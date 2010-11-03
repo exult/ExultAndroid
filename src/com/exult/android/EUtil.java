@@ -49,8 +49,32 @@ public class EUtil {
 			return -1;
 		}
 	}
+	private static String baseToUppercase(String str, int count) {
+		if (count <= 0) return str;
+		int todo = count, i;
+						// Go backwards.
+		for (i = str.length() - 1; i >= 0; --i) {
+			int c = str.charAt(i);
+			if (c == '/') {
+				todo--;
+				if (todo <= 0)
+					break;
+			}
+		}
+		if (todo > 0)
+			return null;	// Didn't reach 'count' parts.
+		String res = str.substring(0, i) + str.substring(i, str.length()).toUpperCase();
+		return res;
+	}
+
 	public static final boolean U7exists(String nm) {
-		return (new File(nm)).exists(); 
+		String name = getSystemPath(nm);
+		int uppercasecount = 0;
+		do {
+			if (new File(name).exists())
+				return true; // found it!
+		} while ((name = baseToUppercase(name, ++uppercasecount)) != null);
+		return false;
 	}
 	public static final boolean isFlex(RandomAccessFile in) {
 		int magic = 0;
@@ -76,6 +100,30 @@ public class EUtil {
 			}
 		}
 		return false;
+	}
+	public static boolean isSystemPathDefined(String path) {
+		return pathMap != null && pathMap.containsKey(path);
+	}
+	public static String getSystemPath(String path) {
+		String newPath;
+		int pos, pos2;
+		pos = path.indexOf('>');
+		pos2 = path.indexOf('<');
+		// If there is no separator, return the path as is
+		if (pos != -1 || pos2 != 0) {
+			newPath = path;
+		} else {
+			pos += 1;
+			// See if we can translate this prefix
+			String syspath = path.substring(0, pos);
+			if (isSystemPathDefined(syspath)) {
+				String newPrefix = (String)pathMap.get(syspath);
+				newPath = newPrefix + path.substring(pos);
+			} else {
+				newPath = path;
+			}
+		}
+		return newPath;
 	}
 	public static void addSystemPath(String key, String value) {
 		if (pathMap == null)
