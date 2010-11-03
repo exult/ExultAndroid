@@ -2,8 +2,10 @@ package com.exult.android;
 import java.io.RandomAccessFile;
 import java.io.File;
 import java.io.IOException;
+import java.util.TreeMap;
 
 public class EUtil {
+	private static TreeMap pathMap;
 	private static byte buf2[] = new byte[2];
 	private static byte buf4[] = new byte[4];
 	public static final int Read2(byte buf[], int ind) {
@@ -74,6 +76,17 @@ public class EUtil {
 			}
 		}
 		return false;
+	}
+	public static void addSystemPath(String key, String value) {
+		if (pathMap == null)
+			pathMap = new TreeMap();
+		pathMap.put(key, value);
+	}
+	public static void initSystemPaths() {
+		String base = "/sdcard/Games/exult/blackgate";	// FOR NOW.
+		addSystemPath("<PATCH>", base + "/PATCH");
+		addSystemPath("<STATIC>", base + "/STATIC");
+		addSystemPath("<GAMEDAT>", base + "/GAMEDAT");
 	}
 }
 
