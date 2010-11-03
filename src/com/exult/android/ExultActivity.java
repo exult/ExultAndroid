@@ -18,7 +18,8 @@ public class ExultActivity extends Activity {
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-    	vgaFile = new VgaFile("/sdcard/Games/exult/blackgate/STATIC/SHAPES.VGA", null);
+    	EUtil.initSystemPaths();
+    	vgaFile = new VgaFile(EFile.SHAPES_VGA, null);
         super.onCreate(savedInstanceState);
         setContentView(new MySurfaceView(this));
     }

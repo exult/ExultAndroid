@@ -67,14 +67,14 @@ public class EUtil {
 		return res;
 	}
 
-	public static final boolean U7exists(String nm) {
+	public static final String U7exists(String nm) {
 		String name = getSystemPath(nm);
 		int uppercasecount = 0;
 		do {
 			if (new File(name).exists())
-				return true; // found it!
+				return name; // found it!
 		} while ((name = baseToUppercase(name, ++uppercasecount)) != null);
-		return false;
+		return null;
 	}
 	public static final boolean isFlex(RandomAccessFile in) {
 		int magic = 0;
@@ -91,9 +91,10 @@ public class EUtil {
 	}
 	public static final boolean isFlex(String nm) {
 		RandomAccessFile file = null;
-		if (EUtil.U7exists(nm)) {
+		String fname = U7exists(nm);
+		if (fname != null) {
 			try {
-				file = new RandomAccessFile(nm, "r");
+				file = new RandomAccessFile(fname, "r");
 				return isFlex(file);
 			} catch (IOException e) {
 				return false;
@@ -110,7 +111,7 @@ public class EUtil {
 		pos = path.indexOf('>');
 		pos2 = path.indexOf('<');
 		// If there is no separator, return the path as is
-		if (pos != -1 || pos2 != 0) {
+		if (pos == -1 || pos2 != 0) {
 			newPath = path;
 		} else {
 			pos += 1;

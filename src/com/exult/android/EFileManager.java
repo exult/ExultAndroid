@@ -18,10 +18,11 @@ public class EFileManager {
 		EFile file = (EFile) fileList.get(nm);
 		if (file != null)
 			return file;
-		if (!EUtil.U7exists(nm))
+		String fname = EUtil.U7exists(nm);
+		if (fname == null)
 			return null;
-		if (EUtil.isFlex(nm))
-			file = new FlexFile(nm);
+		if (EUtil.isFlex(fname))
+			file = new FlexFile(fname);
 		/* +++++FINISH
 		else if (EUtil.isIff(s.name))
 			uf = new IFFFile(s.name);
@@ -29,7 +30,7 @@ public class EFileManager {
 			uf = new TableFile(s.name);
 		*/
 		else
-			file = new EFile(nm);	// Flat file.
+			file = new EFile(fname);	// Flat file.
 		// Failed
 		if (file == null) {
 			return null;

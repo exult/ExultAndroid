@@ -34,9 +34,10 @@ public class VgaFile {
 		boolean tmpPatch[]
 		) {
 		RandomAccessFile source = null;
-		if (EUtil.U7exists(resource)) {
+		String fname = EUtil.U7exists(resource);
+		if (fname != null) {
 			try {
-				source = new RandomAccessFile(resource, "r");
+				source = new RandomAccessFile(fname, "r");
 			} catch (IOException e) {
 				return null;
 			}
@@ -54,7 +55,7 @@ public class VgaFile {
 		int tmpCnts[] = new int[count];
 		
 		boolean is_good = true;
-		if (!EUtil.U7exists(sources[0]))
+		if (EUtil.U7exists(sources[0]) == null)
 			is_good = false;
 		for (int i = 0; i < count; ++i) {
 			RandomAccessFile source = U7load(sources[i], tmpSources, tmpPatch);
