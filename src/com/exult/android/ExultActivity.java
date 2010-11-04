@@ -19,7 +19,8 @@ public class ExultActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	EUtil.initSystemPaths();
-    	vgaFile = new VgaFile(EFile.SHAPES_VGA, null);
+    	ShapeFiles.load();
+    	vgaFile = ShapeFiles.SHAPES_VGA.getFile();
         super.onCreate(savedInstanceState);
         setContentView(new MySurfaceView(this));
     }
