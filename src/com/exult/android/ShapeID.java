@@ -28,17 +28,17 @@ public class ShapeID {
 		} 
 		return shape;
 	}
-	ShapeID(int shnum, int frnum, ShapeFiles shfile) {
+	public final void set(int shnum, int frnum, ShapeFiles shfile) {
 		shapeNum = (short)shnum; frameNum = (byte)frnum;
 		hasTrans = 0;
 		shape = null;
 		shapeFile = shfile;	
 	}
+	ShapeID(int shnum, int frnum, ShapeFiles shfile) {
+		set(shnum, frnum, shfile);
+	}
 	ShapeID(int shnum, int frnum) {
-		shapeNum = (short)shnum; frameNum = (byte)frnum;
-		hasTrans = 0;
-		shape = null;
-		shapeFile = ShapeFiles.SHAPES_VGA;
+		set(shnum, frnum, ShapeFiles.SHAPES_VGA);
 	}
 	public final boolean isInvalid()
 		{ return shapeNum == -1; }

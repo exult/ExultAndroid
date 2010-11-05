@@ -13,6 +13,9 @@ public class ShapeFrame {
 	private boolean rle;			// Run-length encoded.
 	private static Canvas scrwin;	// Screen window to render to.
 	
+	public byte[] getData() {
+		return data;
+	}
 	/*
 	 *	Create a new frame by reflecting across a line running NW to SE.
 	 *
