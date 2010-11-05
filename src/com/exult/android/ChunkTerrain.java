@@ -95,7 +95,7 @@ public class ChunkTerrain {
 				    frnum = (data[ind + 1]>>2)&0x1f;
 					ind += 2;
 				}
-				shapes[16*tiley + tilex] = ((shnum<<16)&0xffff00) | (frnum&0xff);
+				shapes[16*tiley + tilex] = ((shnum<<8)&0xffff00) | (frnum&0xff);
 			}
 	}
 	public final void add_client()
