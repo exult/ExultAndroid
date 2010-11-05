@@ -1,18 +1,23 @@
 package com.exult.android;
 
 public enum ShapeFiles {
-	SHAPES_VGA	(EFile.SHAPES_VGA);
+	SHAPES_VGA,
+	GUMPS_VGA,
+	PAPERDOL,	
+	SPRITES_VGA,
+	FACES_VGA,	
+	EXULT_FLX,		
+	GAME_FLX;
 	
-	private String name;
 	private VgaFile file;
-	ShapeFiles(String nm) {
-		name = nm;
+	ShapeFiles() {
 		file = null;
 	}
 	public final VgaFile getFile() {
 		return file;
 	}
 	public static final void load() {
-		SHAPES_VGA.file = new VgaFile(SHAPES_VGA.name, null);
+		SHAPES_VGA.file = new VgaFile(EFile.SHAPES_VGA, null);
+		//++++FINISH.
 	}
 }
