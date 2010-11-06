@@ -75,8 +75,11 @@ public class ExultActivity extends Activity {
     		thread = new MySurfaceThread(getHolder(), this);
     		//create a graphic
     		testSprite1 = new AnimationSprite();
+    		/*
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     		int width = display.getWidth(), height = display.getHeight();
+    		*/
+    		int width = 320, height = 200;	// Standard U7 screen.
     		ibuf = new ImageBuf(width, height);
     		pal0 = new Palette(ibuf);
     		pal0.set(Palette.PALETTE_DAY, -1, null);	

@@ -82,6 +82,7 @@ public class ChunkTerrain {
 		numClients = 0;
 		renderedFlats = null;
 		renderQueueNext = renderQueuePrev = null;
+		shapes = new int[16*16];
 		int ind = 0;
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
 			for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++) {
