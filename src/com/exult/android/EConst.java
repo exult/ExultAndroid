@@ -30,4 +30,8 @@ public class EConst {
 
 	// Maximum number of global flags:
 	public static final int c_last_gflag = 2047;
+	
+	public static final int  INCR_CHUNK(int x) {
+		return ((x) + 1)%c_num_chunks;
+	}
 }

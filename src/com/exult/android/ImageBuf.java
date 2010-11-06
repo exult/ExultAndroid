@@ -29,6 +29,18 @@ public class ImageBuf {
 		pixels = new byte[w*h];
 		pal = new int[256];
 	}
+	public int getWidth() {
+		return width;
+	}
+	public int getHeight() {
+		return height;
+	}
+	public void setClip(int x, int y, int w, int h) {
+		clipx = x; clipy = y; clipw = w; cliph = h;
+	}
+	public void clearClip() {
+		clipx = clipy = 0; clipw = width; cliph = height;
+	}
 	/*
 	 * Utility to create each palette color.
 	 */
