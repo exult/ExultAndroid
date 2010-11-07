@@ -5,13 +5,14 @@ import java.io.RandomAccessFile;
 import java.io.IOException;
 
 public class GameMap {
-	private int num;			// Map #.  Index in gwin->maps.
+	private int num;			// Map #.  Index in gwin.maps.
 	private static Vector<ChunkTerrain> chunkTerrains;
 	private static RandomAccessFile chunks;	// "u7chunks" file.
 	private static boolean v2Chunks;		// True if 3 bytes/entry.
 	private static boolean readAllTerrain;	// Read them all.
 	private short terrainMap[];				// ChunkTerrains index for each chunk.
 	private MapChunk objects[];				// List of objects for each chunk.
+	private boolean schunkRead[];			// 12x12, a flag for each superchunk.
 	private static final int V2_CHUNK_HDR_SIZE = 4+4+2;
 	private static final byte v2hdr[] = {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, 
 		'e', 'x', 'l', 't', 0, 0};
@@ -40,6 +41,7 @@ public class GameMap {
 		num = n;
 		terrainMap = new short[EConst.c_num_chunks*EConst.c_num_chunks];
 		objects = new MapChunk[EConst.c_num_chunks * EConst.c_num_chunks];
+		schunkRead = new boolean[12*12];
 	}
 	// Init. the static data.
 	public static void initChunks() {
@@ -120,6 +122,64 @@ public class GameMap {
 			Arrays.fill(terrainMap, (short)0);
 		}
 	// Would fill various buffers here++++++++++++
+	}
+	/*
+	 * Read in superchunk data to cover the screen.
+	 */
+	public void readMapData() {
+		GameWindow gwin = GameWindow.instanceOf();
+		int scrolltx = gwin.getScrolltx(), scrollty = gwin.getScrollty();
+		int w = gwin.getWidth(), h = gwin.getHeight();
+						// Start one tile to left.
+		int firstsx = (scrolltx - 1)/EConst.c_tiles_per_schunk, 
+		    firstsy = (scrollty - 1)/EConst.c_tiles_per_schunk;
+						// End 8 tiles to right.
+		int lastsx = (scrolltx + (w + EConst.c_tilesize - 2)/EConst.c_tilesize + 
+					EConst.c_tiles_per_chunk/2)/EConst.c_tiles_per_schunk;
+		int lastsy = (scrollty + (h + EConst.c_tilesize - 2)/EConst.c_tilesize + 
+					EConst.c_tiles_per_chunk/2)/EConst.c_tiles_per_schunk;
+						// Watch for wrapping.
+		int stopsx = (lastsx + 1)%EConst.c_num_schunks,
+		    stopsy = (lastsy + 1)%EConst.c_num_schunks;
+						// Read in "map", "ifix" objects for
+						//  all visible superchunks.
+		for (int sy = firstsy; sy != stopsy; sy = (sy + 1)%EConst.c_num_schunks)
+			for (int sx = firstsx; sx != stopsx; 
+							sx = (sx + 1)%EConst.c_num_schunks) {
+						// Figure superchunk #.
+				int schunk = 12*sy + sx;
+						// Read it if necessary.
+				if (!schunkRead[schunk])
+					getSuperchunkObjects(schunk);
+			}
+	}
+	/*
+	 *	Read in terrain graphics data into window's image.  (May also be
+	 *	called during map-editing if the chunknum changes.)
+	 */
+	public void getChunkObjects(int cx, int cy) {
+						// Get list we'll store into.
+		MapChunk chunk = getChunk(cx, cy);
+		int chunkNum = terrainMap[cy*EConst.c_num_chunks + cx];
+		ChunkTerrain ter = getTerrain(chunkNum);
+		chunk.setTerrain(ter);
+		}
+	public void getMapObjects(int schunk) {
+		int scy = 16*(schunk/12);	// Get abs. chunk coords.
+		int scx = 16*(schunk%12);
+						// Go through chunks.
+		for (int cy = 0; cy < 16; cy++)
+			for (int cx = 0; cx < 16; cx++)
+				getChunkObjects(scx + cx, scy + cy);
+	}
+	public void getSuperchunkObjects(int schunk) {
+		getMapObjects(schunk);	// Get map objects/scenery.
+		/*
+		get_ifix_objects(schunk);	// Get objects from ifix.
+		get_ireg_objects(schunk);	// Get moveable objects.
+		*/
+		schunkRead[schunk] = true;	// Done this one now.
+		// map_patches->apply(schunk);	// Move/delete objects.
 	}
 	public static ChunkTerrain getTerrain(int tnum) {
 		ChunkTerrain ter = (ChunkTerrain) chunkTerrains.elementAt(tnum);

@@ -59,16 +59,16 @@ public class ChunkTerrain {
 		renderedFlats = null;
 	}
 	private ImageBuf renderFlats() {
-		if (renderedFlats != null) {
-		if (queueSize > 100) {	// FOR NOW.
+		if (renderedFlats == null) {
+			if (queueSize > 100) {	// FOR NOW.
 								// Grown too big.  Remove last.
-			ChunkTerrain last = renderQueue.renderQueuePrev;
-			last.freeRenderedFlats();
-			renderQueue.renderQueuePrev = last.renderQueuePrev;
-			last.renderQueuePrev.renderQueueNext = renderQueue;
-			last.renderQueueNext = last.renderQueuePrev = null;
-			queueSize--;
-		}
+				ChunkTerrain last = renderQueue.renderQueuePrev;
+				last.freeRenderedFlats();
+				renderQueue.renderQueuePrev = last.renderQueuePrev;
+				last.renderQueuePrev.renderQueueNext = renderQueue;
+				last.renderQueueNext = last.renderQueuePrev = null;
+				queueSize--;
+			}
 		renderedFlats = new ImageBuf(EConst.c_chunksize, EConst.c_chunksize);
 		}
 					// Go through array of tiles.

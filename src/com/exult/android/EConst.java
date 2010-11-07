@@ -34,4 +34,20 @@ public class EConst {
 	public static final int  INCR_CHUNK(int x) {
 		return ((x) + 1)%c_num_chunks;
 	}
+	public static final int DECR_CHUNK(int x) {
+		return ((x) - 1 + c_num_chunks)%c_num_chunks;
+	}
+	public static final int INCR_TILE(int x) {
+		return ((x) + 1)%c_num_tiles;
+	}
+	public static final int DECR_TILE(int x, int amt) { 
+		return (x - amt + c_num_tiles)%c_num_tiles; 
+	}
+	 				// Return x - y with wrapping.
+	public static final int SUB_TILE(int x, int y) {
+	 	int delta = x - y;
+	 	return delta < -c_num_tiles/2 ? delta + c_num_tiles :
+	 	       delta >= c_num_tiles/2 ? delta - c_num_tiles : delta;
+	 }
+
 }

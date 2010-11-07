@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.Vector;
+
 import android.graphics.Canvas;
 
 public class GameWindow {
@@ -32,12 +33,14 @@ public class GameWindow {
 		win = new ImageBuf(width, height);
 		pal = new Palette(win);
 		dirty = new Rectangle();
+		paintBox = new Rectangle();
 		//GameSingletons.init(this);
 		
 	}
 	//	Prepare for game.
 	public void setupGame() {
 		getMap(0).init();
+		centerView(6*16*16, 6*16*16);//+++++FOR NOW testing.
 		//+++++Find other maps here.
 		//+++++LOTS MORE to do.
 	}
@@ -65,11 +68,58 @@ public class GameWindow {
 	public int getScrollty() {
 		return scrollty;
 	}
+	public void setScrolls(int newscrolltx, int newscrollty) {
+		scrolltx = newscrolltx;
+		scrollty = newscrollty;
+						// Set scroll box.
+						// Let's try 2x2 tiles.
+		/*
+		scroll_bounds.w = scroll_bounds.h = 2;
+		scroll_bounds.x = scrolltx + 
+				(get_width()/c_tilesize - scroll_bounds.w)/2;
+		// OFFSET HERE
+		scroll_bounds.y = scrollty + 
+				((get_height())/c_tilesize - scroll_bounds.h)/2;
+
+		Barge_object *old_active_barge = moving_barge;
+		*/
+		map.readMapData();		// This pulls in objects.
+		/*
+						// Found active barge?
+		if (!old_active_barge && moving_barge)
+			{			// Do it right.
+			Barge_object *b = moving_barge;
+			moving_barge = 0;
+			set_moving_barge(b);
+			}
+						// Set where to skip rendering.
+		int cx = camera_actor->get_cx(), cy = camera_actor->get_cy();	
+		Map_chunk *nlist = map->get_chunk(cx, cy);
+		nlist->setup_cache();					 
+		int tx = camera_actor->get_tx(), ty = camera_actor->get_ty();
+		set_above_main_actor(nlist->is_roof (tx, ty,
+							camera_actor->get_lift()));
+		set_in_dungeon(nlist->has_dungeon()?nlist->is_dungeon(tx, ty):0);
+		set_ice_dungeon(nlist->is_ice_dungeon(tx, ty));
+		*/
+	}
+	//	Center around given tile pos.
+	public void centerView(int tx, int ty) {
+		int tw = win.getWidth()/EConst.c_tilesize, th = (win.getHeight())/EConst.c_tilesize;
+		setScrolls(EConst.DECR_TILE(tx, tw/2), EConst.DECR_TILE(ty, th/2));
+		setAllDirty();
+	}
 	/*
 	 * 	Rendering:
 	 */
 	public ImageBuf getWin() {
 		return win;
+	}
+	public final int getWidth() {
+		return win.getWidth();
+	}
+	public final int getHeight() {
+		return win.getHeight();
 	}
 	public void setPainted()
 		{ painted = true; }
@@ -82,7 +132,7 @@ public class GameWindow {
 			painted = false;
 			return true;
 		}
-	return false;
+		return false;
 	}
 	public void setAllDirty() {
 		dirty.set(0, 0, win.getWidth(), win.getHeight());

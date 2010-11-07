@@ -63,9 +63,15 @@ public class ExultActivity extends Activity {
     	private MySurfaceThread thread;
     	@Override
     	protected void onDraw(Canvas canvas){
+    		if (gwin.isDirty())
+    			gwin.paintDirty();
+    		if (!gwin.show(canvas, false))
+    			;	// Blit mouse++++
+    		/*
     		canvas.drawColor(Color.BLACK);
     		testSprite1.Update(GameTime);
     		testSprite1.draw(canvas);
+    		*/
     	}
     	public MySurfaceView(Context context){
     		super(context);
@@ -83,10 +89,13 @@ public class ExultActivity extends Activity {
     		int width = 320, height = 200;	// Standard U7 screen.
     		gwin = new GameWindow(width, height);
     		gwin.setupGame();
+    		gwin.setAllDirty();
+    		/*
     		ibuf = new ImageBuf(width, height);
     		pal0 = new Palette(ibuf);
     		pal0.set(Palette.PALETTE_DAY, -1, null);	
     		testSprite1.Init(721, 6);	// Avatar.
+    		*/
     	}
     	@Override
     	public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
