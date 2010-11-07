@@ -11,6 +11,7 @@ public class GameMap {
 	private static boolean v2Chunks;		// True if 3 bytes/entry.
 	private static boolean readAllTerrain;	// Read them all.
 	private short terrainMap[];				// ChunkTerrains index for each chunk.
+	private MapChunk objects[];				// List of objects for each chunk.
 	private static final int V2_CHUNK_HDR_SIZE = 4+4+2;
 	private static final byte v2hdr[] = {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, 
 		'e', 'x', 'l', 't', 0, 0};
@@ -38,6 +39,7 @@ public class GameMap {
 	public GameMap(int n) {
 		num = n;
 		terrainMap = new short[EConst.c_num_chunks*EConst.c_num_chunks];
+		objects = new MapChunk[EConst.c_num_chunks * EConst.c_num_chunks];
 	}
 	// Init. the static data.
 	public static void initChunks() {
@@ -107,9 +109,11 @@ public class GameMap {
 				int ind = 0;
 							// Go through chunks.
 				for (int cy = 0; cy < 16; cy++)
-					for (int cx = 0; cx < 16; cx++)
-						terrainMap[(scy+cy)*EConst.c_num_chunks + scx + cx] = 
-											(short) EUtil.Read2(buf, ind += 2);
+					for (int cx = 0; cx < 16; cx++) {
+						short n = (short) EUtil.Read2(buf, ind);
+						ind += 2;
+						terrainMap[(scy+cy)*16 + scx + cx] = n;
+					}
 			}
 			u7map.close();
 		} catch (IOException e) {
@@ -123,5 +127,14 @@ public class GameMap {
 	}
 	public int getNumChunkTerrains()
 		{ return chunkTerrains.size(); }
+	private MapChunk createChunk(int cx, int cy) {
+		MapChunk c = new MapChunk(this, cx, cy);
+		objects[cy*EConst.c_num_chunks + cx] = c;
+		return c;
+	}
+	public MapChunk getChunk(int cx, int cy) {
+		MapChunk list = objects[cy*EConst.c_num_chunks + cx];
+	return list != null ? list : createChunk(cx, cy);
+	}
 	
 }

@@ -42,12 +42,14 @@ public class ShapeFrame {
 		int xoff = reflected.xleft, yoff = reflected.yabove;
 		int in = 0; 	// Point to data, and draw.
 		int scanlen;
-		while ((scanlen = EUtil.Read2(data, in += 2)) != 0) {
+		while ((scanlen = EUtil.Read2(data, in)) != 0) {
+			in += 2;
 						// Get length of scan line.
 			boolean encoded = (scanlen&1) != 0;// Is it encoded?
 			scanlen = scanlen>>1;
-			int scanx = EUtil.Read2(data, in += 2);
-			int scany = EUtil.Read2(data, in += 2);
+			int scanx = EUtil.Read2(data, in);
+			int scany = EUtil.Read2(data, in + 2);
+			in += 4;
 			if (!encoded) {		// Raw data?
 				ibuf.copy8(data, in, 1, scanlen,
 						xoff + scany, yoff + scanx);

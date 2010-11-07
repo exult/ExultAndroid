@@ -99,7 +99,7 @@ public class ChunkTerrain {
 				shapes[16*tiley + tilex] = ((shnum<<8)&0xffff00) | (frnum&0xff);
 			}
 	}
-	public final void add_client()
+	public final void addClient()
 		{ numClients++; }
 	public final void removeClient()
 		{ numClients--; }

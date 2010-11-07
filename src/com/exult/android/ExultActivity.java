@@ -11,6 +11,7 @@ import android.content.Context;
 public class ExultActivity extends Activity {
 	public VgaFile vgaFile;
 	public long GameTime;
+	public GameWindow gwin;
 	public AnimationSprite testSprite1;
 	public ImageBuf ibuf;
 	public Palette pal0;
@@ -80,6 +81,8 @@ public class ExultActivity extends Activity {
     		int width = display.getWidth(), height = display.getHeight();
     		*/
     		int width = 320, height = 200;	// Standard U7 screen.
+    		gwin = new GameWindow(width, height);
+    		gwin.setupGame();
     		ibuf = new ImageBuf(width, height);
     		pal0 = new Palette(ibuf);
     		pal0.set(Palette.PALETTE_DAY, -1, null);	

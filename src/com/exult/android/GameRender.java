@@ -30,15 +30,13 @@ public class GameRender {
 		int xoff, int yoff		// Pixel offset of top-of-screen.
 		)
 		{
-		/* ++++++FINISH need Map_chunk
 		GameWindow gwin = GameWindow.instanceOf();
-		Map_chunk *olist = gwin->map->get_chunk(cx, cy);
+		MapChunk olist = gwin.getMap().getChunk(cx, cy);
 						// Paint flat tiles.
-		ImageBuf cflats = olist->get_rendered_flats();
+		ImageBuf cflats = olist.getRenderedFlats();
 		if (cflats != null)
 			gwin.getWin().copy8(cflats.getPixels(), 0,
 					EConst.c_chunksize, EConst.c_chunksize, xoff, yoff);
-		*/
 		}
 	
 	/*
