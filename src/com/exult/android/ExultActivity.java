@@ -65,8 +65,10 @@ public class ExultActivity extends Activity {
     	protected void onDraw(Canvas canvas){
     		if (gwin.isDirty())
     			gwin.paintDirty();
-    		if (!gwin.show(canvas, true))	//++++Why does 'false' flicker.	
-    			;	// Blit mouse++++
+    		if (!gwin.show(canvas, false)) {	
+    				// Blit mouse++++
+    			gwin.getWin().blit(canvas);
+    		}
     		/*
     		canvas.drawColor(Color.BLACK);
     		testSprite1.Update(GameTime);
@@ -82,12 +84,10 @@ public class ExultActivity extends Activity {
     		thread = new MySurfaceThread(getHolder(), this);
     		//create a graphic
     		testSprite1 = new AnimationSprite();
-    		/*
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     		int width = display.getWidth(), height = display.getHeight();
-    		*/
-    		int width = 320, height = 200;	// Standard U7 screen.
-    		gwin = new GameWindow(width, height);
+    		gwin = new GameWindow(320, 200);	// Standard U7 dims.
+    		gwin.getWin().setToScale(width, height);
     		gwin.setupGame();
     		gwin.centerView(1035,2181);//+++++FOR NOW testing.
     		gwin.setAllDirty();

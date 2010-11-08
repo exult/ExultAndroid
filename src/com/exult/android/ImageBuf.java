@@ -1,6 +1,11 @@
 package com.exult.android;
 import android.graphics.Point;
 import android.graphics.Canvas;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Rect;
+import android.graphics.Color;
+
 public class ImageBuf {
 	private int width, height;
 	private int clipx, clipy, clipw, cliph;
@@ -8,6 +13,9 @@ public class ImageBuf {
 	private int rgba[];			// Buffer for transfering to canvas.
 	private int pal[];			// Palette.
 	private int clipbuf[] = new int[3];		// srcx, srcw, destx
+	private Bitmap toScale;
+	private int scalew, scaleh;
+	private Rect scaleSrc, scaleDest;
 	
 	private boolean clipInternal(int clips, int clipl) {
 		if (clipbuf[2] < clips) {
@@ -28,6 +36,12 @@ public class ImageBuf {
 		rgba = new int[w*h];
 		pixels = new byte[w*h];
 		pal = new int[256];
+	}
+	public void setToScale(int w, int h) {
+		scalew = w; scaleh = h;
+		toScale = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+		scaleSrc = new Rect();
+		scaleDest = new Rect();
 	}
 	public int getWidth() {
 		return width;
@@ -63,7 +77,7 @@ public class ImageBuf {
 			int r = getColor8(rgbs[3*i], maxval, brightness);
 			int g  = getColor8(rgbs[3*i + 1], maxval, brightness);
 			int b  = getColor8(rgbs[3*i + 2], maxval, brightness);
-			pal[i] = (r<<16) | (g<<8) | b;
+			pal[i] = (0xff<<24)|(r<<16) | (g<<8) | b;	// Include alpha = 0xff.
 		}
 	}
 	public byte [] getPixels() {
@@ -137,7 +151,17 @@ public class ImageBuf {
 			}
 			from += width - w;
 		}
-		c.drawBitmap(rgba, 0, w, x, y, w, h, false, null);
+		//c.drawBitmap(rgba, 0, w, x, y, w, h, false, null);
+		blit(c);// +++++++++FOR NOW.
+	}
+	public void blit(Canvas c) {
+		if (toScale != null) {
+			toScale.setPixels(rgba, 0, width, 0, 0, width, height);
+			scaleSrc.set(0, 0, width - 1, height - 1);
+			scaleDest.set(0, 0, scalew - 1, scaleh - 1);
+			c.drawBitmap(toScale, scaleSrc, scaleDest, null);
+		} else
+			c.drawBitmap(rgba, 0, width, 0, 0, width, height, false, null);
 	}
 	public void show(Canvas c) {
 		show(c, 0, 0, width, height);
