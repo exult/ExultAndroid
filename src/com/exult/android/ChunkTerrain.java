@@ -88,11 +88,11 @@ public class ChunkTerrain {
 			for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++) {
 				int shnum, frnum;
 				if (v2_chunks) { 
-					shnum = data[ind + 0] + 256*data[ind + 1];
-					frnum = data[ind + 2];
+					shnum = data[ind + 0]&0xff + 256*(data[ind + 1]&0xff);
+					frnum = data[ind + 2]&0xff;
 					ind += 3;
 				} else {
-					shnum = data[ind + 0]+256*(data[ind + 1]&3);
+					shnum = data[ind + 0]&0xff + 256*(data[ind + 1]&3);
 				    frnum = (data[ind + 1]>>2)&0x1f;
 					ind += 2;
 				}

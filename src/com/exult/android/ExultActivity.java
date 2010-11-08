@@ -65,7 +65,7 @@ public class ExultActivity extends Activity {
     	protected void onDraw(Canvas canvas){
     		if (gwin.isDirty())
     			gwin.paintDirty();
-    		if (!gwin.show(canvas, false))
+    		if (!gwin.show(canvas, true))	//++++Why does 'false' flicker.	
     			;	// Blit mouse++++
     		/*
     		canvas.drawColor(Color.BLACK);
@@ -89,6 +89,7 @@ public class ExultActivity extends Activity {
     		int width = 320, height = 200;	// Standard U7 screen.
     		gwin = new GameWindow(width, height);
     		gwin.setupGame();
+    		gwin.centerView(1035,2181);//+++++FOR NOW testing.
     		gwin.setAllDirty();
     		/*
     		ibuf = new ImageBuf(width, height);

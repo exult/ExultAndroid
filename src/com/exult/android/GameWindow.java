@@ -40,7 +40,7 @@ public class GameWindow {
 	//	Prepare for game.
 	public void setupGame() {
 		getMap(0).init();
-		centerView(6*16*16, 6*16*16);//+++++FOR NOW testing.
+		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
 		//+++++Find other maps here.
 		//+++++LOTS MORE to do.
 	}

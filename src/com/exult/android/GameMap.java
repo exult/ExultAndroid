@@ -102,9 +102,10 @@ public class GameMap {
 				nm = EUtil.U7exists(mname);
 				u7map = new RandomAccessFile(nm != null ? nm : mname, "r");
 			}
+			byte buf[] = new byte[16*16*2];
 			for (int schunk = 0; schunk < EConst.c_num_schunks*EConst.c_num_schunks; schunk++) {
 						// Read in the chunk #'s.
-				byte buf[] = new byte[16*16*2];
+				
 				u7map.read(buf);
 				int scy = 16*(schunk/12);// Get abs. chunk coords.
 				int scx = 16*(schunk%12);
@@ -114,7 +115,8 @@ public class GameMap {
 					for (int cx = 0; cx < 16; cx++) {
 						short n = (short) EUtil.Read2(buf, ind);
 						ind += 2;
-						terrainMap[(scy+cy)*16 + scx + cx] = n;
+						int i = (scy+cy)*EConst.c_num_chunks + scx + cx;
+						terrainMap[i] = n;
 					}
 			}
 			u7map.close();
