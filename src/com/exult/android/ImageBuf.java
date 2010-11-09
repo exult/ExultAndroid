@@ -15,6 +15,7 @@ public class ImageBuf {
 	private int clipbuf[] = new int[3];		// srcx, srcw, destx
 	private Rectangle tempClipSrc = new Rectangle();
 	private Point tempClipDest = new Point();
+	private Rectangle tempShowRect = new Rectangle();
 	private Bitmap toScale;
 	private int scalew, scaleh;
 	private Rect scaleSrc, scaleDest;
@@ -85,7 +86,7 @@ public class ImageBuf {
 	public byte [] getPixels() {
 		return pixels;
 	}
-	public boolean clip(Rectangle src, Point dest) {
+	public synchronized boolean clip(Rectangle src, Point dest) {
 	// Start with x-dim.
 		clipbuf[0] = src.x; clipbuf[1] = src.w; clipbuf[2] = dest.x;
 		if (clipInternal(clipx, clipw)) {
@@ -102,7 +103,7 @@ public class ImageBuf {
 	/*
 	 * 	Fill with a single byte.
 	 */
-	public void fill8(byte v) {
+	public synchronized void fill8(byte v) {
 		int i, cnt = width*height;
 		for (i = 0; i < cnt; ++i)
 			pixels[i] = v;
@@ -110,7 +111,7 @@ public class ImageBuf {
 	/*
 	 *	Fill a rectangle with an 8-bit value.
 	 */
-	public void fill8(byte pix, int srcw, int srch, int destx, int desty) {
+	public synchronized void fill8(byte pix, int srcw, int srch, int destx, int desty) {
 		int srcx = 0, srcy = 0;
 		tempClipSrc.set(srcx, srcy, srcw, srch);
 		tempClipDest.set(destx, desty);
@@ -129,7 +130,7 @@ public class ImageBuf {
 		{ return (!(x >= clipx + clipw || y >= clipy + cliph ||
 			x + w <= clipx || y + h <= clipy)); }
 	public void show(Canvas c, int x, int y, int w, int h) {
-		Rectangle rect = tempClipSrc;
+		Rectangle rect = tempShowRect;
 		rect.set(x, y, w, h);
 		rect.enlarge(4, 4, 4, 4, width, height);	// Increase area by 4.
 		x = rect.x; y = rect.y; w = rect.w; h = rect.h;
@@ -173,7 +174,7 @@ public class ImageBuf {
 	 *	Copy an area of the image within itself.
 	 */
 
-	public void copy
+	public synchronized void copy
 		(
 		int srcx, int srcy,		// Where to start.
 		int srcw, int srch,		// Dimensions to copy.
@@ -201,7 +202,7 @@ public class ImageBuf {
 	/*
 	 *	Copy another rectangle into this one.
 	 */
-	public void copy8
+	public synchronized void copy8
 		(
 		byte src_pixels[],		// Source rectangle pixels.
 		int start,
@@ -217,15 +218,17 @@ public class ImageBuf {
 			return;
 		int to = tempClipDest.y*width + tempClipDest.x;
 		int from = start + tempClipSrc.y*src_width + tempClipSrc.x;
+		// int dlen = pixels.length; int slen = src_pixels.length; //++++DEBUGGING
 		while (tempClipSrc.h-- > 0) {
-			for (int i = 0; i < tempClipSrc.w; ++i)
+			for (int i = 0; i < tempClipSrc.w; ++i) {
 				pixels[to + i] = src_pixels[from + i];
+			}
 			from += src_width;
 			to += width; 
 		}
 	}
 	// Slightly Optimized RLE Painter
-	public void paintRle (int xoff, int yoff, byte inptr[])
+	public synchronized void paintRle (int xoff, int yoff, byte inptr[])
 	{
 		int in = 0;
 		int scanlen;
