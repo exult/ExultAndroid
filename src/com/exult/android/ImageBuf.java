@@ -13,6 +13,8 @@ public class ImageBuf {
 	private int rgba[];			// Buffer for transfering to canvas.
 	private int pal[];			// Palette.
 	private int clipbuf[] = new int[3];		// srcx, srcw, destx
+	private Rectangle tempClipSrc = new Rectangle();
+	private Point tempClipDest = new Point();
 	private Bitmap toScale;
 	private int scalew, scaleh;
 	private Rect scaleSrc, scaleDest;
@@ -110,14 +112,14 @@ public class ImageBuf {
 	 */
 	public void fill8(byte pix, int srcw, int srch, int destx, int desty) {
 		int srcx = 0, srcy = 0;
-		Rectangle src = new Rectangle(srcx, srcy, srcw, srch);
-		Point dest = new Point(destx, desty);
-		if (!clip(src, dest))
+		tempClipSrc.set(srcx, srcy, srcw, srch);
+		tempClipDest.set(destx, desty);
+		if (!clip(tempClipSrc, tempClipDest))
 			return;
-		int ind = dest.y*width + dest.x;
-		int to_next = width - src.w;	// # pixels to next line.
-		while (src.h-- > 0) {			// Do each line.
-			for (int cnt = src.w; cnt > 0; cnt--)
+		int ind = tempClipDest.y*width + tempClipDest.x;
+		int to_next = width - tempClipSrc.w;	// # pixels to next line.
+		while (tempClipSrc.h-- > 0) {			// Do each line.
+			for (int cnt = tempClipSrc.w; cnt > 0; cnt--)
 				pixels[ind++] = pix;
 			ind += to_next;	// Get to start of next line.
 		}
@@ -127,7 +129,8 @@ public class ImageBuf {
 		{ return (!(x >= clipx + clipw || y >= clipy + cliph ||
 			x + w <= clipx || y + h <= clipy)); }
 	public void show(Canvas c, int x, int y, int w, int h) {
-		Rectangle rect = new Rectangle(x, y, w, h);
+		Rectangle rect = tempClipSrc;
+		rect.set(x, y, w, h);
 		rect.enlarge(4, 4, 4, 4, width, height);	// Increase area by 4.
 		x = rect.x; y = rect.y; w = rect.w; h = rect.h;
 		// Make it 4 pixel aligned too
@@ -208,14 +211,14 @@ public class ImageBuf {
 		int srcx = 0, srcy = 0;
 		int src_width = srcw;		// Save full source width.
 									// Constrain to window's space.
-		Rectangle src = new Rectangle(srcx, srcy, srcw, srch);
-		Point dest = new Point(destx, desty);
-		if (!clip(src, dest))
+		tempClipSrc.set(srcx, srcy, srcw, srch);
+		tempClipDest.set(destx, desty);
+		if (!clip(tempClipSrc, tempClipDest))
 			return;
-		int to = dest.y*width + dest.x;
-		int from = start + src.y*src_width + src.x;
-		while (src.h-- > 0) {
-			for (int i = 0; i < src.w; ++i)
+		int to = tempClipDest.y*width + tempClipDest.x;
+		int from = start + tempClipSrc.y*src_width + tempClipSrc.x;
+		while (tempClipSrc.h-- > 0) {
+			for (int i = 0; i < tempClipSrc.w; ++i)
 				pixels[to + i] = src_pixels[from + i];
 			from += src_width;
 			to += width; 

@@ -61,7 +61,6 @@ public class Palette {
 			return;			// In the black.
 			// could throw!
 		load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, palette, null, -1);
-		//load("/sdcard/Games/exult/blackgate/STATIC/PALETTES.FLX", null, palette, null, -1);
 		apply(c);
 	}
 	public void apply(Canvas c) {
