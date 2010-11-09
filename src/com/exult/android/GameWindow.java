@@ -12,6 +12,7 @@ public class GameWindow {
 	private ImageBuf win;
 	private Palette pal;
 	private int scrolltx, scrollty;		// Top-left tile of screen.
+	private Rectangle scrollBounds;	// Walking outside this scrolls.
 	private boolean painted;			// We updated imagebuf.
 	private Rectangle dirty;			// What to display.
 	/*
@@ -33,6 +34,7 @@ public class GameWindow {
 		win = new ImageBuf(width, height);
 		pal = new Palette(win);
 		dirty = new Rectangle();
+		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
 		//GameSingletons.init(this);
 		
@@ -73,14 +75,13 @@ public class GameWindow {
 		scrollty = newscrollty;
 						// Set scroll box.
 						// Let's try 2x2 tiles.
-		/*
-		scroll_bounds.w = scroll_bounds.h = 2;
-		scroll_bounds.x = scrolltx + 
-				(get_width()/c_tilesize - scroll_bounds.w)/2;
+		scrollBounds.w = scrollBounds.h = 2;
+		scrollBounds.x = scrolltx + 
+				(getWidth()/EConst.c_tilesize - scrollBounds.w)/2;
 		// OFFSET HERE
-		scroll_bounds.y = scrollty + 
-				((get_height())/c_tilesize - scroll_bounds.h)/2;
-
+		scrollBounds.y = scrollty + 
+				((getHeight())/EConst.c_tilesize - scrollBounds.h)/2;
+		/*
 		Barge_object *old_active_barge = moving_barge;
 		*/
 		map.readMapData();		// This pulls in objects.
@@ -93,14 +94,14 @@ public class GameWindow {
 			set_moving_barge(b);
 			}
 						// Set where to skip rendering.
-		int cx = camera_actor->get_cx(), cy = camera_actor->get_cy();	
-		Map_chunk *nlist = map->get_chunk(cx, cy);
-		nlist->setup_cache();					 
-		int tx = camera_actor->get_tx(), ty = camera_actor->get_ty();
-		set_above_main_actor(nlist->is_roof (tx, ty,
-							camera_actor->get_lift()));
-		set_in_dungeon(nlist->has_dungeon()?nlist->is_dungeon(tx, ty):0);
-		set_ice_dungeon(nlist->is_ice_dungeon(tx, ty));
+		int cx = camera_actor.get_cx(), cy = camera_actor.get_cy();	
+		Map_chunk *nlist = map.get_chunk(cx, cy);
+		nlist.setup_cache();					 
+		int tx = camera_actor.get_tx(), ty = camera_actor.get_ty();
+		set_above_main_actor(nlist.is_roof (tx, ty,
+							camera_actor.get_lift()));
+		set_in_dungeon(nlist.has_dungeon()?nlist.is_dungeon(tx, ty):0);
+		set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
 		*/
 	}
 	//	Center around given tile pos.
@@ -109,6 +110,69 @@ public class GameWindow {
 		setScrolls(EConst.DECR_TILE(tx, tw/2), EConst.DECR_TILE(ty, th/2));
 		setAllDirty();
 	}
+	/*
+	 *	Shift view by one tile.
+	 */
+	public void shiftViewHoriz(boolean toleft) {
+		int w = getWidth(), h = getHeight();
+		if (toleft) {
+			scrolltx = EConst.DECR_TILE(scrolltx);
+			scrollBounds.x = EConst.DECR_TILE(scrollBounds.x);
+		} else {
+						// Get current rightmost chunk.
+			scrolltx = EConst.INCR_TILE(scrolltx);
+			scrollBounds.x = EConst.INCR_TILE(scrollBounds.x);
+		}
+		/*
+		if (gump_man.showing_gumps()) {		// Gump on screen?
+			paint();
+			return;
+		}
+		*/
+		map.readMapData();		// Be sure objects are present.
+		if (toleft) {			// Shift image to right.
+			win.copy(0, 0, w - EConst.c_tilesize, h, EConst.c_tilesize, 0);
+			paint(0, 0, EConst.c_tilesize, h);
+			dirty.x += EConst.c_tilesize;
+		} else { 				// Shift image to left.
+			win.copy(EConst.c_tilesize, 0, w - EConst.c_tilesize, h, 0, 0);
+						// Paint 1 column to right.
+			paint(w - EConst.c_tilesize, 0, EConst.c_tilesize, h);
+			dirty.x -= EConst.c_tilesize;	// Shift dirty rect.
+			
+		}
+		dirty = clipToWin(dirty);
+	}
+	
+	public void shiftViewVertical(boolean up) {
+		int w = getWidth(), h = getHeight();
+		if (up) {
+			scrollty = EConst.DECR_TILE(scrollty);
+			scrollBounds.y = EConst.DECR_TILE(scrollBounds.y);
+		} else {
+						// Get current bottomost chunk.
+			scrollty = EConst.INCR_TILE(scrollty);
+			scrollBounds.y = EConst.INCR_TILE(scrollBounds.y);
+		}
+		/*
+		if (gump_man.showing_gumps())			// Gump on screen?
+			{
+			paint();
+			return;
+			}
+		*/
+		map.readMapData();		// Be sure objects are present.
+		if (up) {
+			scrollty = EConst.DECR_TILE(scrollty);
+			scrollBounds.y = EConst.DECR_TILE(scrollBounds.y);
+		} else {
+			win.copy(0, EConst.c_tilesize, w, h - EConst.c_tilesize, 0, 0);
+			paint(0, h - EConst.c_tilesize, w, EConst.c_tilesize);
+			dirty.y -= EConst.c_tilesize;		// Shift dirty rect.
+		}
+		dirty = clipToWin(dirty);
+	}
+	
 	/*
 	 * 	Rendering:
 	 */
@@ -142,7 +206,7 @@ public class GameWindow {
 	public boolean isDirty()
 		{ return dirty.w > 0; }
 	public void paint(int x, int y, int w, int h) {
-		// if (!win->ready()) return;
+		// if (!win.ready()) return;
 		int gx = x, gy = y, gw = w, gh = h;
 		if (gx < 0) { gw+=x; gx = 0; }
 		if ((gx+gw) > win.getWidth()) gw = win.getWidth()-gx;
@@ -152,17 +216,17 @@ public class GameWindow {
 	
 		int light_sources = 0;
 
-		// if (main_actor) render->paint_map(gx, gy, gw, gh);
+		// if (main_actor) render.paint_map(gx, gy, gw, gh);
 		// else 
-		//	win->fill8(0);
+		//	win.fill8(0);
 		render.paintMap(gx, gy, gw, gh);
 		/*
-		effects->paint();		// Draw sprites.
+		effects.paint();		// Draw sprites.
 
-		gump_man->paint(false);
-		if (dragging) dragging->paint();	// Paint what user is dragging.
-		effects->paint_text();
-		gump_man->paint(true);
+		gump_man.paint(false);
+		if (dragging) dragging.paint();	// Paint what user is dragging.
+		effects.paint_text();
+		gump_man.paint(true);
 
 					// Complete repaint?
 		if (!gx && !gy && gw == get_width() && gh == get_height() && main_actor)
@@ -171,15 +235,15 @@ public class GameWindow {
 		int cnt = get_party(party, 1);
 		int carried_light = 0;
 		for (int i = 0; !carried_light && i < cnt; i++)
-			carried_light = party[i]->has_light_source();
+			carried_light = party[i].has_light_source();
 					// Also check light spell.
-		if (special_light && clock->get_total_minutes() >special_light)
+		if (special_light && clock.get_total_minutes() >special_light)
 			{		// Just expired.
 			special_light = 0;
-			clock->set_palette();
+			clock.set_palette();
 			}
 					// Set palette for lights.
-		clock->set_light_source(carried_light + (light_sources > 0),
+		clock.set_light_source(carried_light + (light_sources > 0),
 								in_dungeon);
 		}
 		*/
@@ -196,9 +260,9 @@ public class GameWindow {
 		/*
 		// Update the gumps before painting, unless in dont_move mode (may change dirty area)
 	    if (!main_actor_dont_move())
-	        gump_man->update_gumps();
+	        gump_man.update_gumps();
 
-		effects->update_dirty_text();
+		effects.update_dirty_text();
 		*/
 		Rectangle box = clipToWin(dirty);
 		if (box.w > 0 && box.h > 0)
@@ -207,7 +271,7 @@ public class GameWindow {
 	}
 	//	Paint whole window.
 	public void paint() {
-		// if (main_actor != 0) map->read_map_data();		// Gather in all objs., etc.
+		// if (main_actor != 0) map.read_map_data();		// Gather in all objs., etc.
 		setAllDirty();
 		paintDirty();
 		}

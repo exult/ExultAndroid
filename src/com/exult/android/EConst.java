@@ -40,6 +40,9 @@ public class EConst {
 	public static final int INCR_TILE(int x) {
 		return ((x) + 1)%c_num_tiles;
 	}
+	public static final int DECR_TILE(int x) { 
+		return (x - 1 + c_num_tiles)%c_num_tiles; 
+	}
 	public static final int DECR_TILE(int x, int amt) { 
 		return (x - amt + c_num_tiles)%c_num_tiles; 
 	}

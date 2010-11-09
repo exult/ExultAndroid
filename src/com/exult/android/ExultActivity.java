@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.KeyEvent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.content.Context;
@@ -63,8 +65,11 @@ public class ExultActivity extends Activity {
     	private MySurfaceThread thread;
     	@Override
     	protected void onDraw(Canvas canvas){
-    		if (gwin.isDirty())
+    		if (gwin.isDirty()) {
     			gwin.paintDirty();
+    			// +++++++TESTING draw avatar
+    			ShapeFiles.SHAPES_VGA.getShape(721, 1).paint(gwin.getWin(), 184, 92);
+    		}
     		if (!gwin.show(canvas, false)) {	
     				// Blit mouse++++
     			gwin.getWin().blit(canvas);
@@ -82,6 +87,11 @@ public class ExultActivity extends Activity {
     	private void init(){
     		getHolder().addCallback(this);
     		thread = new MySurfaceThread(getHolder(), this);
+    		// Keystroke handler.
+    		setOnKeyListener(keyListener);
+    		setFocusable(true);
+    		setFocusableInTouchMode(true);
+    		requestFocus();
     		//create a graphic
     		testSprite1 = new AnimationSprite();
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
@@ -98,6 +108,23 @@ public class ExultActivity extends Activity {
     		testSprite1.Init(721, 6);	// Avatar.
     		*/
     	}
+    	private OnKeyListener keyListener = new OnKeyListener() {
+    		public boolean onKey(View v, int keyCode, KeyEvent event) {
+		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+		        	switch (keyCode) {
+		        	case KeyEvent.KEYCODE_DPAD_RIGHT:
+		        		gwin.shiftViewHoriz(false); break;
+		        	case KeyEvent.KEYCODE_DPAD_LEFT:
+		        		gwin.shiftViewHoriz(true); break;
+		        	case KeyEvent.KEYCODE_DPAD_DOWN:
+		        		gwin.shiftViewVertical(false); break;
+		        	case KeyEvent.KEYCODE_DPAD_UP:
+		        		gwin.shiftViewVertical(true); break;
+		        	}
+		        }
+    			return false;		// Didn't handle it here.
+    	    }
+    	};
     	@Override
     	public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {
     	}

@@ -16,6 +16,9 @@ public enum ShapeFiles {
 	public final VgaFile getFile() {
 		return file;
 	}
+	public ShapeFrame getShape(int shapenum, int framenum) {
+		return file.getShape(shapenum, framenum);
+	}
 	public static final void load() {
 		SHAPES_VGA.file = new VgaFile(EFile.SHAPES_VGA, null);
 		//++++FINISH.

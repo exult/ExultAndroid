@@ -166,7 +166,35 @@ public class ImageBuf {
 	public void show(Canvas c) {
 		show(c, 0, 0, width, height);
 	}
-	
+	/*
+	 *	Copy an area of the image within itself.
+	 */
+
+	public void copy
+		(
+		int srcx, int srcy,		// Where to start.
+		int srcw, int srch,		// Dimensions to copy.
+		int destx, int desty		// Where to copy to.
+		) {
+		int ynext, yfrom, yto;		// Figure y stuff.
+		if (srcy >= desty) {		// Moving up?
+			ynext = width;
+			yfrom = srcy;
+			yto = desty;
+		} else {			// Moving down.
+			ynext = -width;
+			yfrom = srcy + srch - 1;
+			yto = desty + srch - 1;
+		}
+		int to = yto*width + destx;
+		int from = yfrom*width + srcx;
+						// Go through lines.
+		while (srch-- > 0) {
+			System.arraycopy(pixels, from, pixels, to, srcw);
+			to += ynext;
+			from += ynext;
+		}
+	}
 	/*
 	 *	Copy another rectangle into this one.
 	 */
