@@ -86,7 +86,7 @@ public class ImageBuf {
 	public byte [] getPixels() {
 		return pixels;
 	}
-	public synchronized boolean clip(Rectangle src, Point dest) {
+	public boolean clip(Rectangle src, Point dest) {
 	// Start with x-dim.
 		clipbuf[0] = src.x; clipbuf[1] = src.w; clipbuf[2] = dest.x;
 		if (clipInternal(clipx, clipw)) {
@@ -103,7 +103,7 @@ public class ImageBuf {
 	/*
 	 * 	Fill with a single byte.
 	 */
-	public synchronized void fill8(byte v) {
+	public void fill8(byte v) {
 		int i, cnt = width*height;
 		for (i = 0; i < cnt; ++i)
 			pixels[i] = v;
@@ -111,7 +111,7 @@ public class ImageBuf {
 	/*
 	 *	Fill a rectangle with an 8-bit value.
 	 */
-	public synchronized void fill8(byte pix, int srcw, int srch, int destx, int desty) {
+	public void fill8(byte pix, int srcw, int srch, int destx, int desty) {
 		int srcx = 0, srcy = 0;
 		tempClipSrc.set(srcx, srcy, srcw, srch);
 		tempClipDest.set(destx, desty);
@@ -129,7 +129,7 @@ public class ImageBuf {
 	public boolean isVisible(int x, int y, int w, int h)
 		{ return (!(x >= clipx + clipw || y >= clipy + cliph ||
 			x + w <= clipx || y + h <= clipy)); }
-	public void show(Canvas c, int x, int y, int w, int h) {
+	public synchronized void show(Canvas c, int x, int y, int w, int h) {
 		Rectangle rect = tempShowRect;
 		rect.set(x, y, w, h);
 		rect.enlarge(4, 4, 4, 4, width, height);	// Increase area by 4.
@@ -155,8 +155,10 @@ public class ImageBuf {
 			}
 			from += width - w;
 		}
-		//c.drawBitmap(rgba, 0, w, x, y, w, h, false, null);
-		blit(c);// +++++++++FOR NOW.
+		if (toScale == null)
+			c.drawBitmap(rgba, 0, w, x, y, w, h, false, null);
+		else 
+			blit(c);// +++++++++FOR NOW.
 	}
 	public void blit(Canvas c) {
 		if (toScale != null) {
@@ -174,7 +176,7 @@ public class ImageBuf {
 	 *	Copy an area of the image within itself.
 	 */
 
-	public synchronized void copy
+	public void copy
 		(
 		int srcx, int srcy,		// Where to start.
 		int srcw, int srch,		// Dimensions to copy.
@@ -202,7 +204,7 @@ public class ImageBuf {
 	/*
 	 *	Copy another rectangle into this one.
 	 */
-	public synchronized void copy8
+	public void copy8
 		(
 		byte src_pixels[],		// Source rectangle pixels.
 		int start,
@@ -228,7 +230,7 @@ public class ImageBuf {
 		}
 	}
 	// Slightly Optimized RLE Painter
-	public synchronized void paintRle (int xoff, int yoff, byte inptr[])
+	public void paintRle (int xoff, int yoff, byte inptr[])
 	{
 		int in = 0;
 		int scanlen;

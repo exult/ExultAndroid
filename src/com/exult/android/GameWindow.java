@@ -141,7 +141,7 @@ public class GameWindow {
 			dirty.x -= EConst.c_tilesize;	// Shift dirty rect.
 			
 		}
-		dirty = clipToWin(dirty);
+		clipToWin(dirty);
 	}
 	
 	public void shiftViewVertical(boolean up) {
@@ -163,14 +163,15 @@ public class GameWindow {
 		*/
 		map.readMapData();		// Be sure objects are present.
 		if (up) {
-			scrollty = EConst.DECR_TILE(scrollty);
-			scrollBounds.y = EConst.DECR_TILE(scrollBounds.y);
+			win.copy(0, 0, w, h - EConst.c_tilesize, 0, EConst.c_tilesize);
+			paint(0, 0, w, EConst.c_tilesize);
+			dirty.y += EConst.c_tilesize;		// Shift dirty rect.
 		} else {
 			win.copy(0, EConst.c_tilesize, w, h - EConst.c_tilesize, 0, 0);
 			paint(0, h - EConst.c_tilesize, w, EConst.c_tilesize);
 			dirty.y -= EConst.c_tilesize;		// Shift dirty rect.
 		}
-		dirty = clipToWin(dirty);
+		clipToWin(dirty);
 	}
 	
 	/*
@@ -212,49 +213,51 @@ public class GameWindow {
 		if ((gx+gw) > win.getWidth()) gw = win.getWidth()-gx;
 		if (gy < 0) { gh += gy; gy = 0; }
 		if ((gy+gh) > win.getHeight()) gh = win.getHeight()-gy;
-		win.setClip(gx, gy, gw, gh);	// Clip to this area.
+		synchronized(win) {
+			win.setClip(gx, gy, gw, gh);	// Clip to this area.
 	
-		int light_sources = 0;
+			int light_sources = 0;
 
-		// if (main_actor) render.paint_map(gx, gy, gw, gh);
-		// else 
-		//	win.fill8(0);
-		render.paintMap(gx, gy, gw, gh);
-		/*
-		effects.paint();		// Draw sprites.
+			// if (main_actor) render.paint_map(gx, gy, gw, gh);
+			// else 
+			//	win.fill8(0);
+			render.paintMap(gx, gy, gw, gh);
+			/*
+			effects.paint();		// Draw sprites.
 
-		gump_man.paint(false);
-		if (dragging) dragging.paint();	// Paint what user is dragging.
-		effects.paint_text();
-		gump_man.paint(true);
+			gump_man.paint(false);
+			if (dragging) dragging.paint();	// Paint what user is dragging.
+			effects.paint_text();
+			gump_man.paint(true);
 
 					// Complete repaint?
-		if (!gx && !gy && gw == get_width() && gh == get_height() && main_actor)
-		{			// Look for lights.
-		Actor *party[9];	// Get party, including Avatar.
-		int cnt = get_party(party, 1);
-		int carried_light = 0;
-		for (int i = 0; !carried_light && i < cnt; i++)
-			carried_light = party[i].has_light_source();
+			if (!gx && !gy && gw == get_width() && gh == get_height() && main_actor)
+			{			// Look for lights.
+			Actor *party[9];	// Get party, including Avatar.
+			int cnt = get_party(party, 1);
+			int carried_light = 0;
+			for (int i = 0; !carried_light && i < cnt; i++)
+				carried_light = party[i].has_light_source();
 					// Also check light spell.
-		if (special_light && clock.get_total_minutes() >special_light)
-			{		// Just expired.
-			special_light = 0;
-			clock.set_palette();
-			}
+			if (special_light && clock.get_total_minutes() >special_light)
+				{		// Just expired.
+				special_light = 0;
+				clock.set_palette();
+				}
 					// Set palette for lights.
-		clock.set_light_source(carried_light + (light_sources > 0),
+			clock.set_light_source(carried_light + (light_sources > 0),
 								in_dungeon);
-		}
+			}
 		*/
-	win.clearClip();
+		win.clearClip();
+		} // End 'synchronized'.
 	}	
 	public void paint(Rectangle r)
 		{ paint(r.x, r.y, r.w, r.h); }
-	private Rectangle clipToWin(Rectangle r) {
+	// Clip 'r' to window.
+	private void clipToWin(Rectangle r) {
 		paintBox.set(0, 0, win.getWidth(), win.getHeight());
-		paintBox.intersect(r);
-		return paintBox;
+		r.intersect(paintBox);
 	}
 	public void paintDirty() {
 		/*
@@ -264,9 +267,10 @@ public class GameWindow {
 
 		effects.update_dirty_text();
 		*/
-		Rectangle box = clipToWin(dirty);
-		if (box.w > 0 && box.h > 0)
-			paint(box);	// (Could create new dirty rects.)
+		paintBox.set(dirty);
+		clipToWin(paintBox);
+		if (paintBox.w > 0 && paintBox.h > 0)
+			paint(paintBox);	// (Could create new dirty rects.)
 		clearDirty();
 	}
 	//	Paint whole window.

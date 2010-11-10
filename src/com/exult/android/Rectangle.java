@@ -11,6 +11,9 @@ public class Rectangle {
 	public final void set(int xx, int yy, int ww, int hh) {
 		x = xx; y = yy; w = ww; h = hh;
 	}
+	public final void set(Rectangle r) {
+		x = r.x; y = r.y; w = r.w; h = r.h;
+	}
 	public void enlarge(int left, int right, int top, int bottom, int maxw, int maxh) {
 		x -= left; w += left+right;
 		y -= top; h += top+bottom;
