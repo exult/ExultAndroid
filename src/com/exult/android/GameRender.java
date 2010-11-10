@@ -24,7 +24,7 @@ public class GameRender {
 	 *	Paint the flat (non-rle) shapes in a chunk.
 	 */
 
-	public void paintChunkFlats
+	private void paintChunkFlats
 		(
 		int cx, int cy,			// Chunk coords (0 - 12*16).
 		int xoff, int yoff		// Pixel offset of top-of-screen.
@@ -38,7 +38,23 @@ public class GameRender {
 			gwin.getWin().copy8(cflats.getPixels(), 0,
 					EConst.c_chunksize, EConst.c_chunksize, xoff, yoff);
 		}
-	
+	/*
+	 *	Paint the flat RLE (terrain) shapes in a chunk.
+	 */
+	private void paintChunkFlatRles
+		(
+		int cx, int cy,			// Chunk coords (0 - 12*16).
+		int xoff, int yoff		// Pixel offset of top-of-screen.
+		) {
+		GameWindow gwin = GameWindow.instanceOf();
+		MapChunk olist = gwin.getMap().getChunk(cx, cy);
+		/*
+		Flat_object_iterator next(olist);// Do flat RLE objects.
+		Game_object *obj;
+		while ((obj = next.get_next()) != 0)
+			obj->paint();
+		*/
+		}
 	/*
 	 *	Paint just the map and its objects (no gumps, effects).
 	 *	(The caller should set/clear clip area.)
@@ -77,30 +93,17 @@ public class GameRender {
 			for (cx = start_chunkx; cx != stop_chunkx; cx = EConst.INCR_CHUNK(cx)) {
 				int xoff = figureScreenOffset(cx, scrolltx);
 				paintChunkFlats(cx, cy, xoff, yoff);
-				/* 
-				if (cheat.in_map_editor())
-					Paint_chunk_outline(gwin, 
-					    sman->get_special_pixel(HIT_PIXEL), cx, cy,
-					    map->get_terrain_num(cx, cy), xoff, yoff);
-				 */
 				}
 			}
-		/* +++++++++++++FINISH
 		// Now the flat RLE terrain.
-		for (cy = start_chunky; cy != stop_chunky; cy = INCR_CHUNK(cy))
-			{
-			int yoff = figureScreenOffset(cy, scrollty) -  - gwin->get_scrollty_lo();
-			for (cx = start_chunkx; cx != stop_chunkx; cx = INCR_CHUNK(cx))
-				{
-				int xoff = figureScreenOffset(cx, scrolltx) -  - gwin->get_scrolltx_lo();
-				paint_chunk_flat_rles(cx, cy, xoff, yoff);
-
-				if (cheat.in_map_editor())
-					Paint_chunk_outline(gwin, 
-					    sman->get_special_pixel(HIT_PIXEL), cx, cy,
-					    map->get_terrain_num(cx, cy), xoff, yoff);
-				}
+		for (cy = start_chunky; cy != stop_chunky; cy = EConst.INCR_CHUNK(cy)) {
+			int yoff = figureScreenOffset(cy, scrollty);
+			for (cx = start_chunkx; cx != stop_chunkx; cx = EConst.INCR_CHUNK(cx)) {
+				int xoff = figureScreenOffset(cx, scrolltx);
+				paintChunkFlatRles(cx, cy, xoff, yoff);
 			}
+		}
+		/* +++++++FINISH
 						// Draw the chunks' objects
 						//   diagonally NE.
 		int tmp_stopy = DECR_CHUNK(start_chunky);

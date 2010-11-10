@@ -20,7 +20,7 @@ public enum ShapeFiles {
 		return file.getShape(shapenum, framenum);
 	}
 	public static final void load() {
-		SHAPES_VGA.file = new VgaFile(EFile.SHAPES_VGA, null);
+		SHAPES_VGA.file = new ShapesVgaFile(EFile.SHAPES_VGA, EFile.PATCH_SHAPES);
 		//++++FINISH.
 	}
 }

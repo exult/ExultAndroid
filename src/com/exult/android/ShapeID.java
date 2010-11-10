@@ -34,11 +34,14 @@ public class ShapeID {
 		shape = null;
 		shapeFile = shfile;	
 	}
-	ShapeID(int shnum, int frnum, ShapeFiles shfile) {
+	public ShapeID(int shnum, int frnum, ShapeFiles shfile) {
 		set(shnum, frnum, shfile);
 	}
-	ShapeID(int shnum, int frnum) {
+	public ShapeID(int shnum, int frnum) {
 		set(shnum, frnum, ShapeFiles.SHAPES_VGA);
+	}
+	public ShapeID() {
+		set(0,0, null);
 	}
 	public final boolean isInvalid()
 		{ return shapeNum == -1; }
@@ -51,6 +54,9 @@ public class ShapeID {
 		{ return shapeFile; }
 	public final ShapeFrame getShape()
 		{ return (shape!=null)?shape:cacheShape(); }
+	public final ShapeInfo getInfo() {
+		return ShapesVgaFile.getInfo(shapeNum);
+	}
 	public final void set_translucent(int trans)
 		{ hasTrans = (byte)trans; }
 	public final boolean isTranslucent()

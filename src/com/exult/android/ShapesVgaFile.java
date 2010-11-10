@@ -6,7 +6,7 @@ import java.util.TreeMap;
  */
 public class ShapesVgaFile extends VgaFile {
 	private boolean infoRead;
-	private TreeMap<Integer,ShapeInfo> info;
+	private static TreeMap<Integer,ShapeInfo> info;
 	public ShapesVgaFile(
 		String nm,				// Path to file.
 		String nm2				// Patch file, or null.
@@ -14,9 +14,8 @@ public class ShapesVgaFile extends VgaFile {
 		super(nm, nm2);
 		info = new TreeMap<Integer,ShapeInfo>();
 		ShapeInfo.read(shapes.length, info);
-		infoRead = true;
 	}
-	public ShapeInfo getInfo(int shapenum) {
+	public static ShapeInfo getInfo(int shapenum) {
 		ShapeInfo s = info.get(shapenum);
 		return s;
 	}
