@@ -1,6 +1,6 @@
 package com.exult.android;
 
-public class ShapeID {
+public class ShapeID extends GameSingletons {
 	private short shapeNum;			// Shape #.
 	private byte frameNum;			// Frame # within shape.
 	private byte hasTrans;
@@ -62,15 +62,15 @@ public class ShapeID {
 	public final boolean isTranslucent()
 		{ if (shape==null) cacheShape(); return hasTrans!=0; }
 					// Set to given shape.
-	public final void set_shape(int shnum, int frnum) {
+	public final void setShape(int shnum, int frnum) {
 		shapeNum = (short)shnum;
 		frameNum = (byte)frnum;
 		shape = null;
 		//info = null;
 	}
-	public final void set_shape(int shnum)	// Set shape, but keep old frame #.
+	public final void setShape(int shnum)	// Set shape, but keep old frame #.
 		{ shapeNum = (short)shnum; shape = null; /* info = 0; */ }
-	public final void set_frame(int frnum)	// Set to new frame.
+	public final void setFrame(int frnum)	// Set to new frame.
 		{ frameNum = (byte)frnum; shape = null; }
 	public final void setFile(ShapeFiles shfile)	// Set to new flex
 		{ shapeFile = shfile; shape = null; }
@@ -79,5 +79,10 @@ public class ShapeID {
 			return shapeFile.getFile().getNumFrames(shapeNum);
 		else
 			return 0;
+	}
+	public void paintShape(int xoff, int yoff) {
+		ShapeFrame s = getShape();
+		if (s != null)
+			s.paint(gwin.getWin(), xoff, yoff);// ++++FOR NOW Orig. used Shape_manager.
 	}
 }

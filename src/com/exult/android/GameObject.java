@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.Set;
+import android.graphics.Point;
 
 public abstract class GameObject extends ShapeID {
 	protected MapChunk chunk;	// Chunk we're in, or NULL.
@@ -13,6 +14,7 @@ public abstract class GameObject extends ShapeID {
 						//   this can be rendered.
 	private Set<GameObject> dependors;	// Objects which must be painted after.
 	private static byte rotate[] = new byte[8];	// For getting rotated frame #.
+	protected Point paintLoc = new Point();	// Temp for getting coords.
 	public int renderSeq;		// Render sequence #.
 	
 	public GameObject(int shapenum, int framenum, int tilex, 
@@ -28,6 +30,11 @@ public abstract class GameObject extends ShapeID {
 		{ return lift; }
 	public final void setChunk(MapChunk c) {
 		chunk = c;
+	}
+	public void paint() {
+		int x, y;
+		gwin.getShapeLocation(paintLoc, this);
+		// paintShape(paintLoc.x, paintLoc.y);
 	}
 }
 

@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.Vector;
+import android.graphics.Point;
 
 import android.graphics.Canvas;
 
@@ -36,7 +37,7 @@ public class GameWindow {
 		dirty = new Rectangle();
 		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
-		//GameSingletons.init(this);
+		GameSingletons.init(this);
 		
 	}
 	//	Prepare for game.
@@ -63,6 +64,22 @@ public class GameWindow {
 	}
 	public GameMap getMap() {
 		return map;
+	}
+	// Get screen location for an object.
+	public void getShapeLocation(Point loc, int tx, int ty, int tz) {
+		int lft = 4*tz;
+		tx += 1 - scrolltx;
+		ty += 1 - scrollty;
+					// Watch for wrapping.
+		if (tx < -EConst.c_num_tiles/2)
+			tx += EConst.c_num_tiles;
+		if (ty < -EConst.c_num_tiles/2)
+			ty += EConst.c_num_tiles;
+		loc.x = tx*EConst.c_tilesize - 1 - lft;
+		loc.y = ty*EConst.c_tilesize - 1 - lft;
+	}
+	public void getShapeLocation(Point loc, GameObject obj) {
+		getShapeLocation(loc, obj.getTx(), obj.getTy(), obj.getLift());
 	}
 	public int getScrolltx() {
 		return scrolltx;

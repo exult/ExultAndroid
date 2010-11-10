@@ -17,7 +17,7 @@ public class ObjectList {
 		{ return first == null; }
 	public void addIterator()
 		{ iterCount++; }
-	public void remove_iterator()
+	public void removeIterator()
 		{ iterCount--; }
 	public GameObject getFirst()
 		{ return first; }
@@ -55,5 +55,46 @@ public class ObjectList {
 			first = dobj.next != first ? dobj.next : null;
 		dobj.next.prev = dobj.prev;
 		dobj.prev.next = dobj.next;
+	}
+	/*
+	 * Iterators
+	 */
+	public class ObjectIterator extends ObjectIteratorBase {
+		public ObjectIterator(ObjectList l) {
+			super(l);
+			cur = first = l.first;
+			stop = null;
+		}
+		public GameObject next() {
+			if (cur == stop)
+				return null;
+			GameObject ret = cur;
+			cur = cur.next;
+			stop = first;
+			return ret;
+		}
+	}
+	public class FlatObjectIterator extends ObjectIteratorBase {
+		private GameObject stopAt;
+		public FlatObjectIterator(ObjectList l, GameObject firstNonflat) {
+			super(l);
+			first = l.first == firstNonflat ? null : l.first;
+			stopAt = firstNonflat != null ? firstNonflat : l.first;
+			cur = first; stop = null;
+		}
+		public GameObject next() {
+			if (cur == stop)
+				return null;
+			GameObject ret = cur;
+			cur = cur.next;
+			stop = stopAt;
+			return ret;
+		}
+	}
+	ObjectIterator getIterator() {
+		return new ObjectIterator(this);
+	}
+	FlatObjectIterator getFlatIterator(GameObject firstNonflat) {
+		return new FlatObjectIterator(this, firstNonflat);
 	}
 }

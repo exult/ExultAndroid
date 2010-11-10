@@ -48,12 +48,11 @@ public class GameRender {
 		) {
 		GameWindow gwin = GameWindow.instanceOf();
 		MapChunk olist = gwin.getMap().getChunk(cx, cy);
-		/*
-		Flat_object_iterator next(olist);// Do flat RLE objects.
-		Game_object *obj;
-		while ((obj = next.get_next()) != 0)
-			obj->paint();
-		*/
+		ObjectList.FlatObjectIterator iter = olist.getFlatObjectIterator();
+		GameObject obj;
+		while ((obj = iter.next()) != null)
+			obj.paint();
+		iter.done();
 		}
 	/*
 	 *	Paint just the map and its objects (no gumps, effects).

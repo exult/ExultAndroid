@@ -4,7 +4,7 @@ public class MapChunk {
 	private GameMap map;				// Map we're a part of.
 	private ChunkTerrain terrain;		// Flat landscape tiles.
 	private ObjectList objects;			// -'Flat'  obs. (lift=0,ht=0) stored 1st.
-	GameObject firstNonflat;			// ->first nonflat in 'objects'.
+	private GameObject firstNonflat;			// ->first nonflat in 'objects'.
 	private byte cx, cy;
 	
 	public MapChunk(GameMap m, int chx, int chy) {
@@ -15,6 +15,9 @@ public class MapChunk {
 	}
 	public ObjectList getObjects() {
 		return objects;
+	}
+	public ObjectList.FlatObjectIterator getFlatObjectIterator() {
+		return objects.getFlatIterator(firstNonflat);
 	}
 	public void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {
