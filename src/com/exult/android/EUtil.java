@@ -137,5 +137,16 @@ public class EUtil {
 		addSystemPath("<STATIC>", base + "/STATIC");
 		addSystemPath("<GAMEDAT>", base + "/GAMEDAT");
 	}
+	// First try nm1, then nm2.  Returns null if neither found.
+	public static RandomAccessFile U7open2(String nm1, String nm2) {
+		String nm = U7exists(nm1);
+		if (nm != null) try {
+			return new RandomAccessFile(nm, "r");
+		} catch (IOException e) { }
+		nm = U7exists(nm2);if (nm != null) try {
+			return new RandomAccessFile(nm, "r");
+		} catch (IOException e) { }
+		return null;
+	}
 }
 

@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.util.Vector;
 
 public class VgaFile {
-	private RandomAccessFile shapeSources[];
-	private boolean patchFlags[];
-	private int shapeCnts[];
-	private Shape shapes[];
-	private boolean flex;	// False if this is a single-shape file.
+	protected RandomAccessFile shapeSources[];
+	protected boolean patchFlags[];
+	protected int shapeCnts[];
+	protected Shape shapes[];
+	protected boolean flex;	// False if this is a single-shape file.
 	
 	public VgaFile(
 		String nm,				// Path to file.
@@ -21,13 +21,13 @@ public class VgaFile {
 	public VgaFile() {
 		flex = true;
 	}
-	private void reset() {
+	protected void reset() {
 	// Not sure if this is needed.	
 	}
 	/*
 	 *	Open file.
 	 */
-	private RandomAccessFile U7load
+	protected RandomAccessFile U7load
 		(
 		String resource,
 		Vector<RandomAccessFile> tmpSources,
@@ -46,7 +46,7 @@ public class VgaFile {
 		}
 		return source;
 	}
-	private boolean load(String sources[]) {
+	protected boolean load(String sources[]) {
 		reset();
 		int count = sources.length;
 		int num_shapes = 0;
@@ -102,7 +102,7 @@ public class VgaFile {
 		System.arraycopy(tmpCnts, 0, shapeCnts, 0, count);
 		return is_good;
 	}
-	private boolean load(String nm, String nm2) {
+	protected boolean load(String nm, String nm2) {
 		String src[] = new String[nm2 != null ? 2 : 1];
 		src[0] = nm;
 		if (nm2 != null)
