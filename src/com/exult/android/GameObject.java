@@ -28,13 +28,20 @@ public abstract class GameObject extends ShapeID {
 		{ return ty; }
 	public final int getLift()
 		{ return lift; }
+	//	Get absolute tile coords.
+	public final int getTileX() {
+		return chunk != null ? chunk.getCx()*EConst.c_tiles_per_chunk + tx : 255*EConst.c_tiles_per_chunk;
+	}
+	public final int getTileY() {
+		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
+	}
 	public final void setChunk(MapChunk c) {
 		chunk = c;
 	}
 	public void paint() {
 		int x, y;
 		gwin.getShapeLocation(paintLoc, this);
-		// paintShape(paintLoc.x, paintLoc.y);
+		paintShape(paintLoc.x, paintLoc.y);
 	}
 }
 

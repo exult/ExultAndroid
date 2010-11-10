@@ -5,13 +5,20 @@ public class MapChunk {
 	private ChunkTerrain terrain;		// Flat landscape tiles.
 	private ObjectList objects;			// -'Flat'  obs. (lift=0,ht=0) stored 1st.
 	private GameObject firstNonflat;			// ->first nonflat in 'objects'.
-	private byte cx, cy;
+	private short cx, cy;
 	
 	public MapChunk(GameMap m, int chx, int chy) {
 		map = m;
-		cx = (byte)chx;
-		cy = (byte)chy;
+		cx = (short)chx;
+		cy = (short)chy;
 		terrain = null;
+		objects = new ObjectList();
+	}
+	public int getCx() {
+		return cx;
+	}
+	public int getCy() {
+		return cy;
 	}
 	public ObjectList getObjects() {
 		return objects;

@@ -79,7 +79,7 @@ public class GameWindow {
 		loc.y = ty*EConst.c_tilesize - 1 - lft;
 	}
 	public void getShapeLocation(Point loc, GameObject obj) {
-		getShapeLocation(loc, obj.getTx(), obj.getTy(), obj.getLift());
+		getShapeLocation(loc, obj.getTileX(), obj.getTileY(), obj.getLift());
 	}
 	public int getScrolltx() {
 		return scrolltx;
