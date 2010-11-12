@@ -80,7 +80,125 @@ public abstract class GameObject extends ShapeID {
 			info = obj.getInfo();
 			init(obj); 
 		}
-	};
-
+	}
+	/*
+	 *	Compare ranges along a given dimension.
+	 *	Returns: byte 0: 0 if 1st < 2nd, 1 if equal, 2 if 1st > 2nd,
+	 *			 byte 1: 1 if they overlap 
+	 */
+	private static int compareRanges (
+		int from1, int to1,		// First object's range.
+		int from2, int to2) {		// Second object's range.
+		byte cmp, overlap;
+		if (to1 < from2) {
+			overlap = 0;
+			cmp = 0;
+		} else if (to2 < from1) {
+			overlap = 0;
+			cmp = 2;
+		} else {				// X's overlap.
+			overlap = 1;
+			if (from1 < from2)
+				cmp = 0;
+			else if (from1 > from2)
+				cmp = 2;
+			else if (to1 - from1 < to2 - from2)
+				cmp = 2;
+			else if (to1 - from1 > to2 - from2)
+				cmp = 0;
+			else
+				cmp = 1;
+		}
+		return (overlap<<8)|cmp;
+	}
+	/*
+	 *	Compare two objects.
+	 *
+	 *	Output:	-1 if 1st < 2nd, 0 if dont_care, 1 if 1st > 2nd.
+	 */
+	public int compare
+		(
+		OrderingInfo inf1,		// Info. for object 1.
+		GameObject obj2
+		)
+		{
+						// See if there's no overlap.
+		Rectangle r2 = gwin.getShapeRect(obj2);
+		if (!inf1.area.intersects(r2))
+			return (0);		// No overlap on screen.
+		OrderingInfo inf2 = new OrderingInfo(gwin, obj2, r2);
+		int xcmp, ycmp, zcmp;		// Comparisons for a given dimension:
+						//   -1 if o1<o2, 0 if o1==o2,
+						//    1 if o1>o2.
+		boolean xover, yover, zover;	// True if dim's overlap.
+		xcmp = compareRanges(inf1.xleft, inf1.xright, inf2.xleft, inf2.xright);
+		xover = (xcmp&0x100) != 0; xcmp = (xcmp&0xff) - 1;
+		ycmp = compareRanges(inf1.yfar, inf1.ynear, inf2.yfar, inf2.ynear);
+		yover = (ycmp&0x100) != 0; ycmp = (ycmp&0xff) - 1;
+		zcmp = compareRanges(inf1.zbot, inf1.ztop, inf2.zbot, inf2.ztop);
+		zover = (zcmp&0x100) != 0; zcmp = (zcmp&0xff) - 1;
+		if (xcmp == 0 && ycmp == 0 && zcmp == 0)
+						// Same space?
+						// Paint biggest area sec. (Fixes 
+						//   plaque at Penumbra's.)
+			return (inf1.area.w < inf2.area.w  && 
+				inf1.area.h < inf2.area.h) ? -1 : 
+				(inf1.area.w > inf2.area.w &&
+				inf1.area.h > inf2.area.h) ? 1 : 0;
+//			return 0;		// Equal.
+		if (xover & yover & zover) {	// Complete overlap?
+			if (inf1.zs == 0)		// Flat one is always drawn first.
+				return inf2.zs == 0 ? 0 : -1;
+			else if (inf2.zs == 0)
+				return 1;
+		}
+		if (xcmp >= 0 && ycmp >= 0 && zcmp >= 0)
+			return 1;		// GTE in all dimensions.
+		if (xcmp <= 0 && ycmp <= 0 && zcmp <= 0)
+			return -1;		// LTE in all dimensions.
+		if (yover) {		// Y's overlap.
+			if (xover)		// X's too?
+				return zcmp;
+			else if (zover)		// Y's and Z's?
+				return xcmp;
+						// Just Y's overlap.
+			else if (zcmp == 0)		// Z's equal?
+				return xcmp;
+			else			// See if X and Z dirs. agree.
+				if (xcmp == zcmp)
+					return xcmp;
+						// Experiment:  Fixes Trinsic mayor
+						//   statue-through-roof.
+			else if (inf1.ztop/5 < inf2.zbot/5 && inf2.info.occludes())
+				return -1;	// A floor above/below.
+			else if (inf2.ztop/5 < inf1.zbot/5 && inf1.info.occludes())
+				return 1;
+			else
+				return 0;
+		} else if (xover) {		// X's overlap.
+			if (zover)		// X's and Z's?
+				return ycmp;
+			else if (zcmp == 0)		// Z's equal?
+				return ycmp;
+			else
+				return ycmp == zcmp ? ycmp : 0;
+		}
+						// Neither X nor Y overlap.
+		else if (xcmp == -1) {		// o1 X before o2 X?
+			if (ycmp == -1)		// o1 Y before o2 Y?
+						// If Z agrees or overlaps, it's LT.
+				return (zover || zcmp <= 0) ? -1 : 0;
+		} else if (ycmp == 1) {		// o1 Y after o2 Y?
+			if (zover || zcmp >= 0)
+				return 1;
+						// Experiment:  Fixes Brit. museum
+						//   statue-through-roof.
+			else if (inf1.ztop/5 < inf2.zbot/5)
+				return -1;	// A floor above.
+			else
+				return 0;
+		}
+		return 0;
+	}
 }
 

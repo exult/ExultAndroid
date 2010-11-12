@@ -23,6 +23,10 @@ public class Rectangle {
 
 		if (x + w > maxw) w = maxw - x;
 		if (y + h > maxh) h = maxh - y;
+	}				// Does it intersect another?
+	public boolean intersects(Rectangle r2)	{
+	return (x >= r2.x + r2.w ? false : r2.x >= x + w ? false :
+		y >= r2.y + r2.h ? false : r2.y >= y + h ? false : true);
 	}
 	//	Intersect another with this.
 	public final void intersect(Rectangle r2) {
