@@ -81,6 +81,42 @@ public class GameWindow {
 	public void getShapeLocation(Point loc, GameObject obj) {
 		getShapeLocation(loc, obj.getTileX(), obj.getTileY(), obj.getLift());
 	}
+	/*
+	 *	Get screen area used by object.
+	 */
+	Rectangle getShapeRect(GameObject obj) {
+		if (obj.getChunk() == null) {		// Not on map?
+			/* +++++FINISH
+			Gump *gump = gump_man->find_gump(obj);
+			if (gump)
+				return gump->get_shape_rect(obj);
+			else
+			*/
+				return new Rectangle(0, 0, 0, 0);
+			}
+		ShapeFrame s = obj.getShape();
+		if (s == null) {
+			// This is probably fatal.
+			return new Rectangle(0,0,0,0);
+		}
+		// Get tile coords.
+		int tx = obj.getTileX(), ty = obj.getTileY(), tz = obj.getLift();
+		int lftpix = 4*tz;
+		tx += 1 - getScrolltx();
+		ty += 1 - getScrollty();
+						// Watch for wrapping.
+		if (tx < -EConst.c_num_tiles/2)
+			tx += EConst.c_num_tiles;
+		if (ty < -EConst.c_num_tiles/2)
+			ty += EConst.c_num_tiles;
+		return getShapeRect(s,
+			tx*EConst.c_tilesize - 1 - lftpix,
+			ty*EConst.c_tilesize - 1 - lftpix);
+	}
+	public Rectangle getShapeRect(ShapeFrame s, int x, int y) {
+		return new Rectangle(x - s.getXLeft(), y - s.getYAbove(),
+			s.getWidth(), s.getHeight());
+	}
 	public int getScrolltx() {
 		return scrolltx;
 	}

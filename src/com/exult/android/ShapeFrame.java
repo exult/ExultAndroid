@@ -322,13 +322,19 @@ public class ShapeFrame {
 		) {
 		data = encodeRle(pixels, w, h, xleft, yabove, datalen);
 	}
-	public int getWidth()		// Get dimensions.
+	public final int getWidth()		// Get dimensions.
 		{ return xleft + xright + 1; 
 		}
-	public int getHeight()
+	public final int getHeight()
 		{ return yabove + ybelow + 1; 
-		}	
-	public boolean isRle() {
+		}
+	public final int getXLeft() {
+		return xleft;
+	}
+	public final int getYAbove() {
+		return yabove;
+	}
+	public final boolean isRle() {
 		return rle;
 	}
 	/*

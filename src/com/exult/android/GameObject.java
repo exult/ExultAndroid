@@ -35,6 +35,9 @@ public abstract class GameObject extends ShapeID {
 	public final int getTileY() {
 		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
 	}
+	public final MapChunk getChunk() {
+		return chunk;
+	}
 	public final void setChunk(MapChunk c) {
 		chunk = c;
 	}
@@ -43,5 +46,41 @@ public abstract class GameObject extends ShapeID {
 		gwin.getShapeLocation(paintLoc, this);
 		paintShape(paintLoc.x, paintLoc.y);
 	}
+	/*
+	 * Compare objects for rendering.
+	 */
+	public class OrderingInfo {
+		public Rectangle area;			// Area (pixels) rel. to screen.
+		public ShapeInfo info;		// Info. about shape.
+		public int tx, ty, tz;			// Absolute tile coords.
+		public int xs, ys, zs;			// Tile dimensions.
+		public int xleft, xright, ynear, yfar, zbot, ztop;
+		private void init(GameObject obj) {
+			tx = obj.getTileX(); ty = obj.getTileY(); tz = obj.getLift();
+			int frnum = obj.getFrameNum();
+			xs = info.get3dXtiles(frnum);
+			ys = info.get3dYtiles(frnum);
+			zs = info.get3dHeight();
+			xleft = tx - xs + 1;
+			xright = tx;
+			yfar = ty - ys + 1;
+			ynear = ty;
+			ztop = tz + zs - 1;
+			zbot = tz;
+			if (zs == 0)		// Flat?
+				zbot--;
+		}
+		public OrderingInfo(GameWindow gwin, GameObject obj) {
+			area = gwin.getShapeRect(obj);
+			info = obj.getInfo();
+			init(obj); 
+		}
+		OrderingInfo(GameWindow gwin, GameObject obj, Rectangle a) {
+			area = a;				// +++++IS this safe?
+			info = obj.getInfo();
+			init(obj); 
+		}
+	};
+
 }
 
