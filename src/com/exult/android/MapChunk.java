@@ -5,6 +5,8 @@ public class MapChunk extends GameSingletons {
 	private ChunkTerrain terrain;		// Flat landscape tiles.
 	private ObjectList objects;			// -'Flat'  obs. (lift=0,ht=0) stored 1st.
 	private GameObject firstNonflat;			// ->first nonflat in 'objects'.
+	// Counts of overlapping objects from chunks below, to right.
+	private short fromBelow, fromRight, fromBelowRight;
 	private short cx, cy;
 	
 	public MapChunk(GameMap m, int chx, int chy) {
@@ -25,6 +27,9 @@ public class MapChunk extends GameSingletons {
 	}
 	public ObjectList.FlatObjectIterator getFlatObjectIterator() {
 		return objects.getFlatIterator(firstNonflat);
+	}
+	public ObjectList.NonflatObjectIterator getNonflatObjectIterator() {
+		return objects.getNonflatIterator(firstNonflat);
 	}
 	public void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {
@@ -63,11 +68,11 @@ public class MapChunk extends GameSingletons {
 			int newcmp = GameObject.compare(newinfo, obj);
 			int cmp = newcmp == -1 ? 1 : newcmp == 1 ? 0 : -1;
 			if (cmp == 0) {		// Bigger than this object?
-				newobj.getDependencies().add(obj);
-				obj.getDependors().add(newobj);
+				newobj.addDependency(obj);
+				obj.addDependor(newobj);
 			} else if (cmp == 1) {	// Smaller than?
-				obj.getDependencies().add(newobj);
-				newobj.getDependors().add(obj);
+				obj.addDependency(newobj);
+				newobj.addDependor(obj);
 			}
 		}
 	}
@@ -92,11 +97,56 @@ public class MapChunk extends GameSingletons {
 
 	public void add(GameObject newobj) {
 		newobj.setChunk(this);
+		GameObject.OrderingInfo ord = newobj.getOrderingInfo();;
 		if (firstNonflat != null)
 			objects.insertBefore(newobj, firstNonflat);
 		else
 			objects.append(newobj);
 		//+++++++FINISH - Lots of code involving sorting objects, etc.
+		if (newobj.getLift() > 0 || ord.info.get3dHeight() > 0) {
+					// Deal with dependencies.
+					// First this chunk.
+			addDependencies(newobj, ord);
+			if (fromBelow > 0)		// Overlaps from below?
+				addOutsideDependencies(cx, EConst.INCR_CHUNK(cy), newobj, ord);
+			if (fromRight > 0)		// Overlaps from right?
+				addOutsideDependencies(EConst.INCR_CHUNK(cx), cy, newobj, ord);
+			if (fromBelowRight > 0)
+				addOutsideDependencies(EConst.INCR_CHUNK(cx), 
+					EConst.INCR_CHUNK(cy), newobj, ord);
+					// See if newobj extends outside.
+			/* Let's try boundary. YES.  This helps with statues through roofs!*/
+			boolean ext_left = (newobj.getTx() - ord.xs) < 0 && cx > 0;
+			boolean ext_above = (newobj.getTy() - ord.ys) < 0 && cy > 0;
+			if (ext_left) {
+				addOutsideDependencies(EConst.DECR_CHUNK(cx), cy, 
+						newobj, ord).fromRight++;
+				if (ext_above)
+					addOutsideDependencies(EConst.DECR_CHUNK(cx), 
+							 EConst.DECR_CHUNK(cy), newobj, ord).fromBelowRight++;
+			}
+			if (ext_above)
+				addOutsideDependencies(cx, EConst.DECR_CHUNK(cy),
+					newobj, ord).fromBelow++;
+			firstNonflat = newobj;	// Inserted before old first_nonflat.
+		}
+	/* +++++++++FINISH
+	if (cache)			// Add to cache.
+		cache.update_object(this, newobj, 1);
+	if (ord.info.is_light_source())	// Count light sources.
+		{
+		if (dungeon_levels && is_dungeon(newobj.get_tx(),
+							newobj.get_ty()))
+			dungeon_lights++;
+		else
+			non_dungeon_lights++;
+		}
+	if (newobj.get_lift() >= 5)	// Looks like a roof?
+		{
+		if (ord.info.get_shape_class() == Shape_info::building)
+			roof = 1;
+		}
+	*/
 	}
 	public ImageBuf getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;

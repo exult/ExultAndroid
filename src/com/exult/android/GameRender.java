@@ -1,4 +1,6 @@
 package com.exult.android;
+import java.util.Set;
+import java.util.Iterator;
 
 public class GameRender {
 	private long renderSeq;	// For marking rendered objects.
@@ -55,6 +57,54 @@ public class GameRender {
 		iter.done();
 		}
 	/*
+	 *	Paint a chunk's objects, left-to-right, top-to-bottom.
+	 *
+	 *	Output:	# light sources found.
+	 */
+	private int paintChunkObjects
+		(
+		int cx, int cy			// Chunk coords (0 - 12*16).
+		)
+		{
+		GameObject obj;
+		GameWindow gwin = GameWindow.instanceOf();
+		MapChunk olist = gwin.getMap().getChunk(cx, cy);
+		int light_sources =	0;	// Also check for light sources.
+		/* ++++FINISH
+				gwin->is_in_dungeon() ? olist->get_dungeon_lights()
+						: olist->get_non_dungeon_lights();
+		skip = gwin->get_render_skip_lift(); 
+		*/
+		ObjectList.NonflatObjectIterator iter = olist.getNonflatObjectIterator();
+
+		while ((obj = iter.next()) != null)
+			if (obj.renderSeq != renderSeq)
+				paintObject(obj);
+
+		skip = 255;			// Back to a safe #.
+		return light_sources;
+		}
+	/*
+	 *	Render an object after first rendering any that it depends on.
+	 */
+	private void paintObject(GameObject obj) {
+		int lift = obj.getLift();
+		if (lift >= skip)
+			return;
+		obj.renderSeq = renderSeq;
+		Set<GameObject> deps = obj.getDependencies();
+		if (deps != null) {
+			Iterator iter = deps.iterator();
+			while (iter.hasNext()) {
+				GameObject dep = (GameObject) iter.next();
+				if (dep.renderSeq != renderSeq)
+					paintObject(dep);
+			}
+		}
+		obj.paint();			// Finally, paint this one.
+	}
+
+	/*
 	 *	Paint just the map and its objects (no gumps, effects).
 	 *	(The caller should set/clear clip area.)
 	 *
@@ -102,26 +152,27 @@ public class GameRender {
 				paintChunkFlatRles(cx, cy, xoff, yoff);
 			}
 		}
-		/* +++++++FINISH
+		
 						// Draw the chunks' objects
 						//   diagonally NE.
-		int tmp_stopy = DECR_CHUNK(start_chunky);
-		for (cy = start_chunky; cy != stop_chunky; cy = INCR_CHUNK(cy))
+		int tmp_stopy = EConst.DECR_CHUNK(start_chunky);
+		for (cy = start_chunky; cy != stop_chunky; cy = EConst.INCR_CHUNK(cy))
 			{
 			for (int dx = start_chunkx, dy = cy;
 				dx != stop_chunkx && dy != tmp_stopy; 
-					dx = INCR_CHUNK(dx), dy = DECR_CHUNK(dy))
-				light_sources += paint_chunk_objects(dx, dy);
+					dx = EConst.INCR_CHUNK(dx), dy = EConst.DECR_CHUNK(dy))
+				light_sources += paintChunkObjects(dx, dy);
 			}
 		for (cx = (start_chunkx + 1)%EConst.c_num_chunks; cx != stop_chunkx; 
-								cx = INCR_CHUNK(cx))
+								cx = EConst.INCR_CHUNK(cx))
 			{
 			for (int dx = cx, 
 				dy = (stop_chunky - 1 + EConst.c_num_chunks)%EConst.c_num_chunks; 
 				dx != stop_chunkx && dy != tmp_stopy; 
-					dx = INCR_CHUNK(dx), dy = DECR_CHUNK(dy))
-				light_sources += paint_chunk_objects(dx, dy);
+					dx = EConst.INCR_CHUNK(dx), dy = EConst.DECR_CHUNK(dy))
+				light_sources += paintChunkObjects(dx, dy);
 			}
+		/* +++++++FINISH
 		/// Dungeon Blackness (but disable in map editor mode)
 		if ((int)gwin->in_dungeon >= gwin->skip_above_actor && 
 								!cheat.in_map_editor())

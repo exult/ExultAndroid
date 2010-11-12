@@ -1,6 +1,7 @@
 package com.exult.android;
-import java.util.Set;
+import java.util.HashSet;
 import android.graphics.Point;
+import java.lang.ref.WeakReference;
 
 public abstract class GameObject extends ShapeID {
 	protected MapChunk chunk;	// Chunk we're in, or NULL.
@@ -10,12 +11,13 @@ public abstract class GameObject extends ShapeID {
 	protected byte lift;		// Raise by 4* this number.
 	protected short quality;	// Some sort of game attribute.
 	public GameObject next, prev;	// ->next in chunk list or container.
-	private Set<GameObject> dependencies;	// Objects which must be painted before
+	private HashSet<GameObject> dependencies;	// Objects which must be painted before
 						//   this can be rendered.
-	private Set<GameObject> dependors;	// Objects which must be painted after.
+	private HashSet<GameObject> dependors;	// Objects which must be painted after.
 	private static byte rotate[] = new byte[8];	// For getting rotated frame #.
 	protected Point paintLoc = new Point();	// Temp for getting coords.
-	public int renderSeq;		// Render sequence #.
+	public long renderSeq;		// Render sequence #.
+	private WeakReference ordInfo;
 	
 	public GameObject(int shapenum, int framenum, int tilex, 
 			int tiley, int lft) {
@@ -41,11 +43,21 @@ public abstract class GameObject extends ShapeID {
 	public final void setChunk(MapChunk c) {
 		chunk = c;
 	}
-	public final Set<GameObject> getDependencies() {
+	public final HashSet<GameObject> getDependencies() {
 		return dependencies;
 	}
-	public final Set<GameObject> getDependors() {
+	public final HashSet<GameObject> getDependors() {
 		return dependors;
+	}
+	public final void addDependency(GameObject obj) {
+		if (dependencies == null)
+			dependencies = new HashSet<GameObject>();
+		dependencies.add(obj);
+	}
+	public final void addDependor(GameObject obj) {
+		if (dependors == null)
+			dependors = new HashSet<GameObject>();
+		dependors.add(obj);
 	}
 	public void paint() {
 		int x, y;
@@ -61,7 +73,9 @@ public abstract class GameObject extends ShapeID {
 		public int tx, ty, tz;			// Absolute tile coords.
 		public int xs, ys, zs;			// Tile dimensions.
 		public int xleft, xright, ynear, yfar, zbot, ztop;
-		private void init(GameObject obj) {
+		public void init(GameObject obj, Rectangle a) {
+			area = a;				// +++++IS this safe?
+			info = obj.getInfo();
 			tx = obj.getTileX(); ty = obj.getTileY(); tz = obj.getLift();
 			int frnum = obj.getFrameNum();
 			xs = info.get3dXtiles(frnum);
@@ -76,23 +90,21 @@ public abstract class GameObject extends ShapeID {
 			if (zs == 0)		// Flat?
 				zbot--;
 		}
-		public OrderingInfo(GameWindow gwin, GameObject obj) {
-			area = gwin.getShapeRect(obj);
-			info = obj.getInfo();
-			init(obj); 
-		}
-		public OrderingInfo(GameWindow gwin, GameObject obj, Rectangle a) {
-			area = a;				// +++++IS this safe?
-			info = obj.getInfo();
-			init(obj); 
+		public OrderingInfo(GameObject obj, Rectangle a) {
+			init(obj, a); 
 		}
 	}
-	//	+++++Maybe we should cache these?
 	public OrderingInfo getOrderingInfo() {
-		return new OrderingInfo(gwin, this);
+		return getOrderingInfo(gwin.getShapeRect(this));
 	}
 	public OrderingInfo getOrderingInfo(Rectangle a) {
-		return new OrderingInfo(gwin, this, a);
+		OrderingInfo inf;
+		if (ordInfo == null || (inf = (OrderingInfo) ordInfo.get()) == null) {
+			ordInfo = new WeakReference(inf = new OrderingInfo(this, a));
+		} else {
+			inf.init(this, a);
+		}
+		return inf;
 	}
 	/*
 	 *	Compare ranges along a given dimension.

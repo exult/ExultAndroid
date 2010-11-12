@@ -47,7 +47,7 @@ public class ShapeInfo {
 	private void setTfaData() {	// Set fields from tfa.
 		dims[0] = (byte)(1 + (tfa[2]&7));
 		dims[1] = (byte)(1 + ((tfa[2]>>3)&7));
-		dims[2] = (byte)(tfa[0] >> 5);
+		dims[2] = (byte)((tfa[0] >> 5)&7);
 	}
 	// Set/clear tfa bit.
 	private void setTfa(int i, int bit, boolean tf) {
