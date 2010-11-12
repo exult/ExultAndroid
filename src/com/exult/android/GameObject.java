@@ -41,6 +41,12 @@ public abstract class GameObject extends ShapeID {
 	public final void setChunk(MapChunk c) {
 		chunk = c;
 	}
+	public final Set<GameObject> getDependencies() {
+		return dependencies;
+	}
+	public final Set<GameObject> getDependors() {
+		return dependors;
+	}
 	public void paint() {
 		int x, y;
 		gwin.getShapeLocation(paintLoc, this);
@@ -75,11 +81,18 @@ public abstract class GameObject extends ShapeID {
 			info = obj.getInfo();
 			init(obj); 
 		}
-		OrderingInfo(GameWindow gwin, GameObject obj, Rectangle a) {
+		public OrderingInfo(GameWindow gwin, GameObject obj, Rectangle a) {
 			area = a;				// +++++IS this safe?
 			info = obj.getInfo();
 			init(obj); 
 		}
+	}
+	//	+++++Maybe we should cache these?
+	public OrderingInfo getOrderingInfo() {
+		return new OrderingInfo(gwin, this);
+	}
+	public OrderingInfo getOrderingInfo(Rectangle a) {
+		return new OrderingInfo(gwin, this, a);
 	}
 	/*
 	 *	Compare ranges along a given dimension.
@@ -116,17 +129,18 @@ public abstract class GameObject extends ShapeID {
 	 *
 	 *	Output:	-1 if 1st < 2nd, 0 if dont_care, 1 if 1st > 2nd.
 	 */
-	public int compare
+	public static int compare
 		(
 		OrderingInfo inf1,		// Info. for object 1.
 		GameObject obj2
 		)
 		{
+		GameWindow gwin = obj2.gwin;
 						// See if there's no overlap.
 		Rectangle r2 = gwin.getShapeRect(obj2);
 		if (!inf1.area.intersects(r2))
 			return (0);		// No overlap on screen.
-		OrderingInfo inf2 = new OrderingInfo(gwin, obj2, r2);
+		GameObject.OrderingInfo inf2 = obj2.getOrderingInfo(r2);
 		int xcmp, ycmp, zcmp;		// Comparisons for a given dimension:
 						//   -1 if o1<o2, 0 if o1==o2,
 						//    1 if o1>o2.

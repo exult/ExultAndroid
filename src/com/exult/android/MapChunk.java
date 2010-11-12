@@ -1,6 +1,6 @@
 package com.exult.android;
 
-public class MapChunk {
+public class MapChunk extends GameSingletons {
 	private GameMap map;				// Map we're a part of.
 	private ChunkTerrain terrain;		// Flat landscape tiles.
 	private ObjectList objects;			// -'Flat'  obs. (lift=0,ht=0) stored 1st.
@@ -52,6 +52,44 @@ public class MapChunk {
 				}
 			}
 	}
+	/*
+	 *	Add rendering dependencies for a new object.
+	 */
+	private void addDependencies(GameObject newobj, GameObject.OrderingInfo newinfo) {
+		GameObject obj;		// Figure dependencies.
+		ObjectList.NonflatObjectIterator next = objects.getNonflatIterator(firstNonflat);
+		while ((obj = next.next()) != null) {
+			/* Compare returns -1 if lt, 0 if dont_care, 1 if gt. */
+			int newcmp = GameObject.compare(newinfo, obj);
+			int cmp = newcmp == -1 ? 1 : newcmp == 1 ? 0 : -1;
+			if (cmp == 0) {		// Bigger than this object?
+				newobj.getDependencies().add(obj);
+				obj.getDependors().add(newobj);
+			} else if (cmp == 1) {	// Smaller than?
+				obj.getDependencies().add(newobj);
+				newobj.getDependors().add(obj);
+			}
+		}
+	}
+	/*
+	 *	Add rendering dependencies for a new object to another chunk.
+	 *	NOTE:  This is static.
+	 *
+	 *	Output:	->chunk that was checked.
+	 */
+
+	private MapChunk addOutsideDependencies
+		(
+		int cx, int cy,			// Chunk to check.
+		GameObject newobj,		// Object to add.
+		GameObject.OrderingInfo newinfo		// Info. for new object's ordering.
+		)
+		{
+		MapChunk chunk = gwin.getMap().getChunk(cx, cy);
+		chunk.addDependencies(newobj, newinfo);
+		return chunk;
+		}
+
 	public void add(GameObject newobj) {
 		newobj.setChunk(this);
 		if (firstNonflat != null)
