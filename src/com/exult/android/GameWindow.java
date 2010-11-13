@@ -40,7 +40,7 @@ public class GameWindow {
 		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
 		GameSingletons.init(this);
-		skipLift = 255;
+		skipLift = 16;
 		skipAboveActor = 31;
 		
 	}

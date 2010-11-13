@@ -225,7 +225,8 @@ public class GameMap extends GameSingletons {
 			for (int i = 0; i < cnt; i++, ent += 4) {
 				int tx = (data[ent]>>4)&0xf, ty = data[ent]&0xf, 
 					tz = data[ent + 1] & 0xf;
-				int shnum = (data[ent + 2]&0xff)+256*(data[ent + 3]&3), 
+				int hi = data[ent + 3]&3;
+				int shnum = (int)(data[ent + 2]&0xff)+256*hi, 
 					frnum = (data[ent + 3]&0xff)>>2;
 				ShapeInfo info = ShapeID.getInfo(shnum);
 				obj = /*+++++ (info.isAnimated() || info.hasSfx()) ?
@@ -241,7 +242,8 @@ public class GameMap extends GameSingletons {
 				{
 				int tx = (data[ent]>>4)&0xf, ty = data[ent]&0xf, 
 					tz = data[ent + 1] & 0xf;
-				int shnum = (data[ent + 2]&0xff)+256*(data[ent + 3]&0xff), 
+				int hi = data[ent + 3]&0xff;
+				int shnum = (int)(data[ent + 2]&0xff)+256*hi, 
 					frnum = data[ent + 4]&0xff;
 				ShapeInfo info = ShapeID.getInfo(shnum);
 				obj = /*++++++ (info.isAnimated() || info.hasSfx()) ?

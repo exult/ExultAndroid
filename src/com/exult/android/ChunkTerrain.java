@@ -92,7 +92,8 @@ public class ChunkTerrain {
 					frnum = data[ind + 2]&0xff;
 					ind += 3;
 				} else {
-					shnum = data[ind + 0]&0xff + 256*(data[ind + 1]&3);
+					int hi = data[ind + 1]&3;
+					shnum = (int)(data[ind + 0]&0xff) + 256*hi;
 				    frnum = (data[ind + 1]>>2)&0x1f;
 					ind += 2;
 				}

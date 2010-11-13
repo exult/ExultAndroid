@@ -128,6 +128,7 @@ public class ExultActivity extends Activity {
 		        				gwin.skipLift--;
 		        			if (gwin.skipLift < 0)	// 0 means 'terrain-editing'.
 		        				gwin.skipLift = 16;
+		        			System.out.println("Setting skipLift to " + gwin.skipLift);
 		        			gwin.setAllDirty();
 		        		}
 		        	}
