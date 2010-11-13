@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Rect;
 import android.graphics.Color;
+import java.util.Arrays;
 
 public class ImageBuf {
 	private int width, height;
@@ -86,6 +87,13 @@ public class ImageBuf {
 	public byte [] getPixels() {
 		return pixels;
 	}
+	// Clip in one dim.  Sets clipbuf.
+	private boolean clipX(int srcx, int srcw, int destx, int desty) {
+		if (desty < clipy || desty >= clipy + cliph)
+			return false;
+		clipbuf[0] = srcx; clipbuf[1] = srcw; clipbuf[2] = destx;
+		return clipInternal(clipx, clipw); 
+	}
 	public boolean clip(Rectangle src, Point dest) {
 	// Start with x-dim.
 		clipbuf[0] = src.x; clipbuf[1] = src.w; clipbuf[2] = dest.x;
@@ -124,6 +132,15 @@ public class ImageBuf {
 				pixels[ind++] = pix;
 			ind += to_next;	// Get to start of next line.
 		}
+	}
+	public void fillLine8(byte pix, int srcw, int destx, int desty) {
+		int srcx = 0;
+		// Constrain to window's space.
+		if (!clipX(srcx, srcw, destx, desty))
+			return;
+		srcx = clipbuf[0]; srcw = clipbuf[1]; destx = clipbuf[2];
+		int start = desty*width + destx;
+		Arrays.fill(pixels, start, start + srcw, pix);
 	}
 	// Is rect. visible within clip?
 	public boolean isVisible(int x, int y, int w, int h)
@@ -361,6 +378,70 @@ public class ImageBuf {
 					continue;
 				}
 			}
+		}
+	}
+	/*
+	 *	This class represents a single transparent color by providing a
+	 *	palette for its effect on all the other colors.
+	 */
+	public class XformPalette {
+		public byte colors[] = new byte[256];	// For transforming 8-bit colors.
+		public byte get(int i)
+			{ return colors[i]; }
+		};
+	/*
+	 *	Copy a line into this buffer where some of the colors are translucent.
+	 */
+	public void copyLineTranslucent8
+		(
+		byte src_pixels[],	// Source rectangle pixels.
+		int start,
+		int srcw,			// Width to copy.
+		int destx, int desty,
+		int first_translucent,		// Palette index of 1st trans. color.
+		int last_translucent,		// Index of last trans. color.
+		XformPalette xforms[]		// Transformers.  Need same # as
+							//   (last_translucent - 
+							//    first_translucent + 1).
+		) {
+		int srcx = 0;
+						// Constrain to window's space.
+		if (!clipX(srcx, srcw, destx, desty))
+			return;
+		srcx = clipbuf[0]; srcw = clipbuf[1]; destx = clipbuf[2];
+		int to = desty*width + destx;
+		int from = start + srcx;
+		byte newc;
+		for (int i = srcw; i > 0; i--) {
+						// Get char., and transform.
+			int c = src_pixels[from++]&0xff;
+			if (c >= first_translucent && c <= last_translucent)
+						// Use table to shift existing pixel.
+				newc = xforms[c - first_translucent].colors[(int)pixels[to]&0xff];
+			else
+				newc = (byte) c;
+			pixels[to++] = newc;
+		}
+	}
+	/*
+	 *	Apply a translucency table to a line.
+	 */
+	public void fillLineTranslucent8
+		(
+		int srcw,
+		int destx, int desty,
+		XformPalette xform		// Transform table.
+		)
+		{
+		int srcx = 0;
+						// Constrain to window's space.
+		if (!clipX(srcx, srcw, destx, desty))
+			return;
+		srcx = clipbuf[0]; srcw = clipbuf[1]; destx = clipbuf[2];
+		int ind = desty*width + destx;
+		while (srcw-- > 0){
+			pixels[ind] = xform.colors[(int)pixels[ind]&0xff];
+			ind++;
 		}
 	}
 }

@@ -362,5 +362,65 @@ public class ShapeFrame {
 				return;
 		}
 		win.paintRle (xoff, yoff, data);
+	}
+	/*
+	 *	Show a Run-Length_Encoded shape with translucency.
+	 */
+	public void paintRleTranslucent
+		(
+		ImageBuf win,			// Buffer to paint in.
+		int xoff, int yoff,		// Where to show in iwin.
+		ImageBuf.XformPalette xforms[]		// Transforms translucent colors
+		) {
+		int xfcnt = xforms.length;
+		assert(rle);
+
+		int w = getWidth(), h = getHeight();
+		if (w >= EConst.c_tilesize || h >= EConst.c_tilesize)	// Big enough to check?  Off screen?
+			if (!win.isVisible(xoff - xleft, yoff - yabove, w, h))
+				return;
+						// First pix. value to transform.
+		int xfstart = 0xff - xfcnt;
+		int in = 0;
+		int scanlen;
+		while ((scanlen = EUtil.Read2(data, in)) != 0) {
+			in += 2;
+						// Get length of scan line.
+			boolean encoded = (scanlen&1) != 0;// Is it encoded?
+			scanlen = scanlen>>1;
+			int scanx = EUtil.Read2(data, in);
+			in += 2;
+			int scany = EUtil.Read2(data, in);
+			in += 2;
+			if (!encoded) {		// Raw data?
+				win.copyLineTranslucent8(data, in, scanlen,
+						xoff + scanx, yoff + scany,
+						xfstart, 0xfe, xforms);
+				in += scanlen;
+				continue;
+			}
+			for (int b = 0; b < scanlen; ) {
+				int bcnt = data[in++]&0xff;
+						// Repeat next char. if odd.
+				boolean repeat = (bcnt&1) != 0;
+				bcnt = bcnt>>1; // Get count.
+				if (repeat) {
+					int pix = data[in++]&0xff;
+					if (pix >= xfstart && pix <= 0xfe)
+						win.fillLineTranslucent8(bcnt,
+							xoff + scanx + b, yoff + scany,
+							xforms[pix - xfstart]);
+					else
+						win.fillLine8((byte)pix, bcnt,
+						      xoff + scanx + b, yoff + scany);
+				} else {		// Get that # of bytes.
+					win.copyLineTranslucent8(data, in, bcnt,
+						xoff + scanx + b, yoff + scany,
+						xfstart, 0xfe, xforms);
+					in += bcnt;
+				}
+				b += bcnt;
+			}
 		}
+	}
 }
