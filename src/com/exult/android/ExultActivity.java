@@ -120,6 +120,16 @@ public class ExultActivity extends Activity {
 		        		gwin.shiftViewVertical(false); break;
 		        	case KeyEvent.KEYCODE_DPAD_UP:
 		        		gwin.shiftViewVertical(true); break;
+		        	case KeyEvent.KEYCODE_L:
+		        		if (/*event.isAltPressed()*/ true) {
+		        			if (gwin.skipLift == 16)
+		        				gwin.skipLift = 11;
+		        			else
+		        				gwin.skipLift--;
+		        			if (gwin.skipLift < 0)	// 0 means 'terrain-editing'.
+		        				gwin.skipLift = 16;
+		        			gwin.setAllDirty();
+		        		}
 		        	}
 		        }
     			return false;		// Didn't handle it here.

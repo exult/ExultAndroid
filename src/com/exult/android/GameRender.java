@@ -73,8 +73,9 @@ public class GameRender {
 		/* ++++FINISH
 				gwin->is_in_dungeon() ? olist->get_dungeon_lights()
 						: olist->get_non_dungeon_lights();
-		skip = gwin->get_render_skip_lift(); 
+		
 		*/
+		skip = gwin.getRenderSkipLift(); 
 		ObjectList.NonflatObjectIterator iter = olist.getNonflatObjectIterator();
 
 		while ((obj = iter.next()) != null)

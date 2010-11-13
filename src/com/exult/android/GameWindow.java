@@ -16,6 +16,8 @@ public class GameWindow {
 	private Rectangle scrollBounds;	// Walking outside this scrolls.
 	private boolean painted;			// We updated imagebuf.
 	private Rectangle dirty;			// What to display.
+	//	Game state values.
+	private int skipAboveActor;		// Level above actor to skip rendering.
 	/*
 	 *	Public flags and gameplay options:
 	 */
@@ -38,6 +40,8 @@ public class GameWindow {
 		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
 		GameSingletons.init(this);
+		skipLift = 255;
+		skipAboveActor = 31;
 		
 	}
 	//	Prepare for game.
@@ -65,6 +69,9 @@ public class GameWindow {
 	public GameMap getMap() {
 		return map;
 	}
+	int getRenderSkipLift()		// Skip rendering here.
+	{ return skipAboveActor < skipLift ?
+				skipAboveActor : skipLift; }
 	// Get screen location for an object.
 	public void getShapeLocation(Point loc, int tx, int ty, int tz) {
 		int lft = 4*tz;

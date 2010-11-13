@@ -10,11 +10,11 @@ public class EFile {
 	protected String identifier;
 	protected RandomAccessFile file;
 	protected EFile() { }
-	public EFile(String id) {
+	public EFile(String fname, String id) {
 		identifier = id;
 		buf = null;
 		try {
-			file = new RandomAccessFile(id, "r");
+			file = new RandomAccessFile(fname, "r");
 		} catch (IOException e) {
 			file = null;
 		}
@@ -34,8 +34,18 @@ public class EFile {
 			}
 		return buf;
 	}
+	public final String getIdentifier() {
+		return identifier;
+	}
 	public String getArchiveType() {
 		return "NONE";
+	}
+	public void close() {
+		try {
+			file.close();
+		} catch (IOException e) { }
+		buf = null;
+		EFileManager.instanceOf().remove(this);
 	}
 	/* Files we use: */
 	public final static String GAMEDAT		= "<GAMEDAT>/";

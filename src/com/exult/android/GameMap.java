@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.io.RandomAccessFile;
 import java.io.IOException;
 
-public class GameMap {
+public class GameMap extends GameSingletons {
 	private int num;			// Map #.  Index in gwin.maps.
 	private static Vector<ChunkTerrain> chunkTerrains;
 	private static RandomAccessFile chunks;	// "u7chunks" file.
@@ -174,10 +174,91 @@ public class GameMap {
 			for (int cx = 0; cx < 16; cx++)
 				getChunkObjects(scx + cx, scy + cy);
 	}
+	static final String digits[] = {"0", "1", "2", "3", "4", "5", "6", "7", 
+									"8", "9", "a", "b", "c", "d", "e", "f"};
+	public String getSchunkFileName
+		(
+		String prefix,		// "ireg" or "ifix".
+		int schunk			// Superchunk # (0-143).
+		) {
+		String fname = getMappedName(prefix);
+		fname += digits[schunk/16];
+		fname += digits[schunk%16];
+		return (fname);
+	}
+	/*
+	 *	Read in the objects for a superchunk from one of the "u7ifix" files.
+	 */
+	private void getIfixObjects
+		(
+		int schunk			// Superchunk # (0-143).
+		)
+		{
+		
+		String nm = getSchunkFileName(EFile.U7IFIX, schunk);
+		String patchnm = getSchunkFileName(EFile.PATCH_U7IFIX, schunk);
+		FlexFile ifix = (FlexFile) fman.getFileObject(nm, patchnm);
+		int vers = ifix.getVers();
+		int scy = 16*(schunk/12);	// Get abs. chunk coords.
+		int scx = 16*(schunk%12);
+						// Go through chunks.
+		for (int cy = 0; cy < 16; cy++)
+			for (int cx = 0; cx < 16; cx++) {
+						// Get to index entry for chunk.
+				int chunk_num = cy*16 + cx;
+				byte data[] = ifix.retrieve(chunk_num);
+				if (data != null && data.length > 0)
+					getIfixChunkObjects(data, vers, scx + cx, scy + cy);
+			}
+		ifix.close();
+	}
+	/*
+	 *	Get the objects from one ifix chunk entry.
+	 */
+	private void getIfixChunkObjects(byte data[], int vers, int cx, int cy) {
+		IfixGameObject obj;
+		int len = data.length, ent = 0;
+						// Get object list for chunk.
+		MapChunk olist = getChunk(cx, cy);
+		if (vers == FlexFile.orig) {
+			int cnt = len/4;
+			for (int i = 0; i < cnt; i++, ent += 4) {
+				int tx = (data[ent]>>4)&0xf, ty = data[ent]&0xf, 
+					tz = data[ent + 1] & 0xf;
+				int shnum = (data[ent + 2]&0xff)+256*(data[ent + 3]&3), 
+					frnum = (data[ent + 3]&0xff)>>2;
+				ShapeInfo info = ShapeID.getInfo(shnum);
+				obj = /*+++++ (info.isAnimated() || info.hasSfx()) ?
+				    new Animated_ifix_object(shnum, frnum,tx, ty, tz)
+				  : */  new IfixGameObject(shnum, frnum, tx, ty, tz);
+				olist.add(obj);
+				}
+			}
+		else if (vers == FlexFile.exultV2) {
+			// b0 = tx,ty, b1 = lift, b2-3 = shnum, b4=frnum
+			int cnt = len/5;
+			for (int i = 0; i < cnt; i++, ent += 5)
+				{
+				int tx = (data[ent]>>4)&0xf, ty = data[ent]&0xf, 
+					tz = data[ent + 1] & 0xf;
+				int shnum = (data[ent + 2]&0xff)+256*(data[ent + 3]&0xff), 
+					frnum = data[ent + 4]&0xff;
+				ShapeInfo info = ShapeID.getInfo(shnum);
+				obj = /*++++++ (info.isAnimated() || info.hasSfx()) ?
+				    new Animated_ifix_object(shnum, frnum,tx, ty, tz)
+				  : */  new IfixGameObject(shnum, frnum, tx, ty, tz);
+				olist.add(obj);
+				}
+			}
+		/* ++++++FINISH
+		olist->setup_dungeon_levels();	// Should have all dungeon pieces now.
+		*/
+		}
+
 	public void getSuperchunkObjects(int schunk) {
 		getMapObjects(schunk);	// Get map objects/scenery.
+		getIfixObjects(schunk);	// Get objects from ifix.
 		/*
-		get_ifix_objects(schunk);	// Get objects from ifix.
 		get_ireg_objects(schunk);	// Get moveable objects.
 		*/
 		schunkRead[schunk] = true;	// Done this one now.

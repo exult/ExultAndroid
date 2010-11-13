@@ -57,6 +57,9 @@ public class ShapeID extends GameSingletons {
 	public final ShapeInfo getInfo() {
 		return ShapesVgaFile.getInfo(shapeNum);
 	}
+	public static final ShapeInfo getInfo(int shnum) {
+		return ShapesVgaFile.getInfo(shnum);
+	}
 	public final void set_translucent(int trans)
 		{ hasTrans = (byte)trans; }
 	public final boolean isTranslucent()

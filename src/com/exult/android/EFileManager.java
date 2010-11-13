@@ -22,7 +22,7 @@ public class EFileManager {
 		if (fname == null)
 			return null;
 		if (EUtil.isFlex(fname))
-			file = new FlexFile(fname);
+			file = new FlexFile(fname, nm);
 		/* +++++FINISH
 		else if (EUtil.isIff(s.name))
 			uf = new IFFFile(s.name);
@@ -30,13 +30,26 @@ public class EFileManager {
 			uf = new TableFile(s.name);
 		*/
 		else
-			file = new EFile(fname);	// Flat file.
+			file = new EFile(fname, nm);	// Flat file.
 		// Failed
 		if (file == null) {
 			return null;
 		}
 		fileList.put(nm, file);
 		return file;	
+	}
+	/*
+	 * Try files in reverse order, looking for given objnum in file.
+	 */
+	public EFile getFileObject(String nm1, String nm2) {
+		EFile file = getFileObject(nm2);
+		if (file == null)
+			file = getFileObject(nm1);
+		return file;
+	}
+	public void remove(EFile file) {
+		String nm = file.getIdentifier();
+		fileList.remove(nm);
 	}
 	/*
 	 * Retrieve given obj with file.
