@@ -91,7 +91,7 @@ public class GameWindow {
 	/*
 	 *	Get screen area used by object.
 	 */
-	Rectangle getShapeRect(GameObject obj) {
+	Rectangle getShapeRect(Rectangle r, GameObject obj) {
 		if (obj.getChunk() == null) {		// Not on map?
 			/* +++++FINISH
 			Gump *gump = gump_man->find_gump(obj);
@@ -99,12 +99,14 @@ public class GameWindow {
 				return gump->get_shape_rect(obj);
 			else
 			*/
-				return new Rectangle(0, 0, 0, 0);
+				r.set(0, 0, 0, 0);
+				return r;
 			}
 		ShapeFrame s = obj.getShape();
 		if (s == null) {
 			// This is probably fatal.
-			return new Rectangle(0,0,0,0);
+			r.set(0,0,0,0);
+			return r;
 		}
 		// Get tile coords.
 		int tx = obj.getTileX(), ty = obj.getTileY(), tz = obj.getLift();
@@ -116,13 +118,14 @@ public class GameWindow {
 			tx += EConst.c_num_tiles;
 		if (ty < -EConst.c_num_tiles/2)
 			ty += EConst.c_num_tiles;
-		return getShapeRect(s,
+		return getShapeRect(r, s,
 			tx*EConst.c_tilesize - 1 - lftpix,
 			ty*EConst.c_tilesize - 1 - lftpix);
 	}
-	public Rectangle getShapeRect(ShapeFrame s, int x, int y) {
-		return new Rectangle(x - s.getXLeft(), y - s.getYAbove(),
+	public Rectangle getShapeRect(Rectangle r, ShapeFrame s, int x, int y) {
+		r.set(x - s.getXLeft(), y - s.getYAbove(),
 			s.getWidth(), s.getHeight());
+		return r;
 	}
 	public int getScrolltx() {
 		return scrolltx;

@@ -68,6 +68,8 @@ public abstract class GameObject extends ShapeID {
 	 * Compare objects for rendering.
 	 */
 	public class OrderingInfo {
+		// Temps for comparing two objects.
+		
 		public Rectangle area;			// Area (pixels) rel. to screen.
 		public ShapeInfo info;		// Info. about shape.
 		public int tx, ty, tz;			// Absolute tile coords.
@@ -94,8 +96,10 @@ public abstract class GameObject extends ShapeID {
 			init(obj, a); 
 		}
 	}
+	private static Rectangle ordArea1 = new Rectangle(), ordArea2 = new Rectangle();
+	// Use this for object #1.
 	public OrderingInfo getOrderingInfo() {
-		return getOrderingInfo(gwin.getShapeRect(this));
+		return getOrderingInfo(gwin.getShapeRect(ordArea1, this));
 	}
 	public OrderingInfo getOrderingInfo(Rectangle a) {
 		OrderingInfo inf;
@@ -149,7 +153,7 @@ public abstract class GameObject extends ShapeID {
 		{
 		GameWindow gwin = obj2.gwin;
 						// See if there's no overlap.
-		Rectangle r2 = gwin.getShapeRect(obj2);
+		Rectangle r2 = gwin.getShapeRect(ordArea2, obj2);
 		if (!inf1.area.intersects(r2))
 			return (0);		// No overlap on screen.
 		GameObject.OrderingInfo inf2 = obj2.getOrderingInfo(r2);

@@ -513,7 +513,7 @@ int get_weapon_offset(int frame)
 						// Reflect.  Bit 32==horizontal.
 			return curframe ^ ((quads%2)<<5);
 	}
-	public static void read(int num_shapes, TreeMap<Integer,ShapeInfo> info) {
+	public static void read(int num_shapes, ShapeInfo info[]) {
 		int i, cnt;
 		ShapeInfo s;
 		// ShapeDims
@@ -522,9 +522,9 @@ int get_weapon_offset(int frame)
 		RandomAccessFile shpdims = EUtil.U7open2(EFile.PATCH_SHPDIMS, EFile.SHPDIMS);
 		if (shpdims != null) try {
 			for (i = EConst.c_first_obj_shape; i < num_shapes; i++) {
-				s = info.get(i);
+				s = info[i];
 				if (s == null)
-					info.put(i, s = new ShapeInfo());
+					info[i] = s = new ShapeInfo();
 				s.shpdims[0] = shpdims.readByte();
 				s.shpdims[1] = shpdims.readByte();
 			}
@@ -533,9 +533,9 @@ int get_weapon_offset(int frame)
 		RandomAccessFile wgtvol = EUtil.U7open2(EFile.PATCH_WGTVOL, EFile.WGTVOL);
 		if (wgtvol != null) try {
 			for (i = 0; i < num_shapes; i++) {
-				s = info.get(i);
+				s = info[i];
 				if (s == null)
-					info.put(i, s = new ShapeInfo());
+					info[i] = s = new ShapeInfo();
 				s.weight = wgtvol.readByte();
 				s.volume = wgtvol.readByte();
 			}
@@ -545,9 +545,9 @@ int get_weapon_offset(int frame)
 		RandomAccessFile tfa = EUtil.U7open2(EFile.PATCH_TFA, EFile.TFA);
 		if (tfa != null) try {
 			for (i = 0; i < num_shapes; i++) {
-				s = info.get(i);
+				s = info[i];
 				if (s == null)
-					info.put(i, s = new ShapeInfo());
+					info[i] = s = new ShapeInfo();
 				tfa.read(s.tfa);
 				s.setTfaData();
 			}
