@@ -502,15 +502,57 @@ public class GameMap extends GameSingletons {
 				chunk.addEgg((Egg_object *) obj);
 			else */
 				chunk.add(obj);
-			}
 		}
+	}
+	/*
+	 *	Read in the objects for a superchunk from one of the "u7ireg" files.
+	 *	(These are the moveable objects.)
+	 */
+	private void getIregObjects(int schunk) { 	// Superchunk # (0-143).
+		InputStream ireg;
 
+		/*
+		if (schunk_cache[schunk] && schunk_cache_sizes[schunk] >= 0) {
+			// No items
+			if (schunk_cache_sizes[schunk] == 0) return;
+			ireg = new BufferDataSource (schunk_cache[schunk], schunk_cache_sizes[schunk]);
+		}
+		*/
+		if (false)
+			;
+		else try {
+			ireg = EUtil.U7openStream(getSchunkFileName(EFile.U7IREG, schunk));
+			int scy = 16*(schunk/12);	// Get abs. chunk coords.
+			int scx = 16*(schunk%12);
+			readIregObjects(ireg, scx, scy, null, 0);
+			ireg.close();
+		} catch(IOException e) {
+			return;			// Just don't show them.
+		}
+		
+		/*	
+						// A fixup:
+		if (schunk == 10*12 + 11 && Game::get_game_type() == SERPENT_ISLE)
+			{			// Lever in SilverSeed:
+			Game_object_vector vec;
+			if (Game_object::find_nearby(vec, Tile_coord(2936, 2726, 0),
+						787, 0, 0, c_any_qual, 5))
+				vec[0]->move(2937, 2727, 2);
+			}
+		*/
+		
+		/*
+		if (schunk_cache[schunk]) {
+			delete [] schunk_cache[schunk];
+			schunk_cache[schunk] = 0;
+			schunk_cache_sizes[schunk] = -1;
+		}
+		*/
+	}
 	public void getSuperchunkObjects(int schunk) {
 		getMapObjects(schunk);	// Get map objects/scenery.
 		getIfixObjects(schunk);	// Get objects from ifix.
-		/*
-		get_ireg_objects(schunk);	// Get moveable objects.
-		*/
+		getIregObjects(schunk);	// Get moveable objects.
 		schunkRead[schunk] = true;	// Done this one now.
 		// map_patches->apply(schunk);	// Move/delete objects.
 	}

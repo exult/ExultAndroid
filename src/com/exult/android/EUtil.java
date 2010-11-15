@@ -2,6 +2,7 @@ package com.exult.android;
 import java.io.RandomAccessFile;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.FileInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
@@ -181,6 +182,11 @@ public class EUtil {
 			return new RandomAccessFile(nm, "r");
 		} catch (IOException e) { }
 		return null;
+	}
+	public static FileInputStream U7openStream(String nm)
+								throws IOException {
+		String fname = getSystemPath(nm);
+		return new FileInputStream(fname);
 	}
 	public static void U7remove(String nm) {
 		String fname = U7exists(nm);
