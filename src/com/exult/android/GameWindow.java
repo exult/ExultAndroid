@@ -1,5 +1,8 @@
 package com.exult.android;
 import java.util.Vector;
+import java.io.RandomAccessFile;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import android.graphics.Point;
 
 import android.graphics.Canvas;
@@ -46,6 +49,9 @@ public class GameWindow {
 	}
 	//	Prepare for game.
 	public void setupGame() {
+		// FOR NOW:  Unpack INITGAME if not already done.
+		if (EUtil.U7exists(EFile.IDENTITY) == null)
+			initGamedat(true);
 		getMap(0).init();
 		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
 		//+++++Find other maps here.
@@ -342,5 +348,164 @@ public class GameWindow {
 		setAllDirty();
 		paintDirty();
 		}
-	
+	/*
+	 *	Create initial 'gamedat' directory if needed
+	 *
+	 */
+
+	boolean initGamedat(boolean create) {
+						// Create gamedat files 1st time.
+		if (create) {
+			System.out.println("Creating 'gamedat' files.");
+			try {
+				if (EUtil.U7exists(EFile.PATCH_INITGAME) != null)
+					restoreGamedat(EFile.PATCH_INITGAME);
+				else {
+						// Flag that we're reading U7 file.
+					// Game::set_new_game();
+					restoreGamedat(EFile.INITGAME);
+				}
+			} catch (IOException e) {
+				//+++++++ABORT
+			}
+			/*
+			// log version of exult that was used to start this game
+			U7open(out, GNEWGAMEVER);
+			getVersionInfo(out);
+			out.close();
+			*/
+		} else if (EUtil.U7exists(EFile.IDENTITY) == null) {
+			return false;
+		} else {
+				byte id[] = new byte[256];
+				try {
+					RandomAccessFile identity_file = EUtil.U7open(EFile.IDENTITY, false);				
+					int i, cnt = identity_file.read(id);
+					identity_file.close();
+					for(i = 0; i < cnt && id[i] != 0x1a && id[i] != 0x0d && id[i] != 0x0a; i++)
+						;
+					System.out.println("Gamedat identity " + new String(id, 0, i));
+				} catch (IOException e) { }
+				/* ++++++FINISH
+				const char *static_identity = get_game_identity(INITGAME);
+				if(strcmp(static_identity, gamedat_identity))
+					{
+						delete [] static_identity;
+						return false;
+					}
+				delete [] static_identity;
+				*/
+			}
+		// ++++++ read_save_names();		// Read in saved-game names.	
+		return true;
+		}
+	/*
+	 *	Write out the gamedat directory from a saved game.
+	 *
+	 *	Output: Aborts if error.
+	 */
+
+	void restoreGamedat(String fname) throws IOException {
+		/*
+						// Check IDENTITY.
+		const char *id = get_game_identity(fname);
+		const char *static_identity = get_game_identity(INITGAME);
+						// Note: "*" means an old game.
+		if(!id || (*id != '*' && strcmp(static_identity, id) != 0))
+			{
+			std::string msg("Wrong identity '");
+			msg += id; msg += "'.  Open anyway?";
+			int ok = Yesno_gump::ask(msg.c_str());
+			if (!ok)
+				return;
+			}
+		*/
+		/*
+		// Check for a ZIP file first
+		if (restore_gamedat_zip(fname) != false)
+			return;
+		*/
+	/*
+	#ifdef RED_PLASMA
+		// Display red plasma during load...
+		setup_load_palette();
+	#endif
+	*/								
+		EUtil.U7mkdir("<GAMEDAT>");		// Create dir. if not already there. Don't
+										// use GAMEDAT define cause that's got a
+										// trailing slash
+		RandomAccessFile in = EUtil.U7open(fname, true);
+
+		EUtil.U7remove (EFile.USEDAT);
+		EUtil.U7remove (EFile.USEVARS);
+		EUtil.U7remove (EFile.U7NBUF_DAT);
+		EUtil.U7remove (EFile.NPC_DAT);
+		EUtil.U7remove (EFile.MONSNPCS);
+		EUtil.U7remove (EFile.FLAGINIT);
+		EUtil.U7remove (EFile.GWINDAT);
+		EUtil.U7remove (EFile.IDENTITY);
+		EUtil.U7remove (EFile.GSCHEDULE);
+		EUtil.U7remove ("<STATIC>/flags.flg");
+		EUtil.U7remove (EFile.GSCRNSHOT);
+		EUtil.U7remove (EFile.GSAVEINFO);
+		EUtil.U7remove (EFile.GNEWGAMEVER);
+		EUtil.U7remove (EFile.GEXULTVER);
+		EUtil.U7remove (EFile.KEYRINGDAT);
+		EUtil.U7remove (EFile.NOTEBOOKXML);
+
+		restoreFlexFiles(in, EFile.GAMEDAT);
+		in.close();
+	/* #ifdef RED_PLASMA
+		load_palette_timer = 0;
+	#endif
+	 */
+	}
+	/*
+	 *	Write files from flex assuming first 13 characters of
+	 *	each flex object are an 8.3 filename.
+	 */
+	void restoreFlexFiles(RandomAccessFile in, String basepath) throws IOException {
+		in.seek(0x54);			// Get to where file count sits.
+		int numfiles = EUtil.Read4(in);
+		in.seek(0x80);			// Get to file info.
+						// Read pos., length of each file.
+		int finfo[] = new int[2*numfiles];
+		int i;
+		for (i = 0; i < numfiles; i++) {
+			finfo[2*i] = EUtil.Read4(in);	// The position, then the length.
+			finfo[2*i + 1] = EUtil.Read4(in);
+		}
+		int baselen = basepath.length();
+		byte nm13[] = new byte[13];
+		for (i = 0; i < numfiles; i++)	// Now read each file.
+			{
+						// Get file length.
+			int len = finfo[2*i + 1] - 13, pos = finfo[2*i];
+			if (len <= 0)
+				continue;
+			in.seek(pos);	// Get to it.
+			in.read(nm13);
+			int nlen;
+			for (nlen = 0; nlen < nm13.length && nm13[nlen] != 0; ++nlen)
+				;
+			if (nm13[nlen] == '.')	// Watch for names ending in '.'.
+				nlen--;
+			String fname = basepath + new String(nm13, 0, nlen);;
+						// Now read the file.
+			byte buf[] = new byte[len];
+			in.read(buf);
+			//+++++FINISH: multimap stuff here.
+			//+++++++++++++
+			try {
+				FileOutputStream out = EUtil.U7create(fname);
+				out.write(buf);	// Then write it out.
+				out.close();
+			} catch (IOException e) {
+				// abort("Error writing '%s'.", fname);
+				throw e;
+			}
+			
+			// CYCLE_RED_PLASMA();
+			}
+		}
 }

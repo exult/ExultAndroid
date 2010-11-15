@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
+import java.io.FileOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
@@ -137,6 +138,17 @@ public class EUtil {
 		addSystemPath("<STATIC>", base + "/STATIC");
 		addSystemPath("<GAMEDAT>", base + "/GAMEDAT");
 	}
+	public static RandomAccessFile U7open(String nm, boolean hardfail)
+												throws IOException {
+		String fname = U7exists(nm);
+		if (fname != null) try {
+			return new RandomAccessFile(fname, "r");
+		} catch (IOException e) { 
+			if (hardfail)
+				throw e;
+		}
+		return null;
+	}
 	// First try nm1, then nm2.  Returns null if neither found.
 	public static RandomAccessFile U7open2(String nm1, String nm2) {
 		String nm = U7exists(nm1);
@@ -147,6 +159,24 @@ public class EUtil {
 			return new RandomAccessFile(nm, "r");
 		} catch (IOException e) { }
 		return null;
+	}
+	public static void U7remove(String nm) {
+		String fname = U7exists(nm);
+		if (fname != null) {
+			File f = new File(fname);
+			f.delete();
+		}
+	}
+	public static boolean U7mkdir(String nm) {
+		if (U7exists(nm) != null)
+			return true;
+		String fname = getSystemPath(nm);
+		File f = new File(fname);
+		return f.mkdir();
+	}
+	public static FileOutputStream U7create(String nm) throws IOException {
+		String fname = getSystemPath(nm);
+		return new FileOutputStream(fname);
 	}
 }
 
