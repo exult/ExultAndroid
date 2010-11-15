@@ -64,6 +64,9 @@ public abstract class GameObject extends ShapeID {
 		gwin.getShapeLocation(paintLoc, this);
 		paintShape(paintLoc.x, paintLoc.y);
 	}
+	public int getIregSize() {
+		return 0;
+	}
 	/*
 	 * Compare objects for rendering.
 	 */
