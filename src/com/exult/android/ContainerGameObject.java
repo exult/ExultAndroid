@@ -10,4 +10,9 @@ public class ContainerGameObject extends IregGameObject {
 		super(shapenum, framenum, tilex, tiley, lft);
 		resistance = (byte)res;
 	}
+	public boolean add(GameObject obj, boolean dont_check,
+			boolean combine, boolean noset) {
+		//+++++FINISH  For now, throw away.
+		return true;
+	}
 }

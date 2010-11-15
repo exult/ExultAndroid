@@ -2,6 +2,7 @@ package com.exult.android;
 import java.util.Vector;
 import java.util.Arrays;
 import java.io.RandomAccessFile;
+import java.io.InputStream;
 import java.io.IOException;
 
 public class GameMap extends GameSingletons {
@@ -16,6 +17,16 @@ public class GameMap extends GameSingletons {
 	private static final int V2_CHUNK_HDR_SIZE = 4+4+2;
 	private static final byte v2hdr[] = {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, 
 		'e', 'x', 'l', 't', 0, 0};
+	/*
+	 *	Constants for IREG files:
+	 */
+	public static int IREG_EXTENDED = 254;		// For shape #'s > 1023.
+	public static int IREG_SPECIAL = 255;		// Precedes special entries.
+	public static int IREG_UCSCRIPT	= 1;		// Saved Usecode_script for object.
+	public static int IREG_ENDMARK = 2;		// Just an 'end' mark.
+	public static int IREG_ATTS	= 3;		// Attribute/value pairs.
+	public static int IREG_STRING = 4;		// A string; ie, function name.
+	
 	private static ChunkTerrain readTerrain(int chunkNum) {
 		int ntiles = EConst.c_tiles_per_chunk*EConst.c_tiles_per_chunk;
 		byte buf[] = new byte[ntiles*3];
@@ -255,6 +266,243 @@ public class GameMap extends GameSingletons {
 		/* ++++++FINISH
 		olist->setup_dungeon_levels();	// Should have all dungeon pieces now.
 		*/
+		}
+	/*
+	 *	Read a list of ireg objects.  They are either placed in the desired
+	 *	game chunk, or added to their container.
+	 */
+	private byte entbuf[] = new byte[20];	// For reading entries.
+	private void readIregObjects
+		(
+		InputStream ireg,			// File to read from.
+		int scx, int scy,			// Abs. chunk coords. of superchunk.
+		GameObject container,		// Container, or null.
+		long flags					// Usecode item flags.
+		) throws IOException {
+		int entlen;			// Gets entry length.
+		int index_id = -1;
+		GameObject last_obj = null;	// Last one read in this call.
+						// Go through entries.
+		while ((entlen = ireg.read()) >= 0) {
+			boolean extended = false;	// 1 for 2-byte shape #'s.
+
+			// Skip 0's & ends of containers.
+
+			if (entlen == 0 || entlen == 1) {
+				if (container != null)
+					return;	// Skip 0's & ends of containers.
+				else
+					continue;
+			} else if (entlen == 2) {	// Detect the 2 byte index id 
+				index_id = EUtil.Read2(ireg);
+				continue;
+			/*
+			} else if (entlen == IREG_SPECIAL)
+				{
+				Read_special_ireg(ireg, last_obj);
+				continue;
+				}
+			*/
+			} else if (entlen == IREG_EXTENDED) {
+				extended = true;
+				entlen = ireg.read();
+			}
+			/*
+						// Get copy of flags.
+			long oflags = flags & ~(1<<Obj_flags::is_temporary);
+			*/
+			long oflags = 0;	//+++++++FINISH
+			int testlen = entlen - (extended?1:0);
+			if (testlen != 6 && testlen != 10 && testlen != 12 && 
+						testlen != 13 && testlen != 14 && testlen != 18) {
+				System.out.println("Unknown entlen " + testlen + " reading ireg entry.");
+				ireg.skip(entlen);
+				continue;	// Only know these two types.
+			}
+			ireg.read(entbuf, 0, entlen);
+			int cx = (entbuf[0]&0xff) >> 4; // Get chunk indices within schunk.
+			int cy = (entbuf[1]&0xff) >> 4;
+						// Get coord. #'s where shape goes.
+			int tilex, tiley;
+			if (container != null) {		// In container?  Get gump coords.
+				tilex = entbuf[0]&0xff;
+				tiley = entbuf[1]&0xff;
+			} else {
+			 	tilex = entbuf[0] & 0xf;
+				tiley = entbuf[1] & 0xf;
+			}
+			int shnum, frnum;	// Get shape #, frame #.
+			if (extended) {
+				shnum = ((int)entbuf[2]&0xff) + 256*((int)entbuf[3]&0xff);
+				frnum = entbuf[4]&0xff;
+				// So the rest is in the right place.
+				System.arraycopy(entbuf, 1, entbuf, 0, entlen);
+			} else {
+				shnum = ((int)entbuf[2]&0xff) + 256*((int)entbuf[3]&3);
+				frnum = ((int)entbuf[3]&0xff) >> 2;
+			}
+			ShapeInfo info = ShapeID.getInfo(shnum);
+			int lift, quality, type;
+			IregGameObject obj = null;
+			boolean is_egg = false;		// Fields are eggs.
+
+			// Has flag byte(s)
+			if (testlen == 10) {
+				// Temporary
+				/* +++++++++++
+				if (entry[6] & 1) 
+					oflags |= 1<<Obj_flags::is_temporary;
+				*/
+			}	
+						// An "egg"?
+			/*
+			if (info.getShapeClass() == ShapeInfo.hatchable) {
+				boolean anim = info.isAnimated() || info.hasSfx();
+				lift = ((int)entbuf[9]&0xff) >> 4;
+				Egg_object *egg = Egg_object::create_egg(entry, entlen,
+								anim, shnum, frnum, tilex, tiley, lift);
+				getChunk(scx + cx, scy + cy).addEgg(egg);
+				last_obj = egg;
+				continue;
+				}
+			else */ if (testlen == 6 || testlen == 10) {	// Simple entry?
+				type = 0;
+				lift = (entbuf[4]&0xff) >> 4;
+				quality = entbuf[5]&0xff;
+				obj = IregGameObject.create(info, shnum, frnum,
+								tilex, tiley, lift);
+				is_egg = obj.isEgg();
+
+						// Wierd use of flag:
+				if (info.hasQuantity()) {
+					if ((quality&0x80) == 0)
+						;//+++++ oflags &= 
+						// 	~(1<<Obj_flags::okay_to_take);
+					else
+						quality &= 0x7f;
+				} else if (info.hasQualityFlags()) {	// Use those flags instead of deflt.
+					//++++++ oflags = Get_quality_flags(quality);
+					quality = 0;
+				}
+			}
+			/*
+			else if (info.is_body_shape())
+				{	// NPC's body.
+				int extbody = testlen == 13 ? 1 : 0;
+				type = entry[4] + 256*entry[5];
+				lift = entry[9 + extbody] >> 4;
+				quality = entry[7];
+				oflags =	// Override flags (I think).
+					Get_quality_flags(entry[11 + extbody]);
+				int npc_num;
+				if (quality == 1 && (extbody || (entry[8] >= 0x80 || 	 
+						Game::get_game_type() == SERPENT_ISLE)))
+					npc_num = extbody ? (entry[8] + 256*entry[9]) :
+							((entry[8] - 0x80) & 0xFF);
+				else
+					npc_num = -1;
+				if (!npc_num)	// Avatar has no body.
+					npc_num = -1;
+				Dead_body *b = new Dead_body(shnum, frnum, 
+						tilex, tiley, lift, npc_num);
+				obj = b;
+				if (npc_num > 0)
+					gwin->set_body(npc_num, b);
+				if (type)	// (0 if empty.)
+					{	// Don't pass along invisibility!
+					read_ireg_objects(ireg, scx, scy, obj, 
+						oflags & ~(1<<Obj_flags::invisible));
+					obj->elements_read();
+					}
+				}
+			*/
+			else if (testlen == 12) {	// Container?
+				type = (entbuf[4]&0xff) + 256*((int)entbuf[5]&0xff);
+				lift = (entbuf[9]&0xff) >> 4;
+				quality = entbuf[7]&0xff;
+				// ++++oflags =	// Override flags (I think).
+				// 	Get_quality_flags(entry[11]);
+				/* +++++++++++++
+				if (info.getShapeClass() == Shape_info::virtue_stone)
+					{	// Virtue stone?
+					Virtue_stone_object *v = 
+					   new Virtue_stone_object(shnum, frnum, tilex,
+							tiley, lift);
+					v->set_target_pos(entry[4], entry[5], entry[6],
+									entry[7]);
+					v->set_target_map(entry[10]);
+					obj = v;
+					type = 0;
+					}
+				else if (info.get_shape_class() == Shape_info::barge)
+					{
+					Barge_object *b = new Barge_object(
+					    shnum, frnum, tilex, tiley, lift,
+						entry[4], entry[5],
+						(quality>>1)&3);
+					obj = b;
+					if (!gwin->get_moving_barge() && 
+								(quality&(1<<3)))
+						gwin->set_moving_barge(b);
+					}
+				else if (info.is_jawbone()) // serpent jawbone
+					{
+					obj = new Jawbone_object(shnum, frnum,
+						tilex, tiley, lift, entry[10]);
+					}
+				
+				else */
+					obj = new ContainerGameObject(
+					    shnum, frnum, tilex, tiley, lift,
+								entbuf[10]&0xff);
+						// Read container's objects.
+				if (type != 0) {	// Don't pass along invisibility!
+					readIregObjects(ireg, scx, scy, obj, 
+						oflags); //++++  & ~(1<<Obj_flags::invisible) );
+					obj.elementsRead();
+				}
+			}
+			/* ++++++++++++
+			else if (info.get_shape_class() == Shape_info::spellbook)
+				{		// Length 18 means it's a spellbook.
+						// Get all 9 spell bytes.
+				quality = 0;
+				unsigned char circles[9];
+				memcpy(&circles[0], &entry[4], 5);
+				lift = entry[9] >> 4;
+				memcpy(&circles[5], &entry[10], 4);
+				uint8 *ptr = &entry[14];
+						// 3 unknowns, then bookmark.
+				unsigned char bmark = ptr[3];
+				obj = new Spellbook_object(
+					shnum, frnum, tilex, tiley, lift,
+					&circles[0], bmark);
+				}
+			
+			obj->set_quality(quality);
+			obj->set_flags(oflags);
+			*/
+			last_obj = obj;		// Save as last read.
+			if (obj == null)
+				continue;		// Can this happen?
+						// Add, but skip volume check.
+			if (container != null) {
+				if (index_id != -1 && 
+				    container.addReadied(obj, index_id, true, true, false))
+					continue;
+				else if (container.add(obj, true, false, false))
+					continue;
+				else		// Fix tx, ty.
+					obj.setShapePos(obj.getTx()&0xf,
+							   obj.getTy()&0xf);
+			}
+			MapChunk chunk = getChunk(scx + cx, scy + cy);
+			/*
+			if (is_egg)
+				chunk.addEgg((Egg_object *) obj);
+			else */
+				chunk.add(obj);
+			}
 		}
 
 	public void getSuperchunkObjects(int schunk) {

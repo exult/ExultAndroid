@@ -37,6 +37,9 @@ public abstract class GameObject extends ShapeID {
 	public final int getTileY() {
 		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
 	}
+	// Set shape coord. in chunk/gump.
+	public final void setShapePos(int shapex, int shapey)
+		{ tx = (byte)shapex; ty = (byte)shapey; }
 	public final MapChunk getChunk() {
 		return chunk;
 	}
@@ -66,6 +69,20 @@ public abstract class GameObject extends ShapeID {
 	}
 	public int getIregSize() {
 		return 0;
+	}
+	public boolean add(GameObject obj, boolean dont_check,
+			boolean combine, boolean noset) {
+		// ++++ return combine ? drop(obj)!=0 : false;
+		return false;
+	}
+	// Add to NPC 'ready' spot.
+	public boolean addReadied(GameObject obj, int index,
+				boolean dont_check, boolean force_pos, boolean noset)
+		{ return add(obj, dont_check, false, noset); }
+	public boolean isEgg() {
+		return false;
+	}
+	public void elementsRead() {
 	}
 	/*
 	 * Compare objects for rendering.

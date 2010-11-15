@@ -12,7 +12,7 @@ public class IregGameObject extends GameObject {
 		super(shapenum, framenum, tilex, tiley, lft);
 	}
 	
-	public static IregGameObject create_ireg_object
+	public static IregGameObject create
 		(
 		ShapeInfo info,		// Info. about shape.
 		int shnum, int frnum,		// Shape, frame.
