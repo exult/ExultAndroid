@@ -388,9 +388,9 @@ public class ShapeFrame {
 						// Get length of scan line.
 			boolean encoded = (scanlen&1) != 0;// Is it encoded?
 			scanlen = scanlen>>1;
-			int scanx = EUtil.Read2(data, in);
+			int scanx = (short)EUtil.Read2(data, in);
 			in += 2;
-			int scany = EUtil.Read2(data, in);
+			int scany = (short)EUtil.Read2(data, in);
 			in += 2;
 			if (!encoded) {		// Raw data?
 				win.copyLineTranslucent8(data, in, scanlen,

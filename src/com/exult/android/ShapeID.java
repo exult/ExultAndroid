@@ -6,6 +6,7 @@ public class ShapeID extends GameSingletons {
 	private byte hasTrans;
 	private ShapeFiles shapeFile;
 	private ShapeFrame shape;
+	private static ImageBuf.XformPalette xforms[];
 	// Shape_info *info;
 
 	private ShapeFrame cacheShape() {
@@ -14,10 +15,9 @@ public class ShapeID extends GameSingletons {
 		if (hasTrans != 2) hasTrans = 0;
 		if (shapeFile == ShapeFiles.SHAPES_VGA) {
 			shape = shapeFile.getFile().getShape(shapeNum, frameNum);
-		/*	if (hasTrans != 2) 
-				hasTrans = 
-				    sman->shapes.get_info(shapenum).has_translucency();
-		 */
+			if (hasTrans != 2) 
+				hasTrans = getInfo(shapeNum).hasTranslucency() ? (byte)1 : (byte)0;
+		 
 		} else if (shapeFile != null) {
 			shape = shapeFile.getFile().getShape(shapeNum, frameNum);
 			if (shapeFile == ShapeFiles.SPRITES_VGA)
@@ -85,7 +85,41 @@ public class ShapeID extends GameSingletons {
 	}
 	public void paintShape(int xoff, int yoff) {
 		ShapeFrame s = getShape();
-		if (s != null)
-			s.paint(gwin.getWin(), xoff, yoff);// ++++FOR NOW Orig. used Shape_manager.
+		if (s != null) {
+			if (hasTrans != 0 && xforms != null) {
+				s.paintRleTranslucent(gwin.getWin(), xoff, yoff, xforms);
+			} else {
+				s.paint(gwin.getWin(), xoff, yoff);
+			}
+		}
+	}
+	/*
+	 * Load static/global data.
+	 */
+	public static void loadStatic() {
+		EFile xf = fman.getFileObject(EFile.XFORMTBL, EFile.PATCH_XFORMS);
+		int nxforms = 17;	// FOR NOW.
+		if (xf != null) {
+			int nobjs = xf.numberOfObjects();
+			if (nobjs > nxforms)
+				nobjs = nxforms;
+			xforms = new ImageBuf.XformPalette[nobjs];
+			for (int i = 0; i < nobjs; ++i) {
+				xforms[nxforms - 1 - i] = win.new XformPalette();
+				byte data[] = xf.retrieve(i);
+				if (data == null) {
+					// No XForm data at all. Make this XForm into an
+					// identity transformation.
+					for (int j = 0; j < ImageBuf.XformPalette.NCOLORS; j++)
+						xforms[nxforms - 1 - i].colors[j] = (byte)j;
+				} else {
+					System.arraycopy(data, 0, xforms[nxforms - 1 - i].colors, 0, 
+										ImageBuf.XformPalette.NCOLORS);
+				}
+			}
+			xf.close();
+		} else {
+			xforms = null;
+		}
 	}
 }

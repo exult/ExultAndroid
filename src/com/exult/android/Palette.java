@@ -68,7 +68,7 @@ public class Palette {
 		if (c != null)
 			win.show(c);
 	}
-	private void load(String fname0, String fname1, int index, String xfname, int xindex) {
+	public void load(String fname0, String fname1, int index, String xfname, int xindex) {
 		byte buf[] = EFileManager.instanceOf().retrieve(fname0, fname1, index);
 		setLoaded(buf, xfname, xindex);
 	}

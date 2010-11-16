@@ -385,7 +385,8 @@ public class ImageBuf {
 	 *	palette for its effect on all the other colors.
 	 */
 	public class XformPalette {
-		public byte colors[] = new byte[256];	// For transforming 8-bit colors.
+		public static final int NCOLORS = 256;
+		public byte colors[] = new byte[NCOLORS];	// For transforming 8-bit colors.
 		public byte get(int i)
 			{ return colors[i]; }
 		};

@@ -47,16 +47,6 @@ public class GameWindow {
 		skipAboveActor = 31;
 		
 	}
-	//	Prepare for game.
-	public void setupGame() {
-		// FOR NOW:  Unpack INITGAME if not already done.
-		if (EUtil.U7exists(EFile.IDENTITY) == null)
-			initGamedat(true);
-		getMap(0).init();
-		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
-		//+++++Find other maps here.
-		//+++++LOTS MORE to do.
-	}
 	/*
 	 *	Read any map.  (This is for "multimap" games, not U7.)
 	 */
@@ -74,6 +64,9 @@ public class GameWindow {
 	}
 	public GameMap getMap() {
 		return map;
+	}
+	public Palette getPal() {
+		return pal;
 	}
 	int getRenderSkipLift()		// Skip rendering here.
 	{ return skipAboveActor < skipLift ?
@@ -349,10 +342,25 @@ public class GameWindow {
 		paintDirty();
 		}
 	/*
+	 * Save/restore/startup.
+	 */
+	public void initFiles(boolean cycle) {
+		ShapeID.loadStatic();
+	}
+	//	Prepare for game.
+	public void setupGame() {
+		// FOR NOW:  Unpack INITGAME if not already done.
+		if (EUtil.U7exists(EFile.IDENTITY) == null)
+			initGamedat(true);
+		getMap(0).init();
+		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
+		//+++++Find other maps here.
+		//+++++LOTS MORE to do.
+	}
+	/*
 	 *	Create initial 'gamedat' directory if needed
 	 *
 	 */
-
 	boolean initGamedat(boolean create) {
 						// Create gamedat files 1st time.
 		if (create) {
@@ -404,7 +412,6 @@ public class GameWindow {
 	 *
 	 *	Output: Aborts if error.
 	 */
-
 	void restoreGamedat(String fname) throws IOException {
 		/*
 						// Check IDENTITY.
