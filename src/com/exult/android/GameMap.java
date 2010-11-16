@@ -320,26 +320,30 @@ public class GameMap extends GameSingletons {
 				continue;	// Only know these two types.
 			}
 			ireg.read(entbuf, 0, entlen);
-			int cx = (entbuf[0]&0xff) >> 4; // Get chunk indices within schunk.
-			int cy = (entbuf[1]&0xff) >> 4;
+			int cx = ((int)entbuf[0] >> 4)&0xf; // Get chunk indices within schunk.
+			int cy = ((int)entbuf[1] >> 4)&0xf;
 						// Get coord. #'s where shape goes.
 			int tilex, tiley;
 			if (container != null) {		// In container?  Get gump coords.
-				tilex = entbuf[0]&0xff;
-				tiley = entbuf[1]&0xff;
+				tilex = (int)entbuf[0]&0xff;
+				tiley = (int)entbuf[1]&0xff;
 			} else {
-			 	tilex = entbuf[0] & 0xf;
-				tiley = entbuf[1] & 0xf;
+			 	tilex = (int)entbuf[0] & 0xf;
+				tiley = (int)entbuf[1] & 0xf;
 			}
 			int shnum, frnum;	// Get shape #, frame #.
 			if (extended) {
 				shnum = ((int)entbuf[2]&0xff) + 256*((int)entbuf[3]&0xff);
-				frnum = entbuf[4]&0xff;
+				frnum = (int)entbuf[4]&0xff;
 				// So the rest is in the right place.
 				System.arraycopy(entbuf, 1, entbuf, 0, entlen);
 			} else {
 				shnum = ((int)entbuf[2]&0xff) + 256*((int)entbuf[3]&3);
 				frnum = ((int)entbuf[3]&0xff) >> 2;
+			}
+			if (shnum == 426 && frnum == 0 && container != null) {
+				System.out.println("Found it: " + tilex + ", " + tiley + ", cx = " +
+						cx + ", cy = " + cy + ", container is a " + container.getShapeNum());
 			}
 			ShapeInfo info = ShapeID.getInfo(shnum);
 			int lift, quality, type;
@@ -355,20 +359,20 @@ public class GameMap extends GameSingletons {
 				*/
 			}	
 						// An "egg"?
-			/*
 			if (info.getShapeClass() == ShapeInfo.hatchable) {
+				/*
 				boolean anim = info.isAnimated() || info.hasSfx();
 				lift = ((int)entbuf[9]&0xff) >> 4;
 				Egg_object *egg = Egg_object::create_egg(entry, entlen,
 								anim, shnum, frnum, tilex, tiley, lift);
 				getChunk(scx + cx, scy + cy).addEgg(egg);
 				last_obj = egg;
+				*/
 				continue;
-				}
-			else */ if (testlen == 6 || testlen == 10) {	// Simple entry?
+			} else if (testlen == 6 || testlen == 10) {	// Simple entry?
 				type = 0;
-				lift = (entbuf[4]&0xff) >> 4;
-				quality = entbuf[5]&0xff;
+				lift = ((int)entbuf[4] >> 4)&0xf;
+				quality = (int)entbuf[5]&0xff;
 				obj = IregGameObject.create(info, shnum, frnum,
 								tilex, tiley, lift);
 				is_egg = obj.isEgg();
@@ -417,9 +421,9 @@ public class GameMap extends GameSingletons {
 				}
 			*/
 			else if (testlen == 12) {	// Container?
-				type = (entbuf[4]&0xff) + 256*((int)entbuf[5]&0xff);
-				lift = (entbuf[9]&0xff) >> 4;
-				quality = entbuf[7]&0xff;
+				type = ((int)entbuf[4]&0xff) + 256*((int)entbuf[5]&0xff);
+				lift = ((int)entbuf[9] >> 4)&0xf;
+				quality = (int)entbuf[7]&0xff;
 				// ++++oflags =	// Override flags (I think).
 				// 	Get_quality_flags(entry[11]);
 				/* +++++++++++++
@@ -454,7 +458,7 @@ public class GameMap extends GameSingletons {
 				else */
 					obj = new ContainerGameObject(
 					    shnum, frnum, tilex, tiley, lift,
-								entbuf[10]&0xff);
+								(int)entbuf[10]&0xff);
 						// Read container's objects.
 				if (type != 0) {	// Don't pass along invisibility!
 					readIregObjects(ireg, scx, scy, obj, 
