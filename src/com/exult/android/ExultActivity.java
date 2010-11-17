@@ -13,6 +13,9 @@ import android.content.Context;
 public class ExultActivity extends Activity {
 	public VgaFile vgaFile;
 	public long GameTime;
+	public long nextTickTime;
+	public static int stdDelay = 200;	// Frame delay in msecs.
+	public static int ticks = 0;
 	public GameWindow gwin;
 	public AnimationSprite testSprite1;
 	public ImageBuf ibuf;
@@ -65,20 +68,27 @@ public class ExultActivity extends Activity {
     	private MySurfaceThread thread;
     	@Override
     	protected void onDraw(Canvas canvas){
-    		if (gwin.isDirty()) {
-    			gwin.paintDirty();
-    			// +++++++TESTING draw avatar
-    			ShapeFiles.SHAPES_VGA.getShape(721, 1).paint(gwin.getWin(), 184, 92);
-    		}
-    		if (!gwin.show(canvas, false)) {	
-    				// Blit mouse++++
+    		if (GameTime > nextTickTime ) {
+                nextTickTime = GameTime + stdDelay;
+                ticks +=1;
+                // I think we would execute timed activities here using new ticks.
+          
+                
+                if (gwin.isDirty()) {
+                	gwin.paintDirty();
+                	// +++++++TESTING draw avatar
+                	ShapeFiles.SHAPES_VGA.getShape(721, 1).paint(gwin.getWin(), 184, 92);
+                }
+                synchronized (gwin.getWin()) {
+                	if (ticks%3 == 0)
+                		rotatePalette();
+                	if (!gwin.show(canvas, false)) {	
+                		// Blit mouse++++
+                		gwin.getWin().blit(canvas);
+                	}
+                }
+    		} else
     			gwin.getWin().blit(canvas);
-    		}
-    		/*
-    		canvas.drawColor(Color.BLACK);
-    		testSprite1.Update(GameTime);
-    		testSprite1.draw(canvas);
-    		*/
     	}
     	public MySurfaceView(Context context){
     		super(context);
@@ -108,6 +118,17 @@ public class ExultActivity extends Activity {
     		pal0.set(Palette.PALETTE_DAY, -1, null);	
     		testSprite1.Init(721, 6);	// Avatar.
     		*/
+    	}
+    	private final void rotatePalette() {
+    		ImageBuf win = gwin.getWin();
+    		//System.out.println("rotatePalette: ticks = " + ticks);
+    			win.rotateColors(0xfc, 3);
+    			win.rotateColors(0xf8, 4);
+    			win.rotateColors(0xf4, 4);
+    			win.rotateColors(0xf0, 4);
+    			win.rotateColors(0xe8, 8);
+    			win.rotateColors(0xe0, 8);
+    			gwin.setPainted();
     	}
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {

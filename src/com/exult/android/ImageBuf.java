@@ -84,6 +84,15 @@ public class ImageBuf {
 			pal[i] = (0xff<<24)|(r<<16) | (g<<8) | b;	// Include alpha = 0xff.
 		}
 	}
+	public void rotateColors
+		(
+		int first,			// Palette index of 1st.
+		int num				// # in range.
+		) {
+		int last = pal[first + num - 1];	// Shift downward.
+		System.arraycopy(pal, first, pal, first + 1, num - 1);
+		pal[first] = last;
+	}
 	public byte [] getPixels() {
 		return pixels;
 	}
@@ -187,7 +196,14 @@ public class ImageBuf {
 			c.drawBitmap(rgba, 0, width, 0, 0, width, height, false, null);
 	}
 	public void show(Canvas c) {
-		show(c, 0, 0, width, height);
+		int cnt = width*height;
+		for (int i = 0; i < cnt; ++i) {
+			rgba[i] = pal[(int)pixels[i]&0xff];
+		}
+		if (toScale == null)
+			c.drawBitmap(rgba, 0, width, 0, 0, width, height, false, null);
+		else 
+			blit(c);
 	}
 	/*
 	 *	Copy an area of the image within itself.

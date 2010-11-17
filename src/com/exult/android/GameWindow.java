@@ -192,6 +192,7 @@ public class GameWindow {
 		}
 		*/
 		map.readMapData();		// Be sure objects are present.
+		synchronized(win) {
 		if (toleft) {			// Shift image to right.
 			win.copy(0, 0, w - EConst.c_tilesize, h, EConst.c_tilesize, 0);
 			paint(0, 0, EConst.c_tilesize, h);
@@ -202,6 +203,7 @@ public class GameWindow {
 			paint(w - EConst.c_tilesize, 0, EConst.c_tilesize, h);
 			dirty.x -= EConst.c_tilesize;	// Shift dirty rect.
 			
+		}
 		}
 		clipToWin(dirty);
 	}
@@ -224,6 +226,7 @@ public class GameWindow {
 			}
 		*/
 		map.readMapData();		// Be sure objects are present.
+		synchronized(win) {
 		if (up) {
 			win.copy(0, 0, w, h - EConst.c_tilesize, 0, EConst.c_tilesize);
 			paint(0, 0, w, EConst.c_tilesize);
@@ -232,6 +235,7 @@ public class GameWindow {
 			win.copy(0, EConst.c_tilesize, w, h - EConst.c_tilesize, 0, 0);
 			paint(0, h - EConst.c_tilesize, w, EConst.c_tilesize);
 			dirty.y -= EConst.c_tilesize;		// Shift dirty rect.
+		}
 		}
 		clipToWin(dirty);
 	}
