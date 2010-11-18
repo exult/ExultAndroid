@@ -11,7 +11,9 @@ public class IregGameObject extends GameObject {
 	public IregGameObject(int shapenum, int framenum, int tilex, int tiley, int lft) {
 		super(shapenum, framenum, tilex, tiley, lft);
 	}
-	
+	public final void setFlags(int f) {
+		flags = f;
+	}
 	public static IregGameObject create
 		(
 		ShapeInfo info,		// Info. about shape.

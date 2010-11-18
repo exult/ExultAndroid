@@ -307,11 +307,8 @@ public class GameMap extends GameSingletons {
 				extended = true;
 				entlen = ireg.read();
 			}
-			/*
 						// Get copy of flags.
-			long oflags = flags & ~(1<<Obj_flags::is_temporary);
-			*/
-			long oflags = 0;	//+++++++FINISH
+			long oflags = flags & ~(1<<GameObject.is_temporary);
 			int testlen = entlen - (extended?1:0);
 			if (testlen != 6 && testlen != 10 && testlen != 12 && 
 						testlen != 13 && testlen != 14 && testlen != 18) {
@@ -346,23 +343,21 @@ public class GameMap extends GameSingletons {
 						cx + ", cy = " + cy + ", container is a " + container.getShapeNum());
 			}
 			ShapeInfo info = ShapeID.getInfo(shnum);
-			int lift, quality, type;
+			int lift, quality = 0, type;
 			IregGameObject obj = null;
 			boolean is_egg = false;		// Fields are eggs.
 
 			// Has flag byte(s)
 			if (testlen == 10) {
 				// Temporary
-				/* +++++++++++
-				if (entry[6] & 1) 
-					oflags |= 1<<Obj_flags::is_temporary;
-				*/
+				if ((entbuf[6] & 1) != 0) 
+					oflags |= 1<<GameObject.is_temporary;
 			}	
 						// An "egg"?
 			if (info.getShapeClass() == ShapeInfo.hatchable) {
-				/*
 				boolean anim = info.isAnimated() || info.hasSfx();
 				lift = ((int)entbuf[9]&0xff) >> 4;
+				/*
 				Egg_object *egg = Egg_object::create_egg(entry, entlen,
 								anim, shnum, frnum, tilex, tiley, lift);
 				getChunk(scx + cx, scy + cy).addEgg(egg);
@@ -380,12 +375,11 @@ public class GameMap extends GameSingletons {
 						// Wierd use of flag:
 				if (info.hasQuantity()) {
 					if ((quality&0x80) == 0)
-						;//+++++ oflags &= 
-						// 	~(1<<Obj_flags::okay_to_take);
+						oflags &= ~(1<<GameObject.okay_to_take);
 					else
 						quality &= 0x7f;
 				} else if (info.hasQualityFlags()) {	// Use those flags instead of deflt.
-					//++++++ oflags = Get_quality_flags(quality);
+					oflags = getQualityFlags((byte)quality);
 					quality = 0;
 				}
 			}
@@ -424,8 +418,8 @@ public class GameMap extends GameSingletons {
 				type = ((int)entbuf[4]&0xff) + 256*((int)entbuf[5]&0xff);
 				lift = ((int)entbuf[9] >> 4)&0xf;
 				quality = (int)entbuf[7]&0xff;
-				// ++++oflags =	// Override flags (I think).
-				// 	Get_quality_flags(entry[11]);
+				oflags =	// Override flags (I think).
+				 	getQualityFlags(entbuf[11]);
 				/* +++++++++++++
 				if (info.getShapeClass() == Shape_info::virtue_stone)
 					{	// Virtue stone?
@@ -462,7 +456,7 @@ public class GameMap extends GameSingletons {
 						// Read container's objects.
 				if (type != 0) {	// Don't pass along invisibility!
 					readIregObjects(ireg, scx, scy, obj, 
-						oflags); //++++  & ~(1<<Obj_flags::invisible) );
+						oflags & ~(1<<GameObject.invisible) );
 					obj.elementsRead();
 				}
 			}
@@ -482,13 +476,13 @@ public class GameMap extends GameSingletons {
 					shnum, frnum, tilex, tiley, lift,
 					&circles[0], bmark);
 				}
-			
-			obj->set_quality(quality);
-			obj->set_flags(oflags);
 			*/
+			
 			last_obj = obj;		// Save as last read.
 			if (obj == null)
 				continue;		// Can this happen?
+			obj.setQuality(quality);
+			obj.setFlags((int)oflags);
 						// Add, but skip volume check.
 			if (container != null) {
 				if (index_id != -1 && 
@@ -507,6 +501,12 @@ public class GameMap extends GameSingletons {
 			else */
 				chunk.add(obj);
 		}
+	}
+	private static final long getQualityFlags(
+			byte qualbyte		// Quality byte containing flags.
+		) {
+		return 	((qualbyte&1) << GameObject.invisible) |
+				(((qualbyte>>3)&1) << GameObject.okay_to_take);
 	}
 	/*
 	 *	Read in the objects for a superchunk from one of the "u7ireg" files.

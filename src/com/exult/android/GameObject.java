@@ -4,6 +4,48 @@ import android.graphics.Point;
 import java.lang.ref.WeakReference;
 
 public abstract class GameObject extends ShapeID {
+	//	Flags
+	public static final int
+	invisible = 0,
+	asleep = 1,
+	charmed = 2,
+	cursed = 3,
+	dead = 4,
+	in_party = 6,		// Guess, appears to be correct
+	paralyzed = 7,
+	poisoned = 8,
+	protection = 9,
+	on_moving_barge = 10,	// ??Guessing.
+	okay_to_take = 11,	// Okay to take??
+	might = 12,		// Double strength, dext, intel.
+	immunities = 13,		// Test flag in Monster_info.
+	cant_die = 14,		// Test flag in Monster_info.
+	dancing = 15,		// ??Not sure.
+	dont_move = 16,			// User can't move.
+	bg_dont_render = 16,	// In BG: also completely invisible.
+	si_on_moving_barge = 17,// SI's version of 10?
+	is_temporary = 18,	// Is temporary
+	okay_to_land = 21,	// Used for flying-carpet.
+	bg_dont_move = 22,		// Exult-only: BG version of dont_move flag
+	dont_render = 22,	// Exult-only: Non-BG version of bg_dont_render flag
+	in_dungeon = 23,	// Pretty sure.  If set, you won't
+				//   be accused of stealing food.
+	confused = 25,		// ??Guessing.
+	in_motion = 26,		// ??Guessing (cart, boat)??
+	met = 28,			// Has the npc been met
+	tournament = 29,	// Call usecode (eventid=7)
+				// Originally SI-only, but allowed for BG in Exult
+	si_zombie = 30,		// Used for sick Neyobi.
+	no_spell_casting = 31,	// Known (cheat screen).
+	// Flags > 31
+	polymorph = 32,		// SI.  Pretty sure about this.
+	tattooed = 33,			// Guess (SI).
+	read = 34,			// Guess (SI).
+	petra = 35,			// Guess
+	fly = 36,			// Known (cheat screen). Get/set/clear fly type flag.
+	freeze = 37,		// SI.  Pretty sure.
+	naked = 38;			// Exult. Makes the avatar naked given its skin.
+	
 	protected MapChunk chunk;	// Chunk we're in, or NULL.
 	protected byte tx, ty;		// (X,Y) of shape within chunk, or if
 								//   in a container, coords. within
@@ -36,6 +78,12 @@ public abstract class GameObject extends ShapeID {
 	}
 	public final int getTileY() {
 		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
+	}
+	public final int getQuality() {
+		return quality;
+	}
+	public final void setQuality(int q) {
+		quality = (short) q;
 	}
 	// Set shape coord. in chunk/gump.
 	public final void setShapePos(int shapex, int shapey)
