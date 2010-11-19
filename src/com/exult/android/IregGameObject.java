@@ -14,6 +14,13 @@ public class IregGameObject extends GameObject {
 	public final void setFlags(int f) {
 		flags = f;
 	}
+	public boolean getFlag(int flag) {
+		if (flag >= 0 && flag < 32)
+			return (flags & (1 << flag)) != 0;
+		else if (flag >= 32 && flag < 64)
+			return (flags2 & (1 << (flag-32))) != 0;
+		return false;
+	}
 	public static IregGameObject create
 		(
 		ShapeInfo info,		// Info. about shape.

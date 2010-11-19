@@ -272,7 +272,7 @@ public class GameMap extends GameSingletons {
 	 *	game chunk, or added to their container.
 	 */
 	private byte entbuf[] = new byte[20];	// For reading entries.
-	private void readIregObjects
+	public void readIregObjects
 		(
 		InputStream ireg,			// File to read from.
 		int scx, int scy,			// Abs. chunk coords. of superchunk.
@@ -572,8 +572,12 @@ public class GameMap extends GameSingletons {
 		return c;
 	}
 	public MapChunk getChunk(int cx, int cy) {
-		MapChunk list = objects[cy*EConst.c_num_chunks + cx];
-	return list != null ? list : createChunk(cx, cy);
+		if (cx >= 0 && cx < EConst.c_num_chunks && 
+			cy >= 0 && cy < EConst.c_num_chunks) {
+			MapChunk list = objects[cy*EConst.c_num_chunks + cx];
+			return list != null ? list : createChunk(cx, cy);
+		} else
+			return null;
 	}
 	
 }

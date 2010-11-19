@@ -72,6 +72,9 @@ public abstract class GameObject extends ShapeID {
 		{ return ty; }
 	public final int getLift()
 		{ return lift; }
+	public final void setLift(int l) {
+		lift = (byte)l;
+	}
 	//	Get absolute tile coords.
 	public final int getTileX() {
 		return chunk != null ? chunk.getCx()*EConst.c_tiles_per_chunk + tx : 255*EConst.c_tiles_per_chunk;
