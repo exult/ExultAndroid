@@ -14,7 +14,7 @@ public class Rectangle {
 	public final void set(Rectangle r) {
 		x = r.x; y = r.y; w = r.w; h = r.h;
 	}
-	public void enlarge(int left, int right, int top, int bottom, int maxw, int maxh) {
+	public final void enlarge(int left, int right, int top, int bottom, int maxw, int maxh) {
 		x -= left; w += left+right;
 		y -= top; h += top+bottom;
 
@@ -23,9 +23,13 @@ public class Rectangle {
 
 		if (x + w > maxw) w = maxw - x;
 		if (y + h > maxh) h = maxh - y;
-	}				// Does it intersect another?
+	}
+	public final void enlarge(int delta) {
+		x -= delta; y -= delta; w += 2*delta; h += 2*delta;
+	}
+	// Does it intersect another?
 	public boolean intersects(Rectangle r2)	{
-	return (x >= r2.x + r2.w ? false : r2.x >= x + w ? false :
+		return (x >= r2.x + r2.w ? false : r2.x >= x + w ? false :
 		y >= r2.y + r2.h ? false : r2.y >= y + h ? false : true);
 	}
 	//	Intersect another with this.
@@ -36,5 +40,13 @@ public class Rectangle {
 		y = y >= r2.y ? y : r2.y;
 		w = (xend <= xend2 ? xend : xend2) - x;
 		h = (yend <= yend2 ? yend : yend2) - y;
+	}
+	public final void add(Rectangle r2) {
+		int xend = x + w, yend = y + h;
+		int xend2 = r2.x + r2.w, yend2 = r2.y + r2.h;
+		x = x < r2.x ? x : r2.x;
+		y = y < r2.y ? y : r2.y;
+		w = (xend > xend2 ? xend : xend2) - x;
+		h = (yend > yend2 ? yend : yend2) - y;
 	}
 }

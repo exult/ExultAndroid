@@ -16,22 +16,25 @@ public class MapChunk extends GameSingletons {
 		terrain = null;
 		objects = new ObjectList();
 	}
-	public int getCx() {
+	public final int getCx() {
 		return cx;
 	}
-	public int getCy() {
+	public final int getCy() {
 		return cy;
 	}
-	public ObjectList getObjects() {
+	public final GameMap getMap() {
+		return map;
+	}
+	public final ObjectList getObjects() {
 		return objects;
 	}
-	public ObjectList.FlatObjectIterator getFlatObjectIterator() {
+	public final ObjectList.FlatObjectIterator getFlatObjectIterator() {
 		return objects.getFlatIterator(firstNonflat);
 	}
-	public ObjectList.NonflatObjectIterator getNonflatObjectIterator() {
+	public final ObjectList.NonflatObjectIterator getNonflatObjectIterator() {
 		return objects.getNonflatIterator(firstNonflat);
 	}
-	public void setTerrain(ChunkTerrain ter) {
+	public final void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {
 			terrain.removeClient();
 			// ++++++++REMOVE OBJS.?
@@ -147,6 +150,9 @@ public class MapChunk extends GameSingletons {
 			roof = 1;
 		}
 	*/
+	}
+	public void remove(GameObject obj) {
+		//+++++++FINISH
 	}
 	public ImageBuf getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;

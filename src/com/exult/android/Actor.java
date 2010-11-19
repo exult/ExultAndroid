@@ -135,6 +135,14 @@ public class Actor extends ContainerGameObject {
 	public Actor(int shapenum, int framenum, int tilex, int tiley, int lft) {
 		super(shapenum, framenum, tilex, tiley, lft, 0);
 	}
+	public Actor(String nm, int shapenum, int num, int uc) {
+		super(shapenum, 0, 0, 0, 0, 0);
+		//+++++++++++++++FINISH
+	}
+	public Actor(String nm, int shapenum) {
+		super(shapenum, 0, 0, 0, 0, 0);
+		//+++++++++++FINISH
+	}
 	/*
 	 *	Initialize frames, properties and spots.
 	 */
@@ -176,6 +184,9 @@ public class Actor extends ContainerGameObject {
 	public boolean isDying() {		// Dead when health below -1/3 str.
 		return properties[health] < 
 				-(properties[strength]/3); 
+	}
+	public final boolean isDead() {
+		return (flags&(1<<GameObject.dead)) != 0; 
 	}
 	public int get_ident() { return ident; }
 	public void set_ident(int id) { ident = (byte)id; }
@@ -550,19 +561,17 @@ public class Actor extends ContainerGameObject {
 							// Get tile #'s.
 		int tilex = locx & 0xf;
 		int tiley = locy & 0xf;
-		/*+++++++++++FINISH
-		set_shape_pos(tilex, tiley);
+		setShapePos(tilex, tiley);
 		MapChunk olist = npcmap.getChunk(scx + cx, scy + cy);
-		set_invalid();			// Not in world yet.
-		if (olist != null && !is_dead() &&	// Valid & alive?  Put into chunk list.
+		setInvalid();			// Not in world yet.
+		if (olist != null && !isDead() &&	// Valid & alive?  Put into chunk list.
 		    !unused) {
 			move((scx + cx)*EConst.c_tiles_per_chunk + tilex,
 			     (scy + cy)*EConst.c_tiles_per_chunk + tiley, 
 					getLift(), map_num);
-			if (this == gwin->get_main_actor())
+			if (this == gwin.getMainActor())
 				gwin.setMap(map_num);
 		}
-		*/
 		/* +++++++++++FINISH
 		// We do this here because we need the NPC's final shape.
 		if (health_val <= 0 && !unused) {

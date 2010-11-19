@@ -2,6 +2,7 @@ package com.exult.android;
 import java.util.Vector;
 import java.io.RandomAccessFile;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import android.graphics.Point;
 
@@ -13,14 +14,21 @@ public class GameWindow {
 	private GameMap map;			// Current map.
 	private GameRender render;
 	private Rectangle paintBox;		// Temp used for painting.
+	private Rectangle tempDirty;	// Temp for addDirty.
 	private ImageBuf win;
 	private Palette pal;
+	// Gameplay objects.
+	private Actor mainActor;
+	private Actor cameraActor;		// What to center view on.
+	Vector<Actor> npcs;
+	// Rendering
 	private int scrolltx, scrollty;		// Top-left tile of screen.
 	private Rectangle scrollBounds;	// Walking outside this scrolls.
 	private boolean painted;			// We updated imagebuf.
 	private Rectangle dirty;			// What to display.
 	//	Game state values.
 	private int skipAboveActor;		// Level above actor to skip rendering.
+	private int numNpcs1;			// Number of type1 NPC's.
 	/*
 	 *	Public flags and gameplay options:
 	 */
@@ -42,6 +50,7 @@ public class GameWindow {
 		dirty = new Rectangle();
 		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
+		tempDirty = new Rectangle();
 		GameSingletons.init(this);
 		skipLift = 16;
 		skipAboveActor = 31;
@@ -65,8 +74,19 @@ public class GameWindow {
 	public GameMap getMap() {
 		return map;
 	}
+	public void setMap(int num) {
+		map = getMap(num);
+		/*
+		if (!map)
+			abort("Map #d doesn't exist", num);
+		*/
+		GameSingletons.gmap = map;
+	}
 	public Palette getPal() {
 		return pal;
+	}
+	public Actor getMainActor() {
+		return mainActor;
 	}
 	int getRenderSkipLift()		// Skip rendering here.
 	{ return skipAboveActor < skipLift ?
@@ -272,6 +292,24 @@ public class GameWindow {
 		{ dirty.w = 0; }
 	public boolean isDirty()
 		{ return dirty.w > 0; }
+	public void addDirty(Rectangle r) {	// Add rectangle to dirty area.
+		if (dirty.w > 0)
+			dirty.add(r);
+		else
+			dirty.set(r);
+	}
+				// Add dirty rect. for obj. Rets. false
+				//   if not on screen.
+	public boolean addDirty(GameObject obj) {
+		getShapeRect(tempDirty, obj);
+		tempDirty.enlarge(1+EConst.c_tilesize/2);
+		clipToWin(tempDirty);
+		if (tempDirty.w > 0 && tempDirty.h > 0) {
+			addDirty(tempDirty);
+			return true;
+		} else
+			return false;
+	}
 	public void paint(int x, int y, int w, int h) {
 		// if (!win.ready()) return;
 		int gx = x, gy = y, gw = w, gh = h;
@@ -360,6 +398,73 @@ public class GameWindow {
 		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
 		//+++++Find other maps here.
 		//+++++LOTS MORE to do.
+	}
+	public void readNpcs() throws IOException {
+		npcs.setSize(1);			// Create main actor.
+		cameraActor = mainActor = new MainActor("", 0);
+		npcs.set(0, mainActor);
+		InputStream nfile = EUtil.U7openStream(EFile.NPC_DAT);
+		int numNpcs;
+		boolean fix_unused = false;	// Get set for old savegames.
+		numNpcs1 = EUtil.Read2(nfile);	// Get counts.
+		numNpcs = numNpcs1 + EUtil.Read2(nfile);
+		mainActor.read(nfile, 0, false);
+		npcs.setSize(numNpcs);
+		// ++++++bodies.resize(num_npcs);
+		int i;
+		centerView(mainActor.getTileX(), mainActor.getTileY());
+		for (i = 1; i < numNpcs; i++) {	// Create the rest.
+			Actor actor = new NpcActor("", 0);
+			npcs.set(i, actor);
+			actor.read(nfile, i, i < numNpcs1);
+			/* ++++++++FINISH
+			if (actor.isUnused()) {		// Not part of the game.
+				actor.removeThis(1);
+				actor.set_schedule_type(Schedule::wait);
+			} else
+				actor.restore_schedule();
+			CYCLE_RED_PLASMA();
+			*/
+		}
+		nfile.close();
+		// +++++ mainActor.setActorShape();
+		/* ++++++++++FINISH
+		try
+		{
+			U7open(nfile_stream, MONSNPCS);	// Monsters.
+			// (Won't exist the first time; in this case U7open throws
+			int cnt = nfile.read2();
+			(void)nfile.read1();// Read 1 ahead to test.
+			int okay = nfile_stream.good();
+			nfile.skip(-1);
+			while (okay && cnt--)
+			{
+						// Read ahead to get shape.
+				nfile.skip(2);
+				unsigned short shnum = nfile.read2()&0x3ff;
+				okay = nfile_stream.good();
+				nfile.skip(-4);
+				ShapeID sid(shnum, 0);
+				if (!okay || sid.get_num_frames() < 16)
+					break;	// Watch for corrupted file.
+				Monster_actor *act = Monster_actor::create(shnum);
+				act->read(&nfile, -1, false, fix_unused);
+				act->restore_schedule();
+				CYCLE_RED_PLASMA();
+			}
+		}
+		catch(exult_exception &) {
+			Monster_actor::give_up();
+		}
+		if (moving_barge)		// Gather all NPC's on barge.
+		{
+			Barge_object *b = moving_barge;
+			moving_barge = 0;
+			set_moving_barge(b);
+		}
+		read_schedules();		// Now get their schedules.
+		*/
+		centerView(mainActor.getTileX(), mainActor.getTileY());
 	}
 	/*
 	 *	Create initial 'gamedat' directory if needed

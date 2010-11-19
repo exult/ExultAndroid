@@ -91,11 +91,36 @@ public abstract class GameObject extends ShapeID {
 	// Set shape coord. in chunk/gump.
 	public final void setShapePos(int shapex, int shapey)
 		{ tx = (byte)shapex; ty = (byte)shapey; }
+	public final void setInvalid() {
+		chunk = null;
+	}
 	public final MapChunk getChunk() {
 		return chunk;
 	}
 	public final void setChunk(MapChunk c) {
 		chunk = c;
+	}
+	public final GameMap getMap() {
+		return chunk != null ? chunk.getMap() : null;
+	}
+	public void move(int newtx, int newty, int newlift, int newmap) {
+					// Figure new chunk.
+		int newcx = newtx/EConst.c_tiles_per_chunk, newcy = newty/EConst.c_tiles_per_chunk;
+		GameMap objmap = newmap >= 0 ? gwin.getMap(newmap) : getMap();
+		if (objmap == null) objmap = gmap;
+		MapChunk newchunk = objmap.getChunk(newcx, newcy);
+		if (newchunk == null)
+			return;			// Bad loc.
+		MapChunk oldchunk = chunk;	// Remove from old.
+		if (oldchunk != null) {
+			gwin.addDirty(this);	// Want to repaint old area.
+			oldchunk.remove(this);
+		}
+		setLift(newlift);		// Set new values.
+		tx = (byte)(newtx%EConst.c_tiles_per_chunk);
+		ty = (byte)(newty%EConst.c_tiles_per_chunk);
+		newchunk.add(this);		// Updates 'chunk'.
+		gwin.addDirty(this);		// And repaint new area.
 	}
 	public final HashSet<GameObject> getDependencies() {
 		return dependencies;
