@@ -59,7 +59,6 @@ public abstract class GameObject extends ShapeID {
 	private static byte rotate[] = new byte[8];	// For getting rotated frame #.
 	protected Point paintLoc = new Point();	// Temp for getting coords.
 	public long renderSeq;		// Render sequence #.
-	private WeakReference ordInfo;
 	
 	public GameObject(int shapenum, int framenum, int tilex, 
 			int tiley, int lft) {
@@ -188,23 +187,23 @@ public abstract class GameObject extends ShapeID {
 			if (zs == 0)		// Flat?
 				zbot--;
 		}
-		public OrderingInfo(GameObject obj, Rectangle a) {
-			init(obj, a); 
+		public OrderingInfo() {
 		}
 	}
+	private static OrderingInfo ordInfo1, ordInfo2;
 	private static Rectangle ordArea1 = new Rectangle(), ordArea2 = new Rectangle();
 	// Use this for object #1.
-	public OrderingInfo getOrderingInfo() {
-		return getOrderingInfo(gwin.getShapeRect(ordArea1, this));
+	public OrderingInfo getOrderingInfo1() {
+		if (ordInfo1 == null)
+			ordInfo1 = new OrderingInfo();
+		ordInfo1.init(this, gwin.getShapeRect(ordArea1, this));
+		return ordInfo1;
 	}
-	public OrderingInfo getOrderingInfo(Rectangle a) {
-		OrderingInfo inf;
-		if (ordInfo == null || (inf = (OrderingInfo) ordInfo.get()) == null) {
-			ordInfo = new WeakReference(inf = new OrderingInfo(this, a));
-		} else {
-			inf.init(this, a);
-		}
-		return inf;
+	public OrderingInfo getOrderingInfo2(Rectangle a) {
+		if (ordInfo2 == null)
+			ordInfo2 = new OrderingInfo();
+		ordInfo2.init(this, a);
+		return ordInfo2;
 	}
 	/*
 	 *	Compare ranges along a given dimension.
@@ -252,7 +251,7 @@ public abstract class GameObject extends ShapeID {
 		Rectangle r2 = gwin.getShapeRect(ordArea2, obj2);
 		if (!inf1.area.intersects(r2))
 			return (0);		// No overlap on screen.
-		GameObject.OrderingInfo inf2 = obj2.getOrderingInfo(r2);
+		GameObject.OrderingInfo inf2 = obj2.getOrderingInfo2(r2);
 		int xcmp, ycmp, zcmp;		// Comparisons for a given dimension:
 						//   -1 if o1<o2, 0 if o1==o2,
 						//    1 if o1>o2.

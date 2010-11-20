@@ -100,7 +100,7 @@ public class MapChunk extends GameSingletons {
 
 	public void add(GameObject newobj) {
 		newobj.setChunk(this);
-		GameObject.OrderingInfo ord = newobj.getOrderingInfo();
+		GameObject.OrderingInfo ord = newobj.getOrderingInfo1();
 		if (firstNonflat != null)
 			objects.insertBefore(newobj, firstNonflat);
 		else
