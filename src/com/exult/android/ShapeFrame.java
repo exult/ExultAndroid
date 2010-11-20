@@ -47,8 +47,8 @@ public class ShapeFrame {
 						// Get length of scan line.
 			boolean encoded = (scanlen&1) != 0;// Is it encoded?
 			scanlen = scanlen>>1;
-			int scanx = EUtil.Read2(data, in);
-			int scany = EUtil.Read2(data, in + 2);
+			int scanx = (short)EUtil.Read2(data, in);
+			int scany = (short)EUtil.Read2(data, in + 2);
 			in += 4;
 			if (!encoded) {		// Raw data?
 				ibuf.copy8(data, in, 1, scanlen,
@@ -182,18 +182,21 @@ public class ShapeFrame {
 	/*
 	 *	Skip transparent pixels.
 	 *
-	 *	Output:	Index of first non-transparent pixel (w if no more).
+	 *	Output:	# skipped, or w-x if not more non-transparent
 	 */
-	private static int Skip_transparent
+	private static int SkipTransparent
 		(
 		byte pixels[],		// 8-bit pixel scan line.
 		int ind,
 		int x,				// X-coord. of pixel to start with.
 		int w				// Remaining width of pixels.
 		) {
-		while (x < w && pixels[ind + x] == 255)
+		int deltax = 0;
+		while (x < w && ((int)pixels[ind + x]&0xff) == 255) {
 			x++;
-		return (x);
+			deltax++;
+		}
+		return (deltax);
 	}
 	/*
 	 *	Split a line of pixels into runs, where a run
@@ -228,7 +231,7 @@ public class ShapeFrame {
 				ind++;
 				run += 2;	// So we don't have to shift.
 			}
-			while (x < w && pixels[ind] != 255 &&
+			while (x < w && ((int)pixels[ind]&0xff) != 255 &&
 					(x == w - 1 || pixels[ind] != pixels[ind + 1]));
 					// Store run length.
 			runs[runcnt++] = (short) run;
@@ -254,13 +257,16 @@ public class ShapeFrame {
 		int out = 0;	// Index into buf.
 		int ind = 0;
 		int newx;			// Gets new x at end of a scan line.
-		for (int y = 0; y < h; y++)	// Go through rows.
-			for (int x = Skip_transparent(pixels, ind, 0, w); x < w; x = Skip_transparent(pixels, ind, newx, w))
-				{
-				short runs[] = new short[200];// Get runs.
-				ind += x;
+		int deltax;
+		short runs[] = new short[200];
+		for (int y = 0; y < h; y++) {	// Go through rows.
+			int x = 0;
+			if (ind != y*w)
+				System.out.println("Ind = " + ind + " but should be " + y*w);
+			for (deltax = x = SkipTransparent(pixels, ind, x, w); x < w; 
+										deltax = SkipTransparent(pixels, ind, newx, w), x = newx + deltax) {
+				ind += deltax;
 				newx = Find_runs(runs, pixels, ind, x, w);
-				ind += newx;
 						// Just 1 non-repeated run?
 				if (runs[1] == 0 && (runs[0]&1) == 0)
 					{
@@ -289,20 +295,21 @@ public class ShapeFrame {
 							int c = len > 127
 								? 127 : len;
 							buf[out++] = (byte)((c<<1)|1);
-							buf[out++] = pixels[ind++];
+							buf[out++] = pixels[ind];
 							ind += c;
 							len -= c;
 						}
 					} else while (len > 0) {
 						int c = len > 127 ? 127 : len;
 						buf[out++] = (byte)(c<<1);
-						EUtil.Memcpy(buf, out, pixels, ind, c);
+						System.arraycopy(pixels, ind, buf, out, c);
 						out += c;
 						ind += c;
 						len -= c;
-						}
 					}
 				}
+			}
+		}
 		out = EUtil.Write2(buf, out, 0);			// End with 0 length.
 		datalen = out;		// Create buffer of correct size.
 		byte data[] = new byte[datalen];

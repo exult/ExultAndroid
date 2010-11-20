@@ -386,6 +386,37 @@ public class GameWindow {
 	/*
 	 * Save/restore/startup.
 	 */
+	public void initActors() throws IOException {
+		if (mainActor != null) {		// Already done?
+			/* FINISH++++++++
+			Game::clear_avname();
+			Game::clear_avsex();
+			Game::clear_avskin();
+			*/
+			return;
+		}
+		readNpcs();			// Read in all U7 NPC's.
+
+		// Was a name, sex or skincolor set in Game
+		// this bascially detects 
+		boolean changed = false;
+
+		/* ++++++++FINISH
+		if (Game::get_avsex() == 0 || Game::get_avsex() == 1 || Game::get_avname()
+				|| (Game::get_avskin() >= 0 && Game::get_avskin() <= 2))
+			changed = true;
+
+		Game::clear_avname();
+		Game::clear_avsex();
+		Game::clear_avskin();
+
+		// Update gamedat if there was a change
+		if (changed) {
+			schedule_npcs(6,7,false);
+			write_npcs();
+		}
+		*/
+	}
 	public void initFiles(boolean cycle) {
 		ShapeID.loadStatic();
 	}
@@ -396,13 +427,80 @@ public class GameWindow {
 			initGamedat(true);
 		getMap(0).init();
 		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
-		//+++++Find other maps here.
-		//+++++LOTS MORE to do.
+		// Init. current 'tick'.
+		// Game::set_ticks(SDL_GetTicks());
+		try {
+			initActors();		// Set up actors if not already done.
+								// This also sets up initial 
+								// schedules and positions.
+		} catch (IOException e) {
+			System.out.println("FAILED to read NPCs!");
+		}
+		// CYCLE_RED_PLASMA();
+		/* 
+		Notebook_gump::initialize();		// Read in journal.
+		usecode->read();		// Read the usecode flags
+		CYCLE_RED_PLASMA();
+
+		if (Game::get_game_type() == BLACK_GATE)
+		{
+			string yn;		// Override from config. file.
+						// Skip intro. scene?
+			config->value("config/gameplay/skip_intro", yn, "no");
+			if (yn == "yes")
+				usecode->set_global_flag(
+					Usecode_machine::did_first_scene, 1);
+
+						// Should Avatar be visible?
+			if (usecode->get_global_flag(Usecode_machine::did_first_scene))
+				main_actor->clear_flag(Obj_flags::bg_dont_render);
+			else
+				main_actor->set_flag(Obj_flags::bg_dont_render);
+		}
+
+		CYCLE_RED_PLASMA();
+
+		// Fade out & clear screen before palette change
+		pal->fade_out(c_fade_out_time);
+		clear_screen(true);
+	#ifdef RED_PLASMA
+		load_palette_timer = 0;
+	#endif
+
+		// note: we had to stop the plasma here already, because init_readied
+		// and activate_eggs may update the screen through usecode functions
+		// (Helm of Light, for example)
+		Actor party[] = new Actor[9];
+		int cnt = getParty(party, 1);	// Get entire party.
+		for (int i = 0; i < cnt; i++) {	// Init. rings.
+			party[i].initReadied();
+		}
+		time_stopped = 0;
+	//+++++The below wasn't prev. done by ::read(), so maybe it should be
+	//+++++controlled by a 'first-time' flag.
+						// Want to activate first egg.
+		MapChunk olist = mainActor.getChunk();
+		olist.setupCache();
+
+		int tx = mainActor.getTileX(), ty = mainActor.getTileY(), tz = mainActor.getLift();
+		// Do them immediately.
+		olist.activateEggs(main_actor, tx, ty, tz, -1,-1,true);
+		// Force entire repaint.
+		setAllDirty();
+		painted = true;			// Main loop uses this.
+		gump_man->close_all_gumps(true);		// Kill gumps.
+		Face_stats::load_config(config);
+
+		// Set palette for time-of-day.
+		clock->reset();
+		clock->set_palette();
+		pal->fade(6, 1, -1);		// Fade back in.
+		*/
 	}
 	public void readNpcs() throws IOException {
-		npcs.setSize(1);			// Create main actor.
+		npcs = new Vector<Actor>(1);			// Create main actor.
 		cameraActor = mainActor = new MainActor("", 0);
-		npcs.set(0, mainActor);
+		npcs.add(mainActor);
 		InputStream nfile = EUtil.U7openStream(EFile.NPC_DAT);
 		int numNpcs;
 		boolean fix_unused = false;	// Get set for old savegames.

@@ -213,18 +213,18 @@ public class Actor extends ContainerGameObject {
 		// This is used to get around parts of the files that we don't know
 		// what the uses are. 'fix_first' is used fix issues in the originals
 		// files that cause problems for the extra info we save.
-		boolean fix_first = false; // +++++++ Game::is_new_game();
+		boolean fix_first = true; // +++++++ Game::is_new_game();
 							
 		init();				// Clear rest of stuff.
 		int locx = nfile.read()&0xff;	// Get chunk/tile coords.
 		int locy = nfile.read()&0xff;
 							// Read & set shape #, frame #.
 		int shnum = EUtil.Read2(nfile)&0xffff;
-
-		if (num == 0 /* ++++ && Game::get_game_type() != BLACK_GATE && 
-								(shnum & 0x3ff) < 12 */)
+		/* +++++
+		if (num == 0 && Game::get_game_type() != BLACK_GATE && 
+								(shnum & 0x3ff) < 12)
 			setShape((shnum & 0x3ff) | 0x400);
-		else
+		else */
 			setShape(shnum & 0x3ff);
 
 		setFrame(shnum >> 10);
@@ -263,7 +263,7 @@ public class Actor extends ContainerGameObject {
 			usecode = -1;		// Let's try this.
 							// Guessing:  !!  (Want to get signed.)
 		int health_val = nfile.read();
-		setProperty(health, health_val);
+		setProperty(Actor.health, health_val);
 		nfile.skip(3);	// Skip 3 bytes.
 		int iflag2 = EUtil.Read2(nfile);	// The 'used-in-game' flag.
 		/* ++++++NEEDED?
@@ -309,7 +309,7 @@ public class Actor extends ContainerGameObject {
 		int strength_val = nfile.read();
 
 		if (true /* +++++ Game::get_game_type() == BLACK_GATE */) {
-			setProperty(strength, strength_val & 0x3F);
+			setProperty(Actor.strength, strength_val & 0x3F);
 
 			if (num == 0) {
 				if (!extended_skin) {	// We will do it later for extended skins.
@@ -322,7 +322,7 @@ public class Actor extends ContainerGameObject {
 			} else 
 					setSkinColor (-1);
 		} else {
-			setProperty(strength, strength_val & 0x1F);	
+			setProperty(Actor.strength, strength_val & 0x1F);	
 			if (num == 0) {
 				if (!extended_skin) {	// We will do it later for extended skins.
 				/* ++++++FINISH
@@ -341,11 +341,11 @@ public class Actor extends ContainerGameObject {
 		    npc_num > 0)		// DON'T do this for Avatar!
 			setFlag(GameObject.dead);	// Fixes older savegames.
 		// Dexterity
-		setProperty(dexterity, nfile.read());
+		setProperty(Actor.dexterity, nfile.read());
 		// Intelligence (0-4), read(5), Tournament (6), polymorph (7)
 		int intel_val = nfile.read();
 
-		setProperty(intelligence, intel_val & 0x1F);
+		setProperty(Actor.intelligence, intel_val & 0x1F);
 		if (((intel_val >> 5) & 1) != 0) 
 			setFlag (GameObject.read);
 							// Tournament.
@@ -357,7 +357,7 @@ public class Actor extends ContainerGameObject {
 			// Combat skill (0-6), Petra (7)
 		int combat_val = nfile.read();
 
-		setProperty(combat, combat_val & 0x7F);
+		setProperty(Actor.combat, combat_val & 0x7F);
 		if (((combat_val << 7) & 1) != 0) 
 			setFlag (GameObject.petra);
 		schedule_type = (byte) nfile.read();
@@ -395,9 +395,9 @@ public class Actor extends ContainerGameObject {
 			ident = flags3 >> 3;
 			flags3 &= 0x7;
 		}
-		setProperty(magic, magic);
+		setProperty(Actor.magic, magic);
 		// Need to make sure that mana is less than magic
-		setProperty(mana, mana<magic ? mana : magic);
+		setProperty(Actor.mana, mana<magic ? mana : magic);
 		set_temperature (temp);
 		set_ident(ident);
 		if (((flags3 >> 0) & 1) != 0) 
@@ -415,8 +415,8 @@ public class Actor extends ContainerGameObject {
 			face_num = npc_num;
 		nfile.skip(1);	// Unknown
 
-		setProperty(exp, EUtil.Read4(nfile));
-		setProperty(training, nfile.read());
+		setProperty(Actor.exp, EUtil.Read4(nfile));
+		setProperty(Actor.training, nfile.read());
 
 		nfile.skip (2);	// Primary Attacker
 		nfile.skip (2);	// Secondary Attacker
@@ -524,28 +524,27 @@ public class Actor extends ContainerGameObject {
 						// Get (signed) food level.
 		int food_read = nfile.read();
 		if (fix_first) food_read = 18;
-		setProperty(food_level, food_read);
+		setProperty(Actor.food_level, food_read);
 		// Skip 7
 		nfile.skip(7);
 		byte namebuf[] = new byte[16];
 		nfile.read(namebuf);
 		//+++++++++++++++
-		for (int i = 0; i < 16; i++)
-			if (namebuf[i] == 0) 
-				i = 16;
+		int len;
+		for (len = 0; len < 16; len++)
+			if (namebuf[len] == 0) 
+				break;
 			/*	Used to also require namebuf[i] < 127 (jsf).	*/
-			else if (namebuf[i] < ' ') {
-				namebuf[0] = 0;
+			else if (namebuf[len] < ' ') {
 				break;
 			}
-		namebuf[16] = 0;		// Be sure it's 0-delimited.
 //			cout << "Actor " << namebuf << " has alignment " << alignment << endl;
 		/*+++++++++FINISH
 		if (num == 0 && Game::get_avname()) {
 			name = Game::get_avname();
 		} else
 		*/
-			name = new String(namebuf);		// Store copy of it.
+			name = new String(namebuf, 0, len);		// Store copy of it.
 
 							// Get abs. chunk. coords. of schunk.
 		int scy = 16*(schunk/12);
@@ -580,7 +579,7 @@ public class Actor extends ContainerGameObject {
 			// Maybe we should restore it to full health?
 			Monster_info *minf = get_info().get_monster_info();
 			if (minf && minf->cant_die())
-				setProperty(static_cast<int>(Actor::health),
+				setProperty(Actor.static_cast<int>(Actor::health),
 					get_property(static_cast<int>(Actor::strength)));
 		}
 

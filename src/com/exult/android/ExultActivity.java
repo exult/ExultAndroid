@@ -76,8 +76,6 @@ public class ExultActivity extends Activity {
                 
                 if (gwin.isDirty()) {
                 	gwin.paintDirty();
-                	// +++++++TESTING draw avatar
-                	ShapeFiles.SHAPES_VGA.getShape(721, 1).paint(gwin.getWin(), 184, 92);
                 }
                 synchronized (gwin.getWin()) {
                 	if (ticks%3 == 0)
@@ -110,7 +108,6 @@ public class ExultActivity extends Activity {
     		gwin.getWin().setToScale(width, height);
     		gwin.initFiles(false);
     		gwin.setupGame();
-    		gwin.centerView(1035,2181);//+++++FOR NOW testing.
     		gwin.setAllDirty();
     		/*
     		ibuf = new ImageBuf(width, height);
