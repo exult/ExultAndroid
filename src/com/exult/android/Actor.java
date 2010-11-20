@@ -266,14 +266,12 @@ public class Actor extends ContainerGameObject {
 		setProperty(Actor.health, health_val);
 		nfile.skip(3);	// Skip 3 bytes.
 		int iflag2 = EUtil.Read2(nfile);	// The 'used-in-game' flag.
-		/* ++++++NEEDED?
-		if (iflag2 == 0 && num >= 0 && !fix_unused) {
+		if (iflag2 == 0 && num >= 0 /* ++++ && !fix_unused */) {
 			if (num == 0)		// Old (bad) savegame?
-				fix_unused = true;
+				/* +++++ fix_unused = true; */;
 			else
 				unused = true;
 		}
-		*/
 		boolean has_contents = fix_first ? (iflag1 != 0 && !unused) : (iflag1&1) != 0;
 		// Read first set of flags
 		int rflags = EUtil.Read2(nfile);
