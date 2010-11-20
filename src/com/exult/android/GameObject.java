@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.HashSet;
+import java.util.Iterator;
 import android.graphics.Point;
 import java.lang.ref.WeakReference;
 
@@ -74,6 +75,12 @@ public abstract class GameObject extends ShapeID {
 	public final void setLift(int l) {
 		lift = (byte)l;
 	}
+	public final GameObject getNext() {
+		return next;
+	}
+	public final GameObject getPrev() {
+		return prev;
+	}
 	//	Get absolute tile coords.
 	public final int getTileX() {
 		return chunk != null ? chunk.getCx()*EConst.c_tiles_per_chunk + tx : 255*EConst.c_tiles_per_chunk;
@@ -136,6 +143,26 @@ public abstract class GameObject extends ShapeID {
 		if (dependors == null)
 			dependors = new HashSet<GameObject>();
 		dependors.add(obj);
+	}
+	public void clearDependencies() {
+		Iterator X;
+		GameObject obj;
+		
+		// First do those we depend on.
+		for (X = dependencies.iterator(); X.hasNext(); ) {
+			obj = (GameObject)X.next();
+			if (obj.dependors != null)
+				obj.dependors.remove(this);
+		}
+		dependencies.clear();
+		
+		// Now those who depend on us.
+		for (X = dependors.iterator(); X.hasNext();  ) {
+			obj = (GameObject)X.next();
+			if (obj.dependencies != null)
+				obj.dependencies.remove(this);
+		}
+		dependors.clear();
 	}
 	public void paint() {
 		int x, y;

@@ -7,6 +7,10 @@ public class MapChunk extends GameSingletons {
 	private GameObject firstNonflat;			// ->first nonflat in 'objects'.
 	// Counts of overlapping objects from chunks below, to right.
 	private short fromBelow, fromRight, fromBelowRight;
+	private byte dungeonLevels[];	// A 'dungeon' level value for each tile (4 bit).
+	private byte roof;		// 1 if a roof present.
+	// # light sources in chunk.
+	private byte dungeonLights, nonDungeonLights;
 	private short cx, cy;
 	
 	public MapChunk(GameMap m, int chx, int chy) {
@@ -151,8 +155,39 @@ public class MapChunk extends GameSingletons {
 		}
 	*/
 	}
-	public void remove(GameObject obj) {
-		//+++++++FINISH
+	public void remove(GameObject remove) {
+		/* ++++++
+		if (cache)			// Remove from cache.
+			cache->update_object(this, remove, 0);
+		 */
+		remove.clearDependencies();	// Remove all dependencies.
+		ShapeInfo info = remove.getInfo();
+						// See if it extends outside.
+		int frame = remove.getFrameNum(), tx = remove.getTx(),
+						ty = remove.getTy();
+		/* Let's try boundary. YES.  Helps with statues through roofs. */
+		boolean ext_left = (tx - info.get3dXtiles(frame)) < 0 && cx > 0;
+		boolean ext_above = (ty - info.get3dYtiles(frame)) < 0 && cy > 0;
+		if (ext_left) {
+			gmap.getChunk(cx - 1, cy).fromBelowRight--;
+			if (ext_above)
+				gmap.getChunk(cx - 1, cy - 1).fromBelowRight--;
+		}
+		if (ext_above)
+			gmap.getChunk(cx, cy - 1).fromBelow--;
+		if (info.isLightSource()) {	// Count light sources.
+			if (dungeonLevels != null /* && +++++ is_dungeon(tx, ty) */)
+				dungeonLights--;
+			else
+				nonDungeonLights--;
+		}
+		if (remove == firstNonflat)	{ // First nonflat?
+			firstNonflat = remove.getNext();
+			if (firstNonflat == objects.getFirst())
+				firstNonflat = null;
+			}
+		objects.remove(remove);		// Remove from list.
+		remove.setInvalid();		// No longer part of world.
 	}
 	public ImageBuf getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;
