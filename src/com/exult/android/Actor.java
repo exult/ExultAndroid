@@ -2,7 +2,7 @@ package com.exult.android;
 import java.io.InputStream;
 import java.io.IOException;
 
-public class Actor extends ContainerGameObject {
+public abstract class Actor extends ContainerGameObject implements TimeSensitive {
 	protected String name;			// Its name.
 	protected int usecode;			// # of usecode function.
 	protected boolean usecode_assigned;		// Usecode # explicitly assigned.
@@ -131,6 +131,7 @@ public class Actor extends ContainerGameObject {
 	// Npc_timer_list *timers;		// Timers for poison, hunger, etc.
 	protected Rectangle weapon_rect;		// Screen area weapon was drawn in.
 	protected long rest_time;			// # msecs. of not doing anything.
+	protected int timeQueueCount;		// # times in timeQueue.
 
 	public Actor(int shapenum, int framenum, int tilex, int tiley, int lft) {
 		super(shapenum, framenum, tilex, tiley, lft, 0);
@@ -586,6 +587,15 @@ public class Actor extends ContainerGameObject {
 		if (Game::get_game_type() == BLACK_GATE && Game::get_avname() && (num == 0 || num == 1))
 			ready_best_weapon();
 		*/				
+	}
+	public boolean alwaysHandle() {	// For TimeSensitive
+		return false;
+	}
+	public void addedToQueue() {
+		++timeQueueCount;
+	}
+	public void removedFromQueue() {
+		--timeQueueCount;
 	}
 }
 

@@ -15,7 +15,6 @@ public class ExultActivity extends Activity {
 	public long GameTime;
 	public long nextTickTime;
 	public static int stdDelay = 200;	// Frame delay in msecs.
-	public static int ticks = 0;
 	public GameWindow gwin;
 	public AnimationSprite testSprite1;
 	public ImageBuf ibuf;
@@ -70,7 +69,7 @@ public class ExultActivity extends Activity {
     	protected void onDraw(Canvas canvas){
     		if (GameTime > nextTickTime ) {
                 nextTickTime = GameTime + stdDelay;
-                ticks +=1;
+                TimeQueue.ticks +=1;
                 // I think we would execute timed activities here using new ticks.
           
                 
@@ -78,7 +77,7 @@ public class ExultActivity extends Activity {
                 	gwin.paintDirty();
                 }
                 synchronized (gwin.getWin()) {
-                	if (ticks%3 == 0)
+                	if (TimeQueue.ticks%3 == 0)
                 		rotatePalette();
                 	if (!gwin.show(canvas, false)) {	
                 		// Blit mouse++++
