@@ -5,23 +5,23 @@ import java.io.IOException;
 public abstract class Actor extends ContainerGameObject implements TimeSensitive {
 	protected String name;			// Its name.
 	protected int usecode;			// # of usecode function.
-	protected boolean usecode_assigned;		// Usecode # explicitly assigned.
-	protected String usecode_name;		// Name of usecode fun explicitly assigned.
+	protected boolean usecodeAssigned;		// Usecode # explicitly assigned.
+	protected String usecodeName;		// Name of usecode fun explicitly assigned.
 	protected boolean unused;			// If npc_num > 0, this NPC is unused in the game.
-	protected short npc_num;			// # in Game_window::npcs list, or -1.
-	protected short face_num;			// Which shape for conversations.
-	protected short party_id;			// Index in party, or -1.
+	protected short npcNum;			// # in Game_window::npcs list, or -1.
+	protected short faceNum;			// Which shape for conversations.
+	protected short partyId;			// Index in party, or -1.
 	protected int properties[] = new int[12];		// Properties set/used in 'usecode'.
 	protected byte temperature;	// Measure of coldness (0-63).
-	protected short shape_save;		// Our old shape, or -1.
+	protected short shapeSave;		// Our old shape, or -1.
 	protected short oppressor;		// NPC ID (>= 0) of oppressor, or -1.
 	protected GameObject target;		// Who/what we're attacking.
-	protected short casting_mode;		//For displaying casting frames.
-	protected int casting_shape;	//Shape of casting frames.
+	protected short castingMode;		//For displaying casting frames.
+	protected int castingShape;	//Shape of casting frames.
 	// These 2 are set by the Usecode function 'set_to_attack':
-	protected GameObject target_object;
+	protected GameObject targetObject;
 	protected int target_tile_tx, target_tile_ty, target_tile_tz;
-	protected int attack_weapon;
+	protected int attackWeapon;
 	public static final int		// Attack mode setting from gump.
 		nearest = 0,
 		weakest = 1,		// Attack weakest.
@@ -92,12 +92,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// Party positions
 	// protected static short party_pos[4][10][2];
 
-	protected int attack_mode;
+	protected int attackMode;
 					// A frame sequence for each dir.:
-	// protected static Frames_sequence *avatar_frames[4];
-	// protected static Frames_sequence *npc_frames[4];
-	// protected Frames_sequence **frames;
-	protected byte schedule_type;	// Schedule type (Schedule_type).	
+	protected static FramesSequence avatarFrames[] = new FramesSequence[4];
+	protected static FramesSequence npcFrames[] = new FramesSequence[4];
+	protected FramesSequence frames[];
+	protected byte scheduleType;	// Schedule type (Schedule_type).	
 	// Location (x,y) of Shedule
 	protected int schedule_loc_tx, schedule_loc_ty, schedule_loc_tz;
 	protected byte next_schedule;	// Used so correct schedule type 
@@ -105,52 +105,82 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	// protected Schedule *schedule;		// Current schedule.
 	protected boolean dormant;			// I.e., off-screen.
 	protected boolean hit;			// Just hit in combat.
-	protected boolean combat_protected;		// 'Halo' on paperdoll screen.
-	protected boolean user_set_attack;		// True if player set attack_mode.
+	protected boolean combatProtected;		// 'Halo' on paperdoll screen.
+	protected boolean userSetAttack;		// True if player set attack_mode.
 	protected short alignment;		// 'Feelings' towards Ava. See below.
 	// Where things can go.  See 'Spots' below for description.
 	protected GameObject spots[] = new GameObject[18];	
-	protected boolean two_handed;		// Carrying a two-handed item.
-	protected boolean two_fingered;		// Carrying gauntlets (both fingers)
-	protected boolean use_scabbard;		// Carrying an item in scabbard (belt, back 2h, shield).
-	protected boolean use_neck;			// Carrying cloak (amulet, cloak)
-	protected byte light_sources;	// # of light sources readied.
-	protected byte usecode_dir;	// Direction (0-7) for usecode anim.
-	protected int type_flags;	// 32 flags used in movement among other things
-	protected byte gear_immunities;	// Damage immunities granted by gear.
-	protected byte gear_powers;		// Other powers granted by gear.
+	protected boolean twoHanded;		// Carrying a two-handed item.
+	protected boolean twoFingered;		// Carrying gauntlets (both fingers)
+	protected boolean useScabbard;		// Carrying an item in scabbard (belt, back 2h, shield).
+	protected boolean useNeck;			// Carrying cloak (amulet, cloak)
+	protected byte lightSources;	// # of light sources readied.
+	protected byte usecodeDir;	// Direction (0-7) for usecode anim.
+	protected int typeFlags;	// 32 flags used in movement among other things
+	protected byte gearImmunities;	// Damage immunities granted by gear.
+	protected byte gearPowers;		// Other powers granted by gear.
 
 	protected byte ident;
-	protected int	skin_color;
+	protected int	skinColor;
 	// protected Actor_action *action;		// Controls current animation.
-	protected int frame_time;			// Time between frames in msecs.  0 if
-					//   actor not moving.
-	protected int step_index;			// Index into walking frames, 1 1st.
+	protected int frameTime;			// Time between frames in ticks.  0 if
+										//   actor not moving.
+	protected int stepIndex;			// Index into walking frames, 1 1st.
 	protected int qsteps;				// # steps since last quake.
 
 	// Npc_timer_list *timers;		// Timers for poison, hunger, etc.
-	protected Rectangle weapon_rect;		// Screen area weapon was drawn in.
-	protected long rest_time;			// # msecs. of not doing anything.
+	protected Rectangle weaponRect;		// Screen area weapon was drawn in.
+	protected long restTime;			// # ticks of not doing anything.
 	protected int timeQueueCount;		// # times in timeQueue.
-
-	public Actor(int shapenum, int framenum, int tilex, int tiley, int lft) {
-		super(shapenum, framenum, tilex, tiley, lft, 0);
-	}
 	public Actor(String nm, int shapenum, int num, int uc) {
 		super(shapenum, 0, 0, 0, 0, 0);
-		//+++++++++++++++FINISH
-	}
-	public Actor(String nm, int shapenum) {
-		super(shapenum, 0, 0, 0, 0, 0);
-		//+++++++++++FINISH
+		init();
+		frames = npcFrames;
+		name = nm;
+		usecode = uc; 
+		npcNum = (short)num;
+		partyId = -1;
+		shapeSave = -1;
+		oppressor = -1;
+		castingShape = -1;
+		target_tile_tx = target_tile_ty = -1;
+		attackWeapon = -1;
+		attackMode = nearest;
+		//+++++scheduleType = loiter;
+		dormant = true;
+		skinColor = -1;
+		weaponRect = new Rectangle(0,0,0,0);
 	}
 	/*
 	 *	Initialize frames, properties and spots.
 	 */
+	private void initDefaultFrames() {
+						// Set up actor's frame lists.
+						// Most NPC's walk with a 'stand'
+						//   frame between steps.
+		final int FRAME_NUM = 5;
+		final byte	npc_north_frames[] = { 0,  1,  0,  2,  0},
+					npc_south_frames[] = {16, 17, 16, 18, 16},
+					npc_east_frames[] = {48, 49, 48, 50, 48},
+					npc_west_frames[] = {32, 33, 32, 34, 32};
+		npcFrames[EConst.north/2] = new FramesSequence(npc_north_frames);
+		npcFrames[EConst.south/2] = new FramesSequence(npc_south_frames);
+		npcFrames[EConst.east/2] = new FramesSequence(npc_east_frames);
+		npcFrames[EConst.west/2] = new FramesSequence(npc_west_frames);
+						// Avatar just walks left, right.
+		final byte	avatar_north_frames[] = {0, 1, 2},
+					avatar_south_frames[] = {16, 17, 18},
+					avatar_east_frames[] = {48, 49, 50},
+					avatar_west_frames[] = {32, 33, 34};
+		avatarFrames[EConst.north/2] = new FramesSequence(avatar_north_frames);
+		avatarFrames[EConst.south/2] = new FramesSequence(avatar_south_frames);
+		avatarFrames[EConst.east/2] = new FramesSequence(avatar_east_frames);
+		avatarFrames[EConst.west/2] = new FramesSequence(avatar_west_frames);
+		}
 
 	public void init() {
-		//if (!avatar_frames[0])
-		//	init_default_frames();
+		if (avatarFrames[0] == null)
+			initDefaultFrames();
 		int i, len;
 		for (i = 0, len = properties.length; i < len; i++)
 			properties[i] = 0;
@@ -179,7 +209,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		//++++++++++FINISH
 	}
 	public void setSkinColor (int color) { 
-		skin_color = color; 
+		skinColor = color; 
 		/* +++++ set_actor_shape(); */
 	}
 	public boolean isDying() {		// Dead when health below -1/3 str.
@@ -200,6 +230,25 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void set_actor_shape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
 	}
+	public boolean addDirty(boolean figureWeapon) {
+		if (!gwin.addDirty(this))
+			return false;
+		//+++++++FINISH: Figure casting/weapon rectangle.
+		return true;
+	}
+	public void switchedChunks(MapChunk oldchunk, MapChunk newchunk) {
+	}
+	protected void movef(MapChunk oldChunk, MapChunk newChunk, int newSx, int newSy,
+					int newFrame, int newLift) {
+		if (oldChunk != null)
+			oldChunk.remove(this);
+		setShapePos(newSx, newSy);
+		if (newFrame >= 0)
+			setFrame(newFrame);
+		if (newLift >= 0)
+			setLift(newLift);
+		newChunk.add(this);
+	}
 	/*
 	 *	Read in actor from a given file.
 	 */
@@ -209,7 +258,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int num,			// NPC #, or -1.
 		boolean has_usecode		// 1 if a 'type1' NPC.
 		) throws IOException {
-		npc_num = (short) num;
+		npcNum = (short) num;
 
 		// This is used to get around parts of the files that we don't know
 		// what the uses are. 'fix_first' is used fix issues in the originals
@@ -243,7 +292,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		boolean read_sched_usecode = !fix_first && (iflag1&2) != 0;
 		boolean usecode_name_used = !fix_first && (iflag1&8) != 0;
 		if (usecode_name_used || (!fix_first && (iflag1&4) != 0))
-			usecode_assigned = true;
+			usecodeAssigned = true;
 		boolean extended_skin = !fix_first && (iflag1&16) != 0;
 
 		int schunk = nfile.read();	// Superchunk #.
@@ -256,11 +305,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		setLift(usefun >> 12);		// Lift is high 4 bits.
 		usecode = usefun & 0xfff;
 							// Need this for BG. (Not sure if SI.)
-		if (npc_num >= 0 && npc_num < 256)
-			usecode = 0x400 + npc_num;
+		if (npcNum >= 0 && npcNum < 256)
+			usecode = 0x400 + npcNum;
 							// Watch for new NPC's added.
-		else if (usecode_name_used || (!has_usecode && !usecode_assigned &&
-			          usecode != 0x400 + npc_num) || usecode == 0xfff)
+		else if (usecode_name_used || (!has_usecode && !usecodeAssigned &&
+			          usecode != 0x400 + npcNum) || usecode == 0xfff)
 			usecode = -1;		// Let's try this.
 							// Guessing:  !!  (Want to get signed.)
 		int health_val = nfile.read();
@@ -337,7 +386,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				setFlag (GameObject.freeze);
 		}
 		if (isDying() &&		// Now we know health, strength.
-		    npc_num > 0)		// DON'T do this for Avatar!
+		    npcNum > 0)		// DON'T do this for Avatar!
 			setFlag(GameObject.dead);	// Fixes older savegames.
 		// Dexterity
 		setProperty(Actor.dexterity, nfile.read());
@@ -359,12 +408,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		setProperty(Actor.combat, combat_val & 0x7F);
 		if (((combat_val << 7) & 1) != 0) 
 			setFlag (GameObject.petra);
-		schedule_type = (byte) nfile.read();
+		scheduleType = (byte) nfile.read();
 		int amode = nfile.read();	// Default attack mode
 							// Just stealing 2 spare bits:
-		combat_protected = (amode&(1<<4)) != 0;
-		user_set_attack = (amode&(1<<5)) != 0;
-		attack_mode = (amode&0xf);
+		combatProtected = (amode&(1<<4)) != 0;
+		userSetAttack = (amode&(1<<5)) != 0;
+		attackMode = (amode&0xf);
 
 		nfile.skip(1); 		// Unknown
 		int unk0 = nfile.read();	// We set high bit of this value.
@@ -406,12 +455,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (((flags3 >> 2) & 1) != 0)
 			setFlag (GameObject.si_zombie);
 
-		face_num = (short)EUtil.Read2(nfile);	// NOTE:  Exult's using 2 bytes,
+		faceNum = (short)EUtil.Read2(nfile);	// NOTE:  Exult's using 2 bytes,
 		if (fix_first)	// Not used in the original.
-			//face_num &= 0xff;	// Just 1 byte in orig.
-			face_num = npc_num;
-		else if (face_num == 0 && npc_num > 0)	// Fix older savegames.
-			face_num = npc_num;
+			//faceNum &= 0xff;	// Just 1 byte in orig.
+			faceNum = npcNum;
+		else if (faceNum == 0 && npcNum > 0)	// Fix older savegames.
+			faceNum = npcNum;
 		nfile.skip(1);	// Unknown
 
 		setProperty(Actor.exp, EUtil.Read4(nfile));
@@ -452,7 +501,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		shnum = EUtil.Read2(nfile);
 		if (!fix_first && shnum != 0) {
 				// ++++ Testing
-			if (npc_num == 0)
+			if (npcNum == 0)
 				set_actor_shape();
 			else
 				setShape(shnum);		// 16 Bit Shape Number
@@ -588,7 +637,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			ready_best_weapon();
 		*/				
 	}
-	public boolean alwaysHandle() {	// For TimeSensitive
+	/*
+	 * For TimeSensitive
+	 */
+	public boolean alwaysHandle() {	
 		return false;
 	}
 	public void addedToQueue() {
@@ -596,6 +648,35 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public void removedFromQueue() {
 		--timeQueueCount;
+	}
+	/*
+	 * Sequence of frames, with 0 being the resting frame.
+	 */
+	public class FramesSequence {
+		private byte frames[];
+		public FramesSequence(byte f[]) {
+			frames = f;
+		}
+		public final byte getResting() {
+			return frames[0];
+		}
+		public int nextIndex(int index) {
+			if (++index >= frames.length)
+				index = 1;
+			return index;
+		}
+		public int prevIndex(int index) {
+			if (--index <= 0)
+				index = frames.length - 1;
+			return index;
+		}
+		// Find frame, masking off rotation, or 0 if not found.
+		public int findUnrotated(byte frame) {
+			for (int i = frames.length - 1; i > 0; i--)
+				if (((frame ^ frames[i])&0xf) == 0)
+					return i;
+			return 0;
+		}
 	}
 }
 

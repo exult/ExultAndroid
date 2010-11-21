@@ -29,7 +29,17 @@ public class EConst {
 	public static final int c_occsize = c_max_shapes/8 + (((c_max_shapes%8) !=0) ? 1 : 0);
 	
 	public static final int c_first_obj_shape = 0x96;	// 0-0x95 are 8x8 flat shapes.
-
+	// Directions:
+	public static final int
+		north = 0,
+		northeast = 1,
+		east = 2,
+		southeast = 3,
+		south = 4,
+		southwest = 5,
+		west = 6,
+		northwest = 7;
+	
 	// Maximum number of global flags:
 	public static final int c_last_gflag = 2047;
 	

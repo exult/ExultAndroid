@@ -88,9 +88,20 @@ public class GameWindow {
 	public Actor getMainActor() {
 		return mainActor;
 	}
-	int getRenderSkipLift()		// Skip rendering here.
-	{ return skipAboveActor < skipLift ?
-				skipAboveActor : skipLift; }
+	public boolean isMainActorInside()
+		{ return skipAboveActor < 31 ; }
+	// Returns if skip_above_actor changed!
+	public boolean setAboveMainActor(int lift) {
+		if (skipAboveActor == lift) 
+			return false;
+		skipAboveActor = lift;
+		return true;
+	}
+	
+	int getRenderSkipLift()	{	// Skip rendering here.
+		return skipAboveActor < skipLift ?
+				skipAboveActor : skipLift; 
+	}
 	// Get screen location for an object.
 	public void getShapeLocation(Point loc, int tx, int ty, int tz) {
 		int lft = 4*tz;
@@ -185,6 +196,28 @@ public class GameWindow {
 		set_in_dungeon(nlist.has_dungeon()?nlist.is_dungeon(tx, ty):0);
 		set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
 		*/
+	}	
+	public boolean scrollIfNeeded(Actor a, Tile t) {
+		if (a != cameraActor)
+			return false;
+		boolean scrolled = false;
+		// 1 lift = 1/2 tile.
+		int tx = t.tx - t.tz/2, ty = t.ty - t.tz/2;
+		if (Tile.gte(EConst.DECR_TILE(scrollBounds.x), tx)) {
+			shiftViewHoriz(true);
+			scrolled = true;
+		} else if (Tile.gte(tx, (scrollBounds.x + scrollBounds.w)%EConst.c_num_tiles)) {
+			shiftViewHoriz(false);
+			scrolled = true;
+		}
+		if (Tile.gte(EConst.DECR_TILE(scrollBounds.y), ty)) {
+			shiftViewVertical(true);
+			scrolled = true;
+		} else if (Tile.gte(ty, (scrollBounds.y + scrollBounds.h)%EConst.c_num_tiles)) {
+			shiftViewVertical(false);
+			scrolled = true;
+		}
+		return (scrolled);	
 	}
 	//	Center around given tile pos.
 	public void centerView(int tx, int ty) {

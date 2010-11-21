@@ -192,4 +192,7 @@ public class MapChunk extends GameSingletons {
 	public ImageBuf getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;
 	}
+	public void setupCache() {
+		//++++++++++++FINISH
+	}
 }

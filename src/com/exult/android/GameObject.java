@@ -75,6 +75,13 @@ public abstract class GameObject extends ShapeID {
 	public final void setLift(int l) {
 		lift = (byte)l;
 	}
+	public final void getTile(Tile t) {
+		if (chunk == null)
+			t.set(255*EConst.c_tiles_per_chunk, 255*EConst.c_tiles_per_chunk, 0);
+		else 
+			t.set(chunk.getCx()*EConst.c_tiles_per_chunk + tx,
+				  chunk.getCy()*EConst.c_tiles_per_chunk + ty, lift);
+	}
 	public final GameObject getNext() {
 		return next;
 	}
@@ -127,6 +134,10 @@ public abstract class GameObject extends ShapeID {
 		ty = (byte)(newty%EConst.c_tiles_per_chunk);
 		newchunk.add(this);		// Updates 'chunk'.
 		gwin.addDirty(this);		// And repaint new area.
+	}
+	//	Step:  Overridden by Actors.
+	public boolean step(int tx, int ty, int tz, int frame, boolean force) {
+		return false;
 	}
 	public final HashSet<GameObject> getDependencies() {
 		return dependencies;

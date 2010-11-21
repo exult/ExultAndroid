@@ -1,9 +1,8 @@
 package com.exult.android;
 
 public class NpcActor extends Actor {
-	public NpcActor(String nm, int shapenum) {
-		super(nm, shapenum);
-		// ++++FINISHframes = &avatar_frames[0]; 
+	public NpcActor(String nm, int shapenum) { //++++FINISH, num, uc
+		super(nm, shapenum, -1, -1); 
 	}
 	/*
 	 *	Handle a time event (for TimeSensitive).
