@@ -18,6 +18,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected GameObject target;		// Who/what we're attacking.
 	protected short castingMode;		//For displaying casting frames.
 	protected int castingShape;	//Shape of casting frames.
+	// Walking:
+	private Tile walkSrc = new Tile();
+	private ZombiePathFinder zombiePath;
 	// These 2 are set by the Usecode function 'set_to_attack':
 	protected GameObject targetObject;
 	protected int target_tile_tx, target_tile_ty, target_tile_tz;
@@ -122,7 +125,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 	protected byte ident;
 	protected int	skinColor;
-	// protected Actor_action *action;		// Controls current animation.
+	protected ActorAction action;		// Controls current animation.
 	protected int frameTime;			// Time between frames in ticks.  0 if
 										//   actor not moving.
 	protected int stepIndex;			// Index into walking frames, 1 1st.
@@ -219,6 +222,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean isDead() {
 		return (flags&(1<<GameObject.dead)) != 0; 
 	}
+	public final ActorAction getAction() {
+		return action;
+	}
+	public final void setAction(ActorAction newact) {
+		action = newact;
+		if (action == null)			// No action?  We're stopped.
+			frameTime = 0;
+	}
 	public int get_ident() { return ident; }
 	public void set_ident(int id) { ident = (byte)id; }
 
@@ -235,6 +246,35 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return false;
 		//+++++++FINISH: Figure casting/weapon rectangle.
 		return true;
+	}
+	/*
+	 *	Walk towards a given tile.
+	 */
+	public void walkToTile
+		(
+		Tile dest,			// Destination.
+		int speed,			// Time between frames (ticks).
+		int delay,			// Delay before starting (ticks) (only
+							//   if not already moving).
+		int maxblk			// Max. # retries if blocked.
+		) {
+		if (zombiePath == null)
+			zombiePath = new ZombiePathFinder();
+		/*
+		if (action == null)
+			action = new PathWalkingActorAction(zombie, maxblk);
+		getTile(walkSrc);
+		setAction(action.walkToTile(this, walkSrc, dest));
+		*/
+		/* ++++++++FINISH
+		if (action != null)			// Successful at setting path?
+			start(speed, delay);
+		else
+		*/
+			frameTime = 0;		// Not moving.
+		}
+	public void walkToTile(Tile dest, int speed, int delay) {
+		walkToTile(dest, speed, delay, 3);
 	}
 	public void switchedChunks(MapChunk oldchunk, MapChunk newchunk) {
 	}

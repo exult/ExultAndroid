@@ -206,5 +206,29 @@ public class EUtil {
 		String fname = getSystemPath(nm);
 		return new FileOutputStream(fname);
 	}
+	/*
+	 *	Return the direction for a given slope (0-7).
+	 *	NOTE:  Assumes cartesian coords, NOT screen coords. (which have y
+	 *		growing downwards).
+	 */
+	public static final int getDirection(int deltay,int deltax) {
+		if (deltax == 0)
+			return deltay > 0 ? EConst.north : EConst.south;
+		int dydx = (1024*deltay)/deltax;// Figure 1024*tan.
+		if (dydx >= 0)
+			if (deltax >= 0)	// Top-right quadrant?
+				return dydx <= 424 ? EConst.east : dydx <= 2472 ? EConst.northeast
+									: EConst.north;
+			else			// Lower-left.
+				return dydx <= 424 ? EConst.west : dydx <= 2472 ? EConst.southwest
+									: EConst.south;
+		else
+			if (deltax >= 0)	// Lower-right.
+				return dydx >= -424 ? EConst.east : dydx >= -2472 ? EConst.southeast
+									: EConst.south;
+			else			// Top-left?
+				return dydx >= -424 ? EConst.west : dydx >= -2472 ? EConst.northwest
+									: EConst.north;
+	}
 }
 

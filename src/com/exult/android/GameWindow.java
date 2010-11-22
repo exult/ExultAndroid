@@ -15,6 +15,8 @@ public class GameWindow {
 	private GameRender render;
 	private Rectangle paintBox;		// Temp used for painting.
 	private Rectangle tempDirty;	// Temp for addDirty.
+	private Point tempPoint = new Point();
+	private Tile tempTile = new Tile();
 	private ImageBuf win;
 	private Palette pal;
 	// Gameplay objects.
@@ -26,6 +28,8 @@ public class GameWindow {
 	private Rectangle scrollBounds;	// Walking outside this scrolls.
 	private boolean painted;			// We updated imagebuf.
 	private Rectangle dirty;			// What to display.
+	// Options:
+	int stepTileDelta = 8;				// Multiplier for the delta in startActor.
 	//	Game state values.
 	private int skipAboveActor;		// Level above actor to skip rendering.
 	private int numNpcs1;			// Number of type1 NPC's.
@@ -124,9 +128,9 @@ public class GameWindow {
 	Rectangle getShapeRect(Rectangle r, GameObject obj) {
 		if (obj.getChunk() == null) {		// Not on map?
 			/* +++++FINISH
-			Gump *gump = gump_man->find_gump(obj);
+			Gump *gump = gump_man.find_gump(obj);
 			if (gump)
-				return gump->get_shape_rect(obj);
+				return gump.get_shape_rect(obj);
 			else
 			*/
 				r.set(0, 0, 0, 0);
@@ -191,7 +195,7 @@ public class GameWindow {
 		Map_chunk *nlist = map.get_chunk(cx, cy);
 		nlist.setup_cache();					 
 		int tx = camera_actor.get_tx(), ty = camera_actor.get_ty();
-		set_above_main_actor(nlist.is_roof (tx, ty,
+		set_above_mainActor(nlist.is_roof (tx, ty,
 							camera_actor.get_lift()));
 		set_in_dungeon(nlist.has_dungeon()?nlist.is_dungeon(tx, ty):0);
 		set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
@@ -292,7 +296,154 @@ public class GameWindow {
 		}
 		clipToWin(dirty);
 	}
+	/*
+	 * Start stepping towards given point.
+	 */
+	private void startActorSteps
+		(
+		int winx, int winy,	// Mouse position to aim for.
+		int speed			// Ticks between frames.
+		) {
+	Point a = tempPoint;
+	getShapeLocation(a, mainActor);
 	
+	mainActor.getTile(tempTile);
+	Tile start = tempTile;
+	int dir;
+	// ++++FINISH boolean checkdrop = (mainActor.getTypeFlags() & MOVE_LEVITATE) == 0;
+	/* ++++++++FINISH
+	for (dir = 0; dir < 8; dir++)
+	{
+		Tile_coord dest = start.get_neighbor(dir);
+		blocked[dir] = mainActor.is_blocked(dest, &start,
+							mainActor.get_type_flags());
+		if (checkdrop && abs(start.tz - dest.tz) > 1)
+			blocked[dir] = true;
+	}
+	*/
+	dir = EUtil.getDirection (a.y - winy, winx - a.x);
+	/*
+	if (blocked[dir] && !blocked[(dir+1)%8])
+		dir = (dir+1)%8;
+	else if (blocked[dir] && !blocked[(dir+7)%8])
+		dir = (dir+7)%8;
+	else if (blocked[dir])
+	{
+	   	Game_object *block = mainActor.is_moving() ? 0
+			: mainActor.find_blocking(start.get_neighbor(dir), dir);
+		// We already know the blocking object isn't the avatar, so don't
+		// double check it here.
+		if (!block || !block.move_aside(mainActor, dir))
+			{
+			stop_actor();
+			if (mainActor.get_lift()%5)// Up on something?
+				{	// See if we're stuck in the air.
+				int savetz = start.tz;
+				if (!Map_chunk::is_blocked(start, 1, 
+						MOVE_WALK, 100) && 
+						start.tz < savetz)
+					mainActor.move(start.tx, start.ty, 
+								start.tz);
+				}
+			return;
+			}
+		}
+	 */
+		int delta = stepTileDelta*EConst.c_tilesize;// Bigger # here avoids jerkiness,
+												//   but causes probs. with followers.
+		switch (dir) {
+		case EConst.north:
+			a.y -= delta;
+			break;
+		case EConst.northeast:
+			a.y -= delta;
+			a.x += delta;
+			break;
+		case EConst.east:
+			a.x += delta;
+			break;
+		case EConst.southeast:
+			a.y += delta;
+			a.x += delta;
+			break;
+		case EConst.south:
+			a.y += delta;
+			break;
+		case EConst.southwest:
+			a.y += delta;
+			a.x -= delta;
+			break;
+		case EConst.west:
+			a.x -= delta;
+			break;
+		case EConst.northwest:
+			a.y -= delta;
+			a.x -= delta;
+			break;
+		}
+		int lift = mainActor.getLift();
+		int liftpixels = 4*lift;	// Figure abs. tile.
+		int tx = getScrolltx() + (a.x + liftpixels)/EConst.c_tilesize,
+	    	ty = getScrollty() + (a.y + liftpixels)/EConst.c_tilesize;
+					// Wrap:Game_window::start_actor
+		tx = (tx + EConst.c_num_tiles)%EConst.c_num_tiles;
+		ty = (ty + EConst.c_num_tiles)%EConst.c_num_tiles;
+		tempTile.set(tx, ty, lift);
+		mainActor.walkToTile(tempTile, speed, 0);
+		/* +++++FINISH
+		if (walk_in_formation && mainActor.get_action())
+		//++++++In this case, may need to set schedules back to
+		// follow_avatar after, say, sitting.++++++++++
+			mainActor.get_action().set_get_party(true);
+		*/
+	}
+	/*
+	 *	Start the actor.
+	 */
+	public void startActor
+		(
+		int winx, int winy, // Mouse position to aim for.
+		int speed			// Ticks between frames.
+		) {
+		if (mainActor.getFlag(GameObject.asleep) ||
+				mainActor.getFlag(GameObject.paralyzed) /* ++++ ||
+				mainActor.in_usecode_control() || 
+				mainActor.get_schedule_type() == Schedule::sleep */)
+			return;			// Zzzzz....
+		/*++++++++++
+		if (gump_man.gump_mode() && !gump_man.gumps_dont_pause_game())
+			return;
+		if (moving_barge)
+			{			// Want to move center there.
+			int lift = mainActor.get_lift();
+			int liftpixels = 4*lift;	// Figure abs. tile.
+			int tx = get_scrolltx() + (winx + liftpixels)/c_tilesize,
+		    ty = get_scrollty() + (winy + liftpixels)/c_tilesize;
+					// Wrap:
+			tx = (tx + c_num_tiles)%c_num_tiles;
+			ty = (ty + c_num_tiles)%c_num_tiles;
+			Tile_coord atile = moving_barge.get_center(),
+			   btile = moving_barge.get_tile();
+					// Go faster than walking.
+			moving_barge.travel_to_tile(
+				Tile_coord(tx + btile.tx - atile.tx, 
+				   ty + btile.ty - atile.ty, btile.tz), 
+					speed/2);
+		} else
+		*/
+		{
+			/* ++++++++++++
+			// Set schedule.
+			int sched = mainActor.get_schedule_type();
+			if (sched != Schedule::follow_avatar &&
+					sched != Schedule::combat &&
+					!mainActor.get_flag(Obj_flags::asleep))
+				mainActor.set_schedule_type(Schedule::follow_avatar);
+			*/
+			startActorSteps(winx, winy, speed);
+		}
+	}
+
 	/*
 	 * 	Rendering:
 	 */
@@ -355,7 +506,7 @@ public class GameWindow {
 	
 			int light_sources = 0;
 
-			// if (main_actor) render.paint_map(gx, gy, gw, gh);
+			// if (mainActor) render.paint_map(gx, gy, gw, gh);
 			// else 
 			//	win.fill8(0);
 			render.paintMap(gx, gy, gw, gh);
@@ -368,7 +519,7 @@ public class GameWindow {
 			gump_man.paint(true);
 
 					// Complete repaint?
-			if (!gx && !gy && gw == get_width() && gh == get_height() && main_actor)
+			if (!gx && !gy && gw == get_width() && gh == get_height() && mainActor)
 			{			// Look for lights.
 			Actor *party[9];	// Get party, including Avatar.
 			int cnt = get_party(party, 1);
@@ -399,7 +550,7 @@ public class GameWindow {
 	public void paintDirty() {
 		/*
 		// Update the gumps before painting, unless in dont_move mode (may change dirty area)
-	    if (!main_actor_dont_move())
+	    if (!mainActor_dont_move())
 	        gump_man.update_gumps();
 
 		effects.update_dirty_text();
@@ -412,7 +563,7 @@ public class GameWindow {
 	}
 	//	Paint whole window.
 	public void paint() {
-		// if (main_actor != 0) map.read_map_data();		// Gather in all objs., etc.
+		// if (mainActor != 0) map.read_map_data();		// Gather in all objs., etc.
 		setAllDirty();
 		paintDirty();
 		}
@@ -472,29 +623,29 @@ public class GameWindow {
 		// CYCLE_RED_PLASMA();
 		/* 
 		Notebook_gump::initialize();		// Read in journal.
-		usecode->read();		// Read the usecode flags
+		usecode.read();		// Read the usecode flags
 		CYCLE_RED_PLASMA();
 
 		if (Game::get_game_type() == BLACK_GATE)
 		{
 			string yn;		// Override from config. file.
 						// Skip intro. scene?
-			config->value("config/gameplay/skip_intro", yn, "no");
+			config.value("config/gameplay/skip_intro", yn, "no");
 			if (yn == "yes")
-				usecode->set_global_flag(
+				usecode.set_global_flag(
 					Usecode_machine::did_first_scene, 1);
 
 						// Should Avatar be visible?
-			if (usecode->get_global_flag(Usecode_machine::did_first_scene))
-				main_actor->clear_flag(Obj_flags::bg_dont_render);
+			if (usecode.get_global_flag(Usecode_machine::did_first_scene))
+				mainActor.clear_flag(Obj_flags::bg_dont_render);
 			else
-				main_actor->set_flag(Obj_flags::bg_dont_render);
+				mainActor.set_flag(Obj_flags::bg_dont_render);
 		}
 
 		CYCLE_RED_PLASMA();
 
 		// Fade out & clear screen before palette change
-		pal->fade_out(c_fade_out_time);
+		pal.fade_out(c_fade_out_time);
 		clear_screen(true);
 	#ifdef RED_PLASMA
 		load_palette_timer = 0;
@@ -517,17 +668,17 @@ public class GameWindow {
 
 		int tx = mainActor.getTileX(), ty = mainActor.getTileY(), tz = mainActor.getLift();
 		// Do them immediately.
-		olist.activateEggs(main_actor, tx, ty, tz, -1,-1,true);
+		olist.activateEggs(mainActor, tx, ty, tz, -1,-1,true);
 		// Force entire repaint.
 		setAllDirty();
 		painted = true;			// Main loop uses this.
-		gump_man->close_all_gumps(true);		// Kill gumps.
+		gump_man.close_all_gumps(true);		// Kill gumps.
 		Face_stats::load_config(config);
 
 		// Set palette for time-of-day.
-		clock->reset();
-		clock->set_palette();
-		pal->fade(6, 1, -1);		// Fade back in.
+		clock.reset();
+		clock.set_palette();
+		pal.fade(6, 1, -1);		// Fade back in.
 		*/
 	}
 	public void readNpcs() throws IOException {
@@ -579,8 +730,8 @@ public class GameWindow {
 				if (!okay || sid.get_num_frames() < 16)
 					break;	// Watch for corrupted file.
 				Monster_actor *act = Monster_actor::create(shnum);
-				act->read(&nfile, -1, false, fix_unused);
-				act->restore_schedule();
+				act.read(&nfile, -1, false, fix_unused);
+				act.restore_schedule();
 				CYCLE_RED_PLASMA();
 			}
 		}
