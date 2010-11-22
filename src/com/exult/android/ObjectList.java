@@ -59,7 +59,7 @@ public class ObjectList {
 	/*
 	 * Iterators
 	 */
-	public abstract class ObjectIteratorBase {
+	public static abstract class ObjectIteratorBase {
 			protected ObjectList list;
 			protected GameObject first, stop, cur;
 			public ObjectIteratorBase(ObjectList l) {
@@ -71,7 +71,7 @@ public class ObjectList {
 			}
 			public abstract GameObject next();
 	}
-	public class ObjectIterator extends ObjectIteratorBase {
+	public static class ObjectIterator extends ObjectIteratorBase {
 		public ObjectIterator(ObjectList l) {
 			super(l);
 			cur = first = l.first;
@@ -86,7 +86,7 @@ public class ObjectList {
 			return ret;
 		}
 	}
-	class NonflatObjectIterator extends ObjectIterator {
+	public static class NonflatObjectIterator extends ObjectIterator {
 		private GameObject nonflats;
 		private void reset()
 			{ this.cur = nonflats; this.stop = null; }
@@ -96,7 +96,7 @@ public class ObjectList {
 		reset(); 
 		}
 	};
-	public class FlatObjectIterator extends ObjectIteratorBase {
+	public static class FlatObjectIterator extends ObjectIteratorBase {
 		private GameObject stopAt;
 		public FlatObjectIterator(ObjectList l, GameObject firstNonflat) {
 			super(l);

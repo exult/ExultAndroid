@@ -400,7 +400,7 @@ public class ImageBuf {
 	 *	This class represents a single transparent color by providing a
 	 *	palette for its effect on all the other colors.
 	 */
-	public class XformPalette {
+	public static class XformPalette {
 		public static final int NCOLORS = 256;
 		public byte colors[] = new byte[NCOLORS];	// For transforming 8-bit colors.
 		public byte get(int i)

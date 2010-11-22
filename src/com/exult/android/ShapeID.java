@@ -105,7 +105,7 @@ public class ShapeID extends GameSingletons {
 				nobjs = nxforms;
 			xforms = new ImageBuf.XformPalette[nobjs];
 			for (int i = 0; i < nobjs; ++i) {
-				xforms[nxforms - 1 - i] = win.new XformPalette();
+				xforms[nxforms - 1 - i] = new ImageBuf.XformPalette();
 				byte data[] = xf.retrieve(i);
 				if (data == null) {
 					// No XForm data at all. Make this XForm into an

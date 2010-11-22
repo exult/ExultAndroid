@@ -106,7 +106,7 @@ public class TimeQueue {
 		}
 	}
 	
-	public class QueueEntry {
+	public static class QueueEntry {
 		TimeSensitive handler;
 		Object udata;		// Data to pass to handler.
 		int time;			// Time when due.

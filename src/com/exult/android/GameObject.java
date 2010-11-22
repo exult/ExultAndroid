@@ -200,7 +200,7 @@ public abstract class GameObject extends ShapeID {
 	/*
 	 * Compare objects for rendering.
 	 */
-	public class OrderingInfo {
+	public static class OrderingInfo {
 		// Temps for comparing two objects.
 		
 		public Rectangle area;			// Area (pixels) rel. to screen.

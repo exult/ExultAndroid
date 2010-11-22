@@ -692,7 +692,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	/*
 	 * Sequence of frames, with 0 being the resting frame.
 	 */
-	public class FramesSequence {
+	public static class FramesSequence {
 		private byte frames[];
 		public FramesSequence(byte f[]) {
 			frames = f;

@@ -10,7 +10,7 @@ public class FlexFile extends EFile {
 	int	count;
 	int	magic2;
 	int	padding[];	// 9 words
-	class  Reference {
+	static class  Reference {
 		int offset;
 		int size;
 		byte buf[];
