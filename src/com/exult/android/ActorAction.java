@@ -26,6 +26,9 @@ abstract public class ActorAction {
 	abstract public int handleEvent(Actor actor);
 	abstract public void stop(Actor actor);
 	abstract public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist);
+	public int getSpeed() {
+		return 0;
+	}
 	/*
 	 *	Follow a path.
 	 */
@@ -41,7 +44,7 @@ abstract public class ActorAction {
 		private byte max_blocked;	// Try this many times.
 		private byte blocked_frame;	// Frame for blocked tile.
 		private Tile blocked_tile;	// Tile to retry.
-		private Tile stepTile = new Tile(), curTile = new Tile();;
+		private Tile stepTile = new Tile(), curTile = new Tile();
 		private void setSubseq(ActorAction sub) {
 			subseq = sub;
 		}
@@ -55,10 +58,10 @@ abstract public class ActorAction {
 				int delay = subseq.handleEvent(actor);
 				if (delay != 0)
 					return delay;	// Still going.
-			setSubseq(null);
+				setSubseq(null);
 						// He was stopped, so restore speed.
-			actor.setFrameTime(speed);
-			return speed;		// Come back in a moment.
+				actor.setFrameTime(speed);
+				return speed;		// Come back in a moment.
 			}
 			/* +++++++++++++
 			if (blocked != 0) {

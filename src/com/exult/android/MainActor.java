@@ -10,32 +10,27 @@ public class MainActor extends Actor {
 	 *	Handle a time event (for TimeSensitive).
 	 */
 	public void handleEvent(int ctime, Object udata) {
-		/* ++++++++FINISH
-		if (action)			// Doing anything?
-				{			// Do what we should.
-				int speed = action->get_speed();
-				int delay = action->handle_event(this);
-				if (!delay)
-					{	// Action finished.
+		if (action != null)	{		// Doing anything?
+							// Do what we should.
+			int speed = action.getSpeed();
+			int delay = action.handleEvent(this);
+			if (delay == 0) {
+						// Action finished.
 						// This makes for a smoother scrolling and prevents the
 						// avatar from skipping a step when walking.
-					frame_time = speed;
-					if (!frame_time)	// Not a path. Add a delay anyway.
-						frame_time = gwin->get_std_delay();
-					delay = frame_time;
-					set_action(0);
-					}
-
-				gwin->get_tqueue()->add(
-						curtime + delay, this, udata);
-				}
-			else if (in_usecode_control() || get_flag(Obj_flags::paralyzed))
+				frameTime = speed;
+				if (frameTime == 0)	// Not a path. Add a delay anyway.
+					frameTime = 1;	// 1 tick.
+				delay = frameTime;
+				setAction(null);
+			}
+			gwin.getTqueue().add(ctime + delay, this, udata);
+		} else if (inUsecodeControl() || getFlag(GameObject.paralyzed))
 				// Keep trying if we are in usecode control.
-				gwin->get_tqueue()->add(
-						curtime + gwin->get_std_delay(), this, udata);
-			else if (schedule)
-				schedule->now_what();
-	*/
+			gwin.getTqueue().add(ctime + 1, this, udata);
+			/* else ++++  if (schedule != null)
+				schedule.nowWhat();
+			 */
 	}
 	public boolean step(Tile t, int frame, boolean force) {
 		restTime = 0;			// Reset counter.

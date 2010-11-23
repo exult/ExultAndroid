@@ -71,9 +71,9 @@ public class ExultActivity extends Activity {
     		if (GameTime > nextTickTime ) {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
-                // I think we would execute timed activities here using new ticks.
-          
-                
+                synchronized (gwin.getTqueue()) {
+                	gwin.getTqueue().activate(TimeQueue.ticks);
+                }
                 if (gwin.isDirty()) {
                 	gwin.paintDirty();
                 }
@@ -131,6 +131,7 @@ public class ExultActivity extends Activity {
     	}
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
+    			synchronized (gwin.getTqueue()) {
     			int x = (int)gwin.getWin().screenToGameX(event.getX()), 
     				y = (int)gwin.getWin().screenToGameY(event.getY());
     			switch (event.getAction()) {
@@ -138,7 +139,7 @@ public class ExultActivity extends Activity {
     				gwin.startActor(x, y, 1);
     				return true;
     			case MotionEvent.ACTION_UP:
-    				gwin.stopActor();
+    				//+++++TESTING gwin.stopActor();
     				return true;
     			case MotionEvent.ACTION_MOVE:
     				gwin.startActor(x, y, 1);
@@ -147,6 +148,7 @@ public class ExultActivity extends Activity {
     				return true;
     			}
     			return false;
+    		}
     		}
     	};
     	private OnKeyListener keyListener = new OnKeyListener() {

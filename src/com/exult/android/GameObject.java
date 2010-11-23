@@ -159,21 +159,24 @@ public abstract class GameObject extends ShapeID {
 		Iterator X;
 		GameObject obj;
 		
-		// First do those we depend on.
-		for (X = dependencies.iterator(); X.hasNext(); ) {
-			obj = (GameObject)X.next();
-			if (obj.dependors != null)
-				obj.dependors.remove(this);
+		if (dependencies != null) {
+			// First do those we depend on.
+			for (X = dependencies.iterator(); X.hasNext(); ) {
+				obj = (GameObject)X.next();
+				if (obj.dependors != null)
+					obj.dependors.remove(this);
+			}
+			dependencies.clear();
 		}
-		dependencies.clear();
-		
-		// Now those who depend on us.
-		for (X = dependors.iterator(); X.hasNext();  ) {
-			obj = (GameObject)X.next();
-			if (obj.dependencies != null)
-				obj.dependencies.remove(this);
+		if (dependors != null) {
+			// Now those who depend on us.
+			for (X = dependors.iterator(); X.hasNext();  ) {
+				obj = (GameObject)X.next();
+				if (obj.dependencies != null)
+					obj.dependencies.remove(this);
+			}
+			dependors.clear();
 		}
-		dependors.clear();
 	}
 	public void paint() {
 		int x, y;

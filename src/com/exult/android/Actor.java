@@ -330,6 +330,19 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)
 				|| isDead() || getProperty(health) <= 0);
 	}
+	public boolean inUsecodeControl() {
+		if (getFlag(GameObject.dont_render) || getFlag(GameObject.dont_move))
+			return true;
+		/* +++++++
+		Usecode_script *scr = 0;
+		Actor *act = const_cast<Actor *>(this);
+		while ((scr = Usecode_script::find_active(act, scr)) != 0)
+			// no_halt scripts seem not to prevent movement.
+			if (!scr->is_no_halt())
+				return true;
+		*/
+		return false;
+	}
 	/*
 	 *	Walk towards a given tile.
 	 */

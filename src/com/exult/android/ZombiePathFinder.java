@@ -17,6 +17,9 @@ public class ZombiePathFinder extends PathFinder {
 					//   subtract 'major_delta' from sum.
 	private int sum1, sum2;			// Sum of 'minor_delta''s.
 	
+	public ZombiePathFinder() {
+		major_frame_incr = 1;
+	}
 	@Override
 	public boolean NewPath(Tile s, Tile d) {
 		cur[X] = s.tx; cur[Y] = s.ty; cur[Z] = s.tz;
