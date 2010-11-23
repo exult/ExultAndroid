@@ -25,6 +25,7 @@ abstract public class ActorAction {
 	// Handle time event.
 	abstract public int handleEvent(Actor actor);
 	abstract public void stop(Actor actor);
+	abstract public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist);
 	/*
 	 *	Follow a path.
 	 */
@@ -45,7 +46,8 @@ abstract public class ActorAction {
 			subseq = sub;
 		}
 		public PathWalkingActorAction(PathFinder p, int maxblk) {
-			
+			path = p;
+			max_blocked = (byte) maxblk;
 		}
 						// Handle time event.
 		public int handleEvent(Actor actor) {
@@ -156,7 +158,58 @@ abstract public class ActorAction {
 		}
 						// Set simple path to destination.
 		public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist) {
-			return null;
+			blocked = 0;			// Clear 'blocked' count.
+			reached_end = false;		// Starting new path.
+			/* ++++++++FINISH
+			get_party = false;
+			from_offscreen = false;
+						//+++++Should dist be used below??:
+							// Set up new path.
+							// Don't care about 1 coord.?
+			if (dest.tx == -1 || dest.ty == -1)
+				{
+				if (dest.tx == dest.ty)	// Completely off-screen?
+					{
+					Offscreen_pathfinder_client cost(npc);
+					if (!path->NewPath(src, dest, &cost))
+						return (0);
+					}
+				else
+					{
+					Onecoord_pathfinder_client cost(npc);
+					if (!path->NewPath(src, dest, &cost))
+						return (0);
+					}
+				}
+							// How about from source?
+			else if (src.tx == -1 || src.ty == -1)
+				{			// Figure path in opposite dir.
+				if (src.tx == src.ty)	// Both -1?
+					{		// Aim from NPC's current pos.
+					Offscreen_pathfinder_client cost(npc, npc->get_tile());
+					if (!path->NewPath(dest, src, &cost))
+						return (0);
+					}
+				else
+					{
+					Onecoord_pathfinder_client cost(npc);
+					if (!path->NewPath(dest, src, &cost))
+						return (0);
+					}
+				from_offscreen = true;
+							// Set to go backwards.
+				if (!path->set_backwards())
+					return (0);
+				}
+			else */
+				{
+				// ++++++Actor_pathfinder_client cost(npc, dist);
+				if (!path.NewPath(src, dest /* , &cost*/))
+					return null;
+				}
+							// Reset direction (but not index).
+			original_dir = EUtil.getDirection4(src.ty - dest.ty, dest.tx - src.tx);
+			return this;
 		}
 		/* ++++++
 						// Get destination, or ret. 0.

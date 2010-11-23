@@ -343,17 +343,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		) {
 		if (zombiePath == null)
 			zombiePath = new ZombiePathFinder();
-		/*
 		if (action == null)
-			action = new PathWalkingActorAction(zombie, maxblk);
+			action = new ActorAction.PathWalkingActorAction(zombiePath, maxblk);
 		getTile(walkSrc);
-		setAction(action.walkToTile(this, walkSrc, dest));
-		*/
-		/* ++++++++FINISH
+		setAction(action.walkToTile(this, walkSrc, dest, 0));
 		if (action != null)			// Successful at setting path?
 			start(speed, delay);
 		else
-		*/
 			frameTime = 0;		// Not moving.
 		}
 	public void walkToTile(Tile dest, int speed, int delay) {

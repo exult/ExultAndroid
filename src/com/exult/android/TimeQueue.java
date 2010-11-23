@@ -3,7 +3,7 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 
 public class TimeQueue {
-	private LinkedList<QueueEntry> entries;
+	private LinkedList<QueueEntry> entries = new LinkedList<QueueEntry>();
 	private int pauseTime;		// Time when paused.
 	private int paused;			// # calls to 'pause'.
 	public static int ticks = 0;

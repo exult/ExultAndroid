@@ -6,7 +6,7 @@ package com.exult.android;
 public class Tile {
 	public short tx, ty, tz;
 	public void set(int x, int y, int z) {
-		tx = (short)tx; ty = (short)y; tz = (short)z;
+		tx = (short)x; ty = (short)y; tz = (short)z;
 	}
 	public Tile(int x, int y, int z) {
 		tx = (short)tx; ty = (short)y; tz = (short)z;

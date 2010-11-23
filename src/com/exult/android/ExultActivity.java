@@ -131,7 +131,8 @@ public class ExultActivity extends Activity {
     	}
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
-    			int x = (int)event.getX(), y = (int)event.getY();
+    			int x = (int)gwin.getWin().screenToGameX(event.getX()), 
+    				y = (int)gwin.getWin().screenToGameY(event.getY());
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
     				gwin.startActor(x, y, 1);

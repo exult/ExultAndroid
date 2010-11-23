@@ -34,7 +34,7 @@ public class ImageBuf {
 		return (true);
 	}
 	public ImageBuf(int w, int h) {
-		width = w; height = h;
+		width = scalew = w; height = scaleh = h;
 		clipx = clipy = 0;
 		clipw = w; cliph = h;
 		rgba = new int[w*h];
@@ -52,6 +52,13 @@ public class ImageBuf {
 	}
 	public int getHeight() {
 		return height;
+	}
+	// Convert from scaled screen to game coords.
+	public final float screenToGameX(float sx) {
+		return sx * width/scalew;
+	}
+	public final float screenToGameY(float sy) {
+		return sy * height/scaleh;
 	}
 	public void setClip(int x, int y, int w, int h) {
 		clipx = x; clipy = y; clipw = w; cliph = h;
