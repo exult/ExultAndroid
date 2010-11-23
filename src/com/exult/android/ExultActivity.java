@@ -2,6 +2,7 @@ package com.exult.android;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Debug;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -24,13 +25,20 @@ public class ExultActivity extends Activity {
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	// start tracing to "/sdcard/calc.trace"
+        //Debug.startMethodTracing("calc");
+
     	EUtil.initSystemPaths();
     	ShapeFiles.load();
     	vgaFile = ShapeFiles.SHAPES_VGA.getFile();
         super.onCreate(savedInstanceState);
         setContentView(new MySurfaceView(this));
     }
-    
+    @Override
+    public void onDestroy() {
+    	// stop tracing
+        //Debug.stopMethodTracing();
+    }
     /*
      * Subclasses.
      */
@@ -175,6 +183,9 @@ public class ExultActivity extends Activity {
 		        			System.out.println("Setting skipLift to " + gwin.skipLift);
 		        			gwin.setAllDirty();
 		        		}
+		        	case KeyEvent.KEYCODE_X:
+		        		//+++TODO test for ALT.
+		        		finish(); break;
 		        	}
 		        }
     			return false;		// Didn't handle it here.

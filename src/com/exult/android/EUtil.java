@@ -35,9 +35,7 @@ public class EUtil {
 	}
 	public static final int Read4(RandomAccessFile in) {
 		try {
-			int cnt = in.read(buf4);
-			if (cnt != 4)
-				return -1;	// Throw exception?
+			in.read(buf4);
 			return (((int)buf4[0]&0xff) | (((int)buf4[1]&0xff)<<8) | 
 					(((int)buf4[2]&0xff)<<16) | (((int)buf4[3]&0xff)<<24));
 		} catch (IOException e) {
@@ -46,9 +44,7 @@ public class EUtil {
 	}
 	public static final int Read2(RandomAccessFile in) {
 		try {
-			int cnt = in.read(buf2);
-			if (cnt != 2)
-				return -1;	// Throw exception?
+			in.read(buf2);
 			return (((int)buf2[0]&0xff) | (((int)buf2[1]&0xff)<<8));
 		} catch (IOException e) {
 			return -1;
@@ -56,9 +52,7 @@ public class EUtil {
 	}
 	public static final int Read4(InputStream in) {
 		try {
-			int cnt = in.read(buf4);
-			if (cnt != 4)
-				return -1;	// Throw exception?
+			in.read(buf4);
 			return (((int)buf4[0]&0xff) | (((int)buf4[1]&0xff)<<8) | 
 					(((int)buf4[2]&0xff)<<16) | (((int)buf4[3]&0xff)<<24));
 		} catch (IOException e) {
@@ -67,9 +61,7 @@ public class EUtil {
 	}
 	public static final int Read2(InputStream in) {
 		try {
-			int cnt = in.read(buf2);
-			if (cnt != 2)
-				return -1;	// Throw exception?
+			in.read(buf2);
 			return (((int)buf2[0]&0xff) | (((int)buf2[1]&0xff)<<8));
 		} catch (IOException e) {
 			return -1;
