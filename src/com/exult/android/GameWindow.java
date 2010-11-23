@@ -18,6 +18,7 @@ public class GameWindow {
 	private Rectangle tempDirty;	// Temp for addDirty.
 	private Point tempPoint = new Point();
 	private Tile tempTile = new Tile();
+	private Tile SRTempTile = new Tile();	// For getShapeRect.
 	private ImageBuf win;
 	private Palette pal;
 	// Gameplay objects.
@@ -148,18 +149,18 @@ public class GameWindow {
 			return r;
 		}
 		// Get tile coords.
-		int tx = obj.getTileX(), ty = obj.getTileY(), tz = obj.getLift();
-		int lftpix = 4*tz;
-		tx += 1 - getScrolltx();
-		ty += 1 - getScrollty();
+		obj.getTile(SRTempTile);
+		int lftpix = 4*SRTempTile.tz;
+		SRTempTile.tx += 1 - scrolltx;
+		SRTempTile.ty += 1 - scrollty;
 						// Watch for wrapping.
-		if (tx < -EConst.c_num_tiles/2)
-			tx += EConst.c_num_tiles;
-		if (ty < -EConst.c_num_tiles/2)
-			ty += EConst.c_num_tiles;
+		if (SRTempTile.tx < -EConst.c_num_tiles/2)
+			SRTempTile.tx += EConst.c_num_tiles;
+		if (SRTempTile.ty < -EConst.c_num_tiles/2)
+			SRTempTile.ty += EConst.c_num_tiles;
 		return getShapeRect(r, s,
-			tx*EConst.c_tilesize - 1 - lftpix,
-			ty*EConst.c_tilesize - 1 - lftpix);
+				SRTempTile.tx*EConst.c_tilesize - 1 - lftpix,
+				SRTempTile.ty*EConst.c_tilesize - 1 - lftpix);
 	}
 	public Rectangle getShapeRect(Rectangle r, ShapeFrame s, int x, int y) {
 		r.set(x - s.getXLeft(), y - s.getYAbove(),
@@ -388,8 +389,8 @@ public class GameWindow {
 		}
 		int lift = mainActor.getLift();
 		int liftpixels = 4*lift;	// Figure abs. tile.
-		int tx = getScrolltx() + (a.x + liftpixels)/EConst.c_tilesize,
-	    	ty = getScrollty() + (a.y + liftpixels)/EConst.c_tilesize;
+		int tx = scrolltx + (a.x + liftpixels)/EConst.c_tilesize,
+	    	ty = scrollty + (a.y + liftpixels)/EConst.c_tilesize;
 					// Wrap:Game_window::start_actor
 		tx = (tx + EConst.c_num_tiles)%EConst.c_num_tiles;
 		ty = (ty + EConst.c_num_tiles)%EConst.c_num_tiles;

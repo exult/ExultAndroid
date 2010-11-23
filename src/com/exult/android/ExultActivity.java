@@ -182,7 +182,9 @@ public class ExultActivity extends Activity {
 		        				gwin.skipLift = 16;
 		        			System.out.println("Setting skipLift to " + gwin.skipLift);
 		        			gwin.setAllDirty();
-		        		}
+		        			return true;
+		        		} else
+		        			return false;
 		        	case KeyEvent.KEYCODE_X:
 		        		//+++TODO test for ALT.
 		        		finish(); break;
