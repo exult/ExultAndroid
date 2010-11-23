@@ -121,4 +121,8 @@ public class ZombiePathFinder extends PathFinder {
 	public int getNumSteps() {
 		 return major_distance/major_frame_incr;
 	}
+	@Override
+	public boolean isDone() {
+		return major_distance <= 0;
+	}
 }

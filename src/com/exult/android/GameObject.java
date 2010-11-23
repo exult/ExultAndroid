@@ -136,7 +136,7 @@ public abstract class GameObject extends ShapeID {
 		gwin.addDirty(this);		// And repaint new area.
 	}
 	//	Step:  Overridden by Actors.
-	public boolean step(int tx, int ty, int tz, int frame, boolean force) {
+	public boolean step(Tile t, int frame, boolean force) {
 		return false;
 	}
 	public final HashSet<GameObject> getDependencies() {

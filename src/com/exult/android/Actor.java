@@ -215,12 +215,21 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		skinColor = color; 
 		/* +++++ set_actor_shape(); */
 	}
+	public final int getFrameTime() {
+		return frameTime;
+	}
+	public final void setFrameTime(int f) {
+		frameTime = f;
+	}
 	public boolean isDying() {		// Dead when health below -1/3 str.
 		return properties[health] < 
 				-(properties[strength]/3); 
 	}
 	public final boolean isDead() {
 		return (flags&(1<<GameObject.dead)) != 0; 
+	}
+	public final boolean isDormant() {
+		return dormant;
 	}
 	public final ActorAction getAction() {
 		return action;
@@ -246,6 +255,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return false;
 		//+++++++FINISH: Figure casting/weapon rectangle.
 		return true;
+	}
+	// Get frame seq. for given dir.
+	public FramesSequence getFrames(int dir)
+		{ return frames[dir/2]; }
+	public final int getStepIndex() {
+		return stepIndex;
+	}
+	public final void setStepIndex(int i) {
+		stepIndex = i;
 	}
 	/*
 	 *	Walk towards a given tile.
@@ -709,6 +727,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (--index <= 0)
 				index = frames.length - 1;
 			return index;
+		}
+		public final int get(int i) {
+			return frames[i];
 		}
 		// Find frame, masking off rotation, or 0 if not found.
 		public int findUnrotated(byte frame) {

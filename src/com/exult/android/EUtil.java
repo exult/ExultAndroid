@@ -6,11 +6,13 @@ import java.io.FileInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
+import java.util.Random;
 
 public class EUtil {
 	private static TreeMap pathMap;
 	private static byte buf2[] = new byte[2];
 	private static byte buf4[] = new byte[4];
+	private static Random random = new Random();
 	public static final int Read2(byte buf[], int ind) {
 		return ((int)buf[ind]&0xff) | ((int)buf[ind+1]&0xff)<<8;
 	}
@@ -229,6 +231,22 @@ public class EUtil {
 			else			// Top-left?
 				return dydx >= -424 ? EConst.west : dydx >= -2472 ? EConst.northwest
 									: EConst.north;
+	}
+	/*
+	 *	Return the direction for a given slope (0-7), rounded to NSEW.
+	 *	NOTE:  Assumes cartesian coords, NOT screen coords. (which have y
+	 *		growing downwards).
+	 */
+	public static final int getDirection4(int deltay, int deltax) {
+		if (deltax >= 0)	// Right side?
+			return (deltay > deltax ? EConst.north : deltay < -deltax ? EConst.south
+									: EConst.east);
+		else				// Left side.
+			return (deltay > -deltax ? EConst.north : deltay < deltax ? EConst.south
+									: EConst.west);
+	}
+	public static final int rand() {
+		return random.nextInt();
 	}
 }
 
