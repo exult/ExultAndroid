@@ -182,7 +182,7 @@ public class ShapeFrame {
 	/*
 	 *	Skip transparent pixels.
 	 *
-	 *	Output:	# skipped, or w-x if not more non-transparent
+	 *	Output: Ind of 1st non-transparent pixel, or w-x if not more non-transparent
 	 */
 	private static int SkipTransparent
 		(
@@ -191,12 +191,11 @@ public class ShapeFrame {
 		int x,				// X-coord. of pixel to start with.
 		int w				// Remaining width of pixels.
 		) {
-		int deltax = 0;
-		while (x < w && ((int)pixels[ind + x]&0xff) == 255) {
+		while (x < w && pixels[ind] == -1) {
 			x++;
-			deltax++;
+			ind++;
 		}
-		return (deltax);
+		return (x);
 	}
 	/*
 	 *	Split a line of pixels into runs, where a run
@@ -215,7 +214,7 @@ public class ShapeFrame {
 			int w					// Remaining width of pixels.
 		) {
 		int runcnt = 0;			// Counts runs.
-		while (x < w && pixels[x] != 255) {	// Stop at first transparent pixel.
+		while (x < w && pixels[ind] != -1) {	// Stop at first transparent pixel.
 			int run = 0;		// Look for repeat.
 			while (x < w - 1 && pixels[ind] == pixels[ind + 1]) {
 				x++;
@@ -231,7 +230,7 @@ public class ShapeFrame {
 				ind++;
 				run += 2;	// So we don't have to shift.
 			}
-			while (x < w && ((int)pixels[ind]&0xff) != 255 &&
+			while (x < w && pixels[ind] != -1 &&
 					(x == w - 1 || pixels[ind] != pixels[ind + 1]));
 					// Store run length.
 			runs[runcnt++] = (short) run;
@@ -260,12 +259,10 @@ public class ShapeFrame {
 		int deltax;
 		short runs[] = new short[200];
 		for (int y = 0; y < h; y++) {	// Go through rows.
-			int x = 0;
-			if (ind != y*w)
-				System.out.println("Ind = " + ind + " but should be " + y*w);
-			for (deltax = x = SkipTransparent(pixels, ind, x, w); x < w; 
-										deltax = SkipTransparent(pixels, ind, newx, w), x = newx + deltax) {
-				ind += deltax;
+			int x, oldx = 0;
+			ind = y*w;
+			for (x = 0; (x = SkipTransparent(pixels, ind, x, w)) < w; x = oldx = newx) {
+				ind += x - oldx;
 				newx = Find_runs(runs, pixels, ind, x, w);
 						// Just 1 non-repeated run?
 				if (runs[1] == 0 && (runs[0]&1) == 0)

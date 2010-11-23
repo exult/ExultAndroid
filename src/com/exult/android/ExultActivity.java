@@ -71,6 +71,7 @@ public class ExultActivity extends Activity {
     		if (GameTime > nextTickTime ) {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
+                
                 synchronized (gwin.getTqueue()) {
                 	gwin.getTqueue().activate(TimeQueue.ticks);
                 }
@@ -139,7 +140,7 @@ public class ExultActivity extends Activity {
     				gwin.startActor(x, y, 1);
     				return true;
     			case MotionEvent.ACTION_UP:
-    				//+++++TESTING gwin.stopActor();
+    				gwin.stopActor();
     				return true;
     			case MotionEvent.ACTION_MOVE:
     				gwin.startActor(x, y, 1);
