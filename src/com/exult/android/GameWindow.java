@@ -13,6 +13,7 @@ public class GameWindow {
 	private Vector<GameMap> maps;	// Hold all terrain.
 	private GameMap map;			// Current map.
 	private GameRender render;
+	private TimeQueue tqueue;
 	private Rectangle paintBox;		// Temp used for painting.
 	private Rectangle tempDirty;	// Temp for addDirty.
 	private Point tempPoint = new Point();
@@ -48,6 +49,7 @@ public class GameWindow {
 		maps = new Vector<GameMap>(1);
 		map = new GameMap(0);
 		render = new GameRender();
+		tqueue = new TimeQueue();
 		maps.add(map);
 		win = new ImageBuf(width, height);
 		pal = new Palette(win);
@@ -75,7 +77,7 @@ public class GameWindow {
 			}
 		return newMap;
 	}
-	public GameMap getMap() {
+	public final GameMap getMap() {
 		return map;
 	}
 	public void setMap(int num) {
@@ -86,16 +88,19 @@ public class GameWindow {
 		*/
 		GameSingletons.gmap = map;
 	}
-	public Palette getPal() {
+	public final Palette getPal() {
 		return pal;
 	}
-	public Actor getMainActor() {
+	public final TimeQueue getTqueue() {
+		return tqueue;
+	}
+	public final Actor getMainActor() {
 		return mainActor;
 	}
-	public boolean isMainActorInside()
+	public final boolean isMainActorInside()
 		{ return skipAboveActor < 31 ; }
 	// Returns if skip_above_actor changed!
-	public boolean setAboveMainActor(int lift) {
+	public final boolean setAboveMainActor(int lift) {
 		if (skipAboveActor == lift) 
 			return false;
 		skipAboveActor = lift;
@@ -442,6 +447,20 @@ public class GameWindow {
 			*/
 			startActorSteps(winx, winy, speed);
 		}
+	}
+	public final void stopActor() {
+		/* +++++++++++++++
+		if (moving_barge)
+			moving_barge->stop();
+		else
+		*/
+			{
+			mainActor.stop();	// Stop and set resting state.
+			/* ++++++
+			if (!gump_man.gump_mode())
+					main_actor.get_followers();
+			*/
+			}
 	}
 
 	/*

@@ -6,6 +6,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.content.Context;
@@ -96,6 +97,8 @@ public class ExultActivity extends Activity {
     		thread = new MySurfaceThread(getHolder(), this);
     		// Keystroke handler.
     		setOnKeyListener(keyListener);
+    		// 'Touch' handler
+    		setOnTouchListener(touchListener);
     		setFocusable(true);
     		setFocusableInTouchMode(true);
     		requestFocus();
@@ -126,6 +129,25 @@ public class ExultActivity extends Activity {
     			win.rotateColors(0xe0, 8);
     			gwin.setPainted();
     	}
+    	private OnTouchListener touchListener = new OnTouchListener() {
+    		public boolean onTouch(View v, MotionEvent event) {
+    			int x = (int)event.getX(), y = (int)event.getY();
+    			switch (event.getAction()) {
+    			case MotionEvent.ACTION_DOWN:
+    				gwin.startActor(x, y, 1);
+    				return true;
+    			case MotionEvent.ACTION_UP:
+    				gwin.stopActor();
+    				return true;
+    			case MotionEvent.ACTION_MOVE:
+    				gwin.startActor(x, y, 1);
+    				return true;
+    			case MotionEvent.ACTION_CANCEL:
+    				return true;
+    			}
+    			return false;
+    		}
+    	};
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {

@@ -24,7 +24,7 @@ abstract public class ActorAction {
 	}
 	// Handle time event.
 	abstract public int handleEvent(Actor actor);
-	
+	abstract public void stop(Actor actor);
 	/*
 	 *	Follow a path.
 	 */
@@ -147,7 +147,12 @@ abstract public class ActorAction {
 			return 0;
 		}
 		public void stop(Actor actor) { // Stop moving.
-			//+++++++++++
+			// Don't set slimes.
+			if (!actor.getInfo().hasStrangeMovement() && actor.canAct()) {
+							// For now, just use original dir.
+				Actor.FramesSequence frames = actor.getFrames(original_dir);
+				actor.changeFrame(frames.getResting());
+				}
 		}
 						// Set simple path to destination.
 		public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist) {

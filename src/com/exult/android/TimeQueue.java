@@ -105,7 +105,23 @@ public class TimeQueue {
 				ent.time += diff;	// Push entries ahead.
 		}
 	}
-	
+	/*
+	 *	Remove first entry containing a given object.
+	 */
+	public boolean remove(TimeSensitive obj) {
+		if (entries.isEmpty())
+			return false;
+		ListIterator<QueueEntry> it = entries.listIterator();
+		while (it.hasNext()) {
+			QueueEntry ent = it.next();
+			if (ent.handler == obj) {
+				obj.removedFromQueue();
+				it.remove();
+				return true;
+			}
+		}
+		return false;			// Not found.
+	}
 	public static class QueueEntry {
 		TimeSensitive handler;
 		Object udata;		// Data to pass to handler.

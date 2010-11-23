@@ -189,7 +189,25 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			properties[i] = 0;
 		for (i = 0, len = spots.length; i < len; i++)
 			spots[i] = null;
-		}
+	}
+	public final int getProperty(int prop) {
+		/* ++++++FINISH
+		if (prop == Actor::sex_flag)
+			// Correct in BG and SI, but the flag is never normally set
+			// for anyone but avatar in BG.
+			return get_type_flag(Actor::tf_sex);
+		else if (prop == Actor::missile_weapon)
+			{
+			// Seems to give the same results as in the originals.
+			Game_object *weapon = get_readied(lhand);
+			Weapon_info *winf = weapon ? weapon->get_info().get_weapon_info() : 0;
+			if (!winf)
+				return 0;
+			return (winf->get_uses() >= 2);
+			}
+		*/
+		return (prop >= 0 && prop < Actor.sex_flag) ? properties[prop] : 0;
+	}
 	public final void setProperty(int prop, int val) {
 		//+++++++++FINISH
 	}
@@ -256,6 +274,23 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		//+++++++FINISH: Figure casting/weapon rectangle.
 		return true;
 	}
+	public final void changeFrame(int frnum) {
+		addDirty(false);			// Set to repaint old area.
+		/* FINISH+++++++++++
+		ShapeID id(get_shapenum(), frnum, get_shapefile());
+		Shape_frame *shape = id.get_shape();
+		if (!shape || shape->is_empty())
+			{		// Swap 1hand <=> 2hand frames.
+			frnum = (frnum&48)|visible_frames[frnum&15];
+			id.set_frame(frnum);
+			if (!(shape = id.get_shape()) || shape->is_empty())
+				frnum = (frnum&48)|Actor::standing;
+			}
+		*/
+		restTime = 0;
+		setFrame(frnum);
+		addDirty(true);			// Set to repaint new.
+	}
 	// Get frame seq. for given dir.
 	public FramesSequence getFrames(int dir)
 		{ return frames[dir/2]; }
@@ -264,6 +299,36 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public final void setStepIndex(int i) {
 		stepIndex = i;
+	}
+	
+	/*
+	 *	Begin animation.
+	 */
+	public void start
+		(
+		int speed,			// Time between frames (ticks).
+		int delay			// Delay before starting (ticks) (only
+							//   if not already moving).
+		) {
+		dormant = false;		// 14-jan-2001 - JSF.
+		frameTime = speed;
+		if (!inQueue() || delay > 0) {	// Not already in queue?
+			if (delay > 0)
+				gwin.getTqueue().remove(this);
+			int curtime = TimeQueue.ticks;
+			gwin.getTqueue().add(curtime + delay, this, gwin);
+			}
+	}
+	public void stop() {
+		if (action != null) {
+			action.stop(this);
+			addDirty(false);
+		}
+		frameTime = 0;
+	}
+	public final boolean canAct() {
+		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)
+				|| isDead() || getProperty(health) <= 0);
 	}
 	/*
 	 *	Walk towards a given tile.
@@ -706,6 +771,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public void removedFromQueue() {
 		--timeQueueCount;
+	}
+	public final boolean inQueue() {
+		return timeQueueCount > 0;
 	}
 	/*
 	 * Sequence of frames, with 0 being the resting frame.
