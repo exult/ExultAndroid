@@ -74,6 +74,7 @@ public class ExultActivity extends Activity {
     
     public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback{
     	private MySurfaceThread thread;
+    	private MotionEvent avatarMotion;	// When moving Avatar.
     	@Override
     	protected void onDraw(Canvas canvas){
     		if (GameTime > nextTickTime ) {
@@ -82,6 +83,13 @@ public class ExultActivity extends Activity {
                 
                 synchronized (gwin.getTqueue()) {
                 	gwin.getTqueue().activate(TimeQueue.ticks);
+                }
+                // If mouse still down, keep moving.
+                if (avatarMotion != null && !gwin.isMoving()) {
+                	int x = (int)gwin.getWin().screenToGameX(avatarMotion.getX()), 
+    					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
+                	System.out.println("Keep moving");
+                	gwin.startActor(x, y, 1);
                 }
                 if (gwin.isDirty()) {
                 	gwin.paintDirty();
@@ -141,17 +149,27 @@ public class ExultActivity extends Activity {
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
     			synchronized (gwin.getTqueue()) {
-    			int x = (int)gwin.getWin().screenToGameX(event.getX()), 
-    				y = (int)gwin.getWin().screenToGameY(event.getY());
+    			float sx = event.getX(), sy = event.getY();
+    			int x = (int)gwin.getWin().screenToGameX(sx), 
+    				y = (int)gwin.getWin().screenToGameY(sy);
+    			int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
-    				gwin.startActor(x, y, 1);
+    				if ((state & KeyEvent.META_SHIFT_ON) != 0) {
+    					System.out.println("Starting motion");
+    					avatarMotion = MotionEvent.obtain(event);
+    					gwin.startActor(x, y, 1);
+    				}
     				return true;
     			case MotionEvent.ACTION_UP:
     				gwin.stopActor();
+    				avatarMotion = null;
     				return true;
     			case MotionEvent.ACTION_MOVE:
-    				gwin.startActor(x, y, 1);
+    				if (avatarMotion != null) {
+    					avatarMotion.setLocation(sx, sy);
+    					gwin.startActor(x, y, 1);
+    				}
     				return true;
     			case MotionEvent.ACTION_CANCEL:
     				return true;
@@ -162,7 +180,11 @@ public class ExultActivity extends Activity {
     	};
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
+    			
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+		        	if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ||
+		        		keyCode == KeyEvent.KEYCODE_SHIFT_RIGHT)
+		        		return false;		// Weed these out for performance.
 		        	switch (keyCode) {
 		        	case KeyEvent.KEYCODE_DPAD_RIGHT:
 		        		gwin.shiftViewHoriz(false); break;
@@ -173,7 +195,7 @@ public class ExultActivity extends Activity {
 		        	case KeyEvent.KEYCODE_DPAD_UP:
 		        		gwin.shiftViewVertical(true); break;
 		        	case KeyEvent.KEYCODE_L:
-		        		if (/*event.isAltPressed()*/ true) {
+		        		if (event.isAltPressed()) {
 		        			if (gwin.skipLift == 16)
 		        				gwin.skipLift = 11;
 		        			else
@@ -186,8 +208,11 @@ public class ExultActivity extends Activity {
 		        		} else
 		        			return false;
 		        	case KeyEvent.KEYCODE_X:
-		        		//+++TODO test for ALT.
-		        		finish(); break;
+		        		if (event.isAltPressed()) {
+		        			finish();
+		        			return true;
+		        		} else
+		        			return false;
 		        	}
 		        }
     			return false;		// Didn't handle it here.

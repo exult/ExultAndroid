@@ -95,6 +95,10 @@ public class GameWindow {
 	public final TimeQueue getTqueue() {
 		return tqueue;
 	}
+	public final boolean isMoving() {
+		return /* ++++++ moving_barge ? moving_barge->is_moving()
+			    : */ mainActor.isMoving();
+	}
 	public final Actor getMainActor() {
 		return mainActor;
 	}

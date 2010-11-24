@@ -239,6 +239,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setFrameTime(int f) {
 		frameTime = f;
 	}
+	public final boolean isMoving() {
+		return frameTime > 0;
+	}
 	public boolean isDying() {		// Dead when health below -1/3 str.
 		return properties[health] < 
 				-(properties[strength]/3); 
