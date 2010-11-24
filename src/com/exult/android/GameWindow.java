@@ -1,7 +1,7 @@
 package com.exult.android;
 import java.util.Vector;
 import java.io.RandomAccessFile;
-import java.io.FileOutputStream;
+import java.io.OutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import android.graphics.Point;
@@ -915,7 +915,7 @@ public class GameWindow {
 			//+++++FINISH: multimap stuff here.
 			//+++++++++++++
 			try {
-				FileOutputStream out = EUtil.U7create(fname);
+				OutputStream out = EUtil.U7create(fname);
 				out.write(buf);	// Then write it out.
 				out.close();
 			} catch (IOException e) {

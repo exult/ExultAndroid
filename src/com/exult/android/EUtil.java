@@ -1,8 +1,11 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
 import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.FileInputStream;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
@@ -177,10 +180,10 @@ public class EUtil {
 		} catch (IOException e) { }
 		return null;
 	}
-	public static FileInputStream U7openStream(String nm)
+	public static InputStream U7openStream(String nm)
 								throws IOException {
 		String fname = getSystemPath(nm);
-		return new FileInputStream(fname);
+		return new BufferedInputStream(new FileInputStream(fname));
 	}
 	public static void U7remove(String nm) {
 		String fname = U7exists(nm);
@@ -196,9 +199,9 @@ public class EUtil {
 		File f = new File(fname);
 		return f.mkdir();
 	}
-	public static FileOutputStream U7create(String nm) throws IOException {
+	public static OutputStream U7create(String nm) throws IOException {
 		String fname = getSystemPath(nm);
-		return new FileOutputStream(fname);
+		return new BufferedOutputStream(new FileOutputStream(fname));
 	}
 	/*
 	 *	Return the direction for a given slope (0-7).

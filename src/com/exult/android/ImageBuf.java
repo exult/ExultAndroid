@@ -262,9 +262,7 @@ public class ImageBuf {
 		int from = start + tempClipSrc.y*src_width + tempClipSrc.x;
 		// int dlen = pixels.length; int slen = src_pixels.length; //++++DEBUGGING
 		while (tempClipSrc.h-- > 0) {
-			for (int i = 0; i < tempClipSrc.w; ++i) {
-				pixels[to + i] = src_pixels[from + i];
-			}
+			System.arraycopy(src_pixels, from, pixels, to, tempClipSrc.w);
 			from += src_width;
 			to += width; 
 		}
@@ -308,8 +306,9 @@ public class ImageBuf {
 					// Is there anything to put on the screen?
 					if (skip < scanlen) {
 						int dest = scany*width + scanx;
-						int end = in+scanlen-skip;
- 						while (in < end) pixels[dest++] = inptr[in++];
+						int len = scanlen-skip;
+						System.arraycopy(inptr, in, pixels, dest, len);
+						in += len; dest += len;
 						in += skip;
 						continue;
 					}
@@ -343,8 +342,8 @@ public class ImageBuf {
 							if (skip < bcnt) {
 								byte col = inptr[in++];
 								int end = dest + bcnt - skip;
-								while (dest < end) 
-									pixels[dest++] = col;
+								Arrays.fill(pixels, dest, end, col);
+								dest += end - dest;
 								scanx += bcnt;
 								scanlen -= bcnt;
 								continue;
@@ -371,9 +370,9 @@ public class ImageBuf {
 							if (skip < 0) skip = 0;
 							// Is there anything to put on the screen?
 							if (skip < bcnt) {
-								int end = dest + bcnt - skip;
-								while (dest < end) 
-									pixels[dest++] = inptr[in++];
+								int len = bcnt - skip;
+								System.arraycopy(inptr, in, pixels, dest, len);
+								in += len; dest += len;
 								in += skip;
 								scanx += bcnt;
 								scanlen -= bcnt;
