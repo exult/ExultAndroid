@@ -104,77 +104,68 @@ public class ShapeFrame {
 	 */
 	public int read
 		(
-		RandomAccessFile shapes,	// Shapes data source to read.
-		int shapeoff,		// Offset of shape in file.
+		byte shapes[],		// Data for this entire shape.
 		int shapelen,		// Length expected for detecting RLE.
 		int frnum			// Frame #.
-		) throws IOException
-		{
+		) {
 		int framenum = frnum;
 		rle = false;
-		if (shapelen == 0 && shapeoff == 0) 
+		if (shapelen == 0) 
 			return 0;
-						// Get to actual shape.
-		shapes.seek(shapeoff);
-		int dlen = EUtil.Read4(shapes);
-		int hdrlen = EUtil.Read4(shapes);
-		if (dlen == shapelen)
-			{
+		int dlen = EUtil.Read4(shapes, 0);
+		int hdrlen = EUtil.Read4(shapes, 4);
+		if (dlen == shapelen) {
 			rle = true;		// It's run-length-encoded.
-						// Figure # frames.
+							// Figure # frames.
 			int nframes = (hdrlen - 4)/4;
 			if (framenum >= nframes)// Bug out if bad frame #.
 				return (nframes);
-						// Get frame offset, lengeth.
+					// Get frame offset, lengeth.
 			int frameoff, framelen;
-			if (framenum == 0)
-				{
+			if (framenum == 0) {
 				frameoff = hdrlen;
-				framelen = nframes > 1 ? EUtil.Read4(shapes) - frameoff :
-							dlen - frameoff;
-				}
-			else
-				{
-				shapes.skipBytes((framenum - 1) * 4);
-				frameoff = EUtil.Read4(shapes);
-						// Last frame?
+				framelen = nframes > 1 ? EUtil.Read4(shapes, 8) - frameoff :
+					dlen - frameoff;
+			} else {
+				int from = 8 + (framenum - 1) * 4;
+				frameoff = EUtil.Read4(shapes, from);
+					// Last frame?
 				if (framenum == nframes - 1)
 					framelen = dlen - frameoff;
 				else
-					framelen = EUtil.Read4(shapes) - frameoff;
-				}
-						// Get compressed data.
-			getRleShape(shapes, shapeoff + frameoff, framelen);
-						// Return # frames.
-			return (nframes);
+					framelen = EUtil.Read4(shapes, from + 4) - frameoff;
 			}
+					// Get compressed data.
+			getRleShape(shapes, frameoff, framelen);
+					// Return # frames.
+			return (nframes);
+		}
 		framenum &= 31;			// !!!Guessing here.
 		xleft = yabove = EConst.c_tilesize;		// Just an 8x8 bitmap.
 		xright= ybelow = -1;
-		shapes.seek(shapeoff + framenum*EConst.c_num_tile_bytes);
 		data = new byte[EConst.c_num_tile_bytes];	// Read in 8x8 pixels.
 		datalen = EConst.c_num_tile_bytes;
-		shapes.read(data);
+		System.arraycopy(shapes, framenum*EConst.c_num_tile_bytes, data, 0, datalen);
 		return (shapelen/EConst.c_num_tile_bytes);		// That's how many frames.
-	}
+}
+
 	/*
 	 * Read RLE shape.
 	 */
 	private void getRleShape
 		(
-		RandomAccessFile shapes,		// Shapes data source to read.
-		int filepos,			// Position in file.
+		byte shapes[],		// Data read from entire shape.
+		int framePos,		// Position in data.
 		int len			// Length of entire frame data.
-		) throws IOException {
-		shapes.seek(filepos);		// Get to extents.
-		xright = (short)EUtil.Read2(shapes);
-		xleft = (short)EUtil.Read2(shapes);
-		yabove = (short)EUtil.Read2(shapes);
-		ybelow = (short)EUtil.Read2(shapes);
+		) {
+		xright = (short)EUtil.Read2(shapes, framePos);
+		xleft = (short)EUtil.Read2(shapes, framePos+2);
+		yabove = (short)EUtil.Read2(shapes, framePos+4);
+		ybelow = (short)EUtil.Read2(shapes, framePos+6);
 		len -= 8;			// Subtract what we just read.
 		data = new byte[len + 2];	// Allocate and read data.
 		datalen = len+2;
-		shapes.read(data, 0, len);
+		System.arraycopy(shapes, framePos+8, data, 0, len);
 		data[len] = 0;			// 0-delimit.
 		data[len + 1] = 0;
 		rle = true;

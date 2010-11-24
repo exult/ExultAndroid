@@ -1,8 +1,10 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 
 public class Shape {
+	private WeakReference raw;			// Entire shape from file.
 	private ShapeFrame frames[];		// List of ->'s to frames.
 	private int numFrames;				// # of frames (not counting reflects).
 	private boolean modified;
@@ -76,7 +78,14 @@ public class Shape {
 		ShapeFrame frame = new ShapeFrame();
 		int nframes;
 		try {
-			nframes = frame.read(shpfile, shapeoff, shapelen, frnum);
+			byte data[];
+			if (raw == null || (data = (byte[])raw.get()) == null) {
+				data = new byte[shapelen];
+				raw = new WeakReference(data);
+				shpfile.seek(shapeoff);
+				shpfile.read(data);
+			}
+			nframes = frame.read(data, shapelen, frnum);
 		} catch (IOException e) {
 			return null;
 		}
@@ -119,13 +128,16 @@ public class Shape {
 	void load(RandomAccessFile shapeSource) throws IOException {
 		ShapeFrame frame = new ShapeFrame();
 		int shapelen = EUtil.Read4(shapeSource);
+		byte data[] = new byte[shapelen];
+		shapeSource.seek(0);
+		shapeSource.read(data);
 						// Read frame 0 & get frame count.
-		createFramesList(frame.read(shapeSource, 0, shapelen, 0));
+		createFramesList(frame.read(data, shapelen, 0));
 		storeFrame(frame, 0);
 						// Get the rest.
 		for (int i = 1; i < frames.length; i++) {
 			frame = new ShapeFrame();
-			frame.read(shapeSource, 0, shapelen, i);
+			frame.read(data, shapelen, i);
 			storeFrame(frame, i);
 		}
 	}

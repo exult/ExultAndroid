@@ -19,6 +19,10 @@ public class EUtil {
 	public static final int Read2(byte buf[], int ind) {
 		return ((int)buf[ind]&0xff) | ((int)buf[ind+1]&0xff)<<8;
 	}
+	public static final int Read4(byte buf[], int ind) {
+		return (((int)buf[ind]&0xff) | (((int)buf[ind+1]&0xff)<<8) | 
+				(((int)buf[ind+2]&0xff)<<16) | (((int)buf[ind+3]&0xff)<<24));
+	}
 	public static final int Write2(byte buf[], int ind, short v) {
 		buf[ind] = (byte)(v&0xff);
 		buf[ind+1] = (byte)((v>>8)&0xff);
