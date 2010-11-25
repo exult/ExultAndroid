@@ -16,6 +16,7 @@ public class GameWindow {
 	private TimeQueue tqueue;
 	private Rectangle paintBox;		// Temp used for painting.
 	private Rectangle tempDirty;	// Temp for addDirty.
+	private Rectangle tempFind;		// For findObject.
 	private Point tempPoint = new Point();
 	private Tile tempTile = new Tile();
 	private Tile SRTempTile = new Tile();	// For getShapeRect.
@@ -58,6 +59,7 @@ public class GameWindow {
 		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
 		tempDirty = new Rectangle();
+		tempFind = new Rectangle();
 		GameSingletons.init(this);
 		skipLift = 16;
 		skipAboveActor = 31;
@@ -117,7 +119,7 @@ public class GameWindow {
 				skipAboveActor : skipLift; 
 	}
 	// Get screen location for an object.
-	public void getShapeLocation(Point loc, int tx, int ty, int tz) {
+	public final void getShapeLocation(Point loc, int tx, int ty, int tz) {
 		int lft = 4*tz;
 		tx += 1 - scrolltx;
 		ty += 1 - scrollty;
@@ -129,13 +131,13 @@ public class GameWindow {
 		loc.x = tx*EConst.c_tilesize - 1 - lft;
 		loc.y = ty*EConst.c_tilesize - 1 - lft;
 	}
-	public void getShapeLocation(Point loc, GameObject obj) {
+	public final void getShapeLocation(Point loc, GameObject obj) {
 		getShapeLocation(loc, obj.getTileX(), obj.getTileY(), obj.getLift());
 	}
 	/*
 	 *	Get screen area used by object.
 	 */
-	Rectangle getShapeRect(Rectangle r, GameObject obj) {
+	public final Rectangle getShapeRect(Rectangle r, GameObject obj) {
 		if (obj.getChunk() == null) {		// Not on map?
 			/* +++++FINISH
 			Gump *gump = gump_man.find_gump(obj);
@@ -166,18 +168,18 @@ public class GameWindow {
 				SRTempTile.tx*EConst.c_tilesize - 1 - lftpix,
 				SRTempTile.ty*EConst.c_tilesize - 1 - lftpix);
 	}
-	public Rectangle getShapeRect(Rectangle r, ShapeFrame s, int x, int y) {
+	public final Rectangle getShapeRect(Rectangle r, ShapeFrame s, int x, int y) {
 		r.set(x - s.getXLeft(), y - s.getYAbove(),
 			s.getWidth(), s.getHeight());
 		return r;
 	}
-	public int getScrolltx() {
+	public final int getScrolltx() {
 		return scrolltx;
 	}
-	public int getScrollty() {
+	public final int getScrollty() {
 		return scrollty;
 	}
-	public void setScrolls(int newscrolltx, int newscrollty) {
+	public final void setScrolls(int newscrolltx, int newscrollty) {
 		scrolltx = newscrolltx;
 		scrollty = newscrollty;
 						// Set scroll box.
@@ -314,51 +316,51 @@ public class GameWindow {
 		int winx, int winy,	// Mouse position to aim for.
 		int speed			// Ticks between frames.
 		) {
-	Point a = tempPoint;
-	getShapeLocation(a, mainActor);
+		Point a = tempPoint;
+		getShapeLocation(a, mainActor);
 	
-	mainActor.getTile(tempTile);
-	Tile start = tempTile;
-	int dir;
-	// ++++FINISH boolean checkdrop = (mainActor.getTypeFlags() & MOVE_LEVITATE) == 0;
-	/* ++++++++FINISH
-	for (dir = 0; dir < 8; dir++)
-	{
-		Tile_coord dest = start.get_neighbor(dir);
-		blocked[dir] = mainActor.is_blocked(dest, &start,
+		mainActor.getTile(tempTile);
+		Tile start = tempTile;
+		int dir;
+		// ++++FINISH boolean checkdrop = (mainActor.getTypeFlags() & MOVE_LEVITATE) == 0;
+		/* ++++++++FINISH
+		for (dir = 0; dir < 8; dir++)
+		{
+			Tile_coord dest = start.get_neighbor(dir);
+			blocked[dir] = mainActor.is_blocked(dest, &start,
 							mainActor.get_type_flags());
-		if (checkdrop && abs(start.tz - dest.tz) > 1)
+			if (checkdrop && abs(start.tz - dest.tz) > 1)
 			blocked[dir] = true;
-	}
-	*/
-	dir = EUtil.getDirection (a.y - winy, winx - a.x);
-	/*
-	if (blocked[dir] && !blocked[(dir+1)%8])
+		}
+		 */
+		dir = EUtil.getDirection (a.y - winy, winx - a.x);
+		/*
+		if (blocked[dir] && !blocked[(dir+1)%8])
 		dir = (dir+1)%8;
-	else if (blocked[dir] && !blocked[(dir+7)%8])
-		dir = (dir+7)%8;
-	else if (blocked[dir])
-	{
-	   	Game_object *block = mainActor.is_moving() ? 0
+		else if (blocked[dir] && !blocked[(dir+7)%8])
+			dir = (dir+7)%8;
+		else if (blocked[dir])
+		{
+	   		Game_object *block = mainActor.is_moving() ? 0
 			: mainActor.find_blocking(start.get_neighbor(dir), dir);
-		// We already know the blocking object isn't the avatar, so don't
-		// double check it here.
-		if (!block || !block.move_aside(mainActor, dir))
-			{
-			stop_actor();
-			if (mainActor.get_lift()%5)// Up on something?
+			// We already know the blocking object isn't the avatar, so don't
+			// double check it here.
+			if (!block || !block.move_aside(mainActor, dir))
+				{
+				stop_actor();
+				if (mainActor.get_lift()%5)// Up on something?
 				{	// See if we're stuck in the air.
-				int savetz = start.tz;
-				if (!Map_chunk::is_blocked(start, 1, 
+					int savetz = start.tz;
+					if (!Map_chunk::is_blocked(start, 1, 
 						MOVE_WALK, 100) && 
 						start.tz < savetz)
-					mainActor.move(start.tx, start.ty, 
+						mainActor.move(start.tx, start.ty, 
 								start.tz);
 				}
-			return;
+				return;
+				}
 			}
-		}
-	 */
+		 */
 		int delta = stepTileDelta*EConst.c_tilesize;// Bigger # here avoids jerkiness,
 												//   but causes probs. with followers.
 		switch (dir) {
@@ -467,7 +469,108 @@ public class GameWindow {
 			*/
 			}
 	}
+	/*
+	 *	Find the top object that can be selected, dragged, or activated.
+	 *	The one returned is the 'highest'.
+	 */
+	public GameObject findObject(int x, int y) {
+		int not_above = getRenderSkipLift();
+		// Figure chunk #'s.
+		int start_cx = ((scrolltx + 
+				x/EConst.c_tilesize)/EConst.c_tiles_per_chunk)%EConst.c_num_chunks;
+		int start_cy = ((scrollty + 
+				y/EConst.c_tilesize)/EConst.c_tiles_per_chunk)%EConst.c_num_chunks;
+		// Check 1 chunk down & right too.
+		int stop_cx = (2 + (scrolltx + 
+				(x + 4*not_above)/EConst.c_tilesize)/EConst.c_tiles_per_chunk)%EConst.c_num_chunks;
+		int stop_cy = (2 + (scrollty + 
+				(y + 4*not_above)/EConst.c_tilesize)/EConst.c_tiles_per_chunk)%EConst.c_num_chunks;
 
+		GameObject best = null;		// Find 'best' one.
+		boolean trans = true;		// Try to avoid 'transparent' objs.
+		// Go through them.
+		for (int cy = start_cy; cy != stop_cy; cy = EConst.INCR_CHUNK(cy))
+			for (int cx = start_cx; cx != stop_cx; cx = EConst.INCR_CHUNK(cx)) {
+				MapChunk olist = map.getChunk(cx, cy);
+				if (olist == null)
+					continue;
+				ObjectList.ObjectIterator iter = olist.getObjects().getIterator();
+				GameObject obj;
+				while ((obj = iter.next()) != null) {
+					if (obj.getLift() >= not_above)
+						continue;
+					getShapeRect(tempFind, obj);
+					if (!tempFind.hasPoint(x, y) ||
+						!obj.isFindable())
+						continue;
+					// Check the shape itself.
+					ShapeFrame s = obj.getShape();
+					int ox, oy;
+					getShapeLocation(tempPoint, obj);
+					if (!s.hasPoint(x - tempPoint.x, y - tempPoint.y))
+						continue;
+					// Fixes key under rock in BG at [915, 2434, 0]; need to
+					// know if there are side effects.
+					if (best == null /*+++++ || best.lt(obj) != 0 */ || trans) {
+						boolean ftrans = obj.getInfo().isTransparent();
+						if (!ftrans || trans) {
+							best = obj;
+							trans = ftrans;
+						}
+					}
+				}
+			}
+		return (best);
+	}
+	/*
+	 *	Show the name of the item the mouse is clicked on.
+	 */
+	public final void showItems
+		(
+		int x, int y,			// Coords. in window.
+		boolean ctrl			// Control key is pressed.
+		) {
+		GameObject obj;
+		/* ++++FINISH
+						// Look for obj. in open gump.
+		Gump *gump = gump_man->find_gump(x, y);
+		if (gump)
+		{
+			obj = gump->find_object(x, y);
+			if (!obj) obj = gump->get_cont_or_actor(x, y);
+		}
+		else				// Search rest of world.
+		*/
+			obj = findObject(x, y);
+		/*
+						// All other cases:  unselect.
+			cheat.clear_selected();	
+		*/
+			// Do we have an NPC?
+		Actor npc = obj != null && obj instanceof Actor ? (Actor) obj : null;
+		/* ++++CHEAT stuff went here. */
+		if (obj != null) {			// Show name.
+			System.out.println("Clicked on shape " + obj.getShapeNum());
+			// ++++ String namestr = Get_object_name(obj);
+				// Combat and an NPC?
+			/* ++++++++
+			if (in_combat() && Combat::mode != Combat::original && npc)
+				{
+				char buf[128];
+				sprintf(buf, "%s (%d)", objname, 
+						npc->get_property(Actor::health));
+				objname = &buf[0];
+				}
+			effects.addText(objname, obj);
+			*/
+		}
+		/*
+		// If it's an actor and we want to grab the actor, grab it.
+		if (npc != null && cheat.grabbing_actor() && 
+		    (npc->get_npc_num() || npc==main_actor))
+			cheat.set_grabbed_actor (npc);
+		*/
+	}
 	/*
 	 * 	Rendering:
 	 */

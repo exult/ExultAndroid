@@ -183,6 +183,9 @@ public abstract class GameObject extends ShapeID {
 		gwin.getShapeLocation(paintLoc, this);
 		paintShape(paintLoc.x, paintLoc.y);
 	}
+	public boolean isFindable() { 
+		return true; 
+	}
 	public int getIregSize() {
 		return 0;
 	}

@@ -14,6 +14,9 @@ public class Rectangle {
 	public final void set(Rectangle r) {
 		x = r.x; y = r.y; w = r.w; h = r.h;
 	}
+	public final boolean hasPoint(int px, int py) {
+		return (px >= x && px < x + w && py >= y && py < y + h);
+	}
 	public final void enlarge(int left, int right, int top, int bottom, int maxw, int maxh) {
 		x -= left; w += left+right;
 		y -= top; h += top+bottom;

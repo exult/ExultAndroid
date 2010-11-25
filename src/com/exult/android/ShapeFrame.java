@@ -418,4 +418,46 @@ public class ShapeFrame {
 			}
 		}
 	}
+	/*
+	 * Is a point, relative to the shape's 'origin', actually within the shape.
+	 */
+	public final boolean hasPoint
+		(
+		int x, int y			// Relative to origin of shape.
+		) {
+		if (!rle) {			// 8x8 flat?
+			return x >= -xleft && x < xright && y >= -yabove && y < ybelow;
+		}
+		int in = 0;
+		int scanlen;
+		while ((scanlen = EUtil.Read2(data, in)) != 0) {
+			in += 2;
+					// Get length of scan line.
+			boolean encoded = (scanlen&1) != 0;// Is it encoded?
+			scanlen = scanlen>>1;
+			int scanx = EUtil.Read2(data, in);
+			in += 2;
+			int scany = EUtil.Read2(data, in);
+			in += 2;
+					// Be liberal by 1 pixel.
+			if (y == scany && x >= scanx - 1 && x <= scanx + scanlen)
+				return (true);
+			if (!encoded) {		// Raw data?
+				in += scanlen;
+				continue;
+			}
+			for (int b = 0; b < scanlen; ) {
+				byte bcnt = data[in++];
+					// Repeat next char. if odd.
+				int repeat = bcnt&1;
+				bcnt = (byte)((bcnt&0xff)>>1); // Get count.
+				if (repeat != 0)
+					in++;	// Skip pixel to repeat.
+				else		// Skip that # of bytes.
+					in += bcnt;
+				b += bcnt;
+			}
+		}
+		return false;			// Never found it.
+	}
 }
