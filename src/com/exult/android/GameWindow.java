@@ -505,7 +505,6 @@ public class GameWindow {
 						continue;
 					// Check the shape itself.
 					ShapeFrame s = obj.getShape();
-					int ox, oy;
 					getShapeLocation(tempPoint, obj);
 					if (!s.hasPoint(x - tempPoint.x, y - tempPoint.y))
 						continue;
@@ -527,8 +526,7 @@ public class GameWindow {
 	 */
 	public final void showItems
 		(
-		int x, int y,			// Coords. in window.
-		boolean ctrl			// Control key is pressed.
+		int x, int y			// Coords. in window.
 		) {
 		GameObject obj;
 		/* ++++FINISH

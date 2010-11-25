@@ -75,6 +75,8 @@ public class ExultActivity extends Activity {
     public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback{
     	private MySurfaceThread thread;
     	private MotionEvent avatarMotion;	// When moving Avatar.
+    	private int showItemsX = -1, showItemsY = -1;
+    	public long showItemsTime = 0;
     	@Override
     	protected void onDraw(Canvas canvas){
     		if (GameTime > nextTickTime ) {
@@ -90,6 +92,11 @@ public class ExultActivity extends Activity {
     					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
                 	System.out.println("Keep moving");
                 	gwin.startActor(x, y, 1);
+                }
+                // Handle delayed showing of items clicked on.
+                if (showItemsX >= 0 && GameTime > showItemsTime) {
+                	gwin.showItems(showItemsX, showItemsY);
+                	showItemsX = showItemsY = -1000;
                 }
                 if (gwin.isDirty()) {
                 	gwin.paintDirty();
@@ -159,11 +166,16 @@ public class ExultActivity extends Activity {
     					System.out.println("Starting motion");
     					avatarMotion = MotionEvent.obtain(event);
     					gwin.startActor(x, y, 1);
-    				}
+    				} 
     				return true;
     			case MotionEvent.ACTION_UP:
     				gwin.stopActor();
     				avatarMotion = null;
+    				// Handle double-click, dragging.++++++++++
+    				if (/* ++++ gwin.getMainActor().canAct()*/ true) {
+    					showItemsX = x; showItemsY = y;
+    					showItemsTime = GameTime + 500;
+    				}
     				return true;
     			case MotionEvent.ACTION_MOVE:
     				if (avatarMotion != null) {
