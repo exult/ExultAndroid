@@ -10,6 +10,7 @@ import android.graphics.Canvas;
 
 public class GameWindow {
 	private static GameWindow instance;
+	private EffectsManager effects;	// Manages speciall effects.
 	private Vector<GameMap> maps;	// Hold all terrain.
 	private GameMap map;			// Current map.
 	private GameRender render;
@@ -52,6 +53,7 @@ public class GameWindow {
 		map = new GameMap(0);
 		render = new GameRender();
 		tqueue = new TimeQueue();
+		effects = new EffectsManager();
 		maps.add(map);
 		win = new ImageBuf(width, height);
 		pal = new Palette(win);
@@ -93,6 +95,9 @@ public class GameWindow {
 	}
 	public final Palette getPal() {
 		return pal;
+	}
+	public final EffectsManager getEffects() {
+		return effects;
 	}
 	public final TimeQueue getTqueue() {
 		return tqueue;
@@ -669,7 +674,7 @@ public class GameWindow {
 	public void paint(Rectangle r)
 		{ paint(r.x, r.y, r.w, r.h); }
 	// Clip 'r' to window.
-	private void clipToWin(Rectangle r) {
+	public void clipToWin(Rectangle r) {
 		paintBox.set(0, 0, win.getWidth(), win.getHeight());
 		r.intersect(paintBox);
 	}

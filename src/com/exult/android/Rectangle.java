@@ -52,4 +52,7 @@ public class Rectangle {
 		w = (xend > xend2 ? xend : xend2) - x;
 		h = (yend > yend2 ? yend : yend2) - y;
 	}
+	public final boolean equals(Rectangle r2) {
+		return x == r2.x && y == r2.y && w == r2.w && h == r2.h;
+	}
 }
