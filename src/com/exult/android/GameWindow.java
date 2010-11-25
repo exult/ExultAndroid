@@ -548,7 +548,8 @@ public class GameWindow {
 		Actor npc = obj != null && obj instanceof Actor ? (Actor) obj : null;
 		/* ++++CHEAT stuff went here. */
 		if (obj != null) {			// Show name.
-			System.out.println("Clicked on shape " + obj.getShapeNum());
+			System.out.println("Clicked on shape " + obj.getShapeNum() +
+					":  " + obj.getName());
 			// ++++ String namestr = Get_object_name(obj);
 				// Combat and an NPC?
 			/* ++++++++

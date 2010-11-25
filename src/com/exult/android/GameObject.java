@@ -101,6 +101,12 @@ public abstract class GameObject extends ShapeID {
 	public final void setQuality(int q) {
 		quality = (short) q;
 	}
+	public String getName() {
+		//+++++FOR NOW:
+		int shnum = getShapeNum();
+		return shnum >= 0 && shnum < ItemNames.names.length ? ItemNames.names[shnum]
+		         : new String("Unknown");
+	}
 	// Set shape coord. in chunk/gump.
 	public final void setShapePos(int shapex, int shapey)
 		{ tx = (byte)shapex; ty = (byte)shapey; }

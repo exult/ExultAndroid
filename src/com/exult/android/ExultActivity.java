@@ -128,6 +128,7 @@ public class ExultActivity extends Activity {
     		requestFocus();
     		//create a graphic
     		testSprite1 = new AnimationSprite();
+    		ItemNames.init(false, false);
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     		int width = display.getWidth(), height = display.getHeight();
     		gwin = new GameWindow(320, 200);	// Standard U7 dims.
