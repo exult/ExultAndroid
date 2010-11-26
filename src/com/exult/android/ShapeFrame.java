@@ -329,6 +329,9 @@ public class ShapeFrame {
 	public final int getYAbove() {
 		return yabove;
 	}
+	public final int getYBelow() {
+		return ybelow;
+	}
 	public final boolean isRle() {
 		return rle;
 	}

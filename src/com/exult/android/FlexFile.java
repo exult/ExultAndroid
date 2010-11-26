@@ -68,6 +68,7 @@ public class FlexFile extends EFile {
 				ref.buf = new byte[ref.size];
 				file.read(ref.buf);
 			} catch (IOException e) {
+				return null;
 			}
 		return ref.buf;
 	}

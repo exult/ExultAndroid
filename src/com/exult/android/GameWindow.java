@@ -565,8 +565,8 @@ public class GameWindow {
 						npc->get_property(Actor::health));
 				objname = &buf[0];
 				}
-			effects.addText(objname, obj);
 			*/
+			effects.addText(/* objname*/ obj.getName() , obj);
 		}
 		/*
 		// If it's an actor and we want to grab the actor, grab it.

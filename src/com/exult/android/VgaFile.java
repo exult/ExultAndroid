@@ -121,4 +121,27 @@ public class VgaFile {
 		getShape(shapenum, 0);	// Force it into memory.
 		return shapes[shapenum].getNumFrames();
 	}
+	
+	/*
+	 *	A shape file just has one shape with multiple frames.  They're all
+	 *	read in during construction.
+	 */
+	public static class ShapeFile extends Shape {
+		public ShapeFile(byte data[]) {
+			super.load(data);
+		}
+		/*
+		ShapeFile(const char *nm);
+		Shape_file(Shape_frame *fr): Shape(fr) {}
+		Shape_file(DataSource* shape_source);
+		*/
+		public void load(String nm) throws IOException {
+			RandomAccessFile src = EUtil.U7open(nm, true);
+			super.load(src);
+		}
+		public void load(RandomAccessFile src) throws IOException { 
+			super.load(src);
+		}
+	}
+
 }

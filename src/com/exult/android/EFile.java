@@ -31,6 +31,7 @@ public class EFile {
 				buf = new byte[(int)len];
 				file.read(buf);
 			} catch (IOException e) {
+				return null;
 			}
 		return buf;
 	}

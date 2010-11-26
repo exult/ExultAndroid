@@ -6,6 +6,38 @@ public class EffectsManager extends GameSingletons {
 	private TextEffect texts;		// Text snippets.
 	
 	/*
+	 *  Add text over a given item.
+	 */
+	public void addText(String msg, GameObject item) {
+		if (msg == null)
+			return;
+		// Don't duplicate for item.
+		for (TextEffect each = texts; each != null; each = each.next)
+			if (each.isText(item))
+				return;		// Already have text on this.
+		TextEffect txt = new TextEffect(msg, item);
+		addTextEffect(txt);
+	}
+	/*
+	 *	Add a text object at a given spot.
+	 */
+	public void addText(String msg, int x, int y) {
+		TextEffect txt = new TextEffect(msg,
+			gwin.getScrolltx() + x/EConst.c_tilesize, 
+			gwin.getScrollty() + y/EConst.c_tilesize);
+		addTextEffect(txt);
+	}
+	/*
+	 *	Add a text effect at the start of the chain.
+	 */
+	public void addTextEffect(TextEffect effect) {
+		effect.next = texts;		// Insert into chain.
+		effect.prev = null;
+		if (effect.next != null)
+			effect.next.prev = effect;
+		texts = effect;
+		}
+	/*
 	 *	Remove text from the chain and delete it.
 	 */
 	public void removeTextEffect(TextEffect txt) {
@@ -120,7 +152,7 @@ public class EffectsManager extends GameSingletons {
 			updateDirty();
 		}
 		public void paint() {
-			//++++++ sman.paintText(0, msg, pos.x, pos.y);
+			fonts.paintText(0, msg, pos.x, pos.y);
 		}
 							// Check for matching item.
 		public boolean isText(GameObject it)

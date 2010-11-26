@@ -7,7 +7,6 @@ public class Shape {
 	private WeakReference raw;			// Entire shape from file.
 	private ShapeFrame frames[];		// List of ->'s to frames.
 	private int numFrames;				// # of frames (not counting reflects).
-	private boolean modified;
 	private boolean fromPatch;
 	/*
 	 *	Resize list upwards.
@@ -125,21 +124,24 @@ public class Shape {
 	/*
 	 *	Load all frames for a single shape.  (Assumes RLE-type shape.)
 	 */
-	void load(RandomAccessFile shapeSource) throws IOException {
+	protected void load(byte data[]) {
 		ShapeFrame frame = new ShapeFrame();
-		int shapelen = EUtil.Read4(shapeSource);
-		byte data[] = new byte[shapelen];
-		shapeSource.seek(0);
-		shapeSource.read(data);
-						// Read frame 0 & get frame count.
-		createFramesList(frame.read(data, shapelen, 0));
+							// Read frame 0 & get frame count.
+		createFramesList(frame.read(data, data.length, 0));
 		storeFrame(frame, 0);
 						// Get the rest.
 		for (int i = 1; i < frames.length; i++) {
 			frame = new ShapeFrame();
-			frame.read(data, shapelen, i);
+			frame.read(data, data.length, i);
 			storeFrame(frame, i);
 		}
+	}
+	protected void load(RandomAccessFile shapeSource) throws IOException {
+		int shapelen = EUtil.Read4(shapeSource);
+		byte data[] = new byte[shapelen];
+		shapeSource.seek(0);
+		shapeSource.read(data);
+		load(data);
 	}
 	/*
 	 *	Create the reflection of a shape.
@@ -163,14 +165,12 @@ public class Shape {
 	public Shape() {
 		frames = null;
 		numFrames =  0;
-		modified = false;
 		fromPatch = false;
 	}
 	/*
 	 * Create with given # of frames.
 	 */
 	public Shape(int n) {
-		modified = false;
 		fromPatch = false;
 		createFramesList(n);
 	}

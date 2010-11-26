@@ -7,6 +7,7 @@ public class GameSingletons {
 	public static TimeQueue tqueue;
 	public static GameMap gmap;
 	public static EffectsManager eman;
+	public static FontsVgaFile fonts;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();
@@ -14,5 +15,6 @@ public class GameSingletons {
 		gmap = gwin.getMap();
 		tqueue = gwin.getTqueue();
 		eman = gwin.getEffects();
+		fonts = new FontsVgaFile();
 	}
 }
