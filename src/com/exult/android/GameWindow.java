@@ -640,13 +640,17 @@ public class GameWindow {
 			// if (mainActor) render.paint_map(gx, gy, gw, gh);
 			// else 
 			//	win.fill8(0);
-			render.paintMap(gx, gy, gw, gh);
-			/*
+			if (mainActor != null)
+				render.paintMap(gx, gy, gw, gh);
+			else
+				win.fill8((byte)0);
 			effects.paint();		// Draw sprites.
-
+			/*
 			gump_man.paint(false);
 			if (dragging) dragging.paint();	// Paint what user is dragging.
-			effects.paint_text();
+			*/
+			effects.paintText();
+			/*
 			gump_man.paint(true);
 
 					// Complete repaint?

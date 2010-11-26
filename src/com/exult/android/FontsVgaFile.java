@@ -16,12 +16,14 @@ public class FontsVgaFile extends GameSingletons {
 		EFile sfonts = fman.getFileObject(EFile.FONTS_VGA);
 		EFile pfonts = fman.getFileObject(EFile.PATCH_FONTS);
 		int sn = sfonts.numberOfObjects();
-		int pn = sfonts.numberOfObjects();
+		int pn = pfonts != null ? pfonts.numberOfObjects() : 0;
 		int numfonts = pn > sn ? pn : sn;
 		fonts = new Font[numfonts];
 
-		for (int i = 0; i < numfonts; i++)
+		for (int i = 0; i < numfonts; i++) {
+			fonts[i] = new Font();
 			fonts[i].load(sfonts, pfonts, i, i < cnt ? hlead[i] : 0, 0);
+		}
 	}
 	public FontsVgaFile() {
 		init();
@@ -29,7 +31,10 @@ public class FontsVgaFile extends GameSingletons {
 	public int paintText(int fontnum, 
 							String text, int xoff, int yoff)
 			{ return fonts[fontnum].paintText(win, text, xoff, yoff); }
-	
+	public int getTextWidth(int fontnum, String text)
+		{ return fonts[fontnum].getTextWidth(text); }
+	public int getTextHeight(int fontnum)
+		{ return fonts[fontnum].getTextHeight(); }
 	public static class Font {
 		private int hor_lead;
 		private int ver_lead;
@@ -61,10 +66,10 @@ public class FontsVgaFile extends GameSingletons {
 */
 		public void load(EFile file, EFile patchfile, int index,
 										int hlead, int vlead) {
-			byte data[] = patchfile != null ? patchfile.retrieve(0) : null;
-			if (data == null)
-				data = file.retrieve(0);
-			if (data == null) {
+			byte data[] = patchfile != null ? patchfile.retrieve(index) : null;
+			if (data == null || data.length == 0)
+				data = file.retrieve(index);
+			if (data == null || data.length == 0) {
 				fontShapes = null;
 				hor_lead = 0;
 				ver_lead = 0;
@@ -128,11 +133,33 @@ public class FontsVgaFile extends GameSingletons {
 		int paint_text_fixedwidth(Image_buffer8 *win,  
 			const char *text, int textlen, int xoff, int yoff, int width);
 						// Get text width.
-		int get_text_width(const char *text);
-		int get_text_width(const char *text, int textlen);
+		*/
+		public int getTextWidth(String text) {
+			return getTextWidth(text, text.length());
+		}
+		public int getTextWidth(String text, int textlen) {
+			int width = 0, ind;
+			int chr;
+			if (fontShapes != null) {
+				for (ind = 0; ind < textlen; ++ind) {
+					chr = text.charAt(ind);
+					if (chr == 0)
+						break;
+					ShapeFrame shape = fontShapes.getFrame(chr);
+					if (shape != null)
+						width += shape.getWidth() + hor_lead;
+				}
+			}
+			return (width);
+		}
 						// Get text height, baseline.
-		int get_text_height();
-		int get_text_baseline();
+		public int getTextHeight() {
+			return highest + lowest + 1;
+		}
+		public int get_text_baseline() {
+			return highest;
+		}
+		/*
 		int find_cursor(const char *text, int x, int y, int w, int h,
 						int cx, int cy, int vert_lead);
 		int find_xcursor(const char *text, int textlen, int cx);

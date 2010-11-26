@@ -49,8 +49,15 @@ public class EffectsManager extends GameSingletons {
 			txt.prev.next = txt.next;
 		else				// Head of chain.
 			texts = txt.next;
-		}
-
+	}
+	public void paint() {
+		for (SpecialEffect effect = effects; effect != null; effect = effect.next)
+		effect.paint();
+	}
+	public void paintText() {
+	for (TextEffect txt = texts; txt != null; txt = txt.next)
+		txt.paint();
+	}
 	/*
 	 *	Base class for special-effects:
 	 */
@@ -73,7 +80,7 @@ public class EffectsManager extends GameSingletons {
 		private GameObject item;	// Item text is on.  May be null.
 		private Tile tpos;		// Position to display it at.
 		private Rectangle pos;
-		private short width, height;		// Dimensions of rectangle.
+		private int width, height;		// Dimensions of rectangle.
 		private int numTicks;			// # ticks passed.
 		private static Rectangle updRect = new Rectangle(), dirtyRect = new Rectangle();
 		private static Point tempLoc = new Point();
@@ -87,10 +94,8 @@ public class EffectsManager extends GameSingletons {
 			gwin.addDirty(dirtyRect);
 		}
 		private void init() {
-			/* +++++FINISH
-			width = 8 + sman->get_text_width(0, msg.c_str());
-			height = 8 + sman->get_text_height(0);
-			*/
+			width = 8 + fonts.getTextWidth(0, msg);
+			height = 8 + fonts.getTextHeight(0);
 			addDirty();			// Force first paint.
 							// Start immediately.
 			tqueue.add(tqueue.ticks, this, null);
@@ -148,7 +153,7 @@ public class EffectsManager extends GameSingletons {
 				return;
 			}
 						// Back into queue for 1 tick.
-			tqueue.add(1, this, null);
+			tqueue.add(TimeQueue.ticks + 1, this, null);
 			updateDirty();
 		}
 		public void paint() {
