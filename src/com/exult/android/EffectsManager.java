@@ -118,7 +118,7 @@ public class EffectsManager extends GameSingletons {
 				else 
 				*/
 				{
-					GameObject outer = item; // +++++++FINISH item.getOutermost();
+					GameObject outer = item.getOutermost();
 					if (outer.getChunk() == null) {
 						r.set(0,0,1,1);	// Error?
 					} else {

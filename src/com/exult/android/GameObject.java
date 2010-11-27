@@ -107,6 +107,18 @@ public abstract class GameObject extends ShapeID {
 		return shnum >= 0 && shnum < ItemNames.names.length ? ItemNames.names[shnum]
 		         : new String("Unknown");
 	}
+	public ContainerGameObject getOwner() {
+		return null;
+	}
+	public void setOwner(ContainerGameObject o)
+		{  }
+	public final GameObject getOutermost() {
+		GameObject top = this;
+		GameObject above;
+		while ((above = top.getOwner()) != null)
+			top = above;
+		return top;
+	}
 	// Set shape coord. in chunk/gump.
 	public final void setShapePos(int shapex, int shapey)
 		{ tx = (byte)shapex; ty = (byte)shapey; }
@@ -374,6 +386,17 @@ public abstract class GameObject extends ShapeID {
 				return 0;
 		}
 		return 0;
+	}
+	/*
+	 *	Should this object be rendered before obj2?
+	 *	NOTE:  This older interface isn't as efficient.
+	 *
+	 *	Output:	1 if so, 0 if not, -1 if cannot compare.
+	 */
+	public final int lt(GameObject obj2) {
+		OrderingInfo ord = getOrderingInfo1();
+		int cmp = compare(ord, obj2);
+		return cmp == -1 ? 1 : cmp == 1 ? 0 : -1;
 	}
 }
 

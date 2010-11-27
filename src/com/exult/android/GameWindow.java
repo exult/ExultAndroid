@@ -515,7 +515,7 @@ public class GameWindow {
 						continue;
 					// Fixes key under rock in BG at [915, 2434, 0]; need to
 					// know if there are side effects.
-					if (best == null /*+++++ || best.lt(obj) != 0 */ || trans) {
+					if (best == null || best.lt(obj) == 1 || trans) {
 						boolean ftrans = obj.getInfo().isTransparent();
 						if (!ftrans || trans) {
 							best = obj;

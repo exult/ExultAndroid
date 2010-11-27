@@ -136,12 +136,6 @@ public class ExultActivity extends Activity {
     		gwin.initFiles(false);
     		gwin.setupGame();
     		gwin.setAllDirty();
-    		/*
-    		ibuf = new ImageBuf(width, height);
-    		pal0 = new Palette(ibuf);
-    		pal0.set(Palette.PALETTE_DAY, -1, null);	
-    		testSprite1.Init(721, 6);	// Avatar.
-    		*/
     	}
     	private final void rotatePalette() {
     		ImageBuf win = gwin.getWin();
