@@ -118,7 +118,12 @@ public class GameWindow {
 		skipAboveActor = lift;
 		return true;
 	}
-	
+	public final int getNumNpcs() {
+		return npcs.size();
+	}
+	public final Actor getNpc(int n) {
+		return n >= 0 && n < npcs.size() ? npcs.elementAt(n) : null;
+	}
 	int getRenderSkipLift()	{	// Skip rendering here.
 		return skipAboveActor < skipLift ?
 				skipAboveActor : skipLift; 

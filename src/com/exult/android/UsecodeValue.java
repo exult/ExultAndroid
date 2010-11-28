@@ -3,7 +3,7 @@ package com.exult.android;
 import java.util.Vector;
 
 public abstract class UsecodeValue {
-	private static UsecodeValue zval = new IntUsecodeValue(0);
+	private static UsecodeValue zval = new IntValue(0);
 	public int getIntValue() {
 		return 0;
 	}
@@ -12,6 +12,9 @@ public abstract class UsecodeValue {
 	}
 	public int needIntValue() {
 		return 0;
+	}
+	public GameObject getObjectValue() {
+		return null;
 	}
 	public boolean isFalse() {
 		return false;
@@ -31,20 +34,30 @@ public abstract class UsecodeValue {
 	public UsecodeValue getElem0() {
 		return this;
 	}
+	public int findElem(UsecodeValue val) {
+		return -1;
+	}
 	public UsecodeValue plus(UsecodeValue v2) {
-		return new IntUsecodeValue(0);	// This is undefined for plus.
+		return new IntValue(0);	// This is undefined for plus.
 	}
 	//	++++Not doing 'class_obj_type' yet.
 	public int getClassVarCount() {
 		return 0;
+	}	
+	public UsecodeValue nthClassVar(int n) {
+		return zval;
 	}
 	public abstract boolean eq(UsecodeValue v2);
+	public static final UsecodeValue getZero() {
+		return zval;
+	}
+	
 	/*
 	 * All these subclasses are intended to be immutable.
 	 */
-	public final static class IntUsecodeValue extends UsecodeValue {
+	public final static class IntValue extends UsecodeValue {
 		private int intval;
-		public IntUsecodeValue(int i) {
+		public IntValue(int i) {
 			intval = i;
 		}
 		public int getIntValue() {
@@ -57,32 +70,32 @@ public abstract class UsecodeValue {
 			return intval == 0;
 		}
 		public UsecodeValue plus(UsecodeValue v2) {
-			if (v2 instanceof StringUsecodeValue) {
+			if (v2 instanceof StringValue) {
 				String s = intval + v2.getStringValue();
-				return new StringUsecodeValue(s);
-			} else if (v2 instanceof IntUsecodeValue) {
-				return new IntUsecodeValue(intval + v2.getIntValue());
+				return new StringValue(s);
+			} else if (v2 instanceof IntValue) {
+				return new IntValue(intval + v2.getIntValue());
 			} else
 				return this;
 		}
 		public boolean eq(UsecodeValue v2) {
-			if (v2 instanceof IntUsecodeValue) {
+			if (v2 instanceof IntValue) {
 				return intval == v2.getIntValue();
-			} else if (v2 instanceof ArrayUsecodeValue) {
-				ArrayUsecodeValue arr2 = (ArrayUsecodeValue) v2;
+			} else if (v2 instanceof ArrayValue) {
+				ArrayValue arr2 = (ArrayValue) v2;
 				if (arr2.elems.length == 0)
 					return intval == 0;
 				else
 					return eq(arr2.elems[0]);
-			} else if (intval == 0 && v2 instanceof ObjectUsecodeValue) {
-				return ((ObjectUsecodeValue)v2).obj == null;
+			} else if (intval == 0 && v2 instanceof ObjectValue) {
+				return ((ObjectValue)v2).obj == null;
 			} else
 				return false;
 		}
 	}
-	public final static class StringUsecodeValue extends UsecodeValue {
+	public final static class StringValue extends UsecodeValue {
 		private String str;
-		public StringUsecodeValue(String s) {
+		public StringValue(String s) {
 			str = s;
 		}
 		public String getStringValue() {
@@ -96,12 +109,12 @@ public abstract class UsecodeValue {
 			}
 		}
 		public final UsecodeValue plus(UsecodeValue v2) {
-			if (v2 instanceof IntUsecodeValue) {
+			if (v2 instanceof IntValue) {
 				String s = str + v2.getIntValue();
-				return new StringUsecodeValue(s);
-			} else if (v2 instanceof StringUsecodeValue) {
+				return new StringValue(s);
+			} else if (v2 instanceof StringValue) {
 				String s = str + v2.getStringValue();
-				return new StringUsecodeValue(s);
+				return new StringValue(s);
 			} else
 				return this;
 		}
@@ -110,9 +123,9 @@ public abstract class UsecodeValue {
 			return s2 != null && str.equals(s2);
 		}
 	}
-	public final static class ArrayUsecodeValue extends UsecodeValue {
+	public final static class ArrayValue extends UsecodeValue {
 		private UsecodeValue elems[];
-		public ArrayUsecodeValue(Vector<UsecodeValue> vals) {
+		public ArrayValue(Vector<UsecodeValue> vals) {
 			elems = vals.toArray(elems);
 		}
 		public int needIntValue() {
@@ -133,9 +146,16 @@ public abstract class UsecodeValue {
 		public UsecodeValue getElem0() {
 			return elems[0];
 		}
+		public int findElem(UsecodeValue val) {
+			int cnt = elems.length;
+			for (int i = 0; i < cnt; i++)
+				if (elems[i].eq(val))
+					return (i);
+			return (-1);
+		}
 		public boolean eq(UsecodeValue v2) {
-			if (v2 instanceof ArrayUsecodeValue) {
-				ArrayUsecodeValue arr2 = (ArrayUsecodeValue) v2;
+			if (v2 instanceof ArrayValue) {
+				ArrayValue arr2 = (ArrayValue) v2;
 				int cnt = elems.length;
 				if (cnt != arr2.elems.length)
 					return false;
@@ -150,8 +170,8 @@ public abstract class UsecodeValue {
 		}
 		// Add values to end, and return # added.
 		public final static void addValues(Vector<UsecodeValue>vals, UsecodeValue val2) {
-			if (val2 instanceof ArrayUsecodeValue) {
-				ArrayUsecodeValue arr2 = (ArrayUsecodeValue) val2;
+			if (val2 instanceof ArrayValue) {
+				ArrayValue arr2 = (ArrayValue) val2;
 				int size2 = arr2.elems.length;
 				vals.ensureCapacity(size2);
 				for (int i = 0; i < size2; i++)
@@ -161,25 +181,28 @@ public abstract class UsecodeValue {
 			}
 		}
 	}
-	public final static class ObjectUsecodeValue extends UsecodeValue {
+	public final static class ObjectValue extends UsecodeValue {
 		private GameObject obj;
-		public ObjectUsecodeValue(GameObject o) {
+		public ObjectValue(GameObject o) {
 			obj = o;
 		}
 		public int needIntValue() {
 			//++++++++???
 			return 0;
 		}
+		public GameObject getObjectValue() {
+			return obj;
+		}
 		public boolean isFalse() {
 			return obj == null;
 		}
 		public boolean eq(UsecodeValue v2) {
-			if (v2 instanceof ObjectUsecodeValue)
-				return ((ObjectUsecodeValue)v2).obj == obj;
-			else if (obj == null && v2 instanceof IntUsecodeValue)
-				return ((IntUsecodeValue)v2).intval == 0;
-			else if (v2 instanceof ArrayUsecodeValue) {
-				ArrayUsecodeValue arr2 = (ArrayUsecodeValue) v2;
+			if (v2 instanceof ObjectValue)
+				return ((ObjectValue)v2).obj == obj;
+			else if (obj == null && v2 instanceof IntValue)
+				return ((IntValue)v2).intval == 0;
+			else if (v2 instanceof ArrayValue) {
+				ArrayValue arr2 = (ArrayValue) v2;
 				return arr2.elems.length > 0 && eq(arr2.elems[0]);
 			} else
 				return false;
