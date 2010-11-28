@@ -24,6 +24,9 @@ public class FontsVgaFile extends GameSingletons {
 			fonts[i] = new Font();
 			fonts[i].load(sfonts, pfonts, i, i < cnt ? hlead[i] : 0, 0);
 		}
+		sfonts.close();
+		if (pfonts != null)
+			pfonts.close();
 	}
 	public FontsVgaFile() {
 		init();
