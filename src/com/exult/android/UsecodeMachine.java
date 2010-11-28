@@ -11,6 +11,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 	// Functions: I'th entry contains funs for ID's 256*i + n.
 	private Vector<Vector<UsecodeFunction>> funs = 
 				new Vector<Vector<UsecodeFunction>>();
+	private Vector<UsecodeValue> statics;		// Global persistent vars.
 	private LinkedList<StackFrame> callStack = new LinkedList<StackFrame>();
 	private StackFrame frame;
 	private TreeMap<Integer, Integer> timers = new TreeMap<Integer,Integer>();
@@ -266,7 +267,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 				{
 					UsecodeValue val1 = pop();
 					UsecodeValue val2 = pop();
-					pushi(!(val1 == val2) ? 1 : 0);
+					pushi(!(val1.eq(val2)) ? 1 : 0);
 					break;
 				}
 				case 0x1c:		// ADDSI.
@@ -301,42 +302,38 @@ public abstract class UsecodeMachine extends GameSingletons {
 					}
 					pushs(frame.getDataString(offset));
 					break;
-				/*
 				case 0x1e:		// ARRC.
 				{		// Get # values to pop into array.
 					int num = EUtil.Read2(frame.fcode, frame.ip);
 					int cnt = num;
-					UsecodeValue.ArrayUsecodeValue arr = 
-								new UsecodeValue.ArrayUsecodeValue(num);
-					int to = 0;	// Store at this index.
+					Vector<UsecodeValue> vals= new Vector<UsecodeValue>(num);
 					while (cnt-- > 0) {
 						UsecodeValue val = pop();
-						to += arr.add_values(to, val);
-					}
-					if (to < num)// 1 or more vals empty arrays?
-						arr.resize(to);
+						UsecodeValue.ArrayUsecodeValue.addValues(vals, val);
+					}				
+					UsecodeValue.ArrayUsecodeValue arr = 
+								new UsecodeValue.ArrayUsecodeValue(vals);
 					push(arr);
 				}
-				break;/*++++++++++++++
+				break;
 				case 0x1f:		// PUSHI.
 				{		// Might be negative.
-					short ival = EUtil.Read2(frame.fcode, frame.ip);
+					short ival = (short) EUtil.Read2(frame.fcode, frame.ip);
 					pushi(ival);
 					break;
 				}
 				case 0x9f:		// PUSHI32
 				{
-					int ival = (sint32)EUtil.Read4(frame.fcode,frame.ip);
+					int ival = EUtil.Read4(frame.fcode,frame.ip);
 					pushi(ival);
 					break;
 				}
 				case 0x21:		// PUSH.
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
 					if (offset < 0 || offset >= num_locals) {
-						LOCAL_VAR_ERROR(offset);
+						// LOCAL_VAR_ERROR(offset);
 						pushi(0);
-					}
-					else {
+					} else {
 						push(frame.locals[offset]);
 					}
 					break;
@@ -344,27 +341,25 @@ public abstract class UsecodeMachine extends GameSingletons {
 				{
 					UsecodeValue val1 = pop();
 					UsecodeValue val2 = pop();
-					pushi(val1 == val2);
+					pushi(val1.eq(val2) ? 1 : 0);
 					break;
 				}
 				case 0x24:		// CALL.
 				{
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
 					if (offset < 0 || offset >= frame.num_externs) {
-						EXTERN_ERROR();
+						// EXTERN_ERROR();
 						break;
 					}
-						
-					uint8 *tempptr = frame.externs + 2*offset;
-					int funcid = Read2(tempptr);
-
+					int tempptr = frame.externs + 2*offset;
+					int funcid = EUtil.Read2(frame.fcode, tempptr);
 					call_function(funcid, frame.eventid);
 					frame_changed = true;
 					break;
 				}
 				case 0xa4:		// 32-bit CALL.
 				{
-					offset = (sint32)EUtil.Read4(frame.fcode,frame.ip);
+					offset = EUtil.Read4(frame.fcode, frame.ip);
 					call_function(offset, frame.eventid);
 					frame_changed = true;
 					break;
@@ -372,7 +367,6 @@ public abstract class UsecodeMachine extends GameSingletons {
 				case 0x25:		// RET. (End of procedure reached)
 				case 0x2C:		// RET. (Return from procedure)
 					show_pending_text();
-
 					return_from_procedure();
 					frame_changed = true;
 					break;
@@ -383,55 +377,60 @@ public abstract class UsecodeMachine extends GameSingletons {
 					sval = popi();	// Get index into array.
 					sval--;		// It's 1 based.
 					// Get # of local to index.
-					UsecodeValue *val;
+					UsecodeValue val;
 					if (opcode == 0x26) {
-						offset = EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
 						if (offset < 0 || offset >= num_locals) {
-							LOCAL_VAR_ERROR(offset);
+							// LOCAL_VAR_ERROR(offset);
 							pushi(0);
 							break;
 						}
-						val = &(frame.locals[offset]);
+						val = frame.locals[offset];
 					} else if (opcode == 0x5d) {
-						offset = EUtil.Read2(frame.fcode, frame.ip);
-						UsecodeValue& ths = frame.get_this();
-						if (offset < 0 || offset >= ths.get_class_var_count()) {
-							cerr << "Class variable #" << (offset) << " out of range!";\
-							CERR_CURRENT_IP();
+						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						UsecodeValue ths = frame.getThis();
+						if (offset < 0 || offset >= ths.getClassVarCount()) {
+							System.out.println("Class variable #" + (offset) +
+									" out of range!");
+							//CERR_CURRENT_IP();
 							break;
 						}
-						val = &(ths.nth_class_var(offset));
+						//+++++ val = &(ths.nth_class_var(offset));
+						val = null;	// WILL CRASH
 					} else {
-						offset = (sint16)EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short)EUtil.Read2(frame.fcode, frame.ip);
 						if (offset < 0) {// Global static.
-							if ((unsigned)(-offset) < statics.size())
-								val = &(statics[-offset]);
+							if ((-offset) < statics.size())
+								val = statics.elementAt(-offset);
 							else {
-								cerr << "Global static variable #" << (offset) << " out of range!";\
+								System.out.println("Global static variable #" +
+										(offset) + " out of range!");
 								pushi(0);
 								break;
 							}
 						} else {
-							if ((unsigned)offset < frame.function.statics.size())
-								val = &(frame.function.statics[offset]);
+							if (frame.function.statics != null &&
+									offset < frame.function.statics.size())
+								val = frame.function.statics.elementAt(offset);
 							else {
-								cerr << "Local static variable #" << (offset) << " out of range!";\
+								System.out.println("Local static variable #" +
+										(offset) + " out of range!");
 								pushi(0);
 								break;
 							}
 						}
 					}
 					if (sval < 0) {
-						cerr << "AIDX: Negative array index: " << sval << endl;
+						System.out.println("AIDX: Negative array index: " + sval);
 						pushi(0);
 						break;
 					}
-					if (val.is_array() && sval >= val.get_array_size())
+					if (val.isArray() && sval >= val.getArraySize())
 						pushi(0);	// Matches originals.
 					else if (sval == 0) // needed for SS keyring (among others)
-						push(val.get_elem0());
+						push(val.getElem0());
 					else
-						push(val.get_elem(sval));
+						push(val.getElem(sval));
 					break;
 				}
 				case 0x2d:		// RET. (Return from function)
@@ -444,18 +443,13 @@ public abstract class UsecodeMachine extends GameSingletons {
 					frame_changed = true;
 					break;
 				}
+				/*
 				case 0x2e:		// INITLOOP (1st byte of loop)
 				case 0xae:		// (32 bit version)   
 				{
 					int nextopcode = *(frame.ip);
 					// No real reason to have 32-bit version of this instruction;
 					// keeping it for backward compatibility only.
-	#if 0
-					if ((opcode & 0x80) != (nextopcode & 0x80)) {
-						cerr << "32-bit instruction mixed with 16-bit instruction in loop usecode!" << endl;
-						break;
-					}
-	#endif
 					nextopcode &= 0x7f;
 					if (nextopcode != 0x02 && nextopcode != 0x5c &&
 							nextopcode != 0x5f) {
@@ -1098,6 +1092,82 @@ public abstract class UsecodeMachine extends GameSingletons {
 		return (user_choice);
 		*/
 		return null;
+	} 
+	private UsecodeFunction find_function(int funcid) {
+		UsecodeFunction fun;
+		// locate function
+		int slotnum = funcid/0x100;
+		if (slotnum >= funs.size())
+			fun = null;
+		else {
+			Vector<UsecodeFunction> slot = funs.elementAt(slotnum);
+			int index = funcid%0x100;
+			fun = index < slot.size() ? slot.elementAt(index) : null;
+		}
+		if (fun == null) {
+			// Error?
+		}
+		return fun;
+	}
+	private final boolean is_object_fun(int n) {
+		// +++++++ if (symtbl == null)
+			return (n < 0x800);
+		// ++++ return symtbl->is_object_fun(n);
+	}
+	private boolean call_function(int funcid, int eventid) {
+		return call_function(funcid, eventid, null, false, false);
+	}
+	private boolean call_function(int funcid,
+				 int eventid,
+				 GameObject caller,
+				 boolean entrypoint, boolean orig) {
+		UsecodeFunction fun = find_function(funcid);
+		if (fun == null)
+			return false;
+		if (orig && fun != fun.orig) {
+			return false;
+		}
+		int depth, oldstack, chain;
+		if (entrypoint) {
+			depth = 0;
+			oldstack = 0;
+			chain = StackFrame.getCallChainID();
+		} else {
+			StackFrame parent = callStack.getFirst();
+			// find new depth
+			depth = parent.call_depth + 1;
+			// find number of elements available to pop from stack (as arguments)
+			oldstack = sp - parent.save_sp;
+			chain = parent.call_chain;
+			if (caller == null)
+				caller = parent.caller_item; // use parent's
+		}
+		StackFrame frame = new StackFrame(fun, eventid, caller, chain, depth);
+		int num_args = frame.num_args;
+		// Many functions have 'itemref' as a 'phantom' arg.
+		// In the originals, this was probably so that the games
+		// could know how much memory the function would need.
+		if (is_object_fun(funcid)) {
+			if (--num_args < 0) {
+				// Backwards compatibility with older mods.
+				num_args = 0;
+			}
+		}
+		while (num_args > oldstack) { // Not enough args pushed?
+			pushi(0); // add zeroes
+			oldstack++;
+		}
+		// Store args in first num_args locals
+		int i;
+		for (i = 0; i < num_args; i++) {
+			UsecodeValue val = pop();
+			frame.locals[num_args - i - 1] = val;
+		}
+		// save stack pointer
+		frame.save_sp = sp;
+		// add new stack frame to top of stack
+		callStack.addFirst(frame);
+		return true;
 	}
 	private void previous_stack_frame() {
 		// remove current frame from stack
@@ -1168,7 +1238,26 @@ public abstract class UsecodeMachine extends GameSingletons {
 	private void pushs(String s) {
 		push(new UsecodeValue.StringUsecodeValue(s));
 	}
-
+	/*
+	 *	Make sure pending text has been seen.
+	 */
+	private void show_pending_text() {
+		/* +++++++++++
+		if (book != null)			// Book mode?
+			{
+			int x, y;
+			while (book->show_next_page() && 
+					Get_click(x, y, Mouse::hand, 0, false, book, true))
+				;
+			gwin->paint();
+			}
+						// Normal conversation:
+		else if (conv->is_npc_text_pending())
+			click_to_continue();
+		*/
+	}
+	
+	
 	/*
 	 * One Usecode function.
 	 */
@@ -1177,6 +1266,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 		UsecodeFunction orig;	// Orig., if this was from a patch.
 		byte code[];	// What gets executed.
 		boolean extended;	// 32-bit function.
+		Vector<UsecodeValue> statics;	// Local statics.
 		UsecodeFunction(InputStream file) throws IOException {
 			id = EUtil.Read2(file);
 			int len;
