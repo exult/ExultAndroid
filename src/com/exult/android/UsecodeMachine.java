@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.TreeMap;
 
 public abstract class UsecodeMachine extends GameSingletons {
-	private boolean gflags[] = new boolean[EConst.c_last_gflag + 1];	// Global flags.
+	private boolean gflags[];	// Global flags.
 	// ++++ protected Conversation conv;		// Handles conversations.
 	// Functions: I'th entry contains funs for ID's 256*i + n.
 	private Vector<Vector<UsecodeFunction>> funs = 
@@ -23,7 +23,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 	private boolean found_answer;		// Did we already handle the conv. option?
 	private Tile saved_pos;		// For a couple SI intrinsics.
 	private String theString;	// The single string register.
-	private UsecodeValue stack[] = new UsecodeValue[1024];
+	private UsecodeValue stack[];
 	private int sp;				// Stack-pointer index.
 	
 	public static final int 	// enum Usecode_events
@@ -44,6 +44,41 @@ public abstract class UsecodeMachine extends GameSingletons {
 		left_trinsic = 0x57,
 		avatar_is_thief = 0x2eb
 		;
+	public UsecodeMachine() {
+		/*+++++
+		 conv = new Conversation();
+		 keyring = new Keyring();
+		 saved_pos = new Tile(-1, -1, -1);
+		 saved_map = -1;
+		 telekenesis_fun = -1;
+		 */
+		gflags = new boolean[EConst.c_last_gflag + 1];
+		stack = new UsecodeValue[1024];
+		sp = 0;
+		/*++++++++++FINISH
+		ifstream file;                // Read in usecode.
+		std::cout << "Reading usecode file." << std::endl;
+		try
+			{
+			U7open(file, USECODE);
+			read_usecode(file);
+			file.close();
+			}
+		catch(const file_exception & f)
+			{
+			if (!Game::is_editing())	// Ok if map-editing.
+				throw f;
+			std::cerr << "Warning (map-editing): Couldn't open '" << 
+								USECODE << "'" << endl;
+			}
+						// Get custom usecode functions.
+		if (is_system_path_defined("<PATCH>") && U7exists(PATCH_USECODE)) {
+			U7open(file, PATCH_USECODE);
+			read_usecode(file, true);
+			file.close();
+		}
+		*/
+	}
 	public final boolean getGlobalFlag(int i)	// Get/set ith flag.
 		{ return gflags[i]; }
 	public final void setGlobalFlag(int i, int val)
@@ -80,6 +115,51 @@ public abstract class UsecodeMachine extends GameSingletons {
 		}
 		vec.set(i, fun);
 		}
+	}
+	/*
+	 *	This is the main entry for outside callers.
+	 *
+	 *	Output:	-1 if not found.
+	 *		0 if can't execute now or if aborted.
+	 *		1 otherwise.
+	 */
+
+	public int callUsecode
+		(
+		int id, 			// Function #.
+		GameObject item,		// Item ref.
+		int event
+		) {
+						// Avoid these when already execing.
+		if (!callStack.isEmpty() && 
+			event == npc_proximity /* ++++ && Game::get_game_type() ==
+									BLACK_GATE*/)
+			return (0);
+
+		//+++++++++conv.clear_answers();
+
+		int ret;
+		if (call_function(id, event, item, true, false))
+			ret = run() ? 1 : 0;
+		else
+			ret = -1; // failed to call the function
+		/* ++++++++++++++++++++
+		set_book(0);
+						// Left hanging (BG)?
+		if (conv->get_num_faces_on_screen() > 0)
+			{
+			conv->init_faces();	// Remove them.
+			gwin->set_all_dirty();	// Force repaint.
+			}
+		if (modified_map)
+			{			// On a barge, and we changed the map.
+			Barge_object *barge = gwin->get_moving_barge();
+			if (barge)
+				barge->set_to_gather();	// Refigure what's on barge.
+			modified_map = false;
+			}
+		*/
+		return ret;
 	}
 	/*
 	 * MAIN interpreter
