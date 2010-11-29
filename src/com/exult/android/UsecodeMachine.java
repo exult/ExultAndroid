@@ -267,7 +267,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 				{
 					UsecodeValue val1 = pop();
 					UsecodeValue val2 = pop();
-					pushi(!(val1.eq(val2)) ? 1 : 0);
+					pushi(!(val1 == val2 || val1.eq(val2)) ? 1 : 0);
 					break;
 				}
 				case 0x1c:		// ADDSI.
@@ -341,7 +341,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 				{
 					UsecodeValue val1 = pop();
 					UsecodeValue val2 = pop();
-					pushi(val1.eq(val2) ? 1 : 0);
+					pushi(val1 == val2 || val1.eq(val2) ? 1 : 0);
 					break;
 				}
 				case 0x24:		// CALL.
@@ -435,7 +435,6 @@ public abstract class UsecodeMachine extends GameSingletons {
 				}
 				case 0x2d:		// RET. (Return from function)
 				{
-					// ++++ Testing.
 					show_pending_text();
 					UsecodeValue r = pop();
 
@@ -762,16 +761,21 @@ public abstract class UsecodeMachine extends GameSingletons {
 				case 0x5E:		// Set class member array element.
 				{
 					UsecodeValue arr;
+					offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+					short index = (short)popi();
+					index--;	// It's 1-based.
+					UsecodeValue val = pop();
 					if (opcode == 0x46) {
-						offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+						
 						// Get # of local array.
 						if (offset < 0 || offset >= num_locals) {
 							//LOCAL_VAR_ERROR(offset);
 							break;
 						}
-						arr = frame.locals[offset];
+						frame.locals[offset] = 
+							frame.locals[offset].putElem(index, val);
+					/* ++++++MAYBE LATER
 					} else if (opcode == 0x5e) {
-						offset = (short)EUtil.Read2(frame.fcode, frame.ip);
 						UsecodeValue ths = frame.getThis();
 						if (offset < 0 || offset >= ths.getClassVarCount()) {
 							//cerr << "Class variable #" << (offset) << " out of range!";\
@@ -779,35 +783,29 @@ public abstract class UsecodeMachine extends GameSingletons {
 							break;
 						}
 						arr = ths.nthClassVar(offset);
+					*/
 					} else {
-						offset = (short)EUtil.Read2(frame.fcode, frame.ip);
 						if (offset < 0) {// Global static.
-							if ((-offset) < statics.size())
-								arr = statics.elementAt(-offset);
-							else {
+							if ((-offset) < statics.size()) {
+								arr = statics.elementAt(-offset).putElem(index, val);
+								statics.setElementAt(arr, -offset);
+							} else {
 								//cerr << "Global static variable #" << (offset) << " out of range!";\
 								//CERR_CURRENT_IP();
 								break;
 							}
 						} else {
-							if (offset < frame.function.statics.size())
+							if (offset < frame.function.statics.size()) {
 								arr = frame.function.statics.elementAt(offset);
-							else {
+								arr = arr.putElem(index, val);
+								frame.function.statics.setElementAt(arr, offset);
+							} else {
 								//cerr << "Local static variable #" << (offset) << " out of range!";\
 								//CERR_CURRENT_IP();
 								break;
 							}
 						}
 					}
-					short index = (short)popi();
-					index--;	// It's 1-based.
-					UsecodeValue val = pop();
-					int size = arr.getArraySize();
-					/* +++++++++FINISH CREATE new value and STORE BACK!!
-					if (index >= 0 && 
-						(index < size || arr.resize(index + 1)))
-						arr.put_elem(index, val);
-					*/
 					break;
 				}
 				case 0x47:		// CALLE.  Stack has caller_item.
@@ -827,7 +825,6 @@ public abstract class UsecodeMachine extends GameSingletons {
 				case 0x48:		// PUSH EVENTID.
 					pushi(frame.eventid);
 					break;
-				/*
 				case 0x4a:		// ARRA.
 				{
 					UsecodeValue val = pop();
@@ -843,6 +840,7 @@ public abstract class UsecodeMachine extends GameSingletons {
 					frame.line_number = EUtil.Read2(frame.fcode, frame.ip);
 					break;
 				}
+				/*
 				case 0x4d: // debugging opcode from spanish SI (function init)
 				case 0xcd: // 32 bit debugging function init
 				{
@@ -932,37 +930,37 @@ public abstract class UsecodeMachine extends GameSingletons {
 						cout << endl;
 					break;
 				}
+				*/
 				case 0x50:		// PUSH static.
-					offset = (sint16)EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short)EUtil.Read2(frame.fcode, frame.ip);
 					if (offset < 0) {// Global static.
-						if ((unsigned)(-offset) < statics.size())
-							push(statics[-offset]);
+						if ((-offset) < statics.size())
+							push(statics.elementAt(-offset));
 						else
 							pushi(0);
 					} else {
-						if ((unsigned)offset < frame.function.statics.size())
-							push(frame.function.statics[offset]);
+						if (offset < frame.function.statics.size())
+							push(frame.function.statics.elementAt(offset));
 						else
 							pushi(0);
 					}
 					break;
 				case 0x51:		// POP static.
 				{
-					offset = (sint16)EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short)EUtil.Read2(frame.fcode, frame.ip);
 					// Get value.
 					UsecodeValue val = pop();
 					if (offset < 0) {
-						if ((unsigned)(-offset) >= statics.size())
-							statics.resize(-offset + 1);
-						statics[-offset] = val;
+						if ((-offset) >= statics.size())
+							statics.setSize(-offset + 1);
+						statics.setElementAt(val, -offset);
 					} else {
-						if ((unsigned)offset >= frame.function.statics.size())
-							frame.function.statics.resize(offset + 1);
-						frame.function.statics[offset]=val;
+						if (offset >= frame.function.statics.size())
+							frame.function.statics.setSize(offset + 1);
+						frame.function.statics.setElementAt(val, offset);;
 					}
 				}
 					break;
-				*/
 				case 0x52:		// CALLO (call original).
 				{			// Otherwise, like CALLE.
 					UsecodeValue ival = pop();
