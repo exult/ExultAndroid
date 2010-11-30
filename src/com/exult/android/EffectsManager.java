@@ -50,6 +50,12 @@ public class EffectsManager extends GameSingletons {
 		else				// Head of chain.
 			texts = txt.next;
 	}
+	public void removeTextEffects()	{
+		while (texts != null)
+			removeTextEffect(texts);
+		gwin.setAllDirty();
+	}
+
 	public void paint() {
 		for (SpecialEffect effect = effects; effect != null; effect = effect.next)
 		effect.paint();

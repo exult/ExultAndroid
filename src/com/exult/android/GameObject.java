@@ -119,6 +119,40 @@ public abstract class GameObject extends ShapeID {
 			top = above;
 		return top;
 	}
+	public int getUsecode() {
+		ShapeInfo inf = getInfo();
+		/* +++++++++FINISH
+		Frame_usecode_info *useinf = inf.get_frame_usecode(
+				get_framenum(), inf.has_quality() ? get_quality() : -1);
+		if (useinf)
+			{
+			// Shape has frame- or quality-dependent usecode.
+			std::string ucname = useinf->get_usecode_name();
+			int ucid = -1;
+			if (ucname.length())	// Try by name first.
+				ucid = ucmachine->find_function(ucname.c_str(), true);
+			if (ucid == -1)			// Now try usecode number.
+				ucid = useinf->get_usecode();
+			if (ucid >= 0)			// Have frame usecode.
+				return ucid;
+			}
+		*/
+		return ucmachine.getShapeFun(getShapeNum());
+	}
+	public void activate(int event) {
+		/* ++++++++++
+		int gump = getInfo().getGumpShape();
+		// Serpent Isle spell scrolls:
+		if (gump == 65 && Game::get_game_type() == SERPENT_ISLE) {
+			gumpman.add_gump(this, gump);
+			return;
+		}
+		*/
+		ucmachine.callUsecode(getUsecode(), this, event);
+	}
+	public final void activate() {
+		activate(UsecodeMachine.double_click);
+	}
 	// Set shape coord. in chunk/gump.
 	public final void setShapePos(int shapex, int shapey)
 		{ tx = (byte)shapex; ty = (byte)shapey; }

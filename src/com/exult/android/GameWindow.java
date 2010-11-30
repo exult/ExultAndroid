@@ -15,6 +15,7 @@ public class GameWindow {
 	private GameMap map;			// Current map.
 	private GameRender render;
 	private TimeQueue tqueue;
+	private UsecodeMachine usecode;
 	private Rectangle paintBox;		// Temp used for painting.
 	private Rectangle tempDirty;	// Temp for addDirty.
 	private Rectangle tempFind;		// For findObject.
@@ -54,6 +55,7 @@ public class GameWindow {
 		render = new GameRender();
 		tqueue = new TimeQueue();
 		effects = new EffectsManager();
+		usecode = new UsecodeMachine();
 		maps.add(map);
 		win = new ImageBuf(width, height);
 		pal = new Palette(win);
@@ -102,6 +104,9 @@ public class GameWindow {
 	public final TimeQueue getTqueue() {
 		return tqueue;
 	}
+	public final UsecodeMachine getUsecode() {
+		return usecode;
+	}
 	public final boolean isMoving() {
 		return /* ++++++ moving_barge ? moving_barge->is_moving()
 			    : */ mainActor.isMoving();
@@ -124,9 +129,17 @@ public class GameWindow {
 	public final Actor getNpc(int n) {
 		return n >= 0 && n < npcs.size() ? npcs.elementAt(n) : null;
 	}
-	int getRenderSkipLift()	{	// Skip rendering here.
+	public final int getRenderSkipLift()	{	// Skip rendering here.
 		return skipAboveActor < skipLift ?
 				skipAboveActor : skipLift; 
+	}
+	public final boolean mainActorDontMove() {
+		return mainActor != null &&	// Not if map-editing.
+		(mainActor.getFlag(GameObject.dont_move) ||
+		 mainActor.getFlag(GameObject.dont_render));
+	}
+	public final boolean mainActorCanAct() {
+		return mainActor.canAct();
 	}
 	// Get screen location for an object.
 	public final void getShapeLocation(Point loc, int tx, int ty, int tz) {
@@ -475,7 +488,7 @@ public class GameWindow {
 			mainActor.stop();	// Stop and set resting state.
 			/* ++++++
 			if (!gump_man.gump_mode())
-					main_actor.get_followers();
+					mainActor.get_followers();
 			*/
 			}
 	}
@@ -576,10 +589,85 @@ public class GameWindow {
 		/*
 		// If it's an actor and we want to grab the actor, grab it.
 		if (npc != null && cheat.grabbing_actor() && 
-		    (npc->get_npc_num() || npc==main_actor))
+		    (npc->get_npc_num() || npc==mainActor))
 			cheat.set_grabbed_actor (npc);
 		*/
 	}
+	/*
+	 *	Handle a double-click.
+	 */
+
+	public void doubleClicked
+		(
+		int x, int y			// Coords in window.
+		)
+		{
+						// Animation in progress?
+		//++++++if (mainActorDontMove())
+		//++++++	return;
+		/*
+						// Nothing going on?
+		if (!Usecode_script::get_count())
+			removed->flush();	// Flush removed objects.
+		*/
+						// Look for obj. in open gump.
+		GameObject obj = null;
+		boolean gump = false; //+++++TESTING
+		/*
+		boolean gump = gump_man.double_clicked(x, y, obj);
+		
+		*/
+		boolean avatar_can_act = mainActorCanAct();
+		// If gump manager didn't handle it, we search the world for an object
+		if (!gump) {
+			obj = findObject(x, y);
+			/* ++++++++++++++
+			if (!avatarCanAct && obj && obj->as_actor()
+			    	&& obj->as_actor() == mainActor->as_actor())
+				{
+				ActionFileGump(0);
+				return;
+				}
+			
+			// Check path, except if an NPC, sign, or if editing.
+			if (obj && !obj.asActor() &&
+				!cheat.in_hack_mover() &&
+				//!Is_sign(obj->get_shapenum()) &&
+				!Fast_pathfinder_client::is_grabable(mainActor, obj))
+				{
+				Mouse::mouse->flash_shape(Mouse::blocked);
+				return;
+				}
+			*/
+			}
+		if (obj == null || !avatar_can_act)
+			return;			// Nothing found or avatar disabled.
+		/* +++++++++++
+		if (combat && !gump &&		// In combat?
+		    !Combat::is_paused() &&
+		    (!gump_man->gump_mode() || gump_man->gumps_dont_pause_game()))
+			{
+			Actor *npc = obj->as_actor();
+						// But don't attack party members.
+			if ((!npc || !npc->is_in_party()) &&
+						// Or bodies.
+					!obj->get_info().is_body_shape())
+				{		// In combat mode.
+				// Want everyone to be in combat.
+				combat = 0;
+				mainActor.set_target(obj);
+				toggle_combat();
+				return;
+				}
+		}
+		*/
+		effects.removeTextEffects();	// Remove text msgs. from screen.
+		usecode.initConversation();
+		obj.activate();
+		//+++++++  npc_prox->wait(4);		// Delay "barking" for 4 secs.
+	}
+
+	
 	/*
 	 * 	Rendering:
 	 */

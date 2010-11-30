@@ -5,7 +5,7 @@ import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
 
-public abstract class UsecodeMachine extends GameSingletons {
+public class UsecodeMachine extends GameSingletons {
 	private boolean gflags[];	// Global flags.
 	// ++++ protected Conversation conv;		// Handles conversations.
 	// Functions: I'th entry contains funs for ID's 256*i + n.
@@ -55,29 +55,21 @@ public abstract class UsecodeMachine extends GameSingletons {
 		gflags = new boolean[EConst.c_last_gflag + 1];
 		stack = new UsecodeValue[1024];
 		sp = 0;
-		/*++++++++++FINISH
-		ifstream file;                // Read in usecode.
-		std::cout << "Reading usecode file." << std::endl;
-		try
-			{
-			U7open(file, USECODE);
-			read_usecode(file);
+		InputStream file;                // Read in usecode.
+		try {
+			file = EUtil.U7openStream(EFile.USECODE);
+			readUsecode(file, false);
 			file.close();
-			}
-		catch(const file_exception & f)
-			{
-			if (!Game::is_editing())	// Ok if map-editing.
-				throw f;
-			std::cerr << "Warning (map-editing): Couldn't open '" << 
-								USECODE << "'" << endl;
-			}
-						// Get custom usecode functions.
-		if (is_system_path_defined("<PATCH>") && U7exists(PATCH_USECODE)) {
-			U7open(file, PATCH_USECODE);
-			read_usecode(file, true);
-			file.close();
+		} catch (IOException e) {
+			System.out.println("Couldn't open '" + EFile.USECODE + "'!");
+			return;
 		}
-		*/
+						// Get custom usecode functions.
+		try {
+			file = EUtil.U7openStream(EFile.PATCH_USECODE);
+			readUsecode(file, true);
+			file.close();
+		} catch (IOException e) { }
 	}
 	public final boolean getGlobalFlag(int i)	// Get/set ith flag.
 		{ return gflags[i]; }
@@ -98,22 +90,26 @@ public abstract class UsecodeMachine extends GameSingletons {
 					// Read in all the functions.
 		while (file.available() > 0) {
 			UsecodeFunction fun = new UsecodeFunction(file);
-		int slotnum = fun.id/0x100;
-		if (slotnum >= funs.size())
-			funs.setSize(slotnum < 10 ? 10 : slotnum + 1);
-		Vector<UsecodeFunction> vec = funs.elementAt(slotnum);
-		int i = fun.id%0x100;
-		if (i >= vec.size())
-			vec.setSize(i + 1);
-		else if (vec.elementAt(i) != null) {		// Already have one there.
-			if (patch) {	// Patching?
-				if (vec.elementAt(i).orig != null) {	// Patching a patch.
-					fun.orig = vec.elementAt(i).orig;
-				} else		// Patching fun. from static.
-					fun.orig = vec.elementAt(i);
+			int slotnum = fun.id/0x100;
+			if (slotnum >= funs.size())
+				funs.setSize(slotnum < 10 ? 10 : slotnum + 1);
+			Vector<UsecodeFunction> vec = funs.elementAt(slotnum);
+			int i = fun.id%0x100;
+			if (vec == null) {
+				vec = new Vector<UsecodeFunction>(i + 1);
+				funs.setElementAt(vec, slotnum);
+			} 
+			if (i >= vec.size())
+				vec.setSize(i + 1);
+			else if (vec.elementAt(i) != null) {		// Already have one there.
+				if (patch) {	// Patching?
+					if (vec.elementAt(i).orig != null) {	// Patching a patch.
+						fun.orig = vec.elementAt(i).orig;
+					} else		// Patching fun. from static.
+						fun.orig = vec.elementAt(i);
+				}
 			}
-		}
-		vec.set(i, fun);
+			vec.set(i, fun);
 		}
 	}
 	/*
@@ -160,6 +156,15 @@ public abstract class UsecodeMachine extends GameSingletons {
 			}
 		*/
 		return ret;
+	}
+	public void initConversation() {
+		// ++++++ conv.initFaces();
+	}
+	public int getShapeFun(int n) {
+		return n < 0x400 ? n :
+			(/* ++++ symtbl != null ? symtbl.get_high_shape_fun(n)
+				// Default to 'old-style' high shape functions.
+				: */ 0x1000 + (n - 0x400));
 	}
 	/*
 	 * MAIN interpreter
@@ -1421,6 +1426,8 @@ public abstract class UsecodeMachine extends GameSingletons {
 		int intrinsic,			// The ID.
 		int num_parms			// # parms on stack.
 		) {
+		System.out.println("Called intrinsic " + intrinsic + " with " + num_parms +
+				" params.");
 		UsecodeValue parms[] = new UsecodeValue[num_parms];	// Get parms.
 		for (int i = 0; i < num_parms; i++) {
 			UsecodeValue val = pop();
