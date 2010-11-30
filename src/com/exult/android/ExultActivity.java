@@ -77,6 +77,10 @@ public class ExultActivity extends Activity {
     	private MotionEvent avatarMotion;	// When moving Avatar.
     	private int showItemsX = -1, showItemsY = -1;
     	public long showItemsTime = 0;
+    	private long lastB1Click = 0;
+    	private int leftDownX = -1, leftDownY = -1;
+    	private boolean dragging = false, dragged = false;
+    	
     	@Override
     	protected void onDraw(Canvas canvas){
     		if (GameTime > nextTickTime ) {
@@ -162,11 +166,25 @@ public class ExultActivity extends Activity {
     					avatarMotion = MotionEvent.obtain(event);
     					gwin.startActor(x, y, 1);
     				} 
+    				leftDownX = x; leftDownY = y;
     				return true;
     			case MotionEvent.ACTION_UP:
     				gwin.stopActor();
     				avatarMotion = null;
     				// Handle double-click, dragging.++++++++++
+    				if (GameTime - lastB1Click < 500 && 	
+    						leftDownX - 1 <= x && x <= leftDownX + 1 &&
+    						leftDownY - 1 <= y && y <= leftDownY + 1) {
+    					dragging = dragged = false;
+    					// This function handles the trouble of deciding what to
+    					// do when the avatar cannot act.
+    					gwin.doubleClicked(x, y);
+    					// +++++ Mouse::mouse->set_speed_cursor();
+    					showItemsX = -1000;
+    					return true;
+    				}	
+    				if (!dragging || !dragged)
+    					lastB1Click = GameTime;
     				if (/* ++++ gwin.getMainActor().canAct()*/ true) {
     					showItemsX = x; showItemsY = y;
     					showItemsTime = GameTime + 500;

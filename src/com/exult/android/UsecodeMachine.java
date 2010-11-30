@@ -199,6 +199,7 @@ public class UsecodeMachine extends GameSingletons {
 
 				int current_IP = frame.ip - frame.code;
 				int opcode = frame.fcode[frame.ip];
+				// System.out.println("Opcode is " + opcode);
 				/*
 				if (frame.ip + get_opcode_length(opcode) > frame.endp) {
 					cerr << "Operands lie outside of code segment. ";
@@ -213,9 +214,9 @@ public class UsecodeMachine extends GameSingletons {
 				case 0x84: // (32 bit version)
 				{
 					if (opcode < 0x80)
-						offset = EUtil.Read2(frame.fcode, frame.ip);
+						offset = frame.Read2();
 					else
-						offset = EUtil.Read4(frame.fcode, frame.ip);
+						offset = frame.Read4();
 					
 					found_answer = false;
 					if (get_user_choice() == null)  // Exit conv. if no choices.
@@ -224,7 +225,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				case 0x05:		// JNE.
 				{
-					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) frame.Read2();
 					UsecodeValue val = pop();
 					if (val.isFalse())
 						frame.ip += offset;
@@ -239,7 +240,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				}
 				case 0x06:		// JMP.
-					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) frame.Read2();
 					frame.ip += offset;
 					break;
 				case 0x86:		// JMP32
@@ -249,9 +250,9 @@ public class UsecodeMachine extends GameSingletons {
 				case 0x07:		// CMPS.
 				case 0x87: // (32 bit version)
 				{
-					int cnt = EUtil.Read2(frame.fcode, frame.ip);	// # strings.
+					int cnt = frame.Read2();	// # strings.
 					if (opcode < 0x80)
-						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) frame.Read2();
 					else
 						offset = EUtil.Read4(frame.fcode,frame.ip);
 					
@@ -316,7 +317,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				case 0x12:		// POP into a variable.
 				{
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					// Get value.
 					UsecodeValue val = pop();
 					if (offset < 0 || offset >= num_locals) {
@@ -356,7 +357,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				}
 				case 0x1c:		// ADDSI.
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					if (offset < 0 || frame.data + offset >= frame.externs-6) {
 						// +++++ DATA_SEGMENT_ERROR();
 						break;
@@ -372,7 +373,7 @@ public class UsecodeMachine extends GameSingletons {
 					append_string(frame.getDataString(offset));
 					break;
 				case 0x1d:		// PUSHS.
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					if (offset < 0 || frame.data + offset >= frame.externs-6) {
 						//  +++++DATA_SEGMENT_ERROR();
 						break;
@@ -389,7 +390,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				case 0x1e:		// ARRC.
 				{		// Get # values to pop into array.
-					int num = EUtil.Read2(frame.fcode, frame.ip);
+					int num = frame.Read2();
 					int cnt = num;
 					Vector<UsecodeValue> vals= new Vector<UsecodeValue>(num);
 					while (cnt-- > 0) {
@@ -403,7 +404,7 @@ public class UsecodeMachine extends GameSingletons {
 				break;
 				case 0x1f:		// PUSHI.
 				{		// Might be negative.
-					short ival = (short) EUtil.Read2(frame.fcode, frame.ip);
+					short ival = (short) frame.Read2();
 					pushi(ival);
 					break;
 				}
@@ -414,7 +415,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				}
 				case 0x21:		// PUSH.
-					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) frame.Read2();
 					if (offset < 0 || offset >= num_locals) {
 						// LOCAL_VAR_ERROR(offset);
 						pushi(0);
@@ -431,7 +432,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				case 0x24:		// CALL.
 				{
-					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) frame.Read2();
 					if (offset < 0 || offset >= frame.num_externs) {
 						// EXTERN_ERROR();
 						break;
@@ -444,7 +445,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				case 0xa4:		// 32-bit CALL.
 				{
-					offset = EUtil.Read4(frame.fcode, frame.ip);
+					offset = frame.Read4();
 					call_function(offset, frame.eventid);
 					frame_changed = true;
 					break;
@@ -464,7 +465,7 @@ public class UsecodeMachine extends GameSingletons {
 					// Get # of local to index.
 					UsecodeValue val;
 					if (opcode == 0x26) {
-						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) frame.Read2();
 						if (offset < 0 || offset >= num_locals) {
 							// LOCAL_VAR_ERROR(offset);
 							pushi(0);
@@ -472,7 +473,7 @@ public class UsecodeMachine extends GameSingletons {
 						}
 						val = frame.locals[offset];
 					} else if (opcode == 0x5d) {
-						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) frame.Read2();
 						UsecodeValue ths = frame.getThis();
 						if (offset < 0 || offset >= ths.getClassVarCount()) {
 							System.out.println("Class variable #" + (offset) +
@@ -483,7 +484,7 @@ public class UsecodeMachine extends GameSingletons {
 						//+++++ val = &(ths.nth_class_var(offset));
 						val = null;	// WILL CRASH
 					} else {
-						offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short)frame.Read2();
 						if (offset < 0) {// Global static.
 							if ((-offset) < statics.size())
 								val = statics.elementAt(-offset);
@@ -551,25 +552,25 @@ public class UsecodeMachine extends GameSingletons {
 				case 0xdf:	// (32 bit version)
 				{
 					// Counter (1-based).
-					int local1 = (short)EUtil.Read2(frame.fcode, frame.ip);
+					int local1 = (short)frame.Read2();
 					// Total count.
-					int local2 = (short)EUtil.Read2(frame.fcode, frame.ip);
+					int local2 = (short)frame.Read2();
 					// Current value of loop var.
-					int local3 = (short)EUtil.Read2(frame.fcode, frame.ip);
+					int local3 = (short)frame.Read2();
 					// Array of values to loop over.
 					int local4;
 					boolean is_32bit = (opcode > 0x80);
 					// Mask off 32bit flag.
 					opcode &= 0x7f;
 					if (opcode == 0x5C)
-						local4 = (short)EUtil.Read2(frame.fcode, frame.ip);
+						local4 = (short)frame.Read2();
 					else
-						local4 = EUtil.Read2(frame.fcode, frame.ip);
+						local4 = frame.Read2();
 					// Get offset to end of loop.
 					if (is_32bit)
 						offset = EUtil.Read4(frame.fcode,frame.ip); // 32 bit offset
 					else
-						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) frame.Read2();
 					if (local1 < 0 || local1 >= num_locals) {
 						//LOCAL_VAR_ERROR(local1);
 						break;
@@ -626,8 +627,7 @@ public class UsecodeMachine extends GameSingletons {
 					}
 					*/
 
-					int next = frame.locals[local1].getIntValue();
-
+					int next;
 					if (initializing_loop) {	// Initialize loop.
 						initializing_loop = false;
 						int cnt = arr.isArray() ?
@@ -635,8 +635,8 @@ public class UsecodeMachine extends GameSingletons {
 						frame.locals[local2] = new UsecodeValue.IntValue(cnt);
 						frame.locals[local1] = UsecodeValue.getZero();
 						next = 0;
-					}
-
+					} else
+						next = frame.locals[local1].getIntValue();
 					// in SI, the loop-array can be modified in-loop, it seems
 					// (conv. with Spektran, 044D:00BE)
 				   
@@ -718,7 +718,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				case 0x2f:		// ADDSV.
 				{
-					offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short) frame.Read2();
 					if (offset < 0 || offset >= num_locals) {
 						// LOCAL_VAR_ERROR(offset);
 						break;
@@ -753,7 +753,7 @@ public class UsecodeMachine extends GameSingletons {
 				// in the same behaviour as the original
 					frame.ip += 2;
 					if (opcode < 0x80)
-						offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short)frame.Read2();
 					else
 						offset = EUtil.Read4(frame.fcode,frame.ip);
 					
@@ -775,7 +775,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				case 0x38:		// CALLIS.
 				{
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					sval = frame.fcode[frame.ip++];  // # of parameters.
 					UsecodeValue ival = call_intrinsic(frame.eventid,
 														offset, sval);
@@ -784,7 +784,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				}
 				case 0x39:		// CALLI.
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					sval = frame.fcode[frame.ip++]; // # of parameters.
 					call_intrinsic(frame.eventid, offset, sval);
 					frame_changed = true;
@@ -807,7 +807,7 @@ public class UsecodeMachine extends GameSingletons {
 					if (opcode > 0x80)
 						offset = popi();
 					else
-						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) frame.Read2();
 					if (offset < 0 || offset >= gflags.length) {
 						// FLAG_ERROR(offset);
 						pushi(0);
@@ -820,7 +820,7 @@ public class UsecodeMachine extends GameSingletons {
 					if (opcode > 0x80)
 						offset = popi();
 					else
-						offset = (short) EUtil.Read2(frame.fcode, frame.ip);
+						offset = (short) frame.Read2();
 					if (offset < 0 || offset >= gflags.length) {
 						// FLAG_ERROR(offset);
 					} else {
@@ -846,7 +846,7 @@ public class UsecodeMachine extends GameSingletons {
 				case 0x5E:		// Set class member array element.
 				{
 					UsecodeValue arr;
-					offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short)frame.Read2();
 					short index = (short)popi();
 					index--;	// It's 1-based.
 					UsecodeValue val = pop();
@@ -900,7 +900,7 @@ public class UsecodeMachine extends GameSingletons {
 					GameObject caller = get_item(ival);
 					push(ival); // put caller_item back on stack
 					if (opcode < 0x80)
-						offset = EUtil.Read2(frame.fcode, frame.ip);
+						offset = frame.Read2();
 					else
 						offset = EUtil.Read4(frame.fcode,frame.ip);
 					call_function(offset, frame.eventid, caller, false, false);
@@ -922,7 +922,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				case 0x4c: // debugging opcode from spanish SI (line number)
 				{
-					frame.line_number = EUtil.Read2(frame.fcode, frame.ip);
+					frame.line_number = frame.Read2();
 					break;
 				}
 				/*
@@ -933,8 +933,8 @@ public class UsecodeMachine extends GameSingletons {
 					int paramnames;
 					if (opcode < 0x80)
 					{
-						funcname = EUtil.Read2(frame.fcode, frame.ip);
-						paramnames = EUtil.Read2(frame.fcode, frame.ip);
+						funcname = frame.Read2();
+						paramnames = frame.Read2();
 					}
 					else
 					{
@@ -1017,7 +1017,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				*/
 				case 0x50:		// PUSH static.
-					offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short)frame.Read2();
 					if (offset < 0) {// Global static.
 						if ((-offset) < statics.size())
 							push(statics.elementAt(-offset));
@@ -1032,7 +1032,7 @@ public class UsecodeMachine extends GameSingletons {
 					break;
 				case 0x51:		// POP static.
 				{
-					offset = (short)EUtil.Read2(frame.fcode, frame.ip);
+					offset = (short)frame.Read2();
 					// Get value.
 					UsecodeValue val = pop();
 					if (offset < 0) {
@@ -1052,7 +1052,7 @@ public class UsecodeMachine extends GameSingletons {
 					GameObject caller = get_item(ival);
 					push(ival); // put caller_item back on stack
 
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					call_function(offset, frame.eventid, caller,
 									false, true);
 					frame_changed = true;
@@ -1071,7 +1071,7 @@ public class UsecodeMachine extends GameSingletons {
 				/* +++++++++LATER
 				case 0x54:		// PUSH class this.var.
 				{
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					UsecodeValue& ths = frame.get_this();
 					push(ths.nth_class_var(offset));
 					break;
@@ -1080,7 +1080,7 @@ public class UsecodeMachine extends GameSingletons {
 				{
 					// Get value.
 					UsecodeValue val = pop();
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					UsecodeValue& ths = frame.get_this();
 					ths.nth_class_var(offset) = val;
 					break;
@@ -1088,7 +1088,7 @@ public class UsecodeMachine extends GameSingletons {
 				case 0x56:		// CALLM - call method, use var vtable.
 				case 0x57:		// CALLMS - call method, use pushed vtable.
 				{
-					offset = EUtil.Read2(frame.fcode, frame.ip);
+					offset = frame.Read2();
 					Usecode_class_symbol *c;
 					if (opcode == 0x56)
 						{
@@ -1097,7 +1097,7 @@ public class UsecodeMachine extends GameSingletons {
 						}
 					else
 						{
-						UsecodeValue thisptr = EUtil.Read2(frame.fcode, frame.ip);
+						UsecodeValue thisptr = frame.Read2();
 						c = get_class(thisptr.getIntValue());
 						}
 					if (!c) {
@@ -1112,7 +1112,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				case 0x58:		// CLSCREATE
 				{
-					int cnum = EUtil.Read2(frame.fcode, frame.ip);
+					int cnum = frame.Read2();
 					Usecode_class_symbol *cls = symtbl.get_class(cnum);
 					if (!cls) {
 						cerr << "Can't create obj. for class #" << cnum << endl;
@@ -1542,6 +1542,14 @@ public class UsecodeMachine extends GameSingletons {
 			externs = ip;
 			ip += 2 * num_externs; // now points to actual code
 			code = ip;
+		}
+		final int Read2() {
+			ip += 2;
+			return EUtil.Read2(fcode, ip - 2);
+		}
+		final int Read4() {
+			ip += 4;
+			return EUtil.Read2(fcode, ip - 4);
 		}
 		String getDataString(int offset) {
 			int cnt;

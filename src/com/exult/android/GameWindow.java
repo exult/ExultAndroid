@@ -640,8 +640,10 @@ public class GameWindow {
 				}
 			*/
 			}
-		if (obj == null || !avatar_can_act)
+		if (obj == null /*+++++TESTING || !avatar_can_act */)
 			return;			// Nothing found or avatar disabled.
+		System.out.println("Double-clicked on shape " + obj.getShapeNum() +
+				":  " + obj.getName());
 		/* +++++++++++
 		if (combat && !gump &&		// In combat?
 		    !Combat::is_paused() &&
