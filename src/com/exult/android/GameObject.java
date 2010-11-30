@@ -107,6 +107,9 @@ public abstract class GameObject extends ShapeID {
 		return shnum >= 0 && shnum < ItemNames.names.length ? ItemNames.names[shnum]
 		         : new String("Unknown");
 	}
+	public int getShapeReal() {		// Actor class overrides this.
+		return getShapeNum();
+	}
 	public ContainerGameObject getOwner() {
 		return null;
 	}

@@ -24,6 +24,8 @@ public class UsecodeMachine extends GameSingletons {
 	private Tile saved_pos;		// For a couple SI intrinsics.
 	private String theString;	// The single string register.
 	private UsecodeValue stack[];
+	private UsecodeIntrinsics intrinsics;
+	private UsecodeValue intrinsicParms[] = new UsecodeValue[12];
 	private int sp;				// Stack-pointer index.
 	
 	public static final int 	// enum Usecode_events
@@ -54,6 +56,7 @@ public class UsecodeMachine extends GameSingletons {
 		 */
 		gflags = new boolean[EConst.c_last_gflag + 1];
 		stack = new UsecodeValue[1024];
+		intrinsics = new UsecodeIntrinsics();	// ++++FOR NOW. Later do BG, SI.
 		sp = 0;
 		InputStream file;                // Read in usecode.
 		try {
@@ -1297,7 +1300,9 @@ public class UsecodeMachine extends GameSingletons {
 			System.out.println("Stack underflow");
 			return new UsecodeValue.IntValue(0);
 		}
-		return stack[--sp]; 
+		UsecodeValue ret = stack[--sp];
+		stack[sp] = null;
+		return ret;
 	}
 	private UsecodeValue peek() {
 		return stack[sp-1];
@@ -1325,7 +1330,7 @@ public class UsecodeMachine extends GameSingletons {
 	 *
 	 *	Output:	->game object.
 	 */
-	private GameObject get_item(UsecodeValue itemref) {
+	public GameObject get_item(UsecodeValue itemref) {
 						// If array, take 1st element.
 		UsecodeValue elemval = itemref.getElem0();
 		GameObject obj = elemval.getObjectValue();
@@ -1431,23 +1436,9 @@ public class UsecodeMachine extends GameSingletons {
 		UsecodeValue parms[] = new UsecodeValue[num_parms];	// Get parms.
 		for (int i = 0; i < num_parms; i++) {
 			UsecodeValue val = pop();
-			parms[i] = val;
+			intrinsicParms[i] = val;
 		}
-		/* +++++++FINISH
-		if (intrinsic<=max_bundled_intrinsics) {
-		struct Usecode_internal::IntrinsicTableEntry *table_entry;
-		
-		if (Game::get_game_type() == SERPENT_ISLE)
-			table_entry = serpent_table+intrinsic;
-		else
-			table_entry = intrinsic_table+intrinsic;
-		UsecodeIntrinsicFn func=(*table_entry).func;
-		const char *name=(*table_entry).name;
-		return Execute_Intrinsic(func,name,event,intrinsic,
-							num_parms,parms);
-		}
-		*/
-	return(UsecodeValue.getZero());
+		return intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
 	}
 
 
