@@ -256,6 +256,9 @@ public abstract class GameObject extends ShapeID {
 	public boolean isEgg() {
 		return false;
 	}
+	public boolean getFlag(int flag) {
+		return false;	// Only Ireg objects have flags.
+	}
 	public void elementsRead() {
 	}
 	/*

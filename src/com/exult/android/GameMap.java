@@ -14,6 +14,10 @@ public class GameMap extends GameSingletons {
 	private short terrainMap[];				// ChunkTerrains index for each chunk.
 	private MapChunk objects[];				// List of objects for each chunk.
 	private boolean schunkRead[];			// 12x12, a flag for each superchunk.
+	private static Rectangle worldRect = new Rectangle(0, 0, 
+							EConst.c_num_chunks*EConst.c_tiles_per_chunk, 
+							EConst.c_num_chunks*EConst.c_tiles_per_chunk);
+	private static Rectangle nearbyRect = new Rectangle();
 	private static final int V2_CHUNK_HDR_SIZE = 4+4+2;
 	private static final byte v2hdr[] = {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, 
 		'e', 'x', 'l', 't', 0, 0};
@@ -264,7 +268,7 @@ public class GameMap extends GameSingletons {
 				}
 			}
 		/* ++++++FINISH
-		olist->setup_dungeon_levels();	// Should have all dungeon pieces now.
+		olist.setup_dungeon_levels();	// Should have all dungeon pieces now.
 		*/
 		}
 	/*
@@ -405,12 +409,12 @@ public class GameMap extends GameSingletons {
 						tilex, tiley, lift, npc_num);
 				obj = b;
 				if (npc_num > 0)
-					gwin->set_body(npc_num, b);
+					gwin.set_body(npc_num, b);
 				if (type)	// (0 if empty.)
 					{	// Don't pass along invisibility!
 					read_ireg_objects(ireg, scx, scy, obj, 
 						oflags & ~(1<<Obj_flags::invisible));
-					obj->elements_read();
+					obj.elements_read();
 					}
 				}
 			*/
@@ -426,9 +430,9 @@ public class GameMap extends GameSingletons {
 					Virtue_stone_object *v = 
 					   new Virtue_stone_object(shnum, frnum, tilex,
 							tiley, lift);
-					v->set_target_pos(entry[4], entry[5], entry[6],
+					v.set_target_pos(entry[4], entry[5], entry[6],
 									entry[7]);
-					v->set_target_map(entry[10]);
+					v.set_target_map(entry[10]);
 					obj = v;
 					type = 0;
 					}
@@ -439,9 +443,9 @@ public class GameMap extends GameSingletons {
 						entry[4], entry[5],
 						(quality>>1)&3);
 					obj = b;
-					if (!gwin->get_moving_barge() && 
+					if (!gwin.get_moving_barge() && 
 								(quality&(1<<3)))
-						gwin->set_moving_barge(b);
+						gwin.set_moving_barge(b);
 					}
 				else if (info.is_jawbone()) // serpent jawbone
 					{
@@ -541,7 +545,7 @@ public class GameMap extends GameSingletons {
 			Game_object_vector vec;
 			if (Game_object::find_nearby(vec, Tile_coord(2936, 2726, 0),
 						787, 0, 0, c_any_qual, 5))
-				vec[0]->move(2937, 2727, 2);
+				vec[0].move(2937, 2727, 2);
 			}
 		*/
 		
@@ -558,7 +562,7 @@ public class GameMap extends GameSingletons {
 		getIfixObjects(schunk);	// Get objects from ifix.
 		getIregObjects(schunk);	// Get moveable objects.
 		schunkRead[schunk] = true;	// Done this one now.
-		// map_patches->apply(schunk);	// Move/delete objects.
+		// map_patches.apply(schunk);	// Move/delete objects.
 	}
 	public static ChunkTerrain getTerrain(int tnum) {
 		ChunkTerrain ter = (ChunkTerrain) chunkTerrains.elementAt(tnum);
@@ -579,5 +583,86 @@ public class GameMap extends GameSingletons {
 		} else
 			return null;
 	}
-	
+	public final int findNearby
+		(
+		Vector<GameObject> vec,	// Objects appended to this.
+		Tile pos,				// Look near this point.
+		int shapenum,			// Shape to look for.  
+								//   -1=any (but always use mask?),
+								//   c_any_shapenum=any.
+		int delta,				// # tiles to look in each direction.
+		int mask,				// See Check_mask() above.
+		int qual,				// Quality, or c_any_qual for any.
+		int framenum			// Frame #, or c_any_framenum for any.
+		) {
+		if (delta < 0)			// +++++Until we check all old callers.
+			delta = 24;
+		if (shapenum > 0 && mask == 4)	// Ignore mask=4 if shape given!
+			mask = 0;
+		int vecsize = vec.size();
+		Rectangle tiles = nearbyRect;
+		tiles.set(pos.tx - delta, pos.ty - delta, 1 + 2*delta, 1 + 2*delta);
+					// Stay within world.
+		tiles.intersect(worldRect);
+					// Figure range of chunks.
+		int start_cx = tiles.x/EConst.c_tiles_per_chunk,
+	    	end_cx = (tiles.x + tiles.w - 1)/EConst.c_tiles_per_chunk;
+		int start_cy = tiles.y/EConst.c_tiles_per_chunk,
+	    	end_cy = (tiles.y + tiles.h - 1)/EConst.c_tiles_per_chunk;
+					// Go through all covered chunks.
+		for (int cy = start_cy; cy <= end_cy; cy++)
+			for (int cx = start_cx; cx <= end_cx; cx++) { // Go through objects.
+			MapChunk chunk = gmap.getChunk(cx, cy);
+			ObjectList.ObjectIterator next = chunk.getObjects().getIterator();
+			GameObject obj;
+			while ((obj = next.next()) != null) {	// Check shape.
+				if (shapenum >= 0) {
+					if (obj.getShapeNum() != shapenum)
+						continue;
+				}
+				if (qual != EConst.c_any_qual && obj.getQuality() != qual)
+					continue;
+				if (framenum !=  EConst.c_any_framenum &&
+					obj.getFrameNum() != framenum)
+					continue;
+				if (!checkMask(obj, mask))
+					continue;
+				int tx = obj.getTileX(), ty = obj.getTileY();
+				if (tiles.hasPoint(tx, ty)) {
+					vec.addElement(obj);
+				}
+			}
+		}
+					// Return # added.
+		return (vec.size() - vecsize);
+	}
+	/*
+	 *	Check an object in find_nearby() against the mask.
+	 *
+	 *	Output:	1 if it passes.
+	 */
+	private static boolean checkMask(GameObject obj, int mask) {
+		ShapeInfo info = obj.getInfo();
+		if ((mask&(4|8)) != 0 &&		// Both seem to be all NPC's.
+		    !info.isNpc())
+			return false;
+		int sclass = info.getShapeClass();
+						// Egg/barge?
+		if ((sclass == ShapeInfo.hatchable || sclass == ShapeInfo.barge) &&
+		    (mask&0x10) == 0)		// Only accept if bit 16 set.
+			return false;
+		if (info.isTransparent() &&	// Transparent?
+		    (mask&0x80) == 0)
+			return false;
+						// Invisible object?
+		if (obj.getFlag(GameObject.invisible))
+			if ((mask&0x20) == 0) {	// Guess:  0x20 == invisible.
+				if ((mask&0x40) == 0)	// Guess:  Inv. party member.
+					return false;
+				if (!obj.getFlag(GameObject.in_party))
+					return false;
+				}
+		return true;			// Passed all tests.
+	}
+
 }
