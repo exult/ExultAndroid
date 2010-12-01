@@ -143,7 +143,10 @@ public abstract class UsecodeValue {
 			elems = e;
 		}
 		public ArrayValue(Vector<UsecodeValue> vals) {
-			elems = vals.toArray(elems);
+			int cnt = vals.size();
+			elems = new UsecodeValue[cnt];
+			for (int i = 0; i < cnt; ++i)
+				elems[i] = vals.elementAt(i);
 		}
 		public ArrayValue(UsecodeValue v0, UsecodeValue v1) {
 			elems = new UsecodeValue[2];
@@ -152,6 +155,13 @@ public abstract class UsecodeValue {
 		public ArrayValue(UsecodeValue v0, UsecodeValue v1, UsecodeValue v2) {
 			elems = new UsecodeValue[3];
 			elems[0] = v0; elems[1] = v1; elems[2] = v2;
+		}
+		public static final ArrayValue createObjectsList(Vector<GameObject> objs) {
+			int cnt = objs.size();
+			UsecodeValue elems[] = new UsecodeValue[cnt];
+			for (int i = 0; i < cnt; ++i)
+				elems[i] = new ObjectValue(objs.elementAt(i));
+			return new ArrayValue(elems);
 		}
 		public int needIntValue() {
 			return elems.length > 0 ? elems[0].needIntValue() : 0;
@@ -229,8 +239,9 @@ public abstract class UsecodeValue {
 				ArrayValue arr2 = (ArrayValue) val2;
 				int size2 = arr2.elems.length;
 				vals.ensureCapacity(size2);
-				for (int i = 0; i < size2; i++)
+				for (int i = 0; i < size2; i++) {
 					vals.addElement(arr2.elems[i]);
+				}
 			} else {
 				vals.addElement(val2);
 			}

@@ -4,6 +4,7 @@ import java.util.LinkedList;
 
 public class UsecodeIntrinsics extends GameSingletons {
 	private static Tile tempTile = new Tile();
+	private static Vector<GameObject> foundVec = new Vector<GameObject>();
 	// Stack of last items created with intrins. x24.
 	private LinkedList<GameObject> last_created = new LinkedList<GameObject>();
 	
@@ -125,10 +126,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 				Tile_coord(-1, -1, -1), Schedule::wait, 
 						(int) Actor::neutral, true, equip);
 						// FORCE it to be neutral (dec04,01).
-			monster->set_alignment((int) Actor::neutral);
-			gwin->add_dirty(monster);
-			gwin->add_nearby_npc(monster);
-			gwin->show();
+			monster.set_alignment((int) Actor::neutral);
+			gwin.add_dirty(monster);
+			gwin.add_nearby_npc(monster);
+			gwin.show();
 			last_created.push_back(monster);
 			return monster;
 		} else */ {
@@ -204,6 +205,75 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return new UsecodeValue.IntValue(1);
 	}
+	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
+						UsecodeValue distVal, UsecodeValue maskVal) {
+		int mval = maskVal.getIntValue();// Some kind of mask?  Guessing:
+										//   4 == party members only.
+										//   8 == non-party NPC's only.
+										//  16 == something with eggs???
+										//  32 == monsters? invisible?
+		int shapenum;
+		
+		if (shapeVal.isArray()) {
+			// fixes 'lightning whip sacrifice' in Silver Seed
+			shapenum = shapeVal.getElem(0).getIntValue();
+			if (shapeVal.getArraySize() > 1)
+				System.out.println("Calling find_nearby with an array > 1 !!!!");
+		} else
+			shapenum = shapeVal.getIntValue();
+
+			
+						// It might be (tx, ty, tz).
+		int arraysize = objVal.getArraySize();
+		foundVec.clear();
+		if (arraysize == 4) {		// Passed result of click_on_item.
+			tempTile.set(objVal.getElem(1).getIntValue(),
+						 objVal.getElem(2).getIntValue(),
+						 objVal.getElem(3).getIntValue());
+			
+			gmap.findNearby(foundVec, tempTile, shapenum,
+				distVal.getIntValue(), mval);
+		} else if (arraysize == 3 || arraysize == 5) {
+			// Coords(x,y,z) [qual, frame]. Qual is 4th if there.
+			int qual = arraysize == 5 ? objVal.getElem(3).getIntValue()
+								: EConst.c_any_qual;
+						// Frame is 5th if there.
+			int frnum = arraysize == 5 ? objVal.getElem(4).getIntValue()
+								: EConst.c_any_framenum;
+			tempTile.set(objVal.getElem(0).getIntValue(),
+						 objVal.getElem(1).getIntValue(),
+						 objVal.getElem(2).getIntValue());
+			gmap.findNearby(foundVec, tempTile, shapenum,
+				distVal.getIntValue(), mval, qual, frnum);
+		} else {
+			GameObject obj = getItem(objVal);
+			if (obj == null)
+				return UsecodeValue.getZero();	// +++Exult rets Usecode_value(0,0).
+			obj = obj.getOutermost();	// Might be inside something.
+			obj.getTile(tempTile);
+			gmap.findNearby(foundVec, tempTile, shapenum, distVal.getIntValue(), mval);
+		}
+		/* +++++++FINISH 
+		if (foundVec.size() > 1)		// Sort right-left, near-far to fix
+						//   SI/SS cask bug.
+			std::sort(vec.begin(), vec.end(), Object_reverse_sorter());
+		*/
+		UsecodeValue nearby = UsecodeValue.ArrayValue.createObjectsList(foundVec);
+		return (nearby);
+	}
+	private final void removeItem(GameObject obj) {
+		if (obj != null) {
+			if (!last_created.isEmpty() && obj == last_created.getLast())
+				last_created.removeLast();
+			gwin.addDirty(obj);
+			obj.removeThis();
+		}
+	}
+	private final void removeItem(UsecodeValue p0) {
+		removeItem(getItem(p0));
+		ucmachine.setModifiedMap();
+	}
+	
 	
 	//	For BlackGate.
 	public UsecodeValue execute(int id, int event, int num_parms, UsecodeValue parms[]) {
@@ -226,6 +296,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return setLastCreated(parms[0]);
 		case 0x26:
 			return updateLastCreated(parms[0]);
+		case 0x35:
+			return findNearby(parms[0], parms[1], parms[2], parms[3]);
+		case 0x6f:
+			removeItem(parms[0]); break;
 		default:
 			System.out.println("*** UNHANDLED intrinsic # " + id);
 			break;
