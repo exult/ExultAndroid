@@ -109,6 +109,14 @@ public class ChunkTerrain {
 		int n = shapes[16*tiley + tilex];
 		retId.set((n>>8)&0xffff, n&0xff, ShapeFiles.SHAPES_VGA);
 	}
+	public final int getShapeNum(int tilex, int tiley) {
+		int n = shapes[16*tiley + tilex];
+		return (n>>8)&0xffff;
+	}
+	public final int getFrameNum(int tilex, int tiley) {
+		int n = shapes[16*tiley + tilex];
+		return n&0xff;
+	}
 	public final ShapeFrame getShape(int tilex, int tiley) {
 		int n = shapes[16*tiley + tilex];
 		return ShapeFiles.SHAPES_VGA.getFile().getShape((n>>8)&0xffff, n&0xff);

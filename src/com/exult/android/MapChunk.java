@@ -49,12 +49,10 @@ public class MapChunk extends GameSingletons {
 		ShapeID id = new ShapeID();
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
 			for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++) {
-				ter.getFlat(id, tilex, tiley);
-				ShapeFrame shape = id.getShape();
-				if (shape != null && shape.isRle()) {
-					int shapenum = id.getShapeNum(),
-					    framenum = id.getFrameNum();
-					ShapeInfo info = id.getInfo();
+				int shapenum = ter.getShapeNum(tilex, tiley);
+				if (shapenum >= EConst.c_first_obj_shape) {
+					ShapeInfo info = ShapesVgaFile.getInfo(shapenum);
+					int framenum = ter.getFrameNum(tilex, tiley);
 					GameObject obj = /* +++++++ info.is_animated() ?
 						new Animated_object(shapenum,
 						    	framenum, tilex, tiley)
