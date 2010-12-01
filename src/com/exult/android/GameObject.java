@@ -82,6 +82,9 @@ public abstract class GameObject extends ShapeID {
 			t.set(chunk.getCx()*EConst.c_tiles_per_chunk + tx,
 				  chunk.getCy()*EConst.c_tiles_per_chunk + ty, lift);
 	}
+	public void getOriginalTileCoord(Tile t) {	// Animated obs. will override.
+		getTile(t);
+	}
 	public final GameObject getNext() {
 		return next;
 	}
@@ -106,6 +109,10 @@ public abstract class GameObject extends ShapeID {
 		int shnum = getShapeNum();
 		return shnum >= 0 && shnum < ItemNames.names.length ? ItemNames.names[shnum]
 		         : new String("Unknown");
+	}
+	public void removeThis() {
+		if (chunk != null)
+			chunk.remove(this);
 	}
 	public int getShapeReal() {		// Actor class overrides this.
 		return getShapeNum();
@@ -190,6 +197,11 @@ public abstract class GameObject extends ShapeID {
 		newchunk.add(this);		// Updates 'chunk'.
 		gwin.addDirty(this);		// And repaint new area.
 	}
+	public void changeFrame(int frnum) {
+		gwin.addDirty(this);		// Set to repaint old area.
+		setFrame(frnum);
+		gwin.addDirty(this);		// Set to repaint new.
+	}
 	//	Step:  Overridden by Actors.
 	public boolean step(Tile t, int frame, boolean force) {
 		return false;
@@ -258,6 +270,9 @@ public abstract class GameObject extends ShapeID {
 	}
 	public boolean getFlag(int flag) {
 		return false;	// Only Ireg objects have flags.
+	}
+	public Actor asActor() {
+		return null;
 	}
 	public void elementsRead() {
 	}

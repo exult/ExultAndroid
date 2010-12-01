@@ -77,7 +77,7 @@ public class ShapeID extends GameSingletons {
 		{ frameNum = (byte)frnum; shape = null; }
 	public final void setFile(ShapeFiles shfile)	// Set to new flex
 		{ shapeFile = shfile; shape = null; }
-	public final int get_num_frames() {
+	public final int getNumFrames() {
 		if (shapeFile != null)
 			return shapeFile.getFile().getNumFrames(shapeNum);
 		else

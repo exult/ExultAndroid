@@ -4,6 +4,7 @@ import java.util.Vector;
 
 public abstract class UsecodeValue {
 	private static UsecodeValue zval = new IntValue(0);
+	private static UsecodeValue nullObj = new ObjectValue(null);
 	public int getIntValue() {
 		return 0;
 	}
@@ -60,6 +61,9 @@ public abstract class UsecodeValue {
 	public abstract boolean eq(UsecodeValue v2);
 	public static final UsecodeValue getZero() {
 		return zval;
+	}
+	public static final UsecodeValue getNullObj() {
+		return nullObj;
 	}
 	
 	/*
@@ -144,6 +148,10 @@ public abstract class UsecodeValue {
 		public ArrayValue(UsecodeValue v0, UsecodeValue v1) {
 			elems = new UsecodeValue[2];
 			elems[0] = v0; elems[1] = v1;
+		}
+		public ArrayValue(UsecodeValue v0, UsecodeValue v1, UsecodeValue v2) {
+			elems = new UsecodeValue[3];
+			elems[0] = v0; elems[1] = v1; elems[2] = v2;
 		}
 		public int needIntValue() {
 			return elems.length > 0 ? elems[0].needIntValue() : 0;

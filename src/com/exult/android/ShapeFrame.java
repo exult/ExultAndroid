@@ -335,6 +335,9 @@ public class ShapeFrame {
 	public final boolean isRle() {
 		return rle;
 	}
+	public final boolean isEmpty() {
+		return data[0] == 0 && data[1] == 0;
+	}
 	/*
 	 *	Paint either type of shape.
 	 */

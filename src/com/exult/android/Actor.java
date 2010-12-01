@@ -190,6 +190,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		for (i = 0, len = spots.length; i < len; i++)
 			spots[i] = null;
 	}
+	public Actor asActor() {
+		return this;
+	}
 	public final int getProperty(int prop) {
 		/* ++++++FINISH
 		if (prop == Actor::sex_flag)

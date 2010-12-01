@@ -14,10 +14,9 @@ public class UsecodeMachine extends GameSingletons {
 	private Vector<UsecodeValue> statics;		// Global persistent vars.
 	private LinkedList<StackFrame> callStack = new LinkedList<StackFrame>();
 	private StackFrame frame;
+	private boolean modifiedMap;	//  We add/deleted/moved an object.
 	private TreeMap<Integer, Integer> timers = new TreeMap<Integer,Integer>();
 	private GameObject caller_item;
-	private Vector<GameObject> last_created;// Stack of last items created with 
-											//   intrins. x24.
 	private Actor path_npc;		// Last NPC in path_run_usecode().
 	private String user_choice;	// String user clicked on.
 	private boolean found_answer;		// Did we already handle the conv. option?
@@ -78,6 +77,9 @@ public class UsecodeMachine extends GameSingletons {
 		{ return gflags[i]; }
 	public final void setGlobalFlag(int i, int val)
 		{ gflags[i] = (val == 1); }
+	public final void setModifiedMap() {
+		modifiedMap = true;
+	}
 	public final void readUsecode(InputStream file, boolean patch) throws IOException {
 		int size = file.available();	// Get file size.
 		file.mark(16);
@@ -150,7 +152,7 @@ public class UsecodeMachine extends GameSingletons {
 			conv->init_faces();	// Remove them.
 			gwin->set_all_dirty();	// Force repaint.
 			}
-		if (modified_map)
+		if (modifiedMap)
 			{			// On a barge, and we changed the map.
 			Barge_object *barge = gwin->get_moving_barge();
 			if (barge)
