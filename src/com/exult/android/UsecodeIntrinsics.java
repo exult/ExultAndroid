@@ -111,6 +111,47 @@ public class UsecodeIntrinsics extends GameSingletons {
 		UsecodeValue arr = new UsecodeValue.ArrayValue(vx, vy, vz);
 		return(arr);
 	}
+	private final GameObject createObject(int shapenum, boolean equip) {
+		GameObject obj = null;		// Create to be written to Ireg.
+		ShapeInfo info = ShapeID.getInfo(shapenum);
+		ucmachine.setModifiedMap();
+		/* +++++++++FINISH
+						// +++Not sure if 1st test is needed.
+		if (info.get_monster_info() || info.isNpc()) {
+						// (Wait sched. added for FOV.)
+			// don't add equipment (Erethian's transform sequence)
+			/* +++++FINISH
+			Monster_actor *monster = Monster_actor::create(shapenum,
+				Tile_coord(-1, -1, -1), Schedule::wait, 
+						(int) Actor::neutral, true, equip);
+						// FORCE it to be neutral (dec04,01).
+			monster->set_alignment((int) Actor::neutral);
+			gwin->add_dirty(monster);
+			gwin->add_nearby_npc(monster);
+			gwin->show();
+			last_created.push_back(monster);
+			return monster;
+		} else */ {
+			/* +++++++++++
+			if (info.isBodyShape())
+				obj = new Dead_body(shapenum, 0, 0, 0, 0, -1);
+			else */ {
+				obj = IregGameObject.create(ShapeID.getInfo(shapenum), shapenum, 0);
+						// Be liberal about taking stuff.
+				obj.setFlag(GameObject.okay_to_take);
+			}
+		}
+		obj.setInvalid();		// Not in world yet.
+		obj.setFlag(GameObject.okay_to_take);
+		last_created.addLast(obj);
+		return obj;
+	}
+	private final UsecodeValue createNewObject(UsecodeValue p0) {
+		// create_new_object(shapenum).   Stores it in 'last_created'.
+		int shapenum = p0.getIntValue();
+		GameObject obj = createObject(shapenum, false);
+		return new UsecodeValue.ObjectValue(obj);
+	}
 	private final UsecodeValue setLastCreated(UsecodeValue p0) {
 		// Take itemref off map and set last_created to it.
 		GameObject obj = getItem(p0);
@@ -179,6 +220,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			setItemFrame(parms[0], parms[1]); break;
 		case 0x18:
 			return getObjectPosition(parms[0]);
+		case 0x24:
+			return createNewObject(parms[0]);
 		case 0x25:
 			return setLastCreated(parms[0]);
 		case 0x26:

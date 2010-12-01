@@ -271,6 +271,10 @@ public abstract class GameObject extends ShapeID {
 	public boolean getFlag(int flag) {
 		return false;	// Only Ireg objects have flags.
 	}
+	public void setFlag(int flag) {
+	}
+	public void clearFlag(int flag) {
+	}
 	public Actor asActor() {
 		return null;
 	}

@@ -21,6 +21,21 @@ public class IregGameObject extends GameObject {
 			return (flags2 & (1 << (flag-32))) != 0;
 		return false;
 	}
+	public void setFlag(int flag) {
+		if (flag >= 0 && flag < 32)
+			flags |= (1 << flag);
+		else if (flag >= 32 && flag < 64)
+			flags2 |= (1 << (flag-32));
+	}
+	public void clearFlag(int flag) {
+		if (flag >= 0 && flag < 32)
+			flags &= ~(1 << flag);
+		else if (flag >= 32 && flag < 64)
+			flags2 &= ~(1 << (flag-32));
+	}
+	public static IregGameObject create(ShapeInfo info, int shnum, int frnum) {
+		return create(info, shnum, frnum, 0, 0, 0);
+	}
 	public static IregGameObject create
 		(
 		ShapeInfo info,		// Info. about shape.
