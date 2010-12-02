@@ -1,6 +1,7 @@
 package com.exult.android;
 import java.util.Vector;
 import java.util.LinkedList;
+import android.graphics.Point;
 
 public class UsecodeIntrinsics extends GameSingletons {
 	private static Tile tempTile = new Tile();
@@ -164,6 +165,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (*it == obj)
 				return Usecode_value(0);
 		*/
+		
 		ucmachine.setModifiedMap();
 		if (obj != null) {
 			gwin.addDirty(obj);		// Set to repaint area.
@@ -174,6 +176,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 		return(u);
 	}
 	private final UsecodeValue updateLastCreated(UsecodeValue p0) {
+		/*++++TESTING
+		System.out.println("Calling getClick");
+		Point pt = new Point();
+		ExultActivity.getClick(pt);
+		System.out.println("Got x,y = " + pt.x + "," + pt.y);
+		*/
 		// Think it takes array from 0x18,
 		//   updates last-created object.
 		//   ??guessing??

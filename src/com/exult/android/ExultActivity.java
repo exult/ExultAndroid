@@ -9,8 +9,8 @@ import android.view.View;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.content.Context;
+import android.graphics.Point;
 
 public class ExultActivity extends Activity {
 	public VgaFile vgaFile;
@@ -21,6 +21,7 @@ public class ExultActivity extends Activity {
 	public AnimationSprite testSprite1;
 	public ImageBuf ibuf;
 	public Palette pal0;
+	private static Point clickPoint;	// Non-null if getClick() is active.
 	
     /** Called when the activity is first created. */
     @Override
@@ -38,6 +39,19 @@ public class ExultActivity extends Activity {
     public void onDestroy() {
     	// stop tracing
         //Debug.stopMethodTracing();
+    }
+    public static void getClick(Point p) {
+    	Point save = clickPoint;	// Don't expect this to happen.
+    	p.x = -1;
+    	clickPoint = p;
+    	while (p.x < 0) {
+    		try {
+    			Thread.sleep(200);
+    		} catch (InterruptedException e) {
+    			p.x = -1; break;
+    		}
+    	}
+    	clickPoint = save;
     }
     /*
      * Subclasses.
@@ -161,7 +175,8 @@ public class ExultActivity extends Activity {
     			int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
-    				if ((state & KeyEvent.META_SHIFT_ON) != 0) {
+    				if ((state & KeyEvent.META_SHIFT_ON) != 0 &&
+    					clickPoint == null && UsecodeMachine.running <= 0) {
     					System.out.println("Starting motion");
     					avatarMotion = MotionEvent.obtain(event);
     					gwin.startActor(x, y, 1);
@@ -171,8 +186,16 @@ public class ExultActivity extends Activity {
     			case MotionEvent.ACTION_UP:
     				gwin.stopActor();
     				avatarMotion = null;
+    				if (clickPoint != null) {
+    					if (leftDownX - 1 <= x && x <= leftDownX + 1 &&
+    						leftDownY - 1 <= y && y <= leftDownY + 1) {
+    						clickPoint.set(x, y);
+    					}
+    					return true;
+    				}
     				// Handle double-click, dragging.++++++++++
-    				if (GameTime - lastB1Click < 500 && 	
+    				if (GameTime - lastB1Click < 500 &&
+    						UsecodeMachine.running <= 0 &&
     						leftDownX - 1 <= x && x <= leftDownX + 1 &&
     						leftDownY - 1 <= y && y <= leftDownY + 1) {
     					dragging = dragged = false;
@@ -191,7 +214,7 @@ public class ExultActivity extends Activity {
     				}
     				return true;
     			case MotionEvent.ACTION_MOVE:
-    				if (avatarMotion != null) {
+    				if (avatarMotion != null && clickPoint == null) {
     					avatarMotion.setLocation(sx, sy);
     					gwin.startActor(x, y, 1);
     				}
@@ -205,7 +228,8 @@ public class ExultActivity extends Activity {
     	};
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
-    			
+    		if (UsecodeMachine.running > 0 || clickPoint != null)
+    			return false;
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
 		        	if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ||
 		        		keyCode == KeyEvent.KEYCODE_SHIFT_RIGHT)

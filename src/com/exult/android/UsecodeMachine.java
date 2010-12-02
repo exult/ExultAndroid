@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.lang.InterruptedException;
 
 public class UsecodeMachine extends GameSingletons {
 	private boolean gflags[];	// Global flags.
@@ -26,6 +27,7 @@ public class UsecodeMachine extends GameSingletons {
 	private UsecodeIntrinsics intrinsics;
 	private UsecodeValue intrinsicParms[] = new UsecodeValue[12];
 	private int sp;				// Stack-pointer index.
+	public static int running;	// >0 when we are running.
 	
 	public static final int 	// enum Usecode_events
 		npc_proximity = 0,
@@ -124,7 +126,7 @@ public class UsecodeMachine extends GameSingletons {
 	 *		0 if can't execute now or if aborted.
 	 *		1 otherwise.
 	 */
-
+	
 	public int callUsecode
 		(
 		int id, 			// Function #.
@@ -140,9 +142,15 @@ public class UsecodeMachine extends GameSingletons {
 		//+++++++++conv.clear_answers();
 
 		int ret;
-		if (call_function(id, event, item, true, false))
-			ret = run() ? 1 : 0;
-		else
+		if (call_function(id, event, item, true, false)) {
+			Thread t = new Thread() {
+				public void run() {
+					myRun();// ? 1 : 0;
+				}
+			};
+			t.start();
+			ret = 1;
+		} else
 			ret = -1; // failed to call the function
 		/* ++++++++++++++++++++
 		set_book(0);
@@ -170,6 +178,12 @@ public class UsecodeMachine extends GameSingletons {
 			(/* ++++ symtbl != null ? symtbl.get_high_shape_fun(n)
 				// Default to 'old-style' high shape functions.
 				: */ 0x1000 + (n - 0x400));
+	}
+	private boolean myRun() {
+		++running;
+		boolean ret = run();
+		--running;
+		return ret;
 	}
 	/*
 	 * MAIN interpreter

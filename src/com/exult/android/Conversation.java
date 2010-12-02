@@ -1,6 +1,7 @@
 package com.exult.android;
 import java.util.Vector;
 import java.util.LinkedList;
+import android.graphics.Point;
 
 public final class Conversation extends GameSingletons {
 	private NpcFaceInfo face_info[];	// NPC's on-screen faces in convers.
@@ -8,7 +9,8 @@ public final class Conversation extends GameSingletons {
 	private int last_face_shown;		// Index of last npc face shown.
 	private Rectangle avatar_face;		// Area take by Avatar in conversation.
 	private Rectangle conv_choices[];	// Choices during a conversation.
-
+	private Point clicked;
+	
 	private Vector<String> answers;
 	private LinkedList<Vector<String> > answer_stack;
 
@@ -254,9 +256,7 @@ public final class Conversation extends GameSingletons {
 			info.cur_text = msg.substring(-height, msg.length());
 			int x, y; char c;
 			gwin.paint();		// Paint scenery beneath
-			/* +++++++++++FINISH
-			Get_click(x, y, Mouse::hand, &c, false, this, true);
-			*/
+			ExultActivity.getClick(clicked);
 			gwin.paint();
 			msg += -height;
 		}
