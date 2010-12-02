@@ -83,6 +83,16 @@ public class ShapeID extends GameSingletons {
 		else
 			return 0;
 	}
+	public void paintShapeTranslucent(int xoff, int yoff) {
+		ShapeFrame s = getShape();
+		if (s != null) {
+			if (xforms != null) {
+				s.paintRleTranslucent(gwin.getWin(), xoff, yoff, xforms);
+			} else {
+				s.paint(gwin.getWin(), xoff, yoff);
+			}
+		}
+	}
 	public void paintShape(int xoff, int yoff) {
 		ShapeFrame s = getShape();
 		if (s != null) {
