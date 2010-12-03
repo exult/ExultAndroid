@@ -177,11 +177,8 @@ public final class Conversation extends GameSingletons {
 			faceInfo[slot] = info;
 			setFaceRect(info, prev, screenw, screenh);
 		}
-		//++++++++MIGHT NEED to sync here.
-		//+++++NEEDED? gwin.getWin().setClip(0, 0, screenw, screenh);
 		paintFaces(false);			// Paint all faces.
-		//+++++NEEDED? gwin.getWin().clearClip();
-		}
+	}
 
 	/*
 	 *	Change the frame of the face on given slot.
@@ -214,10 +211,7 @@ public final class Conversation extends GameSingletons {
 		NpcFaceInfo prev = slot != 0 ? faceInfo[slot - 1] : null;
 		setFaceRect(info, prev, screenw, screenh);
 
-		// +++++++++SYNC?
-		//++++NEEDEDgwin.getWin().setClip(0, 0, screenw, screenh);
 		paintFaces(false);			// Paint all faces.
-		//+++++gwin.getWin().clearClip();
 	}
 
 	/*
@@ -272,9 +266,10 @@ public final class Conversation extends GameSingletons {
 		while ((height = fonts.paintTextBox(gwin.getWin(), font, info.curText, 
 				box.x, box.y, box.w,box.h, -1, true, info.largeFace)) < 0) {
 						// More to do?
-			info.curText = msg.substring(-height, info.curText.length());
-			int x, y; char c;
+			String nxtMsg = msg.substring(-height, info.curText.length());
+			gwin.addDirty(info.textRect);
 			ExultActivity.getClick(clicked);
+			info.curText = nxtMsg;
 			gwin.addDirty(info.textRect);
 		}
 						// All fit?  Store height painted.
@@ -371,7 +366,7 @@ public final class Conversation extends GameSingletons {
 		// Set up new list of choices.
 		convChoices = new Rectangle[numChoices];
 		for (int i = 0; i < numChoices; i++) {
-			String text = /* ++++ (char)(127) + */ choices[i];	// 127 is a circle.
+			String text = (char)(127) +  choices[i];	// 127 is a circle.
 			int width = fonts.getTextWidth(0, text);
 			if (x > 0 && x + width >= tbox.w) {		// Start a new line.
 				x = 0;
