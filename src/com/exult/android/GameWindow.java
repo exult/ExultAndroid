@@ -745,6 +745,9 @@ public class GameWindow {
 			if (dragging) dragging.paint();	// Paint what user is dragging.
 			*/
 			effects.paintText();
+			Conversation conv = GameSingletons.conv;
+			if (conv != null)
+				conv.paint();		// Conversation.
 			/*
 			gump_man.paint(true);
 

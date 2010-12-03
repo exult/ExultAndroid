@@ -5,6 +5,7 @@ import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.lang.InterruptedException;
+import android.graphics.Point;
 
 public class UsecodeMachine extends GameSingletons {
 	private boolean gflags[];	// Global flags.
@@ -18,14 +19,14 @@ public class UsecodeMachine extends GameSingletons {
 	private boolean modifiedMap;	//  We add/deleted/moved an object.
 	private TreeMap<Integer, Integer> timers = new TreeMap<Integer,Integer>();
 	private GameObject caller_item;
-	private Actor path_npc;		// Last NPC in path_run_usecode().
-	private String user_choice;	// String user clicked on.
+	private Actor path_npc;		// Last NPC in path_run_usecode()
 	private boolean found_answer;		// Did we already handle the conv. option?
 	private Tile saved_pos;		// For a couple SI intrinsics.
 	private String theString;	// The single string register.
 	private UsecodeValue stack[];
 	private UsecodeIntrinsics intrinsics;
 	private UsecodeValue intrinsicParms[] = new UsecodeValue[12];
+	private Point clickPoint = new Point();
 	private int sp;				// Stack-pointer index.
 	public static int running;	// >0 when we are running.
 	
@@ -49,7 +50,6 @@ public class UsecodeMachine extends GameSingletons {
 		;
 	public UsecodeMachine() {
 		/*+++++
-		 conv = new Conversation();
 		 keyring = new Keyring();
 		 saved_pos = new Tile(-1, -1, -1);
 		 saved_map = -1;
@@ -58,6 +58,8 @@ public class UsecodeMachine extends GameSingletons {
 		gflags = new boolean[EConst.c_last_gflag + 1];
 		stack = new UsecodeValue[1024];
 		intrinsics = new UsecodeIntrinsics();	// ++++FOR NOW. Later do BG, SI.
+		if (conv == null)
+			conv = new Conversation();
 		sp = 0;
 		InputStream file;                // Read in usecode.
 		try {
@@ -139,7 +141,7 @@ public class UsecodeMachine extends GameSingletons {
 									BLACK_GATE*/)
 			return (0);
 
-		//+++++++++conv.clear_answers();
+		conv.clearAnswers();
 
 		int ret;
 		if (call_function(id, event, item, true, false)) {
@@ -154,12 +156,13 @@ public class UsecodeMachine extends GameSingletons {
 			ret = -1; // failed to call the function
 		/* ++++++++++++++++++++
 		set_book(0);
+		*/
 						// Left hanging (BG)?
-		if (conv->get_num_faces_on_screen() > 0)
-			{
-			conv->init_faces();	// Remove them.
-			gwin->set_all_dirty();	// Force repaint.
-			}
+		if (conv.getNumFacesOnScreen() > 0) {
+			conv.initFaces();	// Remove them.
+			gwin.setAllDirty();	// Force repaint.
+		}
+		/*
 		if (modifiedMap)
 			{			// On a barge, and we changed the map.
 			Barge_object *barge = gwin->get_moving_barge();
@@ -171,7 +174,7 @@ public class UsecodeMachine extends GameSingletons {
 		return ret;
 	}
 	public void initConversation() {
-		// ++++++ conv.initFaces();
+		conv.initFaces();
 	}
 	public int getShapeFun(int n) {
 		return n < 0x400 ? n :
@@ -281,7 +284,8 @@ public class UsecodeMachine extends GameSingletons {
 					while (!matched && !found_answer && cnt-- > 0) {
 						UsecodeValue s = pop();
 						String str = s.getStringValue();
-						if (str != null && str.equals(user_choice)) {
+						String userChoice = conv.getUserChoice();
+						if (str != null && str.equals(userChoice)) {
 							matched = true;
 							found_answer = true;
 						}
@@ -1161,7 +1165,7 @@ public class UsecodeMachine extends GameSingletons {
 				}
 				*/
 				case 0x60:		// PUSHCHOICE
-					pushs(user_choice);
+					pushs(conv.getUserChoice());
 					break;
 				default:
 					System.out.println("Opcode " + opcode + " not known. ");
@@ -1183,16 +1187,49 @@ public class UsecodeMachine extends GameSingletons {
 	 *		0 if no possible choices or user quit.
 	 */
 	private String get_user_choice() {
-		/*+++++++++FINISH
-		if (!conv->get_num_answers())
+		if (conv.getNumAnswers() == 0)
 			return null;		// This does happen (Emps-honey).
 		//	if (!user_choice)		// May have already been done.
 		// (breaks conversation with Cyclops on Dagger Isle ('foul magic' option))
 		get_user_choice_num();
-		return (user_choice);
-		*/
-		return null;
+		return (conv.getUserChoice());
 	} 
+	/*
+	 *	Get user's choice from among the possible responses.
+	 *
+	 *	Output:	User choice is set, with choice # returned.
+	 *		-1 if no possible choices.
+	 */
+	private int get_user_choice_num() {
+		conv.setUserChoice(null);
+		conv.showAvatarChoices();
+		int x, y;			// Get click.
+		int choice_num;
+		do {
+			char chr;		// Allow '1', '2', etc.
+			gwin.paint();		// Paint scenery.
+			ExultActivity.getClick(clickPoint);
+			/*  +++++++++
+			int result=Get_click(x, y, Mouse::hand, &chr, false, conv, true);
+			if (result<=0) {	// ESC pressed, select 'bye' if poss.
+				choice_num = conv->locate_answer("bye");
+			} else if (chr) {		// key pressed
+				if (chr>='1' && chr <='0'+conv->get_num_answers()) {
+					choice_num = chr - '1';
+				} else
+					choice_num = -1;	//invalid key
+			} else */
+				choice_num = conv.conversationChoice(clickPoint.x, clickPoint.y);
+		}
+						// Wait for valid choice.
+		while (choice_num  < 0 || choice_num >= conv.getNumAnswers());
+
+		conv.clearAvatarChoices();
+						// Store ->answer string.
+		conv.setUserChoice(conv.getAnswer(choice_num));
+		return (choice_num);		// Return choice #.
+		}
+
 	private UsecodeFunction find_function(int funcid) {
 		UsecodeFunction fun;
 		// locate function
@@ -1377,7 +1414,7 @@ public class UsecodeMachine extends GameSingletons {
 	/*
 	 *	Make sure pending text has been seen.
 	 */
-	private void show_pending_text() {
+	public void show_pending_text() {
 		/* +++++++++++
 		if (book != null)			// Book mode?
 			{
@@ -1388,9 +1425,8 @@ public class UsecodeMachine extends GameSingletons {
 			gwin->paint();
 			}
 						// Normal conversation:
-		else if (conv->is_npc_text_pending())
+		else */ if (conv.isNpcTextPending())
 			click_to_continue();
-		*/
 	}
 	/*
 	 *	Show book or scroll text.
@@ -1456,6 +1492,20 @@ public class UsecodeMachine extends GameSingletons {
 		}
 		return intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
 	}
+	/*
+	 *	Wait for user to click inside a conversation.
+	 */
+	private void click_to_continue() {
+		int xx, yy;
+		char c;
+		/* +++++ if (!gwin.getPal().is_faded_out()) */ // If black screen, skip!
+			{
+			gwin.paint();		// Repaint scenery.
+			ExultActivity.getClick(clickPoint);
+			}
+		conv.clearTextPending();
+		//	user_choice = 0;		// Clear it.
+		}
 
 
 	

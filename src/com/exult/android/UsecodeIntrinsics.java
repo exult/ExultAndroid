@@ -7,8 +7,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static Tile tempTile = new Tile();
 	private static Vector<GameObject> foundVec = new Vector<GameObject>();
 	// Stack of last items created with intrins. x24.
-	private LinkedList<GameObject> last_created = new LinkedList<GameObject>();
-	
+	private static LinkedList<GameObject> last_created = new LinkedList<GameObject>();
 	private static final GameObject getItem(UsecodeValue v) {
 		return ucmachine.get_item(v);
 	}
@@ -22,6 +21,120 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return UsecodeValue.getZero();
 		return new UsecodeValue.IntValue(1 + (EUtil.rand() % range));
 	}
+	private int getFaceShape(UsecodeValue arg1, Actor npc, int frame) {
+		int shape = -1;
+		if (arg1 instanceof UsecodeValue.IntValue) {
+			shape = Math.abs(arg1.getIntValue());
+			if (shape == 356)	// Avatar.
+				shape = 0;
+		} else if (npc != null)
+			shape = npc.getFaceShapeNum();
+		if (shape < 0)	// No need to do anything else.
+			return shape;
+		// Checks for Petra flag.
+		/*++++++++++++
+		shape = Shapeinfo_lookup::GetFaceReplacement(shape);
+
+		Actor iact;
+		if (Game::get_game_type() == SERPENT_ISLE)
+				{			// Special case: Nightmare Smith.
+							//   (But don't mess up Guardian.)
+				if (shape == 296 && this->frame->caller_item &&
+				    (iact = this->frame->caller_item->as_actor()) != 0 &&
+				    iact->get_npc_num() == 277)
+					shape = 277;
+				}
+
+			// Another special case: map face shape 0 to
+			// the avatar's correct face shape and frame:
+			if (shape == 0)
+				{
+				Actor *ava = gwin->get_main_actor();
+				bool sishapes = Shape_manager::get_instance()->have_si_shapes();
+				Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(
+						ava->get_skin_color(), npc ? (npc->get_type_flag(Actor::tf_sex)!=0)
+							: (ava->get_type_flag(Actor::tf_sex)!=0), sishapes);
+				if (gwin->get_main_actor()->get_flag(Obj_flags::tattooed))
+					{
+					shape = skin->alter_face_shape;
+					frame = skin->alter_face_frame;
+					}
+				else
+					{
+					shape = skin->face_shape;
+					frame = skin->face_frame;
+					}
+				}
+		*/
+		return shape;
+	}
+	private final void showNpcFace(UsecodeValue p0, UsecodeValue p1,
+				int slot) {	// 0, 1, or -1 to find free spot.
+		ucmachine.show_pending_text();
+		GameObject item = getItem(p0);
+		Actor npc = item.asActor();
+		int frame = p1.getIntValue();
+		int shape = getFaceShape(p0, npc, frame);
+		if (shape < 0)
+			return;
+	
+		if (true /* +++++ Game::get_game_type() == BLACK_GATE*/ && npc != null) {
+			// Only do this if the NPC is the caller item.
+			if (npc.getNpcNum() != -1) 
+				npc.setFlag (GameObject.met);
+		}
+		if (conv.getNumFacesOnScreen() == 0)
+			eman.removeTextEffects();
+		// Only non persistent
+		/* ++++++++++++
+		if (gumpman->showing_gumps(true)) {
+			gumpman->close_all_gumps();
+			gwin->set_all_dirty();
+			init_conversation();	// jsf-Added 4/20/01 for SI-Lydia.
+		}
+		*/
+		gwin.paintDirty();
+		conv.showFace(shape, frame, slot);
+		//	user_choice = 0;		// Seems like a good idea.
+		// Also seems to create a conversation bug in Test of Love :-(
+	}
+
+	private final void removeNpcFace(UsecodeValue p0) {
+		ucmachine.show_pending_text();
+		GameObject item = p0.getObjectValue();
+		Actor npc = item.asActor();
+		int shape = getFaceShape(p0, npc, 0);
+		if (shape < 0)
+			return;
+		conv.removeFace(shape);
+	}
+
+	private final void addAnswer(UsecodeValue p0) {
+		conv.addAnswer(p0);
+		//	user_choice = 0;
+	}
+
+	private final void removeAnswer(UsecodeValue p0) {
+		conv.removeAnswer(p0);
+	// Commented out 'user_choice = 0' 8/3/00 for Tseramed conversation.
+//		user_choice = 0;
+	}
+
+	private final void pushAnswers() {
+		conv.pushAnswers();
+	}
+
+	private final void popAnswers() {
+		if (!conv.stackEmpty()) {
+			conv.popAnswers();
+			conv.setUserChoice(null);	// Added 7/24/2000.
+		}
+	}
+
+	private final void clearAnswers() {
+		conv.clearAnswers();
+	}
+	
 	private final void setItemShape(UsecodeValue itemVal, UsecodeValue shapeVal) {
 		int shape = shapeVal.getIntValue();
 		GameObject item = getItem(itemVal);
@@ -159,7 +272,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = getItem(p0);
 		// Don't do it for same object if already there.
 		/*
-		
 		for (vector<Game_object*>::const_iterator it = last_created.begin();
 					it != last_created.end(); ++it)
 			if (*it == obj)
@@ -288,6 +400,20 @@ public class UsecodeIntrinsics extends GameSingletons {
 		switch (id) {
 		case 0x00:
 			return getRandom(parms[0]);
+		case 0x03:
+			showNpcFace(parms[0], parms[1], -1); break;
+		case 0x04:
+			removeNpcFace(parms[0]); break;
+		case 0x05:
+			addAnswer(parms[0]); break;
+		case 0x06:
+			removeAnswer(parms[0]); break;
+		case 0x07:
+			pushAnswers(); break;
+		case 0x08:
+			popAnswers(); break;
+		case 0x09:
+			clearAnswers(); break;
 		case 0x0d:
 			setItemShape(parms[0], parms[1]); break;
 		case 0x11:

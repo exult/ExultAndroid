@@ -21,6 +21,7 @@ public enum ShapeFiles {
 	}
 	public static final void load() {
 		SHAPES_VGA.file = new ShapesVgaFile(EFile.SHAPES_VGA, EFile.PATCH_SHAPES);
+		FACES_VGA.file = new VgaFile(EFile.FACES_VGA, EFile.PATCH_FACES);
 		//++++FINISH.
 	}
 }

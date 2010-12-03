@@ -236,6 +236,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		skinColor = color; 
 		/* +++++ set_actor_shape(); */
 	}
+	public final int getFaceShapeNum() {
+		return faceNum;
+	}
+	public int getUsecode() {
+		return usecode == -1 ? super.getUsecode() : usecode;
+	}
 	public final int getFrameTime() {
 		return frameTime;
 	}
@@ -265,7 +271,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public int get_ident() { return ident; }
 	public void set_ident(int id) { ident = (byte)id; }
-
+	public final int getNpcNum() {
+		return npcNum;
+	}
 	int get_temperature()	// Get/set measure of coldness.
 		{ return temperature; }
 	void set_temperature(int t) {
