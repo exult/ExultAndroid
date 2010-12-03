@@ -166,7 +166,49 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (light_changed)
 			gwin.paint();		// Complete repaint refigures lights.
 	}
-	
+	private final UsecodeValue findNearest(UsecodeValue objVal, 
+			UsecodeValue shapeVal, UsecodeValue distVal) {
+		// Think it rets. nearest obj. near parm0.
+		GameObject obj = getItem(objVal);
+		if (obj == null)
+			return UsecodeValue.getNullObj();
+		foundVec.clear();
+		obj = obj.getOutermost();	// Might be inside something.
+		int dist = distVal.getIntValue();
+		int shnum = shapeVal.getIntValue();
+						// Kludge for Test of Courage:
+		if (ucmachine.getCurrentFunction() == 0x70a && shnum == 0x9a && dist == 0)
+			dist = 16;		// Mage may have wandered.
+		obj.getTile(tempTile);
+		int cnt = gmap.findNearby(foundVec, tempTile, shnum, dist, 0);
+		GameObject closest = null;
+		int bestdist = 100000;// Distance-squared in tiles.
+		int tx1 = obj.getTileX(), ty1 = obj.getTileY(), tz1 = obj.getLift();
+		for (int i = 0; i < cnt; ++i) {
+			GameObject each = foundVec.elementAt(i);
+			each.getTile(tempTile);
+			int dx = tx1 - tempTile.tx, dy = ty1 - tempTile.ty, 
+				dz = tz1 - tempTile.tz;
+			dist = dx*dx + dy*dy + dz*dz;
+			if (dist < bestdist) {
+				bestdist = dist;
+				closest = each;
+			}
+		}
+		return new UsecodeValue.ObjectValue(closest);
+	}
+	private final UsecodeValue dieRoll(UsecodeValue p0, UsecodeValue p1) {
+		// Rand. # within range.
+		int low = p0.getIntValue();
+		int high = p1.getIntValue();
+		if (low > high){
+			int tmp = low;
+			low = high;
+			high = tmp;
+		}
+		int val = (EUtil.rand() % (high - low + 1)) + low;
+		return new UsecodeValue.IntValue(val);
+	}
 	private final UsecodeValue getItemShape(UsecodeValue p0) {
 		GameObject obj = getItem(p0);
 		return obj == null ? UsecodeValue.getZero() :
@@ -416,6 +458,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			clearAnswers(); break;
 		case 0x0d:
 			setItemShape(parms[0], parms[1]); break;
+		case 0x0e:
+			return findNearest(parms[0], parms[1], parms[2]);
+		case 0x10:
+			return dieRoll(parms[0], parms[1]);
 		case 0x11:
 			return getItemShape(parms[0]);
 		case 0x12:
