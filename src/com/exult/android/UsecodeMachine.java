@@ -154,6 +154,22 @@ public class UsecodeMachine extends GameSingletons {
 			ret = 1;
 		} else
 			ret = -1; // failed to call the function
+		
+		return ret;
+	}
+	public void initConversation() {
+		conv.initFaces();
+	}
+	public int getShapeFun(int n) {
+		return n < 0x400 ? n :
+			(/* ++++ symtbl != null ? symtbl.get_high_shape_fun(n)
+				// Default to 'old-style' high shape functions.
+				: */ 0x1000 + (n - 0x400));
+	}
+	private boolean myRun() {
+		++running;
+		boolean ret = run();
+		--running;
 		/* ++++++++++++++++++++
 		set_book(0);
 		*/
@@ -171,21 +187,6 @@ public class UsecodeMachine extends GameSingletons {
 			modified_map = false;
 			}
 		*/
-		return ret;
-	}
-	public void initConversation() {
-		conv.initFaces();
-	}
-	public int getShapeFun(int n) {
-		return n < 0x400 ? n :
-			(/* ++++ symtbl != null ? symtbl.get_high_shape_fun(n)
-				// Default to 'old-style' high shape functions.
-				: */ 0x1000 + (n - 0x400));
-	}
-	private boolean myRun() {
-		++running;
-		boolean ret = run();
-		--running;
 		return ret;
 	}
 	/*
@@ -1451,30 +1452,28 @@ public class UsecodeMachine extends GameSingletons {
 		*/
 		show_pending_text();		// Make sure prev. text was seen.
 		String str = theString;
-		/* +++++++++++++
-		while (*str)			// Look for stopping points ("~~").
-			{
-			if (*str == '*')	// Just gets an extra click.
-				{
+		int ind = 0;
+		char c;			// Look for stopping points ("~~").
+		while (ind < str.length() && (c = str.charAt(ind)) != 0) {
+			if (c == '*') {	// Just gets an extra click.
 				click_to_continue();
-				str++;
+				ind++;
 				continue;
 				}
-			char *eol = strchr(str, '~');
-			if (!eol)		// Not found?
-				{
-				conv->show_npc_message(str);
+			int eol = str.indexOf('~', ind);
+			if (eol < 0) {		// Not found?
+				conv.showNpcMessage(str);
 				click_to_continue();
 				break;
-				}
-			*eol = 0;
-			conv->show_npc_message(str);
-			click_to_continue();
-			str = eol + 1;
-			if (*str == '~')
-				str++;		// 2 in a row.
 			}
-		*/
+			String text = str.substring(ind, eol);
+			conv.showNpcMessage(text);
+			click_to_continue();
+			if (eol < str.length() - 1 && str.charAt(eol + 1) == '~')
+				++eol;		// 2 in a row.
+			str = str.substring(eol + 1, str.length());
+			ind = 0;
+		}
 		theString = null;
 	}
 	private UsecodeValue call_intrinsic

@@ -203,9 +203,10 @@ public class FontsVgaFile extends GameSingletons {
 						if (sw <= 0)
 							sw = space_width;
 						int nsp = sw/space_width;
+						curx += nsp*space_width;
 						while (nsp-- > 0)
 							lines[cur_line].append(' ');
-						curx += nsp*space_width;
+						
 					}
 					ind = wrd;
 					break;

@@ -19,6 +19,7 @@ public final class Conversation extends GameSingletons {
 		avatarFace = new Rectangle();
 		answers = new Vector<String>();
 		answerStack = new LinkedList<Vector<String> >();
+		clicked = new Point();
 	}
 	public final String getUserChoice() {
 		return userChoice;
@@ -164,7 +165,7 @@ public final class Conversation extends GameSingletons {
 		if (info == null) {			// New one?
 			if (numFaces == maxFaces)
 						// None free?  Steal last one.
-				remove_slotFace(maxFaces - 1);
+				removeSlotFace(maxFaces - 1);
 			info = new NpcFaceInfo(faceSid, shape);
 			if (slot == -1)		// Want next one?
 				slot = numFaces;
@@ -177,9 +178,9 @@ public final class Conversation extends GameSingletons {
 			setFaceRect(info, prev, screenw, screenh);
 		}
 		//++++++++MIGHT NEED to sync here.
-		gwin.getWin().setClip(0, 0, screenw, screenh);
+		//+++++NEEDED? gwin.getWin().setClip(0, 0, screenw, screenh);
 		paintFaces(false);			// Paint all faces.
-		gwin.getWin().clearClip();
+		//+++++NEEDED? gwin.getWin().clearClip();
 		}
 
 	/*
@@ -214,9 +215,9 @@ public final class Conversation extends GameSingletons {
 		setFaceRect(info, prev, screenw, screenh);
 
 		// +++++++++SYNC?
-		gwin.getWin().setClip(0, 0, screenw, screenh);
+		//++++NEEDEDgwin.getWin().setClip(0, 0, screenw, screenh);
 		paintFaces(false);			// Paint all faces.
-		gwin.getWin().clearClip();
+		//+++++gwin.getWin().clearClip();
 	}
 
 	/*
@@ -230,13 +231,13 @@ public final class Conversation extends GameSingletons {
 				break;
 		if (i == maxFaces)
 			return;			// Not found.
-		remove_slotFace(i);
+		removeSlotFace(i);
 	}
 
 	/*
 	 *	Remove face from indicated slot (SI).
 	 */
-	public void remove_slotFace(int slot) {
+	public void removeSlotFace(int slot) {
 		int maxFaces = faceInfo.length;
 		if (slot >= maxFaces || faceInfo[slot] == null)
 			return;			// Invalid.
@@ -258,32 +259,28 @@ public final class Conversation extends GameSingletons {
 	/*
 	 *	Show what the NPC had to say.
 	 */
-	public void showNpc_message(String msg) {
+	public void showNpcMessage(String msg) {
 		if (lastFaceShown == -1)
 			return;
+		System.out.println("Showing npc msg: " + msg);
 		NpcFaceInfo info = faceInfo[lastFaceShown];
 		int font = info.largeFace ? 7 : 0;	// Use red for Guardian, snake.
-		info.curText = "";
+		info.curText = msg;
 		Rectangle box = info.textRect;
-		gwin.paint();
 		int height;			// Break at punctuation.
 		/* NOTE:  The original centers text for Guardian, snake.	*/
-		while ((height = fonts.paintTextBox(gwin.getWin(), font, msg, box.x, box.y,
-					box.w,box.h, -1, true, info.largeFace)) < 0) {
+		while ((height = fonts.paintTextBox(gwin.getWin(), font, info.curText, 
+				box.x, box.y, box.w,box.h, -1, true, info.largeFace)) < 0) {
 						// More to do?
-			info.curText = msg.substring(-height, msg.length());
+			info.curText = msg.substring(-height, info.curText.length());
 			int x, y; char c;
-			gwin.paint();		// Paint scenery beneath
 			ExultActivity.getClick(clicked);
-			gwin.paint();
-			msg += -height;
+			gwin.addDirty(info.textRect);
 		}
 						// All fit?  Store height painted.
 		info.lastTextHeight = height;
-		info.curText = msg;
 		info.textPending = true;
 		gwin.setPainted();
-//		gwin.show();
 	}
 	/*
 	 *	Is there NPC text that the user hasn't had a chance to read?
@@ -349,7 +346,7 @@ public final class Conversation extends GameSingletons {
 		if (SI) {
 			if (numFaces == maxFaces)
 						// Remove face #1 if still there.
-				remove_slotFace(maxFaces - 1);
+				removeSlotFace(maxFaces - 1);
 			fy = sbox.h - 2 - face.getHeight();
 			fx = 8;
 		} else if (prev == null)
@@ -375,7 +372,6 @@ public final class Conversation extends GameSingletons {
 		convChoices = new Rectangle[numChoices];
 		for (int i = 0; i < numChoices; i++) {
 			String text = /* ++++ (char)(127) + */ choices[i];	// 127 is a circle.
-			System.out.println("CHOICE " + i + " is " + text);
 			int width = fonts.getTextWidth(0, text);
 			if (x > 0 && x + width >= tbox.w) {		// Start a new line.
 				x = 0;
@@ -409,7 +405,6 @@ public final class Conversation extends GameSingletons {
 
 	public void clearAvatarChoices()
 	{
-//		gwin.paint(avatarFace);	// Paint over face and answers.
 		gwin.addDirty(avatarFace);
 		avatarFace.w = 0;
 	}
@@ -505,7 +500,7 @@ public final class Conversation extends GameSingletons {
 	public void popAnswers()
 	{
 	  answers=answerStack.removeFirst();
-	  gwin.paint();			// Really just need to figure tbox.
+	  gwin.setAllDirty();
 	}
 
 	/*
