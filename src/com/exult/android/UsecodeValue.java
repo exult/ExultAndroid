@@ -4,6 +4,7 @@ import java.util.Vector;
 
 public abstract class UsecodeValue {
 	private static UsecodeValue zval = new IntValue(0);
+	private static UsecodeValue oneVal = new IntValue(1);
 	private static UsecodeValue nullObj = new ObjectValue(null);
 	public int getIntValue() {
 		return 0;
@@ -61,6 +62,9 @@ public abstract class UsecodeValue {
 	public abstract boolean eq(UsecodeValue v2);
 	public static final UsecodeValue getZero() {
 		return zval;
+	}
+	public static final UsecodeValue getOne() {
+		return oneVal;
 	}
 	public static final UsecodeValue getNullObj() {
 		return nullObj;

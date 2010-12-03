@@ -47,6 +47,7 @@ public abstract class GameObject extends ShapeID {
 	freeze = 37,		// SI.  Pretty sure.
 	naked = 38;			// Exult. Makes the avatar naked given its skin.
 	
+	protected final int MAX_QUANTITY = 100;
 	protected MapChunk chunk;	// Chunk we're in, or NULL.
 	protected byte tx, ty;		// (X,Y) of shape within chunk, or if
 								//   in a container, coords. within
@@ -98,11 +99,73 @@ public abstract class GameObject extends ShapeID {
 	public final int getTileY() {
 		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
 	}
+	public final int getVolume() {
+		return getInfo().getVolume();
+	}
 	public final int getQuality() {
 		return quality;
 	}
 	public final void setQuality(int q) {
 		quality = (short) q;
+	}
+	public final int getQuantity() {
+		int shnum = getShapeNum();
+		if (ShapeID.getInfo(shnum).hasQuantity()) {
+			int qual = quality & 0x7f;
+			return qual != 0 ? qual : 1;
+		} else
+			return 1;
+	}
+	/*
+	 *	Add or remove from object's 'quantity', and delete if it goes to 0.
+	 *	Also, this sets the correct frame, even if delta == 0.
+	 *
+	 *	Output:	Delta decremented/incremented by # added/removed.
+	 *		Container's volume_used field is updated.
+	 */
+	public final int modifyQuantity(int delta) {
+		ShapeInfo info = getInfo();
+		if (!info.hasQuantity()) {
+						// Can't do quantity here.
+			if (delta > 0)
+				return (delta);
+			removeThis();		// Remove from container (or world).
+			return (delta + 1);
+		}
+		int quant = quality&0x7f;	// Get current quantity.
+		if (quant == 0)
+			quant = 1;		// Might not be set.
+		int newquant = quant + delta;
+		if (delta >= 0)			// Adding?
+			{			// Too much?
+			if (newquant > MAX_QUANTITY)
+				newquant = MAX_QUANTITY;
+			}
+		else if (newquant <= 0) {		// Subtracting.
+			removeThis();		// We're done for.
+			return (newquant);
+			}
+		int oldvol = getVolume();	// Get old volume used.
+		quality = (short) newquant;	// Store new value.
+		
+						// Set appropriate frame.
+		/* ++++++++++FINISH
+		if (info.hasWeaponInfo())	// Starbursts, serpent(ine) daggers, knives.
+			setFrame(0);		// (Fixes messed-up games.)
+		else if (info.hasQuantityFrames())
+			{
+				// This is actually hard-coded in the originals, but doing
+				// it this way is consistent with musket ammo.
+			int base = info.hasAmmoInfo() ? 24 : 0;
+				// Verified.
+			int new_frame = newquant > 12 ? 7 : (newquant > 6 ? 6 : newquant - 1);
+			setFrame(base + new_frame);
+			}
+		ContainerGameObject owner = getOwner();
+		if (owner != null)			// Update owner's volume.
+			owner.modifyVolumeUsed(getVolume() - oldvol);
+		*/
+		return (delta - (newquant - quant));
 	}
 	public String getName() {
 		//+++++FOR NOW:

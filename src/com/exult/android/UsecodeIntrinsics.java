@@ -39,9 +39,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (Game::get_game_type() == SERPENT_ISLE)
 				{			// Special case: Nightmare Smith.
 							//   (But don't mess up Guardian.)
-				if (shape == 296 && this->frame->caller_item &&
-				    (iact = this->frame->caller_item->as_actor()) != 0 &&
-				    iact->get_npc_num() == 277)
+				if (shape == 296 && this.frame.caller_item &&
+				    (iact = this.frame.caller_item.as_actor()) != 0 &&
+				    iact.get_npc_num() == 277)
 					shape = 277;
 				}
 
@@ -49,20 +49,20 @@ public class UsecodeIntrinsics extends GameSingletons {
 			// the avatar's correct face shape and frame:
 			if (shape == 0)
 				{
-				Actor *ava = gwin->get_main_actor();
-				bool sishapes = Shape_manager::get_instance()->have_si_shapes();
+				Actor *ava = gwin.get_main_actor();
+				bool sishapes = Shape_manager::get_instance().have_si_shapes();
 				Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(
-						ava->get_skin_color(), npc ? (npc->get_type_flag(Actor::tf_sex)!=0)
-							: (ava->get_type_flag(Actor::tf_sex)!=0), sishapes);
-				if (gwin->get_main_actor()->get_flag(Obj_flags::tattooed))
+						ava.get_skin_color(), npc ? (npc.get_type_flag(Actor::tf_sex)!=0)
+							: (ava.get_type_flag(Actor::tf_sex)!=0), sishapes);
+				if (gwin.get_main_actor().get_flag(Obj_flags::tattooed))
 					{
-					shape = skin->alter_face_shape;
-					frame = skin->alter_face_frame;
+					shape = skin.alter_face_shape;
+					frame = skin.alter_face_frame;
 					}
 				else
 					{
-					shape = skin->face_shape;
-					frame = skin->face_frame;
+					shape = skin.face_shape;
+					frame = skin.face_frame;
 					}
 				}
 		*/
@@ -87,9 +87,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			eman.removeTextEffects();
 		// Only non persistent
 		/* ++++++++++++
-		if (gumpman->showing_gumps(true)) {
-			gumpman->close_all_gumps();
-			gwin->set_all_dirty();
+		if (gumpman.showing_gumps(true)) {
+			gumpman.close_all_gumps();
+			gwin.set_all_dirty();
 			init_conversation();	// jsf-Added 4/20/01 for SI-Lydia.
 		}
 		*/
@@ -253,6 +253,56 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		gwin.setPainted();		// Make sure paint gets done.
 	}
+	
+	private final UsecodeValue getItemQuality(UsecodeValue p0) {
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return UsecodeValue.getZero();
+		ShapeInfo info = obj.getInfo();
+		return new UsecodeValue.IntValue(info.hasQuality() ? obj.getQuality() : 0);
+	}
+	private final UsecodeValue setItemQuality(UsecodeValue p0, UsecodeValue p1) {
+		// Guessing it's 
+		//  set_quality(item, value).
+		int qual = p1.getIntValue();
+		if (qual == EConst.c_any_qual)		// Leave alone (happens in SI)?
+			return UsecodeValue.getOne();
+		GameObject obj = getItem(p0);
+		if (obj != null) {
+			ShapeInfo info = obj.getInfo();
+			if (info.hasQuality()) {
+				obj.setQuality(qual);
+				return UsecodeValue.getOne();
+			}
+		}
+		return UsecodeValue.getZero();
+	}
+	private final UsecodeValue getItemQuantity(UsecodeValue p0) {
+		// Get quantity of an item.
+		//   Get_quantity(item, mystery).
+		GameObject obj = getItem(p0);
+		if (obj != null)
+			return new UsecodeValue.IntValue(obj.getQuantity());
+		else
+			return UsecodeValue.getZero();
+	}
+	public static UsecodeValue setItemQuantity(UsecodeValue p0, UsecodeValue p1) {
+		// Set_quantity (item, newcount).  Rets 1 iff item.has_quantity().
+		GameObject obj = getItem(p0);
+		int newquant = p1.getIntValue();
+		if (obj != null && obj.getInfo().hasQuantity()) {
+			UsecodeValue one = UsecodeValue.getOne();
+						// If not in world, don't delete!
+			if (newquant == 0 && obj.getChunk() == null)
+				return one;
+			int oldquant = obj.getQuantity();
+			int delta = newquant - oldquant;
+						// Note:  This can delete the obj.
+			obj.modifyQuantity(delta);
+			return one;
+		} else
+			return UsecodeValue.getZero();
+	}
 	private final UsecodeValue getObjectPosition(UsecodeValue p0) {
 		// Takes itemref.  ?Think it rets.
 		//  hotspot coords: (x, y, z).
@@ -357,7 +407,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			obj.move(tx, ty, tz, sz < 4 ? -1 :
 				  arr.getElem(3).getIntValue());
 			if (/* ++++++ FINISH GAME_BG */ true) {
-				return new UsecodeValue.IntValue(1);
+				return UsecodeValue.getOne();
 			} else {
 				return new UsecodeValue.ObjectValue(obj);
 			}
@@ -365,7 +415,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		} else if (sz == 1) {
 			obj.removeThis();
 		}
-		return new UsecodeValue.IntValue(1);
+		return UsecodeValue.getOne();
 	}
 	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
 						UsecodeValue distVal, UsecodeValue maskVal) {
@@ -468,6 +518,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getItemFrame(parms[0]);
 		case 0x13:
 			setItemFrame(parms[0], parms[1]); break;
+		case 0x14:
+			return getItemQuality(parms[0]);
+		case 0x15:
+			return setItemQuality(parms[0], parms[1]);
+		case 0x16:
+			return getItemQuantity(parms[0]);
+		case 0x17:
+			return setItemQuantity(parms[0], parms[1]);
 		case 0x18:
 			return getObjectPosition(parms[0]);
 		case 0x24:
