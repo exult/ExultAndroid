@@ -374,7 +374,8 @@ public final class Conversation extends GameSingletons {
 		// Set up new list of choices.
 		convChoices = new Rectangle[numChoices];
 		for (int i = 0; i < numChoices; i++) {
-			String text = (char)(127) + choices[i];	// 127 is a circle.
+			String text = /* ++++ (char)(127) + */ choices[i];	// 127 is a circle.
+			System.out.println("CHOICE " + i + " is " + text);
 			int width = fonts.getTextWidth(0, text);
 			if (x > 0 && x + width >= tbox.w) {		// Start a new line.
 				x = 0;
@@ -400,7 +401,7 @@ public final class Conversation extends GameSingletons {
 		int i;	// Blame MSVC
 
 		result=new String[answers.size()];
-		for (i=0;i<answers.size();i++) {
+		for (i=0;i<answers.size();i++) {			
 			result[i]=new String(answers.elementAt(i));
 		}
 		showAvatarChoices(result);

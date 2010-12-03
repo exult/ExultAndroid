@@ -77,14 +77,14 @@ public class FontsVgaFile extends GameSingletons {
 		}
 		// Just spaces and tabs:
 		private final static int passSpace(String text, int ind) {
-			int c;
-			while ((c = text.charAt(ind)) == ' ' || c == '\t')
+			int c, len = text.length();;
+			while (ind < len && ((c = text.charAt(ind)) == ' ' || c == '\t'))
 				ind++;
 			return ind;
 		}
 		private final static int passWord(String text, int ind) {
-			int c;
-			while ((c = text.charAt(ind)) != 0 && (!isSpace(c) || 
+			int c, len = text.length();;
+			while (ind < len && (c = text.charAt(ind)) != 0 && (!isSpace(c) || 
 											(c == '\f') || (c == 0xb)))
 				ind++;
 			return (ind);
