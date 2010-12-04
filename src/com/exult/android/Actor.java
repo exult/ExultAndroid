@@ -261,6 +261,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean isDormant() {
 		return dormant;
 	}
+	public void setAttribute(String nm, int val) {
+		//++++++++++LATER
+	}
+	public int getAttribute(String nm) {
+		return 0;	// +++++++LATER
+	}
 	public final ActorAction getAction() {
 		return action;
 	}

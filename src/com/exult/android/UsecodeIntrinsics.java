@@ -5,6 +5,7 @@ import android.graphics.Point;
 
 public class UsecodeIntrinsics extends GameSingletons {
 	private static Tile tempTile = new Tile();
+	private static Rectangle tempRect = new Rectangle();
 	private static Vector<GameObject> foundVec = new Vector<GameObject>();
 	// Stack of last items created with intrins. x24.
 	private static LinkedList<GameObject> last_created = new LinkedList<GameObject>();
@@ -375,6 +376,56 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = getItem(p0);
 		return new UsecodeValue.ObjectValue(obj);
 	}
+	private UsecodeValue getNpcProp(UsecodeValue p0, UsecodeValue p1) {
+		// Get NPC prop (item, prop_id).
+		GameObject obj = getItem(p0);
+		
+		if (obj == null)
+			return UsecodeValue.getZero();
+		Actor npc = obj.asActor();
+		if (npc == null) {
+			if (p1.getIntValue() == Actor.health)
+				return new UsecodeValue.IntValue(obj.getObjHp());
+			else 
+				return UsecodeValue.getZero();
+		}
+		String att = p1.getStringValue();
+		if (att != null)
+			return new UsecodeValue.IntValue(npc.getAttribute(att));
+		else
+			return new UsecodeValue.IntValue(npc.getProperty(p1.getIntValue()));
+	}
+	private UsecodeValue setNpcProp(UsecodeValue p0, UsecodeValue p1,
+														UsecodeValue p2) {
+		// Set NPC prop (item, prop_id, delta_value).
+		GameObject obj = getItem(p0);
+		Actor npc = obj != null ? obj.asActor() : null;;
+		if (npc != null) {			// NOTE: 3rd parm. is a delta!
+			String att = p1.getStringValue();
+			if (att != null)
+				npc.setAttribute(att, npc.getAttribute(att) +
+							p2.getIntValue());
+			else {
+				int prop = p1.getIntValue();
+				int delta = p2.getIntValue();
+				if (prop == Actor.exp)
+					delta /= 2;	// Verified.
+				if (prop != Actor.sex_flag)
+					delta += npc.getProperty(prop);	// NOT for gender.
+				npc.setProperty(prop, delta);
+				}
+			return UsecodeValue.getOne();// SI needs return.
+		} else if (obj != null) {
+				// Verified. Needed by serpent statue at end of SI.
+			int prop = p1.getIntValue();
+			int delta = p2.getIntValue();
+			if (prop == Actor.health) {
+				obj.setObjHp(obj.getObjHp() + delta);
+				return UsecodeValue.getOne();
+			}
+		}
+		return UsecodeValue.getZero();
+	}
 
 	private final GameObject createObject(int shapenum, boolean equip) {
 		GameObject obj = null;		// Create to be written to Ireg.
@@ -541,7 +592,19 @@ public class UsecodeIntrinsics extends GameSingletons {
 		*/
 		return new UsecodeValue.IntValue(total);
 		}
-
+	private final UsecodeValue npcNearby(UsecodeValue p0) {
+		// NPC nearby? (item).
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return UsecodeValue.getZero();;
+		int tx = obj.getTileX(), ty = obj.getTileY();
+		Actor npc;
+		gwin.getWinTileRect(tempRect);
+		boolean is_near = tempRect.hasPoint(tx, ty) &&
+			// Guessing: true if non-NPC, false if NPC is dead, asleep or paralyzed.
+			((npc = obj.asActor()) == null || npc.canAct());
+		return is_near ? UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
 	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
 						UsecodeValue distVal, UsecodeValue maskVal) {
 		int mval = maskVal.getIntValue();// Some kind of mask?  Guessing:
@@ -659,7 +722,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return findDirection(parms[0], parms[1]);
 		case 0x1b:
 			return getNpcObject(parms[0]);
-		//+++++++++	
+		//+++++++++
+		case 0x20:
+			return getNpcProp(parms[0], parms[1]);
+		case 0x21:
+			return setNpcProp(parms[0], parms[1], parms[2]);
+		case 0x22:
+			return new UsecodeValue.ObjectValue(gwin.getMainActor());
+		//++++++++++	
 		case 0x24:
 			return createNewObject(parms[0]);
 		case 0x25:
@@ -670,6 +740,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getNpcName(parms[0]);
 		case 0x28:
 			return countObjects(parms[0], parms[1], parms[2], parms[3]);
+		//++++++++++
+		case 0x2f:
+			return npcNearby(parms[0]);
+		//++++++++++++
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
 		case 0x6f:

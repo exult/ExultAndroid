@@ -196,6 +196,11 @@ public class GameWindow {
 			s.getWidth(), s.getHeight());
 		return r;
 	}
+	public void getWinTileRect(Rectangle r) {
+		r.set(getScrolltx(), getScrollty(),
+				(win.getWidth() + EConst.c_tilesize - 1)/EConst.c_tilesize,
+				(win.getHeight() + EConst.c_tilesize - 1)/EConst.c_tilesize);
+	}
 	public final int getScrolltx() {
 		return scrolltx;
 	}

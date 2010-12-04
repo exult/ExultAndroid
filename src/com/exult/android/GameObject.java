@@ -224,6 +224,23 @@ public abstract class GameObject extends ShapeID {
 		*/
 		return (delta - (newquant - quant));
 	}
+	static boolean hasHitpoints(int shnum) {
+		ShapeInfo info = ShapeID.getInfo(shnum);
+		return ((info.getShapeClass() == ShapeInfo.has_hp) ||
+				(info.getShapeClass() == ShapeInfo.container));
+		// containers have hitpoints too ('resistance')
+	}
+	public int getObjHp() {	// hitpoints for non-NPCs
+		if (hasHitpoints(getShapeNum()))
+			return quality;
+		else
+			return 0;
+	}
+	public void setObjHp(int hp) {
+		int shnum = getShapeNum();
+		if (hasHitpoints(shnum))
+			setQuality(hp);
+	}
 	public String getName() {
 		//+++++FOR NOW:
 		int shnum = getShapeNum();
