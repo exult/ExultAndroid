@@ -87,6 +87,9 @@ public class UsecodeMachine extends GameSingletons {
 	public final int getCurrentFunction() {
 		return frame.function.id;
 	}
+	public final GameObject get_caller_item() {
+		return caller_item;
+	}
 	public final void readUsecode(InputStream file, boolean patch) throws IOException {
 		int size = file.available();	// Get file size.
 		file.mark(16);

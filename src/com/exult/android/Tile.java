@@ -32,5 +32,24 @@ public class Tile {
 		return diff >= EConst.c_num_tiles/2 ? (diff - EConst.c_num_tiles) :
 			(diff <= -EConst.c_num_tiles/2 ? (diff + EConst.c_num_tiles) :
 							diff);
+	}	
+	public int distance(Tile t2) {	// Distance to another tile?
+		int delta = distance2d(t2);
+		int dz = t2.tz - tz;
+		if (dz < 0)
+			dz = -dz;
+					// Take larger abs. value.
+		return (delta > dz ? delta : dz);
+	}
+	public int distance2d(Tile t2)	// For pathfinder.
+		{			// Handle wrapping round the world.
+		int dy = (t2.ty - ty + EConst.c_num_tiles)%EConst.c_num_tiles;
+		int dx = (t2.tx - tx + EConst.c_num_tiles)%EConst.c_num_tiles;
+		if (dy >= EConst.c_num_tiles/2)// World-wrapping.
+			dy = EConst.c_num_tiles - dy;
+		if (dx >= EConst.c_num_tiles/2)
+			dx = EConst.c_num_tiles - dx;
+					// Take larger abs. value.
+		return (dy > dx ? dy : dx);
 	}
 }

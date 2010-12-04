@@ -86,6 +86,63 @@ public abstract class GameObject extends ShapeID {
 	public void getOriginalTileCoord(Tile t) {	// Animated obs. will override.
 		getTile(t);
 	}
+	private static short deltaTemp[] = new short[2];
+	private static void deltaCheck
+		(
+		int delta1,
+		int size1,
+		int size2,
+		short coord[]) {
+		if (delta1 < 0) {
+			if (coord[0] + size1 > coord[1])
+				coord[0] = coord[1];
+			else
+				coord[0] += size1;
+		} else if (delta1 > 0) {
+			if (coord[1] + size2 > coord[0])
+				coord[1] = coord[0];
+			else
+				coord[1] += size2;
+		}
+	}
+	private static void deltaWrapCheck(
+		int dir,			// Neg. if coord[1] < coord[0].
+		int size1,
+		int size2,
+		short coord[]			// Coords.  Updated.
+		)
+		{
+		// NOTE: An obj's tile is it's lower-right corner.
+		if (dir > 0)			// coord[1] > coord[0].
+			coord[1] = (short)((coord[1] - size2 + EConst.c_num_tiles)%EConst.c_num_tiles);
+		else if (dir < 0)
+			coord[0] = (short)((coord[0] - size1 + EConst.c_num_tiles)%EConst.c_num_tiles);
+	}
+	private static Tile distTile1 = new Tile(), distTile2 = new Tile();
+	public final int distance(GameObject o2) {
+		Tile t1 = distTile1, t2 = distTile2;
+		getTile(t1);
+		o2.getTile(t2);
+
+		ShapeInfo info1 = getInfo(), info2 = o2.getInfo();
+		int f1 = getFrameNum(), f2 = o2.getFrameNum();
+		int dx = Tile.delta(t1.tx, t2.tx),
+			dy = Tile.delta(t1.ty, t2.ty),
+			dz = t1.tz - t2.tz;
+		deltaTemp[0] =  t1.tx; deltaTemp[1] = t2.tx;
+		deltaWrapCheck(dx, info1.get3dXtiles(f1)-1,
+				info2.get3dXtiles(f2)-1, deltaTemp);
+		t1.tx = deltaTemp[0]; t2.tx = deltaTemp[1];
+		deltaTemp[0] =  t1.ty; deltaTemp[1] = t2.ty;
+		deltaWrapCheck(dy, info1.get3dYtiles(f1)-1,
+				info2.get3dYtiles(f2)-1, deltaTemp);
+		t1.ty = deltaTemp[0]; t2.ty = deltaTemp[1];
+		deltaTemp[0] =  t1.tz; deltaTemp[1] = t2.tz;
+		deltaCheck(dz, info1.get3dHeight(),
+				info2.get3dHeight(), deltaTemp);
+		t1.tz = deltaTemp[0]; t2.tz = deltaTemp[1];
+		return t1.distance(t2);
+	}
 	public final GameObject getNext() {
 		return next;
 	}

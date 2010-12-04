@@ -318,6 +318,64 @@ public class UsecodeIntrinsics extends GameSingletons {
 		UsecodeValue arr = new UsecodeValue.ArrayValue(vx, vy, vz);
 		return(arr);
 	}
+	private final UsecodeValue getDistance(UsecodeValue p0, UsecodeValue p1) {
+		// Distance from parm[0] -> parm[1].  Guessing how it's computed.
+		GameObject obj0 = getItem(p0);
+		GameObject obj1 = getItem(p1);
+		if (obj0 == null || obj1 == null)
+			return UsecodeValue.getZero();
+		return new UsecodeValue.IntValue( 
+			obj0.getOutermost().distance(obj1.getOutermost()));
+	}
+	private final Tile getPosition(UsecodeValue itemval) {
+		Tile tile = new Tile();
+		GameObject obj;		// An object?
+		int sz = itemval.getArraySize();
+		if ((sz == 1 || sz == 0) && (obj = getItem(itemval)) != null)
+				obj.getOutermost().getTile(tile);
+		else if (sz == 3)
+						// An array of coords.?
+			tile.set(itemval.getElem(0).getIntValue(),
+					itemval.getElem(1).getIntValue(),
+					itemval.getElem(2).getIntValue());
+		else if (itemval.getArraySize() == 4)
+						// Result of click_on_item() with
+						//  array = (null, tx, ty, tz)?
+			tile.set(itemval.getElem(1).getIntValue(),
+					itemval.getElem(2).getIntValue(),
+					itemval.getElem(3).getIntValue());
+		else				// Else assume caller_item.
+			ucmachine.get_caller_item().getTile(tile);
+		return tile;
+	}
+	private final UsecodeValue findDirection(UsecodeValue from, UsecodeValue to) {
+		// Direction from parm[0] -> parm[1].
+		// Rets. 0-7.  Is 0 east?
+		int angle;			// Gets angle 0-7 (north - northwest)
+		Tile t1 = getPosition(from);
+		Tile t2 = getPosition(to);
+						// Treat as cartesian coords.
+		angle = EUtil.getDirection(t1.ty - t2.ty, t2.tx - t1.tx);
+		return new UsecodeValue.IntValue(angle);
+	}
+
+	private final UsecodeValue getNpcObject(UsecodeValue p0) {
+		// Takes -npc.  Returns object, or array of objects.
+		if (p0.isArray()) {		// Do it for each element of array.
+			int sz = p0.getArraySize();
+			Vector<UsecodeValue> arr = new Vector<UsecodeValue>();
+			arr.setSize(sz);
+			for (int i = 0; i < sz; i++) {
+				UsecodeValue elem = new UsecodeValue.ObjectValue(
+													getItem(p0.getElem(i)));
+				arr.setElementAt(elem, i);
+			}
+			return new UsecodeValue.ArrayValue(arr);
+		}
+		GameObject obj = getItem(p0);
+		return new UsecodeValue.ObjectValue(obj);
+	}
+
 	private final GameObject createObject(int shapenum, boolean equip) {
 		GameObject obj = null;		// Create to be written to Ireg.
 		ShapeInfo info = ShapeID.getInfo(shapenum);
@@ -367,7 +425,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		for (vector<Game_object*>::const_iterator it = last_created.begin();
 					it != last_created.end(); ++it)
 			if (*it == obj)
-				return Usecode_value(0);
+				return UsecodeValue(0);
 		*/
 		
 		ucmachine.setModifiedMap();
@@ -527,7 +585,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		} else {
 			GameObject obj = getItem(objVal);
 			if (obj == null)
-				return UsecodeValue.getZero();	// +++Exult rets Usecode_value(0,0).
+				return UsecodeValue.getZero();	// +++Exult rets UsecodeValue(0,0).
 			obj = obj.getOutermost();	// Might be inside something.
 			obj.getTile(tempTile);
 			gmap.findNearby(foundVec, tempTile, shapenum, distVal.getIntValue(), mval);
@@ -595,6 +653,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return setItemQuantity(parms[0], parms[1]);
 		case 0x18:
 			return getObjectPosition(parms[0]);
+		case 0x19:
+			return getDistance(parms[0], parms[1]);
+		case 0x1a:
+			return findDirection(parms[0], parms[1]);
+		case 0x1b:
+			return getNpcObject(parms[0]);
+		//+++++++++	
 		case 0x24:
 			return createNewObject(parms[0]);
 		case 0x25:
