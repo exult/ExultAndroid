@@ -274,6 +274,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final int getNpcNum() {
 		return npcNum;
 	}
+	public String getName() {
+		return !getFlag(GameObject.met)?super.getName():getNpcName();
+	}
+	public final String getNpcName() {
+		return (name == null || name == "") ? super.getName() : name;	
+	}
 	int get_temperature()	// Get/set measure of coldness.
 		{ return temperature; }
 	void set_temperature(int t) {

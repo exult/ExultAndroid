@@ -341,6 +341,10 @@ public abstract class GameObject extends ShapeID {
 	public Actor asActor() {
 		return null;
 	}
+	//	Containers should override this.
+	public int countObjects(int shapenum, int qual, int framenum) {
+		return 0;
+	}
 	public void elementsRead() {
 	}
 	/*

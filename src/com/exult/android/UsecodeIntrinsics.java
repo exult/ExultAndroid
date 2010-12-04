@@ -417,6 +417,73 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getOne();
 	}
+	private final UsecodeValue getNpcName(UsecodeValue p0) {
+		// Get NPC name(s).  Works on arrays, too.
+		//static const char *unknown = "??name??";
+		Actor npc;
+		int cnt = p0.getArraySize();
+		if (cnt > 0) {			// Do array.
+			Vector<UsecodeValue> arr = new Vector<UsecodeValue>();
+			arr.setSize(cnt);
+			for (int i = 0; i < cnt; i++) {
+				GameObject obj = getItem(p0.getElem(i));
+				npc = obj != null ? obj.asActor() : null;
+				String nm = npc != null ? npc.getNpcName()
+							  : (obj != null ? obj.getName() : "??name??");
+				arr.setElementAt(new UsecodeValue.StringValue(nm), i);
+			}
+			return new UsecodeValue.ArrayValue(arr);
+		}
+		GameObject obj = getItem(p0);
+		String nm;
+		if (obj != null) {
+			npc = obj.asActor();
+			nm = npc != null ? npc.getNpcName() : obj.getName();
+		} else
+			nm = "??name??";
+		return new UsecodeValue.StringValue(nm);
+	}
+	/*
+	 *	Count objects of a given shape in a container, or in the whole party.
+	 */
+
+	private final UsecodeValue countObjects(
+		UsecodeValue objval,		// The container, or -357 for party.
+		UsecodeValue shapeval,	// Object shape to count (c_any_shapenum=any).
+		UsecodeValue qualval,		// Quality (c_any_qual=any).
+		UsecodeValue frameval		// Frame (c_any_framenum=any).
+		) {	
+		// How many?
+		// ((npc?-357==party, -356=avatar), 
+		//   item, quality, frame (c_any_framenum = any)).
+		// Quality/frame -359 means any.
+		long oval = objval.getIntValue();
+		int shapenum = shapeval.getIntValue();
+		int qualnum = qualval.getIntValue();
+		int framenum = frameval.getIntValue();
+		if (oval != -357)
+			{
+			GameObject obj = getItem(objval);
+			return (obj == null ? UsecodeValue.getZero() :
+				new UsecodeValue.IntValue(
+						obj.countObjects(shapenum, qualnum, framenum)));
+		}
+		int total = 0;
+		/* ++++++++++FINISH
+						// Look through whole party.
+		UsecodeValue party = getParty();
+		int cnt = party.getArraySize();
+		
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = getItem(party.getElem(i));
+			if (obj != null)
+				total += obj.countObjects(shapenum, qualnum, 
+									framenum);
+		}
+		*/
+		return new UsecodeValue.IntValue(total);
+		}
+
 	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
 						UsecodeValue distVal, UsecodeValue maskVal) {
 		int mval = maskVal.getIntValue();// Some kind of mask?  Guessing:
@@ -534,6 +601,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return setLastCreated(parms[0]);
 		case 0x26:
 			return updateLastCreated(parms[0]);
+		case 0x27:
+			return getNpcName(parms[0]);
+		case 0x28:
+			return countObjects(parms[0], parms[1], parms[2], parms[3]);
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
 		case 0x6f:
