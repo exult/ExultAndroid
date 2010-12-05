@@ -49,6 +49,14 @@ public class EffectsManager extends GameSingletons {
 			txt.prev.next = txt.next;
 		else				// Head of chain.
 			texts = txt.next;
+	}	
+	public void removeTextEffect(GameObject item) {
+		for (TextEffect each = texts; each != null; each = each.next)
+			if (each.isText(item)) {		// Found it.
+				removeTextEffect(each);
+				gwin.paint();
+				return;
+			}
 	}
 	public void removeTextEffects()	{
 		while (texts != null)

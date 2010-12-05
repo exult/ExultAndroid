@@ -736,7 +736,159 @@ public class UsecodeIntrinsics extends GameSingletons {
 		return (npc != null && npc.isDead()) ? UsecodeValue.getOne()
 				: UsecodeValue.getZero();
 	}
+	private final UsecodeValue getNpcNumber(UsecodeValue p0) {
+		// Returns NPC# of item. (-356 = avatar).
+		Actor npc = getItem(p0).asActor();
+		if (npc == gwin.getMainActor())
+			return new UsecodeValue.IntValue (-356);
+		int num = npc != null ? npc.getNpcNum() : 0;
+		return new UsecodeValue.IntValue(-num);
+	}
+	private final UsecodeValue getAlignment(UsecodeValue p0) {
+		// Get npc's alignment.
+		Actor npc = getItem(p0).asActor();
+		return (npc == null) ? UsecodeValue.getZero() :
+						new UsecodeValue.IntValue(npc.getAlignment());
+	}
+
+	private static void setAlignment(UsecodeValue p0, UsecodeValue p1) {
+		// Set npc's alignment.
+		// 2,3==bad towards Ava. 0==good.
+		Actor npc = getItem(p0).asActor();
+		int val = p1.getIntValue();
+		if (npc != null) {
+			int oldalign = npc.getAlignment();
+			npc.setAlignment(val);
+			/* ++++++++++++FINISH
+			if (oldalign != val)	// Changed?  Force search for new opp.
+				npc.setTarget(0);
+						// For fixing List Field fleeing:
+			if (npc.get_attack_mode() == Actor::flee)
+				npc.set_attack_mode(Actor::nearest);
+			*/
+		}
+	}
+	private final void moveObject(UsecodeValue p0, UsecodeValue p1,
+				UsecodeValue p2) {
+		// move_object(obj(-357=party), (tx, ty, tz)).
+		Tile tile = new Tile(p1.getElem(0).getIntValue(),
+				p1.getElem(1).getIntValue(),
+				p1.getArraySize() > 2 ? p1.getElem(2).getIntValue() : 0);
+		int map = p1.getArraySize() < 4 ? -1 :
+				p1.getElem(3).getIntValue();
+		Actor ava = gwin.getMainActor();
+		ucmachine.setModifiedMap();
+		if (p0.getIntValue() == -357) {		// Move whole party.
+			// ++++++FINISH gwin.teleport_party(tile, false, map);
+			return;
+		}
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return;
+		int oldX = obj.getTileX(), oldY = obj.getTileY();
+		obj.move(tile.tx, tile.ty, tile.tz, map);
+		Actor act = obj.asActor();
+		if (act != null) {
+			act.setAction(null);
+			if (act == ava) {		// Teleported Avatar?
+						// Make new loc. visible, test eggs.
+				if (map != -1)
+					gwin.setMap(map);
+				gwin.centerView(tile.tx, tile.ty);
+				/* +++++++++++
+				Map_chunk::try_all_eggs(ava, tile.tx, 
+					tile.ty, tile.tz, oldX, oldY);
+				*/
+			// Close?  Add to 'nearby' list.
+			} else if (ava.distance(act) < 
+								gwin.getWidth()/EConst.c_tilesize) {
+				/* +++++++++++++
+				NpcActor npc = act.asNpc();
+				if (npc != null) gwin.add_nearby_npc(npc);
+				*/
+			}
+		}
+	}
+	private final void removeNpc(UsecodeValue p0) {
+		// Remove_npc(npc) - Remove npc from world.
+		Actor npc = getItem(p0).asActor();
+		if (npc != null) {
+			ucmachine.setModifiedMap();
+						// Don't want him/her coming back!
+			//+++++++ npc.set_schedule_type(Schedule.wait);
+			gwin.addDirty(npc);
+			npc.removeThis();	// Remove, but don't delete.
+		}
+	}
+
+	private final void itemSay(UsecodeValue p0, UsecodeValue p1)  {
+		// Show str. near item (item, str).
+		GameObject obj = getItem(p0);
+		String str = p1.getStringValue();
+		if (obj != null && str != null && str.length() > 0) {
+						// Added Nov01,01 to fix 'locate':
+			eman.removeTextEffect(obj);
+			eman.addText(str, obj);
+		}
+	}
+	private final UsecodeValue setToAttack(UsecodeValue p0, UsecodeValue p1,
+			UsecodeValue p2) {
+		// set_to_attack(fromnpc, to, weaponshape).
+		// fromnpc attacks the target 'to' with weapon weaponshape.
+		// 'to' can be a game object or the return of a click_on_item
+		// call (including the possibility of being a tile target).
+		Actor from = getItem(p0).asActor();
+		if (from == null)
+			return UsecodeValue.getZero();
+		int shnum = p2.getIntValue();
+		if (shnum < 0)
+			return UsecodeValue.getZero();
+		/* ++++++FINISH
+		Weapon_info *winf = ShapeID::get_info(shnum).get_weapon_info();
+		if (!winf)
+			return Usecode_value(0);
+
+		Usecode_value& tval = parms[1];
+		Game_object *to = get_item(tval.getElem0());
+		int nelems;
+		if (to)
+			{
+			// It is an object.
+			from.set_attack_target(to, shnum);
+			return Usecode_value(1);
+			}
+		else if (tval.is_array() && (nelems = tval.getArraySize()) >= 3)
+			{
+			// Tile return of click_on_item. Allowing size to be < 4 for safety.
+			Tile_coord trg = Tile_coord(
+					tval.getElem(1).getIntValue(),
+					tval.getElem(2).getIntValue(),
+					nelems >= 4 ? tval.getElem(3).getIntValue() : 0);
+			from.set_attack_target(trg, shnum);
+			return Usecode_value(1);
+			}
+		*/
+		return UsecodeValue.getZero();	// Failure.
+	}
+
 	
+	
+	private final UsecodeValue getLift(UsecodeValue p0) {
+		GameObject obj = getItem(p0);
+		return obj == null ? UsecodeValue.getZero() :
+			new UsecodeValue.IntValue(obj.getLift());
+	}
+	private final void setLift(UsecodeValue p0, UsecodeValue p1) {
+		GameObject obj = getItem(p0);
+		if (obj != null) {
+			int lift = p1.getIntValue();
+			if (lift >= 0 && lift < 20) {
+				obj.move(obj.getTileX(), obj.getTileY(), lift);
+				ucmachine.setModifiedMap();
+				// ++++USED TO REPAINT WINDOW.  Still needed?
+			}
+		}
+	}
 	private final void removeItem(GameObject obj) {
 		if (obj != null) {
 			if (!last_created.isEmpty() && obj == last_created.getLast())
@@ -839,7 +991,27 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x37:
 			return isDead(parms[0]);
 		//++++++++++++++
-		
+		case 0x3a:
+			return getNpcNumber(parms[0]);
+		//+++++++++
+		case 0x3c:
+			return getAlignment(parms[0]);
+		case 0x3d:
+			setAlignment(parms[0], parms[1]); break;
+		case 0x3e:
+			moveObject(parms[0], parms[1], parms[2]); break;
+		case 0x3f:
+			removeNpc(parms[0]); break;
+		case 0x40:
+			if (!conv.isNpcTextPending())
+				itemSay(parms[0], parms[1]);
+			break;
+		case 0x41:
+			return setToAttack(parms[0], parms[1], parms[2]);
+		case 0x42:
+			return getLift(parms[0]);
+		case 0x43:
+			setLift(parms[0], parms[1]); break;
 		case 0x6f:
 			removeItem(parms[0]); break;
 		//++++++++++++++

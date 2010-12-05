@@ -334,6 +334,9 @@ public abstract class GameObject extends ShapeID {
 		newchunk.add(this);		// Updates 'chunk'.
 		gwin.addDirty(this);		// And repaint new area.
 	}
+	public final void move(int newtx, int newty, int newlift) {
+		move(newtx, newty, newlift, -1);
+	}
 	public void changeFrame(int frnum) {
 		gwin.addDirty(this);		// Set to repaint old area.
 		setFrame(frnum);
