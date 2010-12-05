@@ -91,7 +91,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		sleep_frame = 13,
 		up_frame = 14,		// Both hands reach up.
 		out_frame = 15		// Both hands reach out.
-		;
+		;	
+	public static final int // Describes alignment field.
+			neutral = 0,
+			friendly = 1,
+			hostile = 2,
+			unknown_align = 3;	// Bees have this, & don't attack until
 						// Party positions
 	// protected static short party_pos[4][10][2];
 
@@ -279,6 +284,18 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void set_ident(int id) { ident = (byte)id; }
 	public final int getNpcNum() {
 		return npcNum;
+	}
+	public final int getPartyId() {
+		return partyId;
+	}
+	public final void setPartyId(int i) {
+		partyId = (short)i;
+	}
+	public final int getAlignment() {
+		return alignment;
+	}
+	public final void setAlignment(int a) {
+		alignment = (short)a;
 	}
 	public String getName() {
 		return !getFlag(GameObject.met)?super.getName():getNpcName();

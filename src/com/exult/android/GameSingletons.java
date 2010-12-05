@@ -10,6 +10,7 @@ public class GameSingletons {
 	public static FontsVgaFile fonts;
 	public static UsecodeMachine ucmachine;
 	public static Conversation conv;	// This stays null until needed.
+	public static PartyManager partyman;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();
@@ -19,5 +20,6 @@ public class GameSingletons {
 		eman = gwin.getEffects();
 		fonts = new FontsVgaFile();
 		ucmachine = gwin.getUsecode();
+		partyman = new PartyManager();
 	}
 }

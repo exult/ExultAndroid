@@ -412,6 +412,8 @@ public abstract class GameObject extends ShapeID {
 	}
 	public void clearFlag(int flag) {
 	}
+	public void setFlagRecursively(int flag) {
+	}
 	public Actor asActor() {
 		return null;
 	}

@@ -376,6 +376,21 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = getItem(p0);
 		return new UsecodeValue.ObjectValue(obj);
 	}
+	private final void addToParty(UsecodeValue p0) {
+		// NPC joins party.
+		Actor npc = getItem(p0).asActor();
+		if (partyman.addToParty(npc))
+			return;		// Can't add.
+		/* +++++++++++++
+		npc.setScheduleType(Schedule.follow_avatar);
+		npc.setAlignment(Actor.friendly);
+		*/
+	}
+	private final void removeFromParty(UsecodeValue p0) {
+		Actor npc = getItem(p0).asActor();
+		if (partyman.removeFromParty(npc))
+			npc.setAlignment(Actor.neutral);
+	}
 	private UsecodeValue getNpcProp(UsecodeValue p0, UsecodeValue p1) {
 		// Get NPC prop (item, prop_id).
 		GameObject obj = getItem(p0);
@@ -426,7 +441,30 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getZero();
 	}
-
+	/*
+	 *	Return an array containing the party, with the Avatar first.
+	 */
+	private Vector<UsecodeValue> getParty() {
+		int cnt = partyman.getCount();
+		Vector<UsecodeValue> arr = new Vector<UsecodeValue>();
+		arr.setSize(cnt + 1);
+						// Add avatar.
+		arr.setElementAt(new UsecodeValue.ObjectValue(gwin.getMainActor()), 0);
+		int num_added = 1;
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = gwin.getNpc(partyman.getMember(i));
+			if (obj == null)
+				continue;
+			UsecodeValue val = new UsecodeValue.ObjectValue(obj);
+			arr.setElementAt(val, num_added++);
+			}
+		// cout << "Party:  "; arr.print(cout); cout << endl;
+		return arr;
+		}
+	private final UsecodeValue getPartyList() {
+		// Return array with party members.
+		return new UsecodeValue.ArrayValue(getParty());
+	}
 	private final GameObject createObject(int shapenum, boolean equip) {
 		GameObject obj = null;		// Create to be written to Ireg.
 		ShapeInfo info = ShapeID.getInfo(shapenum);
@@ -680,6 +718,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		switch (id) {
 		case 0x00:
 			return getRandom(parms[0]);
+		//++++++++++
 		case 0x03:
 			showNpcFace(parms[0], parms[1], -1); break;
 		case 0x04:
@@ -694,10 +733,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			popAnswers(); break;
 		case 0x09:
 			clearAnswers(); break;
+		//++++++++++
 		case 0x0d:
 			setItemShape(parms[0], parms[1]); break;
 		case 0x0e:
 			return findNearest(parms[0], parms[1], parms[2]);
+		//+++++++++++
 		case 0x10:
 			return dieRoll(parms[0], parms[1]);
 		case 0x11:
@@ -723,13 +764,18 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x1b:
 			return getNpcObject(parms[0]);
 		//+++++++++
+		case 0x1e:
+			addToParty(parms[0]); break;
+		case 0x1f:
+			removeFromParty(parms[0]); break;
 		case 0x20:
 			return getNpcProp(parms[0], parms[1]);
 		case 0x21:
 			return setNpcProp(parms[0], parms[1], parms[2]);
 		case 0x22:
 			return new UsecodeValue.ObjectValue(gwin.getMainActor());
-		//++++++++++	
+		case 0x23:
+			return getPartyList();
 		case 0x24:
 			return createNewObject(parms[0]);
 		case 0x25:
@@ -746,8 +792,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		//++++++++++++
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
+		//++++++++++++++
 		case 0x6f:
 			removeItem(parms[0]); break;
+		//++++++++++++++
 		default:
 			System.out.println("*** UNHANDLED intrinsic # " + id);
 			break;
