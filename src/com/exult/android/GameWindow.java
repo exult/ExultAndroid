@@ -25,9 +25,10 @@ public class GameWindow {
 	private ImageBuf win;
 	private Palette pal;
 	// Gameplay objects.
-	private Actor mainActor;
+	private MainActor mainActor;
 	private Actor cameraActor;		// What to center view on.
-	Vector<Actor> npcs;
+	private Vector<Actor> npcs;
+	private GameObject movingBarge;
 	// Rendering
 	private int scrolltx, scrollty;		// Top-left tile of screen.
 	private Rectangle scrollBounds;	// Walking outside this scrolls.
@@ -108,7 +109,7 @@ public class GameWindow {
 		return usecode;
 	}
 	public final boolean isMoving() {
-		return /* ++++++ moving_barge ? moving_barge->is_moving()
+		return /* ++++++ moving_barge ? moving_barge.is_moving()
 			    : */ mainActor.isMoving();
 	}
 	public final Actor getMainActor() {
@@ -240,7 +241,14 @@ public class GameWindow {
 		set_in_dungeon(nlist.has_dungeon()?nlist.is_dungeon(tx, ty):0);
 		set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
 		*/
-	}	
+	}
+	public final void centerView(Tile t) {
+		// OFFSET HERE
+		int tw = getWidth()/EConst.c_tilesize, 
+			th = (getHeight())/EConst.c_tilesize;
+		setScrolls(EConst.DECR_TILE(t.tx, tw/2), EConst.DECR_TILE(t.ty, th/2));
+		setAllDirty();
+	}
 	public boolean scrollIfNeeded(Actor a, Tile t) {
 		if (a != cameraActor)
 			return false;
@@ -437,6 +445,52 @@ public class GameWindow {
 			mainActor.get_action().set_get_party(true);
 		*/
 	}
+	public void teleportParty(Tile t, boolean skipEggs, int newMap) {
+		Tile oldpos = tempTile;
+		mainActor.getTile(oldpos);
+		mainActor.setAction(null);	// Definitely need this, or you may
+						//   step back to where you came from.
+		movingBarge = null;		// Calling 'done()' could be risky...
+		PartyManager party_man = GameSingletons.partyman;
+		int i, cnt = party_man.getCount();
+		if (newMap != -1)
+			setMap(newMap);
+		mainActor.move(t.tx, t.ty, t.tz, newMap);	// Move Avatar.
+		// Fixes a rare crash when moving between maps and teleporting:
+		newMap = mainActor.getMapNum();
+		centerView(t);			// Bring pos. into view, and insure all
+		/*+++++++++++
+		clock.reset();			// Reset and re-display palette.
+		clock.set_palette();
+		*/
+		Tile t1 = new Tile();
+		for (i = 0; i < cnt; i++) {
+			int party_member=party_man.getMember(i);
+			Actor person = getNpc(party_member);
+			if (person != null && !person.isDead() /* +++++FINISH && 
+			    person.getScheduleType() != Schedule::wait */) {
+				person.setAction(null);
+				/* +++++++++++++FINISH
+				t1 = Map_chunk::find_spot(t, 8,
+					person.get_shapenum(), person.get_framenum(),
+										1);
+				if (t1.tx != -1)
+					person.move(t1, newMap);
+				*/
+			}
+		}
+		mainActor.getFollowers();
+		/* +++++++++++
+		if (!skip_eggs)			// Check all eggs around new spot.
+			Map_chunk::try_all_eggs(main_actor, t.tx, t.ty, t.tz,
+						oldpos.tx, oldpos.ty);
+		*/
+		/* +++++NEEDED? generate mousemotion event
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+		SDL_WarpMouse(x, y);
+		*/
+	}
 	/*
 	 *	Start the actor.
 	 */
@@ -486,7 +540,7 @@ public class GameWindow {
 	public final void stopActor() {
 		/* +++++++++++++++
 		if (moving_barge)
-			moving_barge->stop();
+			moving_barge.stop();
 		else
 		*/
 			{
@@ -559,11 +613,11 @@ public class GameWindow {
 		GameObject obj;
 		/* ++++FINISH
 						// Look for obj. in open gump.
-		Gump *gump = gump_man->find_gump(x, y);
+		Gump *gump = gump_man.find_gump(x, y);
 		if (gump)
 		{
-			obj = gump->find_object(x, y);
-			if (!obj) obj = gump->get_cont_or_actor(x, y);
+			obj = gump.find_object(x, y);
+			if (!obj) obj = gump.get_cont_or_actor(x, y);
 		}
 		else				// Search rest of world.
 		*/
@@ -585,7 +639,7 @@ public class GameWindow {
 				{
 				char buf[128];
 				sprintf(buf, "%s (%d)", objname, 
-						npc->get_property(Actor::health));
+						npc.get_property(Actor::health));
 				objname = &buf[0];
 				}
 			*/
@@ -594,7 +648,7 @@ public class GameWindow {
 		/*
 		// If it's an actor and we want to grab the actor, grab it.
 		if (npc != null && cheat.grabbing_actor() && 
-		    (npc->get_npc_num() || npc==mainActor))
+		    (npc.get_npc_num() || npc==mainActor))
 			cheat.set_grabbed_actor (npc);
 		*/
 	}
@@ -613,7 +667,7 @@ public class GameWindow {
 		/*
 						// Nothing going on?
 		if (!Usecode_script::get_count())
-			removed->flush();	// Flush removed objects.
+			removed.flush();	// Flush removed objects.
 		*/
 						// Look for obj. in open gump.
 		GameObject obj = null;
@@ -627,8 +681,8 @@ public class GameWindow {
 		if (!gump) {
 			obj = findObject(x, y);
 			/* ++++++++++++++
-			if (!avatarCanAct && obj && obj->as_actor()
-			    	&& obj->as_actor() == mainActor->as_actor())
+			if (!avatarCanAct && obj && obj.as_actor()
+			    	&& obj.as_actor() == mainActor.as_actor())
 				{
 				ActionFileGump(0);
 				return;
@@ -637,10 +691,10 @@ public class GameWindow {
 			// Check path, except if an NPC, sign, or if editing.
 			if (obj && !obj.asActor() &&
 				!cheat.in_hack_mover() &&
-				//!Is_sign(obj->get_shapenum()) &&
+				//!Is_sign(obj.get_shapenum()) &&
 				!Fast_pathfinder_client::is_grabable(mainActor, obj))
 				{
-				Mouse::mouse->flash_shape(Mouse::blocked);
+				Mouse::mouse.flash_shape(Mouse::blocked);
 				return;
 				}
 			*/
@@ -652,13 +706,13 @@ public class GameWindow {
 		/* +++++++++++
 		if (combat && !gump &&		// In combat?
 		    !Combat::is_paused() &&
-		    (!gump_man->gump_mode() || gump_man->gumps_dont_pause_game()))
+		    (!gump_man.gump_mode() || gump_man.gumps_dont_pause_game()))
 			{
-			Actor *npc = obj->as_actor();
+			Actor *npc = obj.as_actor();
 						// But don't attack party members.
-			if ((!npc || !npc->is_in_party()) &&
+			if ((!npc || !npc.is_in_party()) &&
 						// Or bodies.
-					!obj->get_info().is_body_shape())
+					!obj.get_info().is_body_shape())
 				{		// In combat mode.
 				// Want everyone to be in combat.
 				combat = 0;
@@ -671,7 +725,7 @@ public class GameWindow {
 		effects.removeTextEffects();	// Remove text msgs. from screen.
 		usecode.initConversation();
 		obj.activate();
-		//+++++++  npc_prox->wait(4);		// Delay "barking" for 4 secs.
+		//+++++++  npc_prox.wait(4);		// Delay "barking" for 4 secs.
 	}
 
 	

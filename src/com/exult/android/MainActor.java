@@ -32,6 +32,35 @@ public class MainActor extends Actor {
 				schedule.nowWhat();
 			 */
 	}
+	/*
+	 *	Get the party to follow.
+	 */
+	public final void getFollowers() {
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt; i++)
+			{
+			Actor npc = gwin.getNpc(partyman.getMember(i));
+			if (npc == null || npc.getFlag(GameObject.asleep) ||
+			    npc.isDead())
+				continue;
+			/* ++++++++++FINISH
+			int sched = npc.getScheduleType();
+						// Skip if in combat or set to 'wait'.
+			if (sched != Schedule::combat &&
+			    sched != Schedule::wait &&
+						// Loiter added for SI.
+			    sched != Schedule::loiter)
+				{
+				if (sched != Schedule::follow_avatar)
+					npc.set_schedule_type(
+							Schedule::follow_avatar);
+				else
+					npc.follow(this);
+				}
+			*/
+			}
+		}
+
 	public boolean step(Tile t, int frame, boolean force) {
 		restTime = 0;			// Reset counter.
 		t.fixme();
@@ -48,7 +77,7 @@ public class MainActor extends Actor {
 			if (is_really_blocked(t, force))
 				{
 				if (schedule)		// Tell scheduler.
-					schedule->set_blocked(t);
+					schedule.set_blocked(t);
 				stop();
 				return (0);
 				}
@@ -69,20 +98,20 @@ public class MainActor extends Actor {
 		if (olist != nlist)
 			this.switchedChunks(olist, nlist);
 		/* +++++++++FINISH
-		int roof_height = nlist->is_roof (tx, ty, t.tz);
-		gwin->set_ice_dungeon(nlist->is_ice_dungeon(tx, ty));
-		if (gwin->set_above_main_actor (roof_height))
+		int roof_height = nlist.is_roof (tx, ty, t.tz);
+		gwin.set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
+		if (gwin.set_above_main_actor (roof_height))
 			{
-			gwin->set_in_dungeon(nlist->has_dungeon()?
-						nlist->is_dungeon(tx, ty):0);
-			gwin->set_all_dirty();
+			gwin.set_in_dungeon(nlist.has_dungeon()?
+						nlist.is_dungeon(tx, ty):0);
+			gwin.set_all_dirty();
 			}
-		else if (roof_height < 31 && gwin->set_in_dungeon(nlist->has_dungeon()?
-	 					nlist->is_dungeon(tx, ty):0))
-			gwin->set_all_dirty();
+		else if (roof_height < 31 && gwin.set_in_dungeon(nlist.has_dungeon()?
+	 					nlist.is_dungeon(tx, ty):0))
+			gwin.set_all_dirty();
 						// Near an egg?  (Do this last, since
 						//   it may teleport.)
-		nlist->activate_eggs(this, t.tx, t.ty, t.tz,
+		nlist.activate_eggs(this, t.tx, t.ty, t.tz,
 							stepFrom.tx, stepFrom.ty);
 		quake_on_walk();
 		*/
@@ -135,6 +164,6 @@ public class MainActor extends Actor {
 				nlist.getMap().getChunk(Tile.fix(x), Tile.fix(y)).setupCache();
 
 		// If change in Superchunk number, apply Old Style caching emulation
-		// +++++FINISH gwin->emulate_cache(olist, nlist);
+		// +++++FINISH gwin.emulate_cache(olist, nlist);
 	}
 }

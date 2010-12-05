@@ -618,20 +618,66 @@ public class UsecodeIntrinsics extends GameSingletons {
 						obj.countObjects(shapenum, qualnum, framenum)));
 		}
 		int total = 0;
-		/* ++++++++++FINISH
 						// Look through whole party.
-		UsecodeValue party = getParty();
-		int cnt = party.getArraySize();
-		
+		int cnt = partyman.getCount();
 		for (int i = 0; i < cnt; i++) {
-			GameObject obj = getItem(party.getElem(i));
+			GameObject obj = gwin.getNpc(partyman.getMember(i));
 			if (obj != null)
-				total += obj.countObjects(shapenum, qualnum, 
-									framenum);
+				total += obj.countObjects(shapenum, qualnum, framenum);
 		}
-		*/
 		return new UsecodeValue.IntValue(total);
+	}
+	final private UsecodeValue findObject(UsecodeValue p0, UsecodeValue p1, 
+										  UsecodeValue p2, UsecodeValue p3) {
+		// Find_object(container(-357=party) OR loc, shapenum, qual?? (-359=any), 
+		//						frame??(-359=any)).
+		int shnum = p1.getIntValue(),
+			qual  = p2.getIntValue(),
+			frnum = p3.getIntValue();
+		if (p0.getArraySize() == 3) {			// Location (x, y).
+			Vector<GameObject> vec = new Vector<GameObject>();
+			Tile t = new Tile(p0.getElem(0).getIntValue(),
+							  p0.getElem(1).getIntValue(),
+							  p0.getElem(2).getIntValue());
+			gmap.findNearby(vec, t, shnum, 1, 0, qual, frnum);
+		if (vec.isEmpty())
+			return UsecodeValue.getNullObj();
+		else
+			return new UsecodeValue.ObjectValue(vec.firstElement());
+	}
+	int oval  = p0.getIntValue();
+	if (oval == -359) {		// Find on map (?)
+		Vector<GameObject> vec = new Vector<GameObject>();
+		Rectangle scr = new Rectangle();
+		gwin.getWinTileRect(scr);
+		Tile t = new Tile(scr.x + scr.w/2, scr.y + scr.h/2, 0);
+		gmap.findNearby(vec, t, shnum, scr.h/2, 0, qual, frnum);
+		return vec.isEmpty() ? UsecodeValue.getNullObj()
+				   : new UsecodeValue.ObjectValue(vec.firstElement());
+	}
+	/* +++++++++FINISH
+	if (oval != -357) {		// Not the whole party? Find inside owner.
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return UsecodeValue.getNullObj();
+		GameObject f = obj.findItem(shnum, qual, frnum);
+		return new UsecodeValue.ObjectValue(f);
+	}
+	*/
+					// Look through whole party.
+	int cnt = partyman.getCount();
+	for (int i = 0; i < cnt; i++) {
+		GameObject obj = gwin.getNpc(partyman.getMember(i));
+		if (obj != null) {
+			/* ++++++++FINISH
+			GameObject f = obj.findItem(shnum, qual, frnum);
+			if (f != null)
+				return new UsecodeValue.ObjectValue(f);
+			*/
 		}
+	}
+	return UsecodeValue.getNullObj();
+	}
 	private final UsecodeValue npcNearby(UsecodeValue p0) {
 		// NPC nearby? (item).
 		GameObject obj = getItem(p0);
@@ -779,7 +825,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		Actor ava = gwin.getMainActor();
 		ucmachine.setModifiedMap();
 		if (p0.getIntValue() == -357) {		// Move whole party.
-			// ++++++FINISH gwin.teleport_party(tile, false, map);
+			gwin.teleportParty(tile, false, map);
 			return;
 		}
 		GameObject obj = getItem(p0);
@@ -889,6 +935,63 @@ public class UsecodeIntrinsics extends GameSingletons {
 			}
 		}
 	}
+	private final UsecodeValue getArraySize(UsecodeValue p0) {
+		int cnt;
+		if (p0.isArray())	// An array?  We might return 0.
+			cnt = p0.getArraySize();
+		else				// Not an array?  Usecode wants a 1.
+			cnt = 1;
+		return new UsecodeValue.IntValue(cnt);
+	}
+	private final UsecodeValue getItemFrameRot(UsecodeValue p0) {
+		// Same as get_item_frame, but (guessing!) include rotated bit.
+		GameObject obj = getItem(p0);
+		return obj == null ? UsecodeValue.getZero() :
+			new UsecodeValue.IntValue(obj.getFrameNum());
+	}
+
+	private final void setItemFrameRot(UsecodeValue p0, UsecodeValue p1) {
+		// Set entire frame, including rotated bit.
+		setItemFrame(getItem(p0), p1.getIntValue(), false, true);
+	}
+
+	private final UsecodeValue onBarge() {
+		// Only used once for BG, in usecode for magic-carpet.
+		// For SI, used for turtle.
+		// on_barge()
+		/* +++++++FINISH
+		Barge_object barge = Get_barge(gwin->get_main_actor());
+		if (barge)
+			{			// See if party is on barge.
+			Rectangle foot = barge->get_tile_footprint();
+			Actor *party[9];
+			int cnt = gwin->get_party(party, 1);
+			for (int i = 0; i < cnt; i++)
+				{
+				Actor *act = party[i];
+				Tile_coord t = act->get_tile();
+				if (!foot.has_point(t.tx, t.ty))
+					return Usecode_value(0);
+				}
+						// Force 'gather()' for turtle.
+			if (Game::get_game_type() == SERPENT_ISLE)
+				barge->done();
+			return Usecode_value(1);
+			} 
+		*/
+		return UsecodeValue.getZero();
+	}
+
+	private final UsecodeValue getContainer(UsecodeValue p0) {
+		// Takes itemref, returns container.
+		GameObject obj = getItem(p0);
+		if (obj != null) {
+			obj = obj.getOwner();
+			return obj == null ? UsecodeValue.getNullObj()
+					: new UsecodeValue.ObjectValue(obj);
+		} else
+				return UsecodeValue.getNullObj();
+	}
 	private final void removeItem(GameObject obj) {
 		if (obj != null) {
 			if (!last_created.isEmpty() && obj == last_created.getLast())
@@ -976,7 +1079,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getNpcName(parms[0]);
 		case 0x28:
 			return countObjects(parms[0], parms[1], parms[2], parms[3]);
-		//++++++++++
+		case 0x29:
+			return findObject(parms[0], parms[1], parms[2], parms[3]);
+		//++++++++
 		case 0x2f:
 			return npcNearby(parms[0]);
 		case 0x30:
@@ -1012,6 +1117,18 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getLift(parms[0]);
 		case 0x43:
 			setLift(parms[0], parms[1]); break;
+		//++++++++++++
+		case 0x5e:
+			return getArraySize(parms[0]);
+		//+++++++++++++++
+		case 0x6b:
+			return getItemFrameRot(parms[0]);
+		case 0x6c:
+			setItemFrameRot(parms[0], parms[1]); break;
+		case 0x6d:
+			return onBarge();
+		case 0x6e:
+			return getContainer(parms[0]);
 		case 0x6f:
 			removeItem(parms[0]); break;
 		//++++++++++++++

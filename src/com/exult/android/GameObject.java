@@ -315,6 +315,9 @@ public abstract class GameObject extends ShapeID {
 	public final GameMap getMap() {
 		return chunk != null ? chunk.getMap() : null;
 	}
+	public final int getMapNum() {
+		return chunk != null ? chunk.getMap().getNum() : -1;
+	}
 	public void move(int newtx, int newty, int newlift, int newmap) {
 					// Figure new chunk.
 		int newcx = newtx/EConst.c_tiles_per_chunk, newcy = newty/EConst.c_tiles_per_chunk;

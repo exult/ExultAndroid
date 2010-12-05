@@ -58,6 +58,9 @@ public class GameMap extends GameSingletons {
 		objects = new MapChunk[EConst.c_num_chunks * EConst.c_num_chunks];
 		schunkRead = new boolean[12*12];
 	}
+	public final int getNum() {
+		return num;
+	}
 	// Init. the static data.
 	public static void initChunks() {
 		int numChunkTerrains;
