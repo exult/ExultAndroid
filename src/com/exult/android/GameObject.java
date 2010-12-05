@@ -393,11 +393,6 @@ public abstract class GameObject extends ShapeID {
 	public int getIregSize() {
 		return 0;
 	}
-	public boolean add(GameObject obj, boolean dont_check,
-			boolean combine, boolean noset) {
-		// ++++ return combine ? drop(obj)!=0 : false;
-		return false;
-	}
 	// Add to NPC 'ready' spot.
 	public boolean addReadied(GameObject obj, int index,
 				boolean dont_check, boolean force_pos, boolean noset)
@@ -423,6 +418,15 @@ public abstract class GameObject extends ShapeID {
 	}
 	public void elementsRead() {
 	}
+	public boolean add(GameObject obj, boolean dont_check,
+			boolean combine, boolean noset) {
+		// ++++ return combine ? drop(obj)!=0 : false;
+		return false;
+	}
+	public final boolean add(GameObject obj, boolean dont_check) {
+		return add(obj, dont_check, false, false);
+	}
+	
 	/*
 	 * Compare objects for rendering.
 	 */

@@ -12,6 +12,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static final GameObject getItem(UsecodeValue v) {
 		return ucmachine.get_item(v);
 	}
+	private static GameObject interceptItem;
+	private static Tile interceptTile;
 	
 	/*
 	 * The intrinsics:
@@ -643,6 +645,19 @@ public class UsecodeIntrinsics extends GameSingletons {
 			((npc = obj.asActor()) == null || npc.canAct());
 		return is_near ? UsecodeValue.getOne() : UsecodeValue.getZero();
 	}
+	private final UsecodeValue findNearbyAvatar(UsecodeValue p0) {
+		UsecodeValue av = new UsecodeValue.ObjectValue(gwin.getMainActor());
+							// Try bigger # for Test of Love tree
+		UsecodeValue dist = new UsecodeValue.IntValue(192);
+		return findNearby(av, p0, dist, UsecodeValue.getZero());
+	}
+	public final UsecodeValue isNpc(UsecodeValue p0) {
+		GameObject obj = getItem(p0);
+		if (obj != null && obj.asActor() != null)
+			return UsecodeValue.getOne();
+		else
+			return UsecodeValue.getZero();
+	}
 	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
 						UsecodeValue distVal, UsecodeValue maskVal) {
 		int mval = maskVal.getIntValue();// Some kind of mask?  Guessing:
@@ -699,6 +714,29 @@ public class UsecodeIntrinsics extends GameSingletons {
 		UsecodeValue nearby = UsecodeValue.ArrayValue.createObjectsList(foundVec);
 		return (nearby);
 	}
+	private final UsecodeValue giveLastCreated(UsecodeValue p0) {
+		// Think it's give_last_created(container).
+		GameObject cont = getItem(p0);
+		boolean ret = false;
+		if (cont != null && !last_created.isEmpty()) {
+						// Get object, but don't pop yet.
+			GameObject obj = last_created.getLast();
+			// Might not have been removed from world yet.
+			if (obj.getOwner() == null && obj.getChunk() == null)
+						// Don't check vol.  Causes failures.
+				ret = cont.add(obj, true);
+			if (ret)		// Pop only if added.  Fixes chest/
+						//   tooth bug in SI.
+				last_created.removeLast();
+			}
+		return ret ? UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
+	private final UsecodeValue isDead(UsecodeValue p0) {
+		Actor npc = getItem(p0).asActor();
+		return (npc != null && npc.isDead()) ? UsecodeValue.getOne()
+				: UsecodeValue.getZero();
+	}
+	
 	private final void removeItem(GameObject obj) {
 		if (obj != null) {
 			if (!last_created.isEmpty() && obj == last_created.getLast())
@@ -789,10 +827,19 @@ public class UsecodeIntrinsics extends GameSingletons {
 		//++++++++++
 		case 0x2f:
 			return npcNearby(parms[0]);
+		case 0x30:
+			return findNearbyAvatar(parms[0]);
+		case 0x31:
+			return isNpc(parms[0]);
 		//++++++++++++
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
+		case 0x36:
+			return giveLastCreated(parms[0]);
+		case 0x37:
+			return isDead(parms[0]);
 		//++++++++++++++
+		
 		case 0x6f:
 			removeItem(parms[0]); break;
 		//++++++++++++++
