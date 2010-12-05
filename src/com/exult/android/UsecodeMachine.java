@@ -887,8 +887,17 @@ public class UsecodeMachine extends GameSingletons {
 							//LOCAL_VAR_ERROR(offset);
 							break;
 						}
+						//+++TEST
+						if (frame.locals[offset] == null)
+							System.out.println("NULL local. Fun. ID is " +
+									frame.function.id);
+						else
+							System.out.println("Setarray: offset = " + offset
+									+ ", size is " + 
+									frame.locals[offset].getArraySize());
 						frame.locals[offset] = 
-							frame.locals[offset].putElem(index, val);
+							UsecodeValue.ArrayValue.forceElem(
+										frame.locals[offset], index, val);
 					/* ++++++MAYBE LATER
 					} else if (opcode == 0x5e) {
 						UsecodeValue ths = frame.getThis();
@@ -912,7 +921,8 @@ public class UsecodeMachine extends GameSingletons {
 						} else {
 							if (offset < frame.function.statics.size()) {
 								arr = frame.function.statics.elementAt(offset);
-								arr = arr.putElem(index, val);
+								arr = UsecodeValue.ArrayValue.forceElem(
+															arr, index, val);
 								frame.function.statics.setElementAt(arr, offset);
 							} else {
 								//cerr << "Local static variable #" << (offset) << " out of range!";\

@@ -202,6 +202,22 @@ public abstract class UsecodeValue {
 			} else 
 				return this;
 		}
+		//	Set element, and create array if needed.
+		public static UsecodeValue forceElem(UsecodeValue arr,
+								int ind, UsecodeValue val) {
+			if (arr == null) {
+				UsecodeValue newElems[] = new UsecodeValue[ind + 1];
+				newElems[ind] = val;
+				return new ArrayValue(newElems);
+			} else if (arr instanceof ArrayValue) {
+				return arr.putElem(ind, val);
+			} else {
+				UsecodeValue newElems[] = new UsecodeValue[ind + 1];
+				newElems[0] = arr;		// Original becomes value 0.
+				newElems[ind] = val;
+				return new ArrayValue(newElems);
+			}
+		}
 		//	Append array or value to end.
 		public UsecodeValue concat(UsecodeValue val) {
 			if (val instanceof ArrayValue) {
