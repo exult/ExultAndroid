@@ -489,7 +489,7 @@ public final class Conversation extends GameSingletons {
 	public void pushAnswers()
 	{
 	  answerStack.addFirst(answers);
-	  answers.clear();
+	  answers = new Vector<String>();
 	}
 
 	public void popAnswers()

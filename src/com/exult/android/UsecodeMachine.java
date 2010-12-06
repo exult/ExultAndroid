@@ -887,14 +887,6 @@ public class UsecodeMachine extends GameSingletons {
 							//LOCAL_VAR_ERROR(offset);
 							break;
 						}
-						//+++TEST
-						if (frame.locals[offset] == null)
-							System.out.println("NULL local. Fun. ID is " +
-									frame.function.id);
-						else
-							System.out.println("Setarray: offset = " + offset
-									+ ", size is " + 
-									frame.locals[offset].getArraySize());
 						frame.locals[offset] = 
 							UsecodeValue.ArrayValue.forceElem(
 										frame.locals[offset], index, val);
@@ -1203,7 +1195,7 @@ public class UsecodeMachine extends GameSingletons {
 	 *	Output:	->user choice string.
 	 *		0 if no possible choices or user quit.
 	 */
-	private String get_user_choice() {
+	public String get_user_choice() {
 		if (conv.getNumAnswers() == 0)
 			return null;		// This does happen (Emps-honey).
 		//	if (!user_choice)		// May have already been done.
@@ -1217,7 +1209,7 @@ public class UsecodeMachine extends GameSingletons {
 	 *	Output:	User choice is set, with choice # returned.
 	 *		-1 if no possible choices.
 	 */
-	private int get_user_choice_num() {
+	public int get_user_choice_num() {
 		conv.setUserChoice(null);
 		conv.showAvatarChoices();
 		int x, y;			// Get click.

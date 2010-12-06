@@ -137,7 +137,22 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private final void clearAnswers() {
 		conv.clearAnswers();
 	}
-	
+	private static UsecodeValue selectFromMenu() {
+		conv.setUserChoice(null);
+		UsecodeValue u = new UsecodeValue.StringValue(
+									ucmachine.get_user_choice());
+		conv.setUserChoice(null);
+		return(u);
+	}
+
+	private static UsecodeValue selectFromMenu2() {
+		// Return index (1-n) of choice.
+		conv.setUserChoice(null);
+		UsecodeValue val = new UsecodeValue.IntValue(
+								ucmachine.get_user_choice_num() + 1);
+		conv.setUserChoice(null);
+		return(val);
+	}
 	private final void setItemShape(UsecodeValue itemVal, UsecodeValue shapeVal) {
 		int shape = shapeVal.getIntValue();
 		GameObject item = getItem(itemVal);
@@ -1026,6 +1041,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			popAnswers(); break;
 		case 0x09:
 			clearAnswers(); break;
+		case 0x0a:
+			return selectFromMenu();
+		case 0x0b:
+			return selectFromMenu2();
 		//++++++++++
 		case 0x0d:
 			setItemShape(parms[0], parms[1]); break;
