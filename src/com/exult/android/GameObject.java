@@ -143,6 +143,25 @@ public abstract class GameObject extends ShapeID {
 		t1.tz = deltaTemp[0]; t2.tz = deltaTemp[1];
 		return t1.distance(t2);
 	}
+	public final int distance(Tile t2) {
+		Tile t1 = distTile1;
+		getTile(t1);
+		ShapeInfo info1 = getInfo();
+		int f1 = getFrameNum();
+		int dx = Tile.delta(t1.tx, t2.tx),
+			dy = Tile.delta(t1.ty, t2.ty),
+			dz = t1.tz - t2.tz;
+		deltaTemp[0] =  t1.tx; deltaTemp[1] = t2.tx;
+		deltaWrapCheck(dx, info1.get3dXtiles(f1)-1, 0, deltaTemp);
+		t1.tx = deltaTemp[0]; t2.tx = deltaTemp[1];
+		deltaTemp[0] =  t1.ty; deltaTemp[1] = t2.ty;
+		deltaWrapCheck(dy, info1.get3dYtiles(f1)-1, 0, deltaTemp);
+		t1.ty = deltaTemp[0]; t2.ty = deltaTemp[1];
+		deltaTemp[0] =  t1.tz; deltaTemp[1] = t2.tz;
+		deltaCheck(dz, info1.get3dHeight(), 0, deltaTemp);
+		t1.tz = deltaTemp[0]; t2.tz = deltaTemp[1];
+		return t1.distance(t2);
+	}
 	public final GameObject getNext() {
 		return next;
 	}

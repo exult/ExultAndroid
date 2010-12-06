@@ -242,7 +242,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private final void setItemFrame(UsecodeValue itemVal, UsecodeValue frameVal) {
 		setItemFrame(getItem(itemVal), frameVal.getIntValue(), false, false);
 	}
-	private final void setItemFrame
+	public final static void setItemFrame
 		(
 		GameObject item,
 		int frame,
@@ -1007,7 +1007,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		} else
 				return UsecodeValue.getNullObj();
 	}
-	private final void removeItem(GameObject obj) {
+	public final static void removeItem(GameObject obj) {
 		if (obj != null) {
 			if (!last_created.isEmpty() && obj == last_created.getLast())
 				last_created.removeLast();
