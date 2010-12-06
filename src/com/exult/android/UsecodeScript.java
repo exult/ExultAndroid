@@ -586,23 +586,23 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		int dir,			// 0-7.
 		int dz
 		) {
+		int frame = obj.getFrameNum();
+		// ++++++FINISH Barge_object *barge;
 		/* ++++++++++++++
-		int frame = obj->get_framenum();
-		Barge_object *barge;
-		Actor *act = usecode->as_actor(obj);
-		if (act)
-			{
-			Tile_coord tile = obj->get_tile();
+		Actor act = obj.asActor();
+		if (act != null) {
+			Tile tile = new Tile();
+			obj.getTile(tile);
 			if (dir != -1)
-				tile = tile.get_neighbor(dir);
+				tile.getNeighbor(tile, dir);
 			tile.tz += dz;
-			act->clear_rest_time();
-			Frames_sequence *frames = act->get_frames(dir);
+			// ++++FINISH act.clear_rest_time();
+			Actor.FramesSequence frames = act.getFrames(dir);
 						// Get frame (updates frame_index).
 			frame = frames->get_next(frame_index);
 			if (tile.tz < 0)
 				tile.tz = 0;
-			obj->step(tile, frame, true);
+			obj.step(tile, frame, true);
 			}
 		else if ((barge = obj->as_barge()) != 0)
 			{

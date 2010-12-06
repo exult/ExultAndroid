@@ -4,6 +4,8 @@ package com.exult.android;
  * 3D tile coordinate.
  */
 public class Tile {
+	private final int neighbors[] = 
+		{0,-1, 1,-1, 1,0, 1,1, 0,1, -1,1, -1,0, -1,-1 };
 	public short tx, ty, tz;
 	public void set(int x, int y, int z) {
 		tx = (short)x; ty = (short)y; tz = (short)z;
@@ -51,5 +53,11 @@ public class Tile {
 			dx = EConst.c_num_tiles - dx;
 					// Take larger abs. value.
 		return (dy > dx ? dy : dx);
+	}				// Get neighbor in given dir (0-7) & set 't' to it.
+	public void getNeighbor(Tile t, int dir) {
+		t.set(
+		(tx + neighbors[2*dir] + EConst.c_num_tiles)%EConst.c_num_tiles,
+		(ty + neighbors[2*dir + 1] + EConst.c_num_tiles)%EConst.c_num_tiles,
+							 tz); 
 	}
 }
