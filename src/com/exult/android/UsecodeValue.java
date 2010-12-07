@@ -197,8 +197,8 @@ public abstract class UsecodeValue {
 				int newcnt = ind >= elems.length ? ind + 1 : elems.length;
 				UsecodeValue newelems[] = new UsecodeValue[newcnt];
 				System.arraycopy(elems, 0, newelems, 0, elems.length);
-				elems[ind] = val;
-				return new ArrayValue(elems);
+				newelems[ind] = val;
+				return new ArrayValue(newelems);
 			} else 
 				return this;
 		}
