@@ -330,6 +330,10 @@ public abstract class GameObject extends ShapeID {
 	}
 	public final void setChunk(MapChunk c) {
 		chunk = c;
+	}					
+	// Get frame for desired direction.
+	public final int getDirFramenum(int dir, int frnum) {
+		return (frnum&0xf) + rotate[dir]; 
 	}
 	public final GameMap getMap() {
 		return chunk != null ? chunk.getMap() : null;
@@ -367,6 +371,10 @@ public abstract class GameObject extends ShapeID {
 	//	Step:  Overridden by Actors.
 	public boolean step(Tile t, int frame, boolean force) {
 		return false;
+	}
+	public int reduceHealth(int delta, int damage_type, GameObject attacker) {
+		//+++++++++++FINISH
+		return delta;
 	}
 	public final HashSet<GameObject> getDependencies() {
 		return dependencies;

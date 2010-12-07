@@ -256,6 +256,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean isMoving() {
 		return frameTime > 0;
 	}
+	public void clearRestTime() {
+		restTime = 0;
+	}
 	public boolean isDying() {		// Dead when health below -1/3 str.
 		return properties[health] < 
 				-(properties[strength]/3); 
@@ -290,6 +293,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public final void setPartyId(int i) {
 		partyId = (short)i;
+	}
+	public final void setUsecodeDir(int d) {
+		usecodeDir = (byte)(d&7);
 	}
 	public final int getAlignment() {
 		return alignment;

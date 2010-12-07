@@ -24,6 +24,53 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return UsecodeValue.getZero();
 		return new UsecodeValue.IntValue(1 + (EUtil.rand() % range));
 	}
+	private void createScript(UsecodeValue objval, UsecodeValue codeval,
+														int delay) {
+			GameObject obj = getItem(objval);
+							// Pure kludge for SI wells:
+			/* ++++++++++FINISH
+			if (objval.getArraySize() == 2 && 
+					Game::get_game_type() == SERPENT_ISLE &&
+					obj != null && obj.getShapeNum() == 470 && 
+					obj.getLift() == 0) {
+							// We want the TOP of the well.
+				UsecodeValue v2 = objval.getElem(1);
+				GameObject o2 = getItem(v2);
+				if (o2.getShapeNum() == obj.getShapeNum() && o2.getLift() == 2) {
+					objval = v2;
+					obj = o2;
+				}
+			}
+			*/
+			if (obj == null) {
+				System.out.println("Can't create script for NULL object");
+				return;
+			}
+			UsecodeScript script = new UsecodeScript(obj, codeval);
+			script.start(delay);
+			}
+	private final UsecodeValue executeUsecodeArray(UsecodeValue p0,
+					UsecodeValue p1) {
+						// Start on next tick.
+		createScript(p0, p1, 1);
+		return UsecodeValue.getOne();
+	}
+	public final UsecodeValue delayedExecuteUsecodeArray(UsecodeValue p0,
+					UsecodeValue p1, UsecodeValue p2) {
+		// Delay = .20 sec.?
+						// Special problem with inf. loop:
+		/* +++++STILL NEEDED?
+		if (Game::get_game_type() == BLACK_GATE &&
+		    event == UsecodeMachine.internal_exec && 
+		    p1.getArrayAize() == 3 &&
+		    parms1.getElem(2).getIntValue() == 0x6f7)
+			return UsecodeValue.getZero();
+		*/
+		int delay = p2.getIntValue();
+		createScript(p0, p1, delay);
+		return UsecodeValue.getOne();
+	}
+
 	private int getFaceShape(UsecodeValue arg1, Actor npc, int frame) {
 		int shape = -1;
 		if (arg1 instanceof UsecodeValue.IntValue) {
@@ -1026,7 +1073,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		switch (id) {
 		case 0x00:
 			return getRandom(parms[0]);
-		//++++++++++
+		case 0x01:
+			return executeUsecodeArray(parms[0], parms[1]);
+		case 0x02:
+			return delayedExecuteUsecodeArray(parms[0], parms[1], parms[2]);
 		case 0x03:
 			showNpcFace(parms[0], parms[1], -1); break;
 		case 0x04:

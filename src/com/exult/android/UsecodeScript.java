@@ -255,7 +255,6 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				break;
 			case repeat:		// ?? 2 parms, 1st one < 0.
 				{		// Loop(offset, cnt).
-				// ++++ TESTING.
 				do_another = true;
 				UsecodeValue cntval = code.getElem(i + 2);
 				int cnt = cntval.getIntValue();
@@ -327,10 +326,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				UsecodeValue delayval = code.getElem(++i);
 						// It's # of ticks.
 				Actor act = obj != null ? obj.asActor() : null;
-				/* +++++++++++
 				if (act != null)
 					act.clearRestTime();
-				*/
 				delay = delay*delayval.getIntValue();
 				break;		
 				}
@@ -510,12 +507,10 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 						// It may be 0x3x.  Face dir?
 				int dir = val.getIntValue()&7;
 				Actor npc = obj.asActor();
-				/* +++++++++++++
-				if (npc)
-					npc.set_usecode_dir(dir);
-				UsecodeIntrinsics.setItemFrame(obj, obj.get_dir_framenum(
+				if (npc != null)
+					npc.setUsecodeDir(dir);
+				UsecodeIntrinsics.setItemFrame(obj, obj.getDirFramenum(
 					dir, obj.getFrameNum()), true, true);
-				*/
 				frame_index = 0;// Reset walking frame index.
 				break;
 				}
@@ -535,9 +530,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				{
 				UsecodeValue hps = code.getElem(++i);
 				UsecodeValue type = code.getElem(++i);
-				/* ++++++++FINISH
-				obj.reduce_health(hps.getIntValue(), type.getIntValue());
-				*/
+				obj.reduceHealth(hps.getIntValue(), type.getIntValue(), null);
 				break;
 				}
 			case attack:		// Finish 'set_to_attack()'.
@@ -588,7 +581,6 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		) {
 		int frame = obj.getFrameNum();
 		// ++++++FINISH Barge_object *barge;
-		/* ++++++++++++++
 		Actor act = obj.asActor();
 		if (act != null) {
 			Tile tile = new Tile();
@@ -596,14 +588,16 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			if (dir != -1)
 				tile.getNeighbor(tile, dir);
 			tile.tz += dz;
-			// ++++FINISH act.clear_rest_time();
+			act.clearRestTime();
 			Actor.FramesSequence frames = act.getFrames(dir);
 						// Get frame (updates frame_index).
-			frame = frames->get_next(frame_index);
+			frame_index = frames.nextIndex(frame_index);
+			frame = frames.get(frame_index);
 			if (tile.tz < 0)
 				tile.tz = 0;
 			obj.step(tile, frame, true);
 			}
+		/* ++++++++++
 		else if ((barge = obj->as_barge()) != 0)
 			{
 			for (int i = 0; i < 4; i++)
