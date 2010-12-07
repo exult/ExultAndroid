@@ -1,4 +1,6 @@
 package com.exult.android;
+import java.util.Vector;
+import java.util.HashSet;
 
 public class MapChunk extends GameSingletons {
 	private GameMap map;				// Map we're a part of.
@@ -12,7 +14,22 @@ public class MapChunk extends GameSingletons {
 	// # light sources in chunk.
 	private byte dungeonLights, nonDungeonLights;
 	private short cx, cy;
-	
+	// Data that used to be in Chunk_cache:
+	// Each member of 'blocked' is 16x16 tiles, with each short value using 2
+	// bits for each bit level for #objs blocking there.
+	private Vector<short[]> blocked;	// Each element represents the chunk for 8 lifts.
+	private HashSet<GameObject> doors;
+	private short eggs[];				// Eggs which influence this chunk.
+	// Mask gives low bits (b0) for a given # of ztiles:
+	private static final int tmasks[] = {
+		0x0,
+        0x1,
+        0x5,
+       0x15,
+       0x55,
+      0x155,
+      0x555,
+     0x1555};
 	public MapChunk(GameMap m, int chx, int chy) {
 		map = m;
 		cx = (short)chx;
@@ -193,4 +210,128 @@ public class MapChunk extends GameSingletons {
 	public void setupCache() {
 		//++++++++++++FINISH
 	}
+	/*
+	 *	Set (actually, increment count) for a given tile.
+	 *	Want:	00 => 01,	01 => 10,
+	 *		10 => 11,	11 => 11.
+	 *	So:	newb0 = !b0 OR b1,
+	 *		newb1 =  b1 OR b0
+	 */
+	private void setBlockedTile
+		(
+		short blocked[],		// 16x16 flags,
+		int tx, int ty,			// Tile #'s (0-15).
+		int lift,			// Starting lift to set.
+		int ztiles			// # tiles along z-axis.
+		) {
+		int ind = ty*EConst.c_tiles_per_chunk + tx;
+		int val = blocked[ind]&0xffff;
+							// Get mask for the bit0's:
+		int mask0 = (tmasks[ztiles]<<(2*lift))&0xffff;
+		int mask1 = mask0<<1;	// Mask for the bit1's.
+		int val0s = val&mask0;
+		int Nval0s = (~val)&mask0;
+		int val1s = val&mask1;
+		int newval = val1s | (val0s<<1) | Nval0s | (val1s>>1);
+							// Replace old values with new.
+		blocked[ind] = (short)((val&~(mask0|mask1)) | newval);
+	}
+	/*
+	 *	Clear (actually, decrement count) for a given tile.
+	 *	Want:	00 => 00,	01 => 00,
+	 *		10 => 01,	11 => 10.
+	 *	So:	newb0 =  b1 AND !b0
+	 *		newb1 =  b1 AND  b0
+	 */
+	private void clearBlockedTile
+		(
+		short blocked[],		// 16x16 flags,
+		int tx, int ty,			// Tile #'s (0-15).
+		int lift,			// Starting lift to set.
+		int ztiles			// # tiles along z-axis.
+		)
+		{
+		int ind = ty*EConst.c_tiles_per_chunk + tx;
+		int val = blocked[ind]&0xffff;
+						// Get mask for the bit0's:
+		int mask0 = (tmasks[ztiles]<<(2*lift))&0xffff;
+		int mask1 = mask0<<1;	// Mask for the bit1's.
+		int val0s = val&mask0;
+		int Nval0s = (~val)&mask0;
+		int val1s = val&mask1;
+		int newval = (val1s & (val0s<<1)) | ((val1s>>1) & Nval0s);
+						// Replace old values with new.
+		blocked[ind] = (short)((val&~(mask0|mask1)) | newval);
+	}
+	/*
+	 *	Create new blocked flags for a given z-level, where each level
+	 *	covers 8 lifts.
+	 */
+	private short[] newBlockedLevel
+		(
+		int zlevel
+		) {
+		if (zlevel >= blocked.size())
+			blocked.setSize(zlevel + 1);
+		short[] block = new short[256];
+		blocked.setElementAt(block, zlevel);
+//		std::cout << "***Creating block for level " << zlevel << ", cache = " 
+//			<< (void*)this << std::endl;
+		return block;
+	}
+	private short[] needBlockedLevel(int zlevel) {
+		if (zlevel < blocked.size()) {
+			short[] block = blocked.elementAt(zlevel);
+			if (block != null)
+				return block;
+		}
+		return newBlockedLevel(zlevel);
+	}
+	/*
+	 *	Set/unset the blocked flags in a region.
+	 */
+	private void setBlocked
+		(
+		int startx, int starty,		// Starting tile #'s.
+		int endx, int endy,		// Ending tile #'s.
+		int lift, int ztiles		// Lift, height info.
+		) {
+		int z = lift;
+		while (ztiles > 0) {
+			int zlevel = z/8, thisz = z%8, zcnt = 8 - thisz;
+			if (ztiles < zcnt)
+				zcnt = ztiles;
+			short block[] = needBlockedLevel(zlevel);
+			for (int y = starty; y <= endy; y++)
+				for (int x = startx; x <= endx; x++)
+					setBlockedTile(block, x, y, thisz, zcnt);
+			z += zcnt;
+			ztiles -= zcnt;
+		}
+	}
+	private void clearBlocked
+		(
+		int startx, int starty,		// Starting tile #'s.
+		int endx, int endy,		// Ending tile #'s.
+		int lift, int ztiles		// Lift, height info.
+		) {
+		int z = lift;
+		while (ztiles > 0) {
+			int zlevel = z/8;
+			int thisz = z%8, zcnt = 8 - thisz;
+			if (zlevel >= blocked.size())
+				break;		// All done.
+			if (ztiles < zcnt)
+				zcnt = ztiles;
+			short block[] = blocked.elementAt(zlevel);
+			if (block != null) {
+				for (int y = starty; y <= endy; y++)
+					for (int x = startx; x <= endx; x++)
+						clearBlockedTile(block,x, y, thisz, zcnt);
+			}
+			z += zcnt;
+			ztiles -= zcnt;
+		}
+	}
+
 }
