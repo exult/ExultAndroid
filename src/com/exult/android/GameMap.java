@@ -7,6 +7,7 @@ import java.io.IOException;
 
 public class GameMap extends GameSingletons {
 	private int num;			// Map #.  Index in gwin.maps.
+	private static int iregCount, ifixCount;			// Just for information.
 	private static Vector<ChunkTerrain> chunkTerrains;
 	private static RandomAccessFile chunks;	// "u7chunks" file.
 	private static boolean v2Chunks;		// True if 3 bytes/entry.
@@ -251,6 +252,7 @@ public class GameMap extends GameSingletons {
 				    new Animated_ifix_object(shnum, frnum,tx, ty, tz)
 				  : */  new IfixGameObject(shnum, frnum, tx, ty, tz);
 				olist.add(obj);
+				ifixCount++;
 				}
 			}
 		else if (vers == FlexFile.exultV2) {
@@ -488,6 +490,7 @@ public class GameMap extends GameSingletons {
 			last_obj = obj;		// Save as last read.
 			if (obj == null)
 				continue;		// Can this happen?
+			iregCount++;
 			obj.setQuality(quality);
 			obj.setFlags((int)oflags);
 						// Add, but skip volume check.
@@ -565,6 +568,9 @@ public class GameMap extends GameSingletons {
 		getIfixObjects(schunk);	// Get objects from ifix.
 		getIregObjects(schunk);	// Get moveable objects.
 		schunkRead[schunk] = true;	// Done this one now.
+		System.out.println("Read schunk " + schunk +
+				", ifixCount = " + ifixCount +
+				", iregCount = " + iregCount);
 		// map_patches.apply(schunk);	// Move/delete objects.
 	}
 	public static ChunkTerrain getTerrain(int tnum) {

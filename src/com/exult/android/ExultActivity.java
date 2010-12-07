@@ -39,6 +39,7 @@ public class ExultActivity extends Activity {
     public void onDestroy() {
     	// stop tracing
         //Debug.stopMethodTracing();
+    	super.onDestroy();
     }
     public static void getClick(Point p) {
     	Point save = clickPoint;	// Don't expect this to happen.
