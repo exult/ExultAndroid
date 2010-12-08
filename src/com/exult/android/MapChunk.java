@@ -410,22 +410,241 @@ public final class MapChunk extends GameSingletons {
 		return (tflags[(i)/8] & (3<<(2*((i)%8)))) != 0;
 	}
 	/*
+	 *	Get highest blocked lift below a given level for a given tile.
+	 *
+	 *	Output:	Highest lift that's blocked by an object, or -1 if none.
+	 */
+	private int getHighestBlocked
+		(
+		int lift			// Look below this lift.
+		) {
+		int i;				// Look downwards.
+		for (i = lift - 1; i >= 0 && !testTflags(i); i--)
+			;
+		return i;
+	}
+	/*
 	 *	Get lowest blocked lift above a given level for a given tile.
 	 *
 	 *	Output:	Lowest lift that's blocked by an object, or -1 if none.
 	 */
+	private static int getLowestBlocked(int lift) {
+		int i;				// Look upward.
+		for (i = lift; i <= tflagsMaxz && !testTflags(i); i++)
+			;
+		if (i > tflagsMaxz) return -1;
+		return i;
+	}
 	private int getLowestBlocked
 		(
 		int lift,			// Look above this lift.
 		int tx, int ty			// Square to test.
 		) {
 		setTflags(tx, ty, 255);	// FOR NOW, look up to max.
-		int i;				// Look upward.
-		for (i = lift; i <= tflagsMaxz && !testTflags(i); i++)
-			;
-		if (i > tflagsMaxz) return -1;
-		return i;
+		return getLowestBlocked(lift);
 		}
+	/*
+	 *	See if a tile is water or land.
+	 *	Returns bit0=1 if land, bit1=1 if water, bit2=1 if solid.
+	 */
+	int checkTerrain
+		(
+		int tx, int ty			// Tile within chunk.
+		)
+		{
+		int shnum = terrain.getShapeNum(tx, ty);
+		int terrain = 0;
+		if (shnum >= 0) {
+			ShapeInfo info = ShapeID.getInfo(shnum);
+			if (info.isWater())
+				terrain |= 2;
+			else if (info.isSolid())
+				terrain |= 4;
+			else
+				terrain |= 1;
+		}
+		return terrain;
+	}
+	/*
+	 *	Is a given square available at a given lift?
+	 *
+	 *	Output: lift that's free if so, else -1.
+	 *		If >=0 (tile is free), returns the new height that
+	 *		   an actor will be at if he walks onto the tile.
+	 */
+	public int spotAvailable
+		(
+		int height,			// Height (in tiles) of obj. being
+							//   tested.
+		int tx, int ty, int lift,			// Square to test.
+		int move_flags,
+		int max_drop,			// Max. drop/rise allowed.
+		int max_rise			// Max. rise, or -1 to use old beha-
+								//   viour (max_drop if FLY, else 1).
+		) {
+		int new_lift;
+		// Ethereal beings always return not blocked
+		// and can only move horizontally
+		if ((move_flags & EConst.MOVE_ETHEREAL) != 0)
+			return lift;
+						// Figure max lift allowed.
+		if (max_rise == -1)
+			max_rise = (move_flags & EConst.MOVE_FLY) != 0 ? max_drop : 1;
+		int max_lift = lift + max_rise;
+		if (max_lift > 255)
+			max_lift = 255;		// As high as we can go.
+		setTflags(tx, ty, max_lift + height);
+		for (new_lift = lift; new_lift <= max_lift; new_lift++) {
+			if (!testTflags(new_lift)) {
+						// Not blocked?
+				int new_high = getLowestBlocked(new_lift);
+						// Not blocked above?
+				if (new_high == -1 || new_high >= (new_lift + height))
+					break;	// Okay.
+				}
+			}
+		if (new_lift > max_lift) {	// Spot not found at lift or higher?
+						// Look downwards.
+			new_lift = getHighestBlocked(lift) + 1;
+			if (new_lift >= lift)	// Couldn't drop?
+				return -1;
+			int new_high = getLowestBlocked(new_lift);
+			if (new_high != -1 && new_high < new_lift + height)
+				return -1;	// Still blocked above.
+		}
+		if (new_lift <= lift) {		// Not going up?  See if falling.
+			new_lift =  (move_flags & EConst.MOVE_LEVITATE) != 0 ? lift :
+					getHighestBlocked(lift) + 1;
+						// Don't allow fall of > max_drop.
+			if (lift - new_lift > max_drop)
+				return -1;
+			int new_high = getLowestBlocked(new_lift);
+		
+			// Make sure that where we want to go is tall enough for us
+			if (new_high != -1 && new_high < (new_lift + height)) 
+				return -1;
+		}
+		// Found a new place to go, lets test if we can actually move there
+		// Lift 0 tests
+		if (new_lift == 0) {
+			int ter = 0;
+			ter = checkTerrain(tx, ty);
+			if ((ter & 2) != 0)	{	// Water
+				if ((move_flags & (EConst.MOVE_FLY|EConst.MOVE_SWIM)) != 0)
+					return new_lift;
+				else
+					return -1;
+			} else if ((ter & 1) != 0) {	// Land
+				if ((move_flags & (EConst.MOVE_FLY|EConst.MOVE_WALK)) != 0)
+					return new_lift;
+				else
+					return -1;
+			} else if ((ter & 4) != 0) {	// Blocked
+				if ((move_flags & EConst.MOVE_FLY) != 0)
+					return new_lift;
+				else
+					return -1;
+			} else	// Other
+				return new_lift;
+		} else if ((move_flags & (EConst.MOVE_FLY|EConst.MOVE_WALK)) != 0)
+			return new_lift;
+		return -1;
+	}
+	/*
+	 *	This one is used to see if an object of dims. possibly > 1X1 can
+	 *	step onto an adjacent square.
+	 */
+	public static boolean areaAvailable
+		(
+						// Object dims:
+		int xtiles, int ytiles, int ztiles,
+		Tile from,		// Stepping from here.
+		Tile to,		// Stepping to here.  Tz updated.
+		int move_flags,
+		int max_drop,			// Max drop/rise allowed.
+		int max_rise			// Max. rise, or -1 to use old beha-
+								//   viour (max_drop if FLY, else 1).
+		) {
+		int vertx0, vertx1;		// Get x-coords. of vert. block
+						//   to right/left.
+		int horizx0, horizx1;		// Get x-coords of horiz. block
+						//   above/below.
+		int verty0, verty1;		// Get y-coords of horiz. block
+						//   above/below.
+		int horizy0, horizy1;		// Get y-coords of vert. block
+						//   to right/left.
+						// !Watch for wrapping.
+		horizx0 = (to.tx + 1 - xtiles + EConst.c_num_tiles)%EConst.c_num_tiles;
+		horizx1 = EConst.INCR_TILE(to.tx);
+		if (Tile.gte(to.tx, from.tx)) {		// Moving right?
+			// Start to right of hot spot.
+			vertx0 = EConst.INCR_TILE(from.tx);
+			vertx1 = EConst.INCR_TILE(to.tx);	// Stop past dest.
+		} else {				// Moving left?
+			vertx0 = (to.tx + 1 - xtiles + EConst.c_num_tiles)%EConst.c_num_tiles;
+			vertx1 = (from.tx + 1 - xtiles + EConst.c_num_tiles)%EConst.c_num_tiles;
+		}
+		verty0 = (to.ty + 1 - ytiles + EConst.c_num_tiles)%EConst.c_num_tiles;
+		verty1 = EConst.INCR_TILE(to.ty);
+		if (Tile.gte(to.ty, from.ty)) {		// Moving down?
+						// Start below hot spot.
+			horizy0 = EConst.INCR_TILE(from.ty);	
+			horizy1 = EConst.INCR_TILE(to.ty);	// End past dest.
+			if (to.ty != from.ty)	// Includes bottom of vert. area.
+				verty1 = EConst.DECR_TILE(verty1);
+		} else {				// Moving up?
+			horizy0 = (to.ty + 1 - ytiles + EConst.c_num_tiles)%EConst.c_num_tiles;
+			horizy1 = (from.ty + 1 - ytiles + EConst.c_num_tiles)%EConst.c_num_tiles;
+						// Includes top of vert. area.
+			verty0 = EConst.INCR_TILE(verty0);
+		}
+		int x, y;			// Go through horiz. part.
+		int new_lift = from.tz;
+		int new_lift0 = -1;		// All lift changes must be same.
+		for (y = horizy0; y != horizy1; y = EConst.INCR_TILE(y)) {
+						// Get y chunk, tile-in-chunk.
+			int cy = y/EConst.c_tiles_per_chunk, rty = y%EConst.c_tiles_per_chunk;
+			for (x = horizx0; x != horizx1; x = EConst.INCR_TILE(x))
+				{
+				MapChunk olist = gmap.getChunk(
+						x/EConst.c_tiles_per_chunk, cy);
+				int rtx = x%EConst.c_tiles_per_chunk;
+				new_lift = olist.spotAvailable(ztiles, rtx, rty, from.tz, 
+							move_flags, max_drop, max_rise);
+				if (new_lift == -1)
+					return false;
+				if (new_lift != from.tz) {
+					if (new_lift0 == -1)
+						new_lift0 = new_lift;
+					else if (new_lift != new_lift0)
+						return false;
+				}
+			}
+		}
+						// Do vert. block.
+		for (x = vertx0; x != vertx1; x = EConst.INCR_TILE(x)) {
+						// Get x chunk, tile-in-chunk.
+			int cx = x/EConst.c_tiles_per_chunk, rtx = x%EConst.c_tiles_per_chunk;
+			for (y = verty0; y != verty1; y = EConst.INCR_TILE(y))
+				{
+				MapChunk olist = gmap.getChunk(cx, y/EConst.c_tiles_per_chunk);
+				int rty = y%EConst.c_tiles_per_chunk;
+				new_lift = olist.spotAvailable(ztiles, rtx, rty, from.tz,
+						move_flags, max_drop, max_rise);
+				if (new_lift == -1)
+					return false;
+				if (new_lift != from.tz) {
+					if (new_lift0 == -1)
+						new_lift0 = new_lift;
+					else if (new_lift != new_lift0)
+						return false;
+				}
+			}
+		}
+		to.tz = (short) new_lift;
+		return true;			// All clear.
+	}
+
 	/*
 	 *  Finds if there is a 'roof' above lift in tile (tx, ty)
 	 *  of the chunk. Point is taken 4 above lift

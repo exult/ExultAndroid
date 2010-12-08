@@ -39,7 +39,16 @@ public class EConst {
 		southwest = 5,
 		west = 6,
 		northwest = 7;
-	
+	public static final int
+	 	MOVE_NODROP  = (1<<3),
+	 	MOVE_FLY  = (1<<4),
+	 	MOVE_LEVITATE  = (MOVE_FLY|MOVE_NODROP),
+		MOVE_WALK  = (1<<5),
+		MOVE_SWIM  = (1<<6),
+		MOVE_ALL_TERRAIN  = ((1<<5)|(1<<6)),
+		MOVE_ETHEREAL  = (1<<7),
+		MOVE_ALL  = (MOVE_FLY|MOVE_WALK|MOVE_SWIM|MOVE_ETHEREAL),
+		MOVE_MAPEDIT  = (1<<8);
 	// Maximum number of global flags:
 	public static final int c_last_gflag = 2047;
 	
