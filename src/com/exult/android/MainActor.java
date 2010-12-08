@@ -72,16 +72,21 @@ public class MainActor extends Actor {
 		/*
 		boolean water, poison;		// Get tile info.
 		get_tile_info(this, gwin, nlist, tx, ty, water, poison);
-		if (is_blocked(t, 0, force ? MOVE_ALL : 0))
-			{
+		*/
+		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
+			/* ++++++++++FINISH
 			if (is_really_blocked(t, force))
+			*/
 				{
-				if (schedule)		// Tell scheduler.
+				/*++++++++++++
+				if (schedule != null)		// Tell scheduler.
 					schedule.set_blocked(t);
+				*/
 				stop();
-				return (0);
+				return false;
 				}
-			}
+		}
+		/*
 		if (poison && t.tz == 0)
 			Actor::set_flag(static_cast<int>(Obj_flags::poisoned));
 		*/

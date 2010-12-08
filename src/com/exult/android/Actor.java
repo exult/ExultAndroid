@@ -231,11 +231,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void clear_type_flag(int flag) {
 		//++++++++FINISH
 	}
-	public int get_type_flag(int flag) {
-		return 0; //+++++++++FINISH
+	public int getTypeFlag(int flag) {
+		//++++++++++++FINISH
+		return 0;
 	}
-	public void set_type_flags(int tflags) {
-		//++++++++++FINISH
+	public void setTypeFlags(int tflags) {
+		typeFlags = tflags;
+		/* +++++FINISH set_actor_shape(); */
+	}
+	public int getTypeFlags() {
+		return typeFlags;
 	}
 	public void setSkinColor (int color) { 
 		skinColor = color; 
@@ -429,6 +434,42 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (newLift >= 0)
 			setLift(newLift);
 		newChunk.add(this);
+	}
+	/**
+	 *	See if it's blocked when trying to move to a new tile.
+	 *	@param t Tile to step to. Tz is possibly updated by this function.
+	 *	@param f Pointer to tile we are stepping from, or null for current tile.
+	 *	@param move_flags Additional movement flags to consider for step.
+	 *	@return Returns 1 if so, else 0.
+	 */
+
+	protected boolean areaAvailable
+		(
+		Tile t,			// Tz possibly updated.
+		Tile f,			// Step from here, or curpos if null.
+		int move_flags
+		) {
+		ShapeInfo info = getInfo();
+						// Get dim. in tiles.
+		int frame = getFrameNum();
+		int xtiles = info.get3dXtiles(frame), ytiles = info.get3dYtiles(frame);
+		int ztiles = info.get3dHeight();
+		t.fixme();
+		if (xtiles == 1 && ytiles == 1) {	// Simple case?
+			MapChunk nlist = gmap.getChunk(
+				t.tx/EConst.c_tiles_per_chunk, t.ty/EConst.c_tiles_per_chunk);
+			int new_lift = nlist.spotAvailable(ztiles, 
+					t.tx%EConst.c_tiles_per_chunk, t.ty%EConst.c_tiles_per_chunk, t.tz,
+					move_flags | getTypeFlags(), 1, -1);
+			t.tz = (short)new_lift;
+			return new_lift >= 0;
+			}
+		if (f == null) {
+			f = new Tile();
+			getTile(f);
+		}
+		return MapChunk.areaAvailable(xtiles, ytiles, ztiles,
+				f, t, move_flags | getTypeFlags(), 1, -1);
 	}
 	/*
 	 *	Read in actor from a given file.
@@ -657,14 +698,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int tflags = EUtil.Read2(nfile);
 		// First time round, all the flags are garbage
 		if (fix_first) {
-			set_type_flags (1 << tf_walk);
+			setTypeFlags (1 << tf_walk);
 				// Correct for SI, no problems for BG:
 			if ((tflags & (1 << tf_sex)) != 0)
 				clear_type_flag (tf_sex);
 			else
 				set_type_flag (tf_sex);
 		} else
-			set_type_flags (tflags);
+			setTypeFlags (tflags);
 		/* ++++++++FINISH
 		if (num == 0 && Game::get_avsex() == 0) {
 			clear_type_flag (Actor::tf_sex);
