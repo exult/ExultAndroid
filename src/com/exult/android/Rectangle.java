@@ -27,6 +27,10 @@ public class Rectangle {
 		if (x + w > maxw) w = maxw - x;
 		if (y + h > maxh) h = maxh - y;
 	}
+	public void shift(int deltax, int deltay) {
+		x += deltax;
+		y += deltay;
+	}		
 	public final void enlarge(int delta) {
 		x -= delta; y -= delta; w += 2*delta; h += 2*delta;
 	}

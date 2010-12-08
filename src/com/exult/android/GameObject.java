@@ -175,6 +175,18 @@ public abstract class GameObject extends ShapeID {
 	public final int getTileY() {
 		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
 	}
+	//	Get footprint in absolute tiles.
+	public final void getFootprint(Rectangle r) {
+		ShapeInfo info = getInfo();
+		// Get footprint.
+		int frame = getFrameNum();
+		int xtiles = info.get3dXtiles(frame);
+		int ytiles = info.get3dYtiles(frame);
+		int tx = getTileX(), ty = getTileY();
+		r.set((tx - xtiles + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, 
+			  (ty - ytiles + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, 
+				xtiles, ytiles);
+	}
 	public final int getVolume() {
 		return getInfo().getVolume();
 	}

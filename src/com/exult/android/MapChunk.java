@@ -1,8 +1,9 @@
 package com.exult.android;
 import java.util.Vector;
+import java.util.Arrays;
 import java.util.HashSet;
 
-public class MapChunk extends GameSingletons {
+public final class MapChunk extends GameSingletons {
 	private GameMap map;				// Map we're a part of.
 	private ChunkTerrain terrain;		// Flat landscape tiles.
 	private ObjectList objects;			// -'Flat'  obs. (lift=0,ht=0) stored 1st.
@@ -10,7 +11,7 @@ public class MapChunk extends GameSingletons {
 	// Counts of overlapping objects from chunks below, to right.
 	private short fromBelow, fromRight, fromBelowRight;
 	private byte dungeonLevels[];	// A 'dungeon' level value for each tile (4 bit).
-	private byte roof;		// 1 if a roof present.
+	private boolean roof;			// 1 if a roof present.
 	// # light sources in chunk.
 	private byte dungeonLights, nonDungeonLights;
 	private short cx, cy;
@@ -30,6 +31,11 @@ public class MapChunk extends GameSingletons {
       0x155,
       0x555,
      0x1555};
+	private static Rectangle footRect = new Rectangle(),	// Temp.
+							 tilesRect = new Rectangle();
+	// Temp. storage for 'blocked' flags for a single tile.
+	private static int tflags[] = new int[256/8];
+	private static int tflagsMaxz;
 	public MapChunk(GameMap m, int chx, int chy) {
 		map = m;
 		cx = (short)chx;
@@ -152,29 +158,24 @@ public class MapChunk extends GameSingletons {
 					newobj, ord).fromBelow++;
 			firstNonflat = newobj;	// Inserted before old first_nonflat.
 		}
-	/* +++++++++FINISH
-	if (cache)			// Add to cache.
-		cache.update_object(this, newobj, 1);
-	if (ord.info.is_light_source())	// Count light sources.
-		{
-		if (dungeon_levels && is_dungeon(newobj.get_tx(),
+		addObjectBlocking(newobj);
+		/* +++++++++FINISH
+		if (ord.info.is_light_source())	// Count light sources.
+			{
+			if (dungeon_levels && is_dungeon(newobj.get_tx(),
 							newobj.get_ty()))
-			dungeon_lights++;
-		else
-			non_dungeon_lights++;
+				dungeon_lights++;
+			else
+				non_dungeon_lights++;
+			}
+		 */
+		if (newobj.getLift() >= 5) {	// Looks like a roof?
+			if (ord.info.getShapeClass() == ShapeInfo.building)
+				roof = true;
 		}
-	if (newobj.get_lift() >= 5)	// Looks like a roof?
-		{
-		if (ord.info.get_shape_class() == Shape_info::building)
-			roof = 1;
-		}
-	*/
 	}
 	public void remove(GameObject remove) {
-		/* ++++++
-		if (cache)			// Remove from cache.
-			cache->update_object(this, remove, 0);
-		 */
+		removeObjectBlocking(remove);
 		remove.clearDependencies();	// Remove all dependencies.
 		ShapeInfo info = remove.getInfo();
 						// See if it extends outside.
@@ -280,6 +281,8 @@ public class MapChunk extends GameSingletons {
 		return block;
 	}
 	private short[] needBlockedLevel(int zlevel) {
+		if (blocked == null)
+			blocked = new Vector<short[]>();
 		if (zlevel < blocked.size()) {
 			short[] block = blocked.elementAt(zlevel);
 			if (block != null)
@@ -331,6 +334,161 @@ public class MapChunk extends GameSingletons {
 			}
 			z += zcnt;
 			ztiles -= zcnt;
+		}
+	}
+	// Process 'blocked' for an object that's added.
+	private void addObjectBlocking(GameObject obj) {
+		ShapeInfo info = obj.getInfo();
+		if (info.isDoor()) {		// Special door list.
+			if (doors == null)
+				doors = new HashSet<GameObject>();
+			doors.add(obj);
+		}
+		int ztiles = info.get3dHeight(); 
+		if (ztiles == 0 || !info.isSolid())
+			return;			// Skip if not an obstacle.
+		obj.getFootprint(footRect);
+		int endx = obj.getTx();	// Lower-right corner of obj.
+		int endy = obj.getTy();
+		int lift = obj.getLift();
+		// Simple case.
+		if (footRect.w == 1 && footRect.h == 1 && ztiles <= 8-lift%8) {
+			setBlockedTile(needBlockedLevel(lift/8), 
+					endx, endy, lift%8, ztiles);
+			return;
+		}				// Go through intersected chunks.
+		ChunkIntersectIterator next_chunk = 
+							new ChunkIntersectIterator(footRect);
+		MapChunk chunk;
+		while ((chunk = next_chunk.getNext(tilesRect)) != null)
+			chunk.setBlocked(tilesRect.x, tilesRect.y, 
+				tilesRect.x + tilesRect.w - 1, tilesRect.y + tilesRect.h - 1, 
+				lift, ztiles);
+	}
+	// Process 'blocked' for an object that's removed.
+	private void removeObjectBlocking(GameObject obj) {
+		ShapeInfo info = obj.getInfo();
+		if (info.isDoor())		// Special door list.
+			doors.remove(obj);
+		int ztiles = info.get3dHeight(); 
+		if (ztiles == 0 || !info.isSolid())
+			return;			// Skip if not an obstacle.
+		obj.getFootprint(footRect);
+		int endx = obj.getTx();	// Lower-right corner of obj.
+		int endy = obj.getTy();
+		int lift = obj.getLift();
+		// Simple case.
+		if (footRect.w == 1 && footRect.h == 1 && ztiles <= 8-lift%8) {
+			short[] block = blocked.elementAt(lift/8);
+			if (block != null)
+				clearBlockedTile(block, endx, endy, lift%8, ztiles);
+			return;
+		}				// Go through intersected chunks.
+		ChunkIntersectIterator next_chunk = 
+							new ChunkIntersectIterator(footRect);
+		MapChunk chunk;
+		while ((chunk = next_chunk.getNext(tilesRect)) != null)
+			chunk.clearBlocked(tilesRect.x, tilesRect.y, 
+				tilesRect.x + tilesRect.w - 1, tilesRect.y + tilesRect.h - 1, 
+				lift, ztiles);
+	}
+	private void setTflags(int tx, int ty, int maxz) {
+		int zlevel = maxz/8, bsize = blocked.size();
+		if (zlevel >= bsize) {
+			Arrays.fill(tflags, bsize, zlevel + 1, 0);
+			zlevel = bsize - 1;
+			}
+		while (zlevel >= 0) {
+			short block[] = blocked.elementAt(zlevel);
+			tflags[zlevel--] = block != null 
+						? block[ty*EConst.c_tiles_per_chunk + tx] : 0;
+		}
+		tflagsMaxz = maxz;
+	}
+	//	Test for given z-coord. (lift)
+	private static boolean testTflags(int i) {
+		return (tflags[(i)/8] & (3<<(2*((i)%8)))) != 0;
+	}
+	/*
+	 *	Get lowest blocked lift above a given level for a given tile.
+	 *
+	 *	Output:	Lowest lift that's blocked by an object, or -1 if none.
+	 */
+	private int getLowestBlocked
+		(
+		int lift,			// Look above this lift.
+		int tx, int ty			// Square to test.
+		) {
+		setTflags(tx, ty, 255);	// FOR NOW, look up to max.
+		int i;				// Look upward.
+		for (i = lift; i <= tflagsMaxz && !testTflags(i); i++)
+			;
+		if (i > tflagsMaxz) return -1;
+		return i;
+		}
+	/*
+	 *  Finds if there is a 'roof' above lift in tile (tx, ty)
+	 *  of the chunk. Point is taken 4 above lift
+	 *
+	 *  Roof can be any object, not just a literal roof
+	 *
+	 *  Output: height of the roof.
+	 *  A return of 31 means no roof
+	 *
+	 */
+	public int isRoof(int tx, int ty, int lift) {
+		/* Might be lying on bed at lift==2. */
+		int height = getLowestBlocked (lift+4, tx, ty);
+		if (height == -1) return 255;
+		return height;
+	}
+	/*
+	 *	Here's an iterator that takes a rectangle of tiles, and sequentially
+	 *	returns the interesection of that rectangle with each chunk that it
+	 *	touches.
+	 */
+	public static class ChunkIntersectIterator {
+		private Rectangle tiles;		// Original rect, shifted -cx, -cy.
+		private int start_tx;			// Saves start of tx in tiles.
+						// Chunk #'s covered:
+		private int startcx, stopcx, stopcy;
+		private int curcx, curcy;		// Next chunk to return.
+		ChunkIntersectIterator(Rectangle t) {
+			tiles = new Rectangle(); tiles.set(t);
+			startcx = t.x/EConst.c_tiles_per_chunk;
+			stopcx = EConst.INCR_CHUNK((t.x + t.w - 1)/EConst.c_tiles_per_chunk);
+			stopcy = EConst.INCR_CHUNK((t.y + t.h - 1)/EConst.c_tiles_per_chunk);
+			curcy = t.y/EConst.c_tiles_per_chunk;
+			curcx = startcx;
+			tiles.shift(-curcx*EConst.c_tiles_per_chunk,
+						-curcy*EConst.c_tiles_per_chunk);
+			start_tx = tiles.x;
+			if (t.x < 0 || t.y < 0) {		// Empty to begin with.
+				curcx = stopcx;
+				curcy = stopcy;
+				}
+		}
+		// Intersect is ranged within chunk.
+		MapChunk getNext(Rectangle intersect) {
+			if (curcx == stopcx) {	// End of row?
+				if (curcy == stopcy)
+					return null;
+				else {
+					tiles.y -= EConst.c_tiles_per_chunk;
+					tiles.x = start_tx;
+					curcy = EConst.INCR_CHUNK(curcy);
+					if (curcy == stopcy)
+						return null;
+					curcx = startcx;
+				}
+			}
+			intersect.set(0, 0, EConst.c_tiles_per_chunk, EConst.c_tiles_per_chunk);
+						// Intersect given rect. with chunk.
+			intersect.intersect(tiles);
+			MapChunk chunk = gmap.getChunk(curcx, curcy);
+			curcx = EConst.INCR_CHUNK(curcx);
+			tiles.x -= EConst.c_tiles_per_chunk;
+			return chunk;
 		}
 	}
 

@@ -97,15 +97,16 @@ public class MainActor extends Actor {
 						// In a new chunk?
 		if (olist != nlist)
 			this.switchedChunks(olist, nlist);
-		/* +++++++++FINISH
-		int roof_height = nlist.is_roof (tx, ty, t.tz);
-		gwin.set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
-		if (gwin.set_above_main_actor (roof_height))
-			{
+		int roof_height = nlist.isRoof (tx, ty, t.tz);
+		// +++++FINISH gwin.set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
+		if (gwin.setAboveMainActor(roof_height)) {
+			/* +++++++++++++
 			gwin.set_in_dungeon(nlist.has_dungeon()?
 						nlist.is_dungeon(tx, ty):0);
-			gwin.set_all_dirty();
-			}
+			*/
+			gwin.setAllDirty();
+		}
+		/*+++++++++FINISH
 		else if (roof_height < 31 && gwin.set_in_dungeon(nlist.has_dungeon()?
 	 					nlist.is_dungeon(tx, ty):0))
 			gwin.set_all_dirty();

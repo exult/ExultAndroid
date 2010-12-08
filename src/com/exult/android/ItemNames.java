@@ -108,7 +108,6 @@ public class ItemNames {
 			while (itemlen > 0 && buf[itemlen - 1] == 0)	// Skip ending nulls.
 				itemlen--;
 			String nm = new String(buf, 0, itemlen);
-			System.out.println("Read " + nm + " of length " + itemlen);
 			if (i < num_item_names)
 				names[i] = nm;
 			else if (i - num_item_names < num_text_msgs)
