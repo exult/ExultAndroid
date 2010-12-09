@@ -11,7 +11,7 @@ public class Tile {
 		tx = (short)x; ty = (short)y; tz = (short)z;
 	}
 	public Tile(int x, int y, int z) {
-		tx = (short)tx; ty = (short)y; tz = (short)z;
+		tx = (short)x; ty = (short)y; tz = (short)z;
 	}
 	public Tile() {
 	}

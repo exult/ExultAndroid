@@ -1,11 +1,14 @@
 package com.exult.android;
 
-abstract public class ActorAction {
+abstract public class ActorAction extends GameSingletons {
 	private static long seqcnt = 0;	// To check for deletion.
 	protected long seq;				// Unique sequence #.
-	
+	protected boolean getParty;		// Party should follow at each step.
 	public ActorAction() {
 		seq = ++seqcnt;
+	}
+	public final void setGetParty(Boolean tf) {
+		getParty = tf;
 	}
 	/*
 	 * Check for action being replaced.
@@ -105,14 +108,13 @@ abstract public class ActorAction {
 			} else if (actor.step(stepTile, frames.get(stepIndex), false)) {// Successful.
 				if (deleted) 
 					return 0;
-				/*
-				if (get_party) {		// MUST be the Avatar.
-					GameWindow gwin = GameWindow.instanceOf();
-					gwin.get_party_man().get_followers(newdir);
+				if (getParty) {		// MUST be the Avatar.
+					partyman.getFollowers(newdir);
+					/* +++++NOT SURE about this
 					if (done)
 						gwin.getMainActor().get_followers();
+					*/
 				}
-				*/
 				if (reached_end)		// Was this the last step?
 					return (0);
 				return cur_speed;

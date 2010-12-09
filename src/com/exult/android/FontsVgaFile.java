@@ -214,7 +214,7 @@ public class FontsVgaFile extends GameSingletons {
 				}
 				if (cur_line >= max_lines)
 					break;
-				chr = text.charAt(ind);
+				chr = ind < textlen ? text.charAt(ind) : 0;
 				if (chr == '*') {
 					chr = text.charAt(++ind);
 					if (cur_line > 0)

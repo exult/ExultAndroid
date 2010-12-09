@@ -115,6 +115,9 @@ public class GameWindow {
 	public final Actor getMainActor() {
 		return mainActor;
 	}
+	public final Actor getCameraActor() {
+		return cameraActor;
+	}
 	public final boolean isMainActorInside()
 		{ return skipAboveActor < 31 ; }
 	// Returns if skip_above_actor changed!
@@ -438,12 +441,8 @@ public class GameWindow {
 		ty = (ty + EConst.c_num_tiles)%EConst.c_num_tiles;
 		tempTile.set(tx, ty, lift);
 		mainActor.walkToTile(tempTile, speed, 0);
-		/* +++++FINISH
-		if (walk_in_formation && mainActor.get_action())
-		//++++++In this case, may need to set schedules back to
-		// follow_avatar after, say, sitting.++++++++++
-			mainActor.get_action().set_get_party(true);
-		*/
+		if (mainActor.getAction() != null)
+			mainActor.getAction().setGetParty(true);
 	}
 	public void teleportParty(Tile t, boolean skipEggs, int newMap) {
 		Tile oldpos = tempTile;

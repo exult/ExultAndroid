@@ -15,6 +15,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static GameObject interceptItem;
 	private static Tile interceptTile;
 	
+	private static final Actor asActor(GameObject obj) {
+		return obj == null ? null : obj.asActor();
+	}
 	/*
 	 * The intrinsics:
 	 */
@@ -121,8 +124,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private final void showNpcFace(UsecodeValue p0, UsecodeValue p1,
 				int slot) {	// 0, 1, or -1 to find free spot.
 		ucmachine.show_pending_text();
-		GameObject item = getItem(p0);
-		Actor npc = item.asActor();
+		Actor npc = asActor(getItem(p0));
 		int frame = p1.getIntValue();
 		int shape = getFaceShape(p0, npc, frame);
 		if (shape < 0)
@@ -151,8 +153,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 
 	private final void removeNpcFace(UsecodeValue p0) {
 		ucmachine.show_pending_text();
-		GameObject item = p0.getObjectValue();
-		Actor npc = item.asActor();
+		Actor npc = asActor(getItem(p0));
 		int shape = getFaceShape(p0, npc, 0);
 		if (shape < 0)
 			return;
@@ -440,18 +441,57 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = getItem(p0);
 		return new UsecodeValue.ObjectValue(obj);
 	}
+	private final UsecodeValue getScheduleType(UsecodeValue p0) {
+		// GetSchedule(npc).  Rets. schedtype.
+		Actor npc = asActor(getItem(p0));
+		if (npc == null)
+			return UsecodeValue.getZero();
+		// +++++ FINISH Schedule *schedule = npc->get_schedule();
+		int sched = /* +++++ schedule ? schedule->get_actual_type(npc) 
+				     : */ npc.getScheduleType();
+						// Path_run_usecode?  (This is to fix
+						//   a bug in the Fawn Trial.)
+						//+++++Should be a better way to check.
+		/* +++++++++FINISH
+		if (Game::get_game_type() == SERPENT_ISLE &&
+		    npc->get_action() && npc->get_action()->as_usecode_path())
+						// Give a 'fake' schedule.
+			sched = Schedule.walk_to_schedule;
+		*/
+		return new UsecodeValue.IntValue(sched);
+	}
+	private final void setScheduleType(UsecodeValue p0, 
+			UsecodeValue p1) {
+		// SetSchedule?(npc, schedtype).
+		// Looks like 15=wait here, 11=go home, 0=train/fight... This is the
+		// 'bNum' field in schedules.
+		Actor npc = asActor(getItem(p0));
+		if (npc != null) {
+			int newsched = p1.getIntValue();
+			npc.setScheduleType(newsched);
+			/* ++++++++++FINISH
+						// Taking Avatar out of combat?
+			if (npc == gwin.getMainActor() && gwin->in_combat() &&
+			    newsched != Schedule::combat)
+						// End combat mode (for L.Field).
+				{
+				Audio::get_ptr()->stop_music();
+				gwin->toggle_combat();
+				}
+			*/
+		}
+	}
+
 	private final void addToParty(UsecodeValue p0) {
 		// NPC joins party.
-		Actor npc = getItem(p0).asActor();
-		if (partyman.addToParty(npc))
+		Actor npc = asActor(getItem(p0));
+		if (!partyman.addToParty(npc))
 			return;		// Can't add.
-		/* +++++++++++++
 		npc.setScheduleType(Schedule.follow_avatar);
 		npc.setAlignment(Actor.friendly);
-		*/
 	}
 	private final void removeFromParty(UsecodeValue p0) {
-		Actor npc = getItem(p0).asActor();
+		Actor npc = asActor(getItem(p0));
 		if (partyman.removeFromParty(npc))
 			npc.setAlignment(Actor.neutral);
 	}
@@ -478,7 +518,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 														UsecodeValue p2) {
 		// Set NPC prop (item, prop_id, delta_value).
 		GameObject obj = getItem(p0);
-		Actor npc = obj != null ? obj.asActor() : null;;
+		Actor npc = asActor(obj);
 		if (npc != null) {			// NOTE: 3rd parm. is a delta!
 			String att = p1.getStringValue();
 			if (att != null)
@@ -638,7 +678,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			arr.setSize(cnt);
 			for (int i = 0; i < cnt; i++) {
 				GameObject obj = getItem(p0.getElem(i));
-				npc = obj != null ? obj.asActor() : null;
+				npc = asActor(obj);
 				String nm = npc != null ? npc.getNpcName()
 							  : (obj != null ? obj.getName() : "??name??");
 				arr.setElementAt(new UsecodeValue.StringValue(nm), i);
@@ -1125,7 +1165,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return findDirection(parms[0], parms[1]);
 		case 0x1b:
 			return getNpcObject(parms[0]);
-		//+++++++++
+		case 0x1c:
+			return getScheduleType(parms[0]);
+		case 0x1d:
+			setScheduleType(parms[0], parms[1]); break;
 		case 0x1e:
 			addToParty(parms[0]); break;
 		case 0x1f:

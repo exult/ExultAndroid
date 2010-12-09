@@ -329,7 +329,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void set_actor_shape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
 	}
-	public boolean addDirty(boolean figureWeapon) {
+	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
 			return false;
 		//+++++++FINISH: Figure casting/weapon rectangle.
