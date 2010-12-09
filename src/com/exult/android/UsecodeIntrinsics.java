@@ -1037,6 +1037,25 @@ public class UsecodeIntrinsics extends GameSingletons {
 			}
 		}
 	}
+	private final void bookMode(UsecodeValue p0) {
+		// Display book or scroll.
+		TextGump gump;
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return;
+		// check for avatar read here
+		boolean do_serp = !gwin.getMainActor().getFlag(GameObject.read);
+		int fnt = do_serp ? 8 : 4;
+		if (obj.getShapeNum() == 707)		// Serpentine Scroll - Make SI only???
+			gump = new TextGump.Scroll(fnt);
+		else if (obj.getShapeNum() == 705)	// Serpentine Book - Make SI only???
+			gump = new TextGump.Book(fnt);
+		else if (obj.getShapeNum() == 797)
+			gump = new TextGump.Scroll();
+		else
+			gump = new TextGump.Book();
+		ucmachine.setBook(gump);
+	}
 	private final UsecodeValue getArraySize(UsecodeValue p0) {
 		int cnt;
 		if (p0.isArray())	// An array?  We might return 0.
@@ -1229,6 +1248,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getLift(parms[0]);
 		case 0x43:
 			setLift(parms[0], parms[1]); break;
+		//++++++++++++
+		case 0x55:
+			bookMode(parms[0]); break;
 		//++++++++++++
 		case 0x5e:
 			return getArraySize(parms[0]);

@@ -37,6 +37,11 @@ public class FontsVgaFile extends GameSingletons {
 			int vert_lead, boolean pbreak, boolean center)
 		{ return fonts[fontnum].paintTextBox(win, text, x, y, w, h,
 				vert_lead, pbreak, center); }
+	public int paintTextBox(ImageBuf win, int fontnum, 
+			String text, int start, int textlen, int x, int y, int w, int h, 
+			int vert_lead, boolean pbreak, boolean center)
+		{ return fonts[fontnum].paintTextBox(win, text, start, textlen, 
+				x, y, w, h, vert_lead, pbreak, center); }
 	public int paintText(int fontnum, 
 							String text, int xoff, int yoff)
 			{ return fonts[fontnum].paintText(win, text, xoff, yoff); }
@@ -163,9 +168,15 @@ public class FontsVgaFile extends GameSingletons {
 		 *		Else height of text painted.
 		 */
 		int paintTextBox(ImageBuf win, String text, int x, int y, int w, 
+					int h, int vertLead, boolean pbreak, boolean center) {
+			int textlen = text.length();
+			return paintTextBox(win, text, 0, textlen, x, y, w, h,
+									vertLead, pbreak, center);
+		}
+		int paintTextBox(ImageBuf win, String text, int start, int textlen, 
+				int x, int y, int w, 
 				int h, int vertLead, boolean pbreak, boolean center) {
-			int chr, ind = 0, textlen = text.length();
-			int start = 0;	// Remember the start.b
+			int chr, ind = start;
 			win.setClip(x, y, w, h);
 			int endx = x + w;		// Figure where to stop.
 			int curx = x, cury = y;

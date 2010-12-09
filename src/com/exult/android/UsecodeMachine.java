@@ -19,6 +19,7 @@ public class UsecodeMachine extends GameSingletons {
 	private boolean modifiedMap;	//  We add/deleted/moved an object.
 	private TreeMap<Integer, Integer> timers = new TreeMap<Integer,Integer>();
 	private GameObject caller_item;
+	private TextGump book;		// Book/scroll being displayed.
 	private Actor path_npc;		// Last NPC in path_run_usecode()
 	private boolean found_answer;		// Did we already handle the conv. option?
 	private Tile saved_pos;		// For a couple SI intrinsics.
@@ -83,6 +84,10 @@ public class UsecodeMachine extends GameSingletons {
 		{ gflags[i] = (val == 1); }
 	public final void setModifiedMap() {
 		modifiedMap = true;
+	}
+	public final void setBook(TextGump b) {
+		//++++++++++++ gumpman.close(book);
+		book = b;
 	}
 	public final int getCurrentFunction() {
 		return frame.function.id;
@@ -176,9 +181,7 @@ public class UsecodeMachine extends GameSingletons {
 		++running;
 		boolean ret = run();
 		--running;
-		/* ++++++++++++++++++++
-		set_book(0);
-		*/
+		setBook(null);
 						// Left hanging (BG)?
 		if (conv.getNumFacesOnScreen() > 0) {
 			conv.initFaces();	// Remove them.
@@ -1424,17 +1427,15 @@ public class UsecodeMachine extends GameSingletons {
 	 *	Make sure pending text has been seen.
 	 */
 	public void show_pending_text() {
-		/* +++++++++++
-		if (book != null)			// Book mode?
-			{
+		if (book != null) {			// Book mode?
 			int x, y;
-			while (book->show_next_page() && 
-					Get_click(x, y, Mouse::hand, 0, false, book, true))
-				;
-			gwin->paint();
-			}
+			while (book.showNextPage()) /* ++++++ && 
+					Get_click(x, y, Mouse::hand, 0, false, book, true)) */
+				ExultActivity.getClick(clickPoint);
+			gwin.paint();
+		}
 						// Normal conversation:
-		else */ if (conv.isNpcTextPending())
+		else if (conv.isNpcTextPending())
 			click_to_continue();
 	}
 	/*
@@ -1442,7 +1443,7 @@ public class UsecodeMachine extends GameSingletons {
 	 */
 	private void show_book() {
 		String str = theString;
-		// +++++++FINISH book.add_text(str);
+		book.addText(str);
 		theString = null;
 	}
 	/*
@@ -1451,13 +1452,10 @@ public class UsecodeMachine extends GameSingletons {
 	private void say_string() {
 		if (theString == null)
 			return;
-		/*
-		if (book)			// Displaying a book?
-			{
+		if (book != null) {		// Displaying a book?
 			show_book();
 			return;
-			}
-		*/
+		}
 		show_pending_text();		// Make sure prev. text was seen.
 		String str = theString;
 		int ind = 0;
