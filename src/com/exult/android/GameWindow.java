@@ -20,7 +20,7 @@ public class GameWindow {
 	private Rectangle tempDirty;	// Temp for addDirty.
 	private Rectangle tempFind;		// For findObject.
 	private Point tempPoint = new Point();
-	private Tile tempTile = new Tile();
+	private Tile tempTile = new Tile(), tempTile2 = new Tile();
 	private Tile SRTempTile = new Tile();	// For getShapeRect.
 	private ImageBuf win;
 	private Palette pal;
@@ -361,24 +361,29 @@ public class GameWindow {
 		mainActor.getTile(tempTile);
 		Tile start = tempTile;
 		int dir;
-		// ++++FINISH boolean checkdrop = (mainActor.getTypeFlags() & MOVE_LEVITATE) == 0;
-		/* ++++++++FINISH
-		for (dir = 0; dir < 8; dir++)
-		{
-			Tile_coord dest = start.get_neighbor(dir);
-			blocked[dir] = mainActor.is_blocked(dest, &start,
-							mainActor.get_type_flags());
-			if (checkdrop && abs(start.tz - dest.tz) > 1)
-			blocked[dir] = true;
-		}
-		 */
+		Tile dest = tempTile2;
 		dir = EUtil.getDirection (a.y - winy, winx - a.x);
-		/*
-		if (blocked[dir] && !blocked[(dir+1)%8])
-		dir = (dir+1)%8;
-		else if (blocked[dir] && !blocked[(dir+7)%8])
-			dir = (dir+7)%8;
-		else if (blocked[dir])
+		int tflags = mainActor.getTypeFlags();
+		start.getNeighbor(dest, dir);
+		if (!mainActor.areaAvailable(dest, start, tflags)) {
+			start.getNeighbor(dest, (dir+1)%8);
+			if (mainActor.areaAvailable(dest, start, tflags))
+				dir = (dir+1)%8;
+			else {
+				start.getNeighbor(dest, (dir+7)%8);
+				if (mainActor.areaAvailable(dest, start, tflags))
+					dir = (dir+7)%8;
+				else
+					dir = -1;
+			}
+		}
+		if (dir == -1) {
+			stopActor();
+			return;
+		}
+			
+		/* ++++++++++++FINISH
+		if (dir == -1)
 		{
 	   		Game_object *block = mainActor.is_moving() ? 0
 			: mainActor.find_blocking(start.get_neighbor(dir), dir);

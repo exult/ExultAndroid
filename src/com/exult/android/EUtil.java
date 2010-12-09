@@ -187,7 +187,7 @@ public class EUtil {
 	public static InputStream U7openStream(String nm)
 								throws IOException {
 		String fname = getSystemPath(nm);
-		return new BufferedInputStream(new FileInputStream(fname));
+		return new BufferedInputStream(new FileInputStream(fname), 0x8000);
 	}
 	public static void U7remove(String nm) {
 		String fname = U7exists(nm);

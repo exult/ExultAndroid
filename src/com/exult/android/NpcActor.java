@@ -97,7 +97,7 @@ public class NpcActor extends Actor {
 		if (getFlag(GameObject.paralyzed) || getMap() != gmap)
 			return false;
 		int oldtx = getTileX(), oldty = getTileY();
-		System.out.println(getName() + " stepping to " + t.tx + "," + t.ty);
+		// System.out.println(getName() + " stepping to " + t.tx + "," + t.ty);
 						// Get old chunk.
 		MapChunk olist = getChunk();
 		t.fixme();
