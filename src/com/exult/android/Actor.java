@@ -280,6 +280,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public int getAttribute(String nm) {
 		return 0;	// +++++++LATER
 	}
+	public final int getScheduleType() {
+		return scheduleType;
+	}
+	public final void setScheduleType(int s) {
+		//+++++++++++FINISH
+		scheduleType = (byte)s;
+	}
 	public final ActorAction getAction() {
 		return action;
 	}
@@ -442,8 +449,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *	@param move_flags Additional movement flags to consider for step.
 	 *	@return Returns 1 if so, else 0.
 	 */
-
-	protected boolean areaAvailable
+	public boolean areaAvailable
 		(
 		Tile t,			// Tz possibly updated.
 		Tile f,			// Step from here, or curpos if null.
@@ -899,7 +905,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return frames[i];
 		}
 		// Find frame, masking off rotation, or 0 if not found.
-		public int findUnrotated(byte frame) {
+		public int findUnrotated(int frame) {
 			for (int i = frames.length - 1; i > 0; i--)
 				if (((frame ^ frames[i])&0xf) == 0)
 					return i;

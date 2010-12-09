@@ -162,6 +162,43 @@ public abstract class GameObject extends ShapeID {
 		t1.tz = deltaTemp[0]; t2.tz = deltaTemp[1];
 		return t1.distance(t2);
 	}
+	public final void getCenterTile(Tile t) {
+		if (chunk == null) {
+			t.set(255*EConst.c_tiles_per_chunk, 255*EConst.c_tiles_per_chunk, 0);
+			return;
+		}
+		int frame = getFrameNum();
+		ShapeInfo info = getInfo();
+		int dx = (info.get3dXtiles(frame)-1) >> 1,
+	    	dy = (info.get3dYtiles(frame)-1) >> 1,
+	    	dz = (info.get3dHeight()*3)/4;
+	    int x = chunk.getCx()*EConst.c_tiles_per_chunk + tx - dx,
+	    	y = chunk.getCy()*EConst.c_tiles_per_chunk + ty - dy;
+	    t.set(x, y, lift + dz);
+	}
+	public final int getDirection(Tile t2) {
+		Tile t1 = new Tile();
+		getCenterTile(t1);
+		return EUtil.getDirection(t1.ty - t2.ty, t2.tx - t1.tx);
+	}
+	// Does this object block a given tile?
+	public final boolean blocks(Tile tile) {
+		int tx = getTileX(), ty = getTileY(), tz = getLift();
+		if (tx < tile.tx || ty < tile.ty || tz > tile.tz)
+			return false;		// Out of range.
+		ShapeInfo info = getInfo();
+		int ztiles = info.get3dHeight(); 
+		if (ztiles == 0 || !info.isSolid())
+			return false;		// Skip if not an obstacle.
+					// Occupies desired tile?
+		int frame = getFrameNum();
+		if (tile.tx > tx - info.get3dXtiles(frame) &&
+			tile.ty > ty - info.get3dYtiles(frame) &&
+			tile.tz < tz + ztiles)
+		return true;
+	return false;
+	}
+
 	public final GameObject getNext() {
 		return next;
 	}
@@ -374,6 +411,9 @@ public abstract class GameObject extends ShapeID {
 	}
 	public final void move(int newtx, int newty, int newlift) {
 		move(newtx, newty, newlift, -1);
+	}
+	public final void move(Tile t) {
+		move(t.tx, t.ty, t.tz, -1);
 	}
 	public void changeFrame(int frnum) {
 		gwin.addDirty(this);		// Set to repaint old area.
