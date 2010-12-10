@@ -25,9 +25,6 @@ public abstract class Gump extends ShapeID {
 		ShapeFrame shape = getShape();
 		x = (gwin.getWidth() - shape.getWidth())/2;
 		y = (gwin.getHeight() - shape.getHeight())/2;
-		System.out.println("Gump.setPos: sw = " + shape.getWidth() +
-			"sleft = " + shape.getXLeft());
-		System.out.println("Gump.setPos: x = " + x + ", y = " + y);
 	}
 	//	Get area covered by gump and its contents.
 	public void getDirty(Rectangle rect) {

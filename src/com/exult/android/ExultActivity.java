@@ -95,7 +95,12 @@ public class ExultActivity extends Activity {
     	private long lastB1Click = 0;
     	private int leftDownX = -1, leftDownY = -1;
     	private boolean dragging = false, dragged = false;
-    	
+    	@Override
+    	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
+    		System.out.println("Size changed.  Old w was " + oldw +
+    				", neww is " + w);
+    		gwin.getWin().setToScale(w, h);
+    	}
     	@Override
     	protected void onDraw(Canvas canvas){
     		if (GameTime > nextTickTime ) {
