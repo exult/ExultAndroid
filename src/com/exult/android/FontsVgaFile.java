@@ -81,15 +81,17 @@ public class FontsVgaFile extends GameSingletons {
 			return (ind);
 		}
 		// Just spaces and tabs:
-		private final static int passSpace(String text, int ind) {
-			int c, len = text.length();;
-			while (ind < len && ((c = text.charAt(ind)) == ' ' || c == '\t'))
+		private final static int passSpace(String text, int textlen, int ind) {
+			int c;
+			while (ind < textlen && 
+					((c = text.charAt(ind)) == ' ' || c == '\t'))
 				ind++;
 			return ind;
 		}
-		private final static int passWord(String text, int ind) {
-			int c, len = text.length();;
-			while (ind < len && (c = text.charAt(ind)) != 0 && (!isSpace(c) || 
+		private final static int passWord(String text, int textlen, int ind) {
+			int c;
+			while (ind < textlen && 
+					(c = text.charAt(ind)) != 0 && (!isSpace(c) || 
 											(c == '\f') || (c == 0xb)))
 				ind++;
 			return (ind);
@@ -207,7 +209,7 @@ public class FontsVgaFile extends GameSingletons {
 				case ' ':		// Space.
 				case '\t':
 					{		// Pass space.
-					int wrd = passSpace(text, ind);
+					int wrd = passSpace(text, textlen, ind);
 					if (wrd != ind)
 						{
 						int sw = getTextWidth(text, ind, wrd);
@@ -223,9 +225,9 @@ public class FontsVgaFile extends GameSingletons {
 					break;
 					}
 				}
-				if (cur_line >= max_lines)
+				if (cur_line >= max_lines || ind >= textlen)
 					break;
-				chr = ind < textlen ? text.charAt(ind) : 0;
+				chr = text.charAt(ind);
 				if (chr == '*') {
 					chr = text.charAt(++ind);
 					if (cur_line > 0)
@@ -235,7 +237,7 @@ public class FontsVgaFile extends GameSingletons {
 				if (ucase_next)	// Skip it.
 					++ind;
 							// Pass word & get its width.
-				int ewrd = passWord(text, ind);
+				int ewrd = passWord(text, textlen, ind);
 				int width;
 				if (ucase_next) {
 					int c = Character.toUpperCase(text.charAt(ind));

@@ -34,7 +34,8 @@ public class TextGump extends Gump {
 		int ind = start;
 		while (ind < textlen && text.charAt(ind) != '*' && 
 										ypos + textheight <= boxH) {
-			if (text.charAt(ind) == '~') {	// Empty paragraph?
+			int chr = text.charAt(ind);
+			if (chr == '~') {	// Empty paragraph?
 				ypos += textheight;
 				ind++;
 				continue;
@@ -65,6 +66,7 @@ public class TextGump extends Gump {
 		if (ind < textlen && text.charAt(ind) == '*')		// Saw end of page?
 			ind++;
 		gwin.setPainted();		// Force blit.
+		System.out.println("End of paintPage()");
 		return (ind);		// Return offset past end.
 	}
 	// Next page of book/scroll.
@@ -72,7 +74,6 @@ public class TextGump extends Gump {
 		if (curend >= text.length())
 			return false;
 		curtop = curend;// Start next page or pair of pages.
-		paint();			// Paint.  This updates curend.
 		return true;
 	}
 	public static class Book extends TextGump {
@@ -93,10 +94,10 @@ public class TextGump extends Gump {
 	}
 	public static class Scroll extends TextGump {
 		public Scroll() {
-			super(32);	//++++++FINISH:  game->get_shape("gumps/scroll")
+			super(55);	//++++++FINISH:  game->get_shape("gumps/scroll")
 		}
 		public Scroll(int fontnum) {
-			super(32, fontnum);//++++++FINISH:  game->get_shape("gumps/scroll")
+			super(55, fontnum);//++++++FINISH:  game->get_shape("gumps/scroll")
 		}
 		public void paint() {	
 			paintShape(x, y);	// The gump itself.
