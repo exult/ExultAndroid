@@ -811,9 +811,8 @@ public class GameWindow {
 			Conversation conv = GameSingletons.conv;
 			if (conv != null)
 				conv.paint();		// Conversation.
+			GameSingletons.gumpman.paint();
 			/*
-			gump_man.paint(true);
-
 					// Complete repaint?
 			if (!gx && !gy && gw == get_width() && gh == get_height() && mainActor)
 			{			// Look for lights.

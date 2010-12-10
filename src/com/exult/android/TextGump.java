@@ -43,11 +43,13 @@ public class TextGump extends Gump {
 			int epage = text.indexOf('*', ind);
 						// Look for line break.
 			int eol = text.indexOf('~', ind);
+			int eolchr = 0;
 			if (epage >= 0 && (eol < 0 || eol > epage))
 				eol = epage;
 			if (eol < 0)		// No end found?
 				eol = textlen;
-			char eolchr = text.charAt(eol);	// Save char. at EOL.
+			else
+				eolchr = text.charAt(eol);
 			int endoff = fonts.paintTextBox(gwin.getWin(),
 					font, text, ind, eol, x + boxX,
 					y + boxY + ypos, boxW, boxH - ypos, vlead, false, false);
@@ -60,14 +62,14 @@ public class TextGump extends Gump {
 				break;
 			}
 		}
-		if (text.charAt(ind) == '*')		// Saw end of page?
+		if (ind < textlen && text.charAt(ind) == '*')		// Saw end of page?
 			ind++;
 		gwin.setPainted();		// Force blit.
 		return (ind);		// Return offset past end.
 	}
 	// Next page of book/scroll.
 	boolean showNextPage() {
-		if (curend > text.length())
+		if (curend >= text.length())
 			return false;
 		curtop = curend;// Start next page or pair of pages.
 		paint();			// Paint.  This updates curend.

@@ -86,7 +86,7 @@ public class UsecodeMachine extends GameSingletons {
 		modifiedMap = true;
 	}
 	public final void setBook(TextGump b) {
-		//++++++++++++ gumpman.close(book);
+		gumpman.closeGump(book);
 		book = b;
 	}
 	public final int getCurrentFunction() {
@@ -1432,7 +1432,7 @@ public class UsecodeMachine extends GameSingletons {
 			while (book.showNextPage()) /* ++++++ && 
 					Get_click(x, y, Mouse::hand, 0, false, book, true)) */
 				ExultActivity.getClick(clickPoint);
-			gwin.paint();
+			gwin.setAllDirty();
 		}
 						// Normal conversation:
 		else if (conv.isNpcTextPending())

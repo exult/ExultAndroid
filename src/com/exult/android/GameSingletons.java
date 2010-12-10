@@ -11,6 +11,7 @@ public class GameSingletons {
 	public static UsecodeMachine ucmachine;
 	public static Conversation conv;	// This stays null until needed.
 	public static PartyManager partyman;
+	public static GumpManager gumpman;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();
@@ -21,5 +22,6 @@ public class GameSingletons {
 		fonts = new FontsVgaFile();
 		ucmachine = gwin.getUsecode();
 		partyman = new PartyManager();
+		gumpman = new GumpManager();
 	}
 }

@@ -10,7 +10,9 @@ public abstract class Gump extends ShapeID {
 	
 	public Gump(int shnum) {
 		super(shnum, 0, ShapeFiles.GUMPS_VGA);
+		elems = new Vector<GumpWidget>();
 		setPos();
+		gumpman.addGump(this);
 	}
 	public final int getX() {
 		return x;
