@@ -206,4 +206,29 @@ public class EFile {
 	public final static String SFX_BLASTER_SI	= "jmsisfx.flx";
 	public final static String SFX_MIDIFILE	= "midisfx.flx";
 
+	// Sections in the exult_xx.flx file, from 'data/exult_xx_flx.h':
+	public final static int	EXULT_BG_FLX_BGMAP_SHP = 0;
+	public final static int	EXULT_BG_FLX_DEFAULTKEYS_TXT = 1;
+	public final static int	EXULT_BG_FLX_MR_FACES_SHP = 2;
+	public final static int	EXULT_BG_FLX_U7MENUPAL_PAL = 3;
+	public final static int	EXULT_BG_FLX_BG_PAPERDOL_VGA = 4;
+	public final static int	EXULT_BG_FLX_BG_MR_FACES_VGAj = 5;
+	public final static int	EXULT_BG_FLX_BODIES_TXT = 6;
+	public final static int	EXULT_BG_FLX_PAPERDOL_INFO_TXT = 7;
+	public final static int	EXULT_BG_FLX_SHAPE_INFO_TXT = 8;
+	public final static int	EXULT_BG_FLX_SHAPE_FILES_TXT = 9;
+	public final static int	EXULT_BG_FLX_AVATAR_DATA_TXT = 10;
+	public final static int	EXULT_BG_FLX_BLENDS_DAT = 11;
+	public final static int	EXULT_BG_FLX_CONTAINER_DAT = 12;
+	
+	public final static int	EXULT_SI_FLX_SIMAP_SHP = 0;
+	public final static int	EXULT_SI_FLX_DEFAULTKEYS_TXT = 1;
+	public final static int	EXULT_SI_FLX_BODIES_TXT = 2;
+	public final static int	EXULT_SI_FLX_PAPERDOL_INFO_TXT = 3;
+	public final static int	EXULT_SI_FLX_SHAPE_INFO_TXT = 4;
+	public final static int	EXULT_SI_FLX_SHAPE_FILES_TXT = 5;
+	public final static int	EXULT_SI_FLX_AVATAR_DATA_TXT = 6;
+	public final static int	EXULT_SI_FLX_BLENDS_DAT = 7;
+	public final static int	EXULT_SI_FLX_CONTAINER_DAT = 8;
+	
 }

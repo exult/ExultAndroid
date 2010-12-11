@@ -9,7 +9,7 @@ public final class DataUtils {
 	/*
 	 *	Get # entries of binary data file (with Exult extension).
 	 */
-	public static int Read_count(InputStream in) {
+	private static int Read_count(InputStream in) {
 		int cnt = EUtil.Read1(in);	// How the originals did it.
 		if (cnt == 255)
 			cnt = EUtil.Read2(in);	// Exult extension.
@@ -18,7 +18,7 @@ public final class DataUtils {
 	/*
 	 *	Generic base data-agnostic reader class.
 	 */
-	public static class Base_reader {
+	public static class BaseReader {
 		protected boolean haveversion;
 		protected void read_data(InputStream in, int index, int version,
 				boolean patch, int game, boolean binary)
@@ -33,7 +33,7 @@ public final class DataUtils {
 			for (int j = 0; j < cnt; j++)
 				read_data(in, j, vers, patch, game, true);
 			}
-		public Base_reader(boolean h) {
+		public BaseReader(boolean h) {
 			haveversion = h;
 		}
 		void parse(Vector<byte[]> strings, int version, 
@@ -74,28 +74,28 @@ public final class DataUtils {
 		}
 	}
 
-	public static class ID_reader_functor {
+	public static class IDReaderFunctor {
 		public int read(DataInputStream in, int index, int version, 
 				boolean binary)
 			{ return binary ? EUtil.Read2(in) : EUtil.ReadInt(in); }
 	}
-	public abstract static class Reader_functor {
+	public abstract static class ReaderFunctor {
 		public abstract boolean read(InputStream in, int version, 
 				boolean patch, int game, ShapeInfo info);
 	}
-	public abstract static class Post_functor {
-		abstract void read(DataInputStream in, int version, boolean patch,
-				int game, ShapeInfo info);
+	public static class PostFunctor {
+		void read(DataInputStream in, int version, boolean patch,
+				int game, ShapeInfo info) {}
 	}
 
 	/*
 	 *	Generic functor-based reader class for maps.
 	 */
-	public static class Functor_multidata_reader extends Base_reader {
+	public static class FunctorMultidataReader extends BaseReader {
 		ShapeInfo info[];
-		Reader_functor reader;
-		Post_functor postread;
-		ID_reader_functor idread;
+		ReaderFunctor reader;
+		PostFunctor postread;
+		IDReaderFunctor idread;
 		public void read_data(DataInputStream in, int index, int version,
 			boolean patch, int game, boolean binary) {
 			int id = idread.read(in, index, version, binary);
@@ -105,8 +105,8 @@ public final class DataUtils {
 				postread.read(in, version, patch, game, inf);
 			}
 		}
-		public Functor_multidata_reader(ShapeInfo nfo[],
-				Reader_functor rd, Post_functor post, ID_reader_functor idrd, 
+		public FunctorMultidataReader(ShapeInfo nfo[],
+				ReaderFunctor rd, PostFunctor post, IDReaderFunctor idrd, 
 									boolean hvers) {
 			super(hvers);
 			info = nfo;

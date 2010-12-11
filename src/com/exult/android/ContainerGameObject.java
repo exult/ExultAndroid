@@ -289,18 +289,16 @@ public class ContainerGameObject extends IregGameObject {
 	public final boolean showGump(int event) {
 		ShapeInfo inf = getInfo();
 		int gump;
-		/* ++++++++FINISH
-		if (inf.has_object_flag(getFrameNum(),
+		/* ++++++FINISH
+		if (inf.hasObjectFlag(getFrameNum(),
 				inf.hasQuality() ? getQuality() : -1, Frame_flags.force_usecode))
 				// Run normal usecode fun.
 			return false;
-		else if ((gump = inf.getGumpShape()) >= 0)
+		else */ if ((gump = inf.getGumpShape()) >= 0)
 			{
-			Gump_manager *gump_man = gumpman;
-			gump_man.add_gump(this, gump);
+			gumpman.addGump(this, gump, false);
 			return true;
-			}
-		*/
+		}
 		return false;
 	}
 	/*

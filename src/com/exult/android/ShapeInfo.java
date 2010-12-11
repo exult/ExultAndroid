@@ -1,8 +1,9 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
+import java.io.InputStream;
 import java.io.IOException;
 
-public class ShapeInfo {
+public final class ShapeInfo {
 	private byte tfa[] = new byte[3];
 	// 3D dimensions in tiles:
 	private byte dims[] = new byte[3];		//   (x, y, z)
@@ -291,21 +292,12 @@ modified_flags |= field_type_flag;
 field_type = (char)sh;
 }
 }
-
-int get_gump_shape() {
-{ return gump_shape; }
-int get_gump_font() {
-{ return gump_font; }
-void set_gump_data(int sh, int fnt)
-{
-if (gump_shape != (short)sh || gump_font != (short)sh)
-{
-modified_flags |= gump_shape_flag;
-gump_shape = (short) sh;
-gump_font = (short) fnt;
-}
-}
 */
+	public int getGumpShape() { 
+		return gumpShape;
+	}
+	public int getGumpFont() {
+		return gumpFont; }
 	public short getShapeFlags() {
 		return shapeFlags; }
 	/*
@@ -516,8 +508,8 @@ int get_weapon_offset(int frame)
 						// Reflect.  Bit 32==horizontal.
 			return curframe ^ ((quads%2)<<5);
 	}
-	public static void read(int num_shapes, ShapeInfo info[]) {
-		int i, cnt;
+	public static void read(int num_shapes, ShapeInfo info[], int game) {
+		int i;
 		ShapeInfo s;
 		// ShapeDims
 
@@ -565,5 +557,33 @@ int get_weapon_offset(int frame)
 		} catch (IOException e) { }
 		
 		//++++++++++LOTS MORE
+		DataUtils.PostFunctor null_post = new DataUtils.PostFunctor();
+		DataUtils.IDReaderFunctor idReader = new DataUtils.IDReaderFunctor();
+		
+		DataUtils.FunctorMultidataReader gump = 
+			new DataUtils.FunctorMultidataReader(
+				info, new GumpReaderFunctor(), null_post, idReader, true);
+		if (game == EConst.BLACK_GATE || game == EConst.SERPENT_ISLE)
+			gump.read(game, game == EConst.BLACK_GATE
+				? EFile.EXULT_BG_FLX_CONTAINER_DAT
+				: EFile.EXULT_SI_FLX_CONTAINER_DAT);
+		else
+			gump.read(EFile.CONTAINER, false, game);
+		gump.read(EFile.PATCH_CONTAINER, true, game);
 	}
+	/*
+	 * Readers
+	 */
+	static class GumpReaderFunctor extends DataUtils.ReaderFunctor {
+		public boolean read(InputStream in, int version, 
+							boolean patch, int game, ShapeInfo info) {
+			info.gumpShape = (short) EUtil.Read2(in);
+			if (version >= 2)
+				info.gumpFont = (short)EUtil.Read2(in);
+			else
+				info.gumpFont = -1;
+			return true;
+		}
+	}
+
 }

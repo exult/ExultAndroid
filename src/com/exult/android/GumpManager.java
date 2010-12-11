@@ -11,6 +11,9 @@ public class GumpManager extends GameSingletons {
 	public void addGump(Gump g) {
 		openGumps.addLast(g);
 	}
+	public void addGump(GameObject obj, int shapenum, boolean actorgump) {
+		//+++++++++++FINISH
+	}
 	public boolean closeGump(Gump g) {
 		return g == null ? false : openGumps.remove(g);
 	}
