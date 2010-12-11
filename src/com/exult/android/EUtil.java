@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.FileInputStream;
+import java.io.DataInputStream;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +74,30 @@ public class EUtil {
 		} catch (IOException e) {
 			return -1;
 		}
+	}
+	public static final byte Read1(InputStream in) {
+		try {
+			return (byte)(in.read()&0xff);
+		} catch (IOException e) {
+			return (byte)-1;
+		}
+	}
+	// Read integer from a text file.
+	public static final int ReadInt(DataInputStream in) {
+		return ReadInt(in, 0);
+	}
+	public static final int ReadInt(DataInputStream in, int def) {
+		byte b = 0;
+		int i = -1;
+		try {
+			i = in.readInt();
+		} catch (IOException e) {
+			return def;
+		}
+		try {
+			while ((b = in.readByte()) != '/');
+		} catch (IOException e) { }
+		return i;
 	}
 	private static String baseToUppercase(String str, int count) {
 		if (count <= 0) return str;
@@ -158,6 +183,7 @@ public class EUtil {
 	}
 	public static void initSystemPaths() {
 		String base = "/sdcard/Games/exult/blackgate";	// FOR NOW.
+		addSystemPath("<DATA>", base);
 		addSystemPath("<PATCH>", base + "/PATCH");
 		addSystemPath("<STATIC>", base + "/STATIC");
 		addSystemPath("<GAMEDAT>", base + "/GAMEDAT");

@@ -72,6 +72,12 @@ public class EConst {
 	 	int delta = x - y;
 	 	return delta < -c_num_tiles/2 ? delta + c_num_tiles :
 	 	       delta >= c_num_tiles/2 ? delta - c_num_tiles : delta;
-	 }
-
+	}
+	// Game types.
+	public static final int // enum Exult_Game
+		NONE = 0,
+		BLACK_GATE = 1,
+		SERPENT_ISLE = 2,
+		EXULT_DEVEL_GAME = 3,		// One that we develop.
+		EXULT_MENU_GAME = 4;		// Game type for the exult menu
 }

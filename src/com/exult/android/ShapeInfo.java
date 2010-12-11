@@ -1,7 +1,6 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
 import java.io.IOException;
-import java.util.TreeMap;
 
 public class ShapeInfo {
 	private byte tfa[] = new byte[3];
