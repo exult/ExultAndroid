@@ -12,6 +12,7 @@ public class ContainerGameObject extends IregGameObject {
 			int tiley, int lft,	int res) {
 		super(shapenum, framenum, tilex, tiley, lft);
 		resistance = (byte)res;
+		objects = new ObjectList();
 	}
 	public void remove(GameObject obj) {
 		if (objects.isEmpty())
@@ -339,7 +340,7 @@ public class ContainerGameObject extends IregGameObject {
 	/*
 	 *	Recursively count all objects of a given shape.
 	 */
-	public int count_objects
+	public int countObjects
 		(
 		int shapenum,			// Shape#, or EConst.c_any_shapenum for any.
 		int qual,			// Quality, or EConst.c_any_qual for any.
