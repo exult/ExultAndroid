@@ -306,9 +306,10 @@ gump_shape = (short) sh;
 gump_font = (short) fnt;
 }
 }
-
-unsigned short get_shape_flags() {
-{ return shape_flags; }
+*/
+	public short getShapeFlags() {
+		return shapeFlags; }
+	/*
 void set_shape_flags(unsigned short flags)
 {
 if (shape_flags != flags)
@@ -318,8 +319,11 @@ modified_flags |= diff;
 shape_flags = flags;
 }
 }
-bool get_shape_flag(int tf) {
-{ return (shape_flags & (1U << tf)) != 0; }
+*/
+	public boolean getShapeFlag(int tf) { 
+		return (shapeFlags & (1 << tf)) != 0;
+	}
+/*
 void set_shape_flag(int tf, int mod)
 {
 if (!(shape_flags & (1U << tf)))
@@ -336,24 +340,24 @@ modified_flags |= (1U << mod);
 shape_flags &= ~(1U << tf);
 }
 }
-
-bool has_usecode_events() {
-{ return get_shape_flag(usecode_events); }
-bool is_body_shape() {
-{ return get_shape_flag(is_body); }
-bool is_lightweight() {
-{ return get_shape_flag(lightweight); }
-bool has_quantity_frames() {
-{ return get_shape_flag(quantity_frames); }
-bool is_container_locked() {
-{ return get_shape_flag(locked); }
-bool is_explosive() {
-{ return get_shape_flag(is_volatile); }
-bool is_jawbone() {
-{ return get_shape_flag(jawbone); }
-bool is_mirror() {
-{ return get_shape_flag(mirror); }
-
+*/
+	public final boolean hasUsecodeEvents() {
+		return getShapeFlag(usecode_events); }
+	public final boolean isBodyShape() {
+		return getShapeFlag(is_body); }
+	public final boolean isLightweight() {
+		return getShapeFlag(lightweight); }
+	public final boolean hasQuantityFrames() {
+		return getShapeFlag(quantity_frames); }
+	public final boolean isContainerLocked() {
+		return getShapeFlag(locked); }
+	public final boolean isExplosive() {
+		return getShapeFlag(is_volatile); }
+	public final boolean isJawbone() {
+		return getShapeFlag(jawbone); }
+	public final boolean isMirror() {
+		return getShapeFlag(mirror); }
+/*
 unsigned byte get_actor_flags() {
 { return actor_flags; }
 void set_actor_flags(byte flags)

@@ -359,7 +359,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (obj != null && obj.getInfo().hasQuantity()) {
 			UsecodeValue one = UsecodeValue.getOne();
 						// If not in world, don't delete!
-			if (newquant == 0 && obj.getChunk() == null)
+			if (newquant == 0 && obj.isPosInvalid())
 				return one;
 			int oldquant = obj.getQuantity();
 			int delta = newquant - oldquant;
@@ -870,7 +870,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						// Get object, but don't pop yet.
 			GameObject obj = last_created.getLast();
 			// Might not have been removed from world yet.
-			if (obj.getOwner() == null && obj.getChunk() == null)
+			if (obj.getOwner() == null && obj.isPosInvalid())
 						// Don't check vol.  Causes failures.
 				ret = cont.add(obj, true);
 			if (ret)		// Pop only if added.  Fixes chest/

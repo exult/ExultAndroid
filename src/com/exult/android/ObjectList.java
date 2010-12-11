@@ -77,6 +77,9 @@ public class ObjectList {
 			cur = first = l.first;
 			stop = null;
 		}
+		public void reset() {
+			cur = first; stop = null;
+		}
 		public GameObject next() {
 			if (cur == stop)
 				return null;
@@ -88,7 +91,7 @@ public class ObjectList {
 	}
 	public static class NonflatObjectIterator extends ObjectIterator {
 		private GameObject nonflats;
-		private void reset()
+		public void reset()
 			{ this.cur = nonflats; this.stop = null; }
 		public NonflatObjectIterator(ObjectList l, GameObject firstNonflat) { 
 		super(l);

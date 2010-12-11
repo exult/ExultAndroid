@@ -76,5 +76,9 @@ public class IregGameObject extends GameObject {
 							tilex, tiley, lift, 0);
 		} else
 			return new IregGameObject(shnum, frnum, tilex, tiley, lift);
+	}				// Write common IREG data.
+	public final int getCommonIregSize() {
+		return (getShapeNum() >= 1024 || getFrameNum() >= 64) 
+								? 7 : 5; 
 	}
 }

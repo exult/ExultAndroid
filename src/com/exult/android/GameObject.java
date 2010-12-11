@@ -1,8 +1,9 @@
 package com.exult.android;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Vector;
 import android.graphics.Point;
-import java.lang.ref.WeakReference;
+import java.io.OutputStream;
 
 public abstract class GameObject extends ShapeID {
 	//	Flags
@@ -227,6 +228,29 @@ public abstract class GameObject extends ShapeID {
 	public final int getVolume() {
 		return getInfo().getVolume();
 	}
+	//	Get weight in 1/10 stones.
+	public int getWeight() {
+		return getWeight(getShapeNum(), getQuantity());
+	}
+	public static int getWeight(int shnum, int quant) {
+		ShapeInfo info = ShapeID.getInfo(shnum);
+		int wt = quant * info.getWeight();
+		/* +++++++++FINISH
+		if (info.isLightweight())
+		{			// Special case:  reagents, coins.
+			wt /= 10;
+			if (wt <= 0) wt = 1;
+		}
+		*/
+		if (info.hasQuantity())
+			if (wt <= 0) wt = 1;
+		return wt;
+	}
+	public int getMaxWeight() {
+		// Looking outwards for NPC.
+		ContainerGameObject own = getOwner();
+		return own != null ? own.getMaxWeight() : 0;
+	}
 	public final int getQuality() {
 		return quality;
 	}
@@ -374,6 +398,9 @@ public abstract class GameObject extends ShapeID {
 	public final void setInvalid() {
 		chunk = null;
 	}
+	public final boolean isPosInvalid() {
+		return chunk == null;
+	}
 	public final MapChunk getChunk() {
 		return chunk;
 	}
@@ -475,6 +502,8 @@ public abstract class GameObject extends ShapeID {
 	public boolean isFindable() { 
 		return true; 
 	}
+	public void writeIreg(OutputStream out) {
+	}
 	public int getIregSize() {
 		return 0;
 	}
@@ -497,9 +526,13 @@ public abstract class GameObject extends ShapeID {
 	public Actor asActor() {
 		return null;
 	}
-	//	Containers should override this.
+	//	Containers should override these.
 	public int countObjects(int shapenum, int qual, int framenum) {
 		return 0;
+	}					// Get contained objs.
+	public int getObjects(Vector<GameObject> vec, int shapenum, int qual,
+								int framenum) {
+		return 0; 
 	}
 	public void elementsRead() {
 	}
@@ -511,7 +544,22 @@ public abstract class GameObject extends ShapeID {
 	public final boolean add(GameObject obj, boolean dont_check) {
 		return add(obj, dont_check, false, false);
 	}
-	
+	public int addQuantity(int delta, int shapenum, int qual,
+								int framenum, boolean dontcreate) {
+		return delta; 
+	}
+	public int createQuantity(int delta, int shapenum, int qual,
+						int framenum, boolean temporary) {
+		return delta; 
+	}
+	public int removeQuantity(int delta, int shapenum, int qual, int framenum) {
+		return delta;
+	} 
+	public GameObject findItem(int shapenum, int qual, int framenum) {
+		return null; 
+	}
+	public void deleteContents() {
+	}
 	/*
 	 * Compare objects for rendering.
 	 */
