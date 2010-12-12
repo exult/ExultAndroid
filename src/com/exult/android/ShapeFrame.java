@@ -323,6 +323,9 @@ public class ShapeFrame {
 	public final int getHeight()
 		{ return yabove + ybelow + 1; 
 		}
+	public final int getXRight() {
+		return xright;
+	}
 	public final int getXLeft() {
 		return xleft;
 	}

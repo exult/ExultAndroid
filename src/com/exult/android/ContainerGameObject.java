@@ -14,6 +14,9 @@ public class ContainerGameObject extends IregGameObject {
 		resistance = (byte)res;
 		objects = new ObjectList();
 	}
+	public ObjectList.ObjectIterator getIterator() {
+		return objects.getIterator();
+	}
 	public void remove(GameObject obj) {
 		if (objects.isEmpty())
 			return;
