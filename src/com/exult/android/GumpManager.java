@@ -178,8 +178,9 @@ public class GumpManager extends GameSingletons {
 		removeGump(g);
 	}
 	public void removeGump(Gump g) {
-		if (g != null)
-			openGumps.remove(g);	
+		if (g == null)
+			return;
+		openGumps.remove(g);	
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 				// And resume queue if last.
 				// Gets messed up upon 'load'.

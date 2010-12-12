@@ -20,6 +20,9 @@ public abstract class Gump extends ShapeID {
 		setPos();
 		gumpman.addGump(this);
 	}
+	public void close() {
+		gumpman.closeGump(this);
+	}
 	public final int getX() {
 		return x;
 	}
@@ -106,9 +109,7 @@ public abstract class Gump extends ShapeID {
 									int checkx, int checky) {
 			objectArea.set(x, y, w, h);
 			checkx += 16; checky -= 12;
-			/* +++++++FINISH
-			elems.push_back(new Checkmark_button(this, checkx, checky));
-			*/
+			elems.add(new GumpWidget.Checkmark(this, checkx, checky));
 		}
 		public GameObject getContainer() {
 			return container;

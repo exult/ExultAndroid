@@ -58,16 +58,22 @@ public class TimeQueue {
 		if (entries.isEmpty())
 			return;
 		ListIterator<QueueEntry> it = entries.listIterator();
-		while (it.hasNext()) {
-			QueueEntry ent = it.next();
-			if (ctime < ent.time)
-				break;
-			TimeSensitive obj = ent.handler;
-			if (obj.alwaysHandle()) {
-				obj.removedFromQueue();
-				Object udata = ent.udata;
-				entries.remove();
-				obj.handleEvent(ctime, udata);
+		boolean tryAgain = true;
+		while (tryAgain) {
+			tryAgain = false;
+			while (it.hasNext()) {
+				QueueEntry ent = it.next();
+				if (ctime < ent.time)
+					return;
+				TimeSensitive obj = ent.handler;
+				if (obj.alwaysHandle()) {
+					obj.removedFromQueue();
+					Object udata = ent.udata;
+					entries.remove();
+					obj.handleEvent(ctime, udata);
+					tryAgain = true;
+					break;	// So we don't crash on the iterator.
+				}
 			}
 		}
 	}
