@@ -182,11 +182,12 @@ public class EUtil {
 		pathMap.put(key, value);
 	}
 	public static void initSystemPaths() {
-		String base = "/sdcard/Games/exult/blackgate";	// FOR NOW.
+		String base = "/sdcard/Games/exult";
+		String bgbase = base + "/blackgate";	// FOR NOW.
 		addSystemPath("<DATA>", base);
-		addSystemPath("<PATCH>", base + "/PATCH");
-		addSystemPath("<STATIC>", base + "/STATIC");
-		addSystemPath("<GAMEDAT>", base + "/GAMEDAT");
+		addSystemPath("<PATCH>", bgbase + "/PATCH");
+		addSystemPath("<STATIC>", bgbase + "/STATIC");
+		addSystemPath("<GAMEDAT>", bgbase + "/GAMEDAT");
 	}
 	public static RandomAccessFile U7open(String nm, boolean hardfail)
 												throws IOException {

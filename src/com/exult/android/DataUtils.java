@@ -50,9 +50,9 @@ public final class DataUtils {
 		}
 			// Binary data file.
 		void read(String fname, boolean patch, int game) {
-			DataInputStream fin;
+			InputStream fin;
 			try {
-				fin = new DataInputStream(EUtil.U7openStream(fname));
+				fin = EUtil.U7openStream(fname);
 				read_binary_internal(fin, patch, game);
 				fin.close();
 			} catch (IOException e) {
@@ -75,16 +75,16 @@ public final class DataUtils {
 	}
 
 	public static class IDReaderFunctor {
-		public int read(DataInputStream in, int index, int version, 
+		public int read(InputStream in, int index, int version, 
 				boolean binary)
-			{ return binary ? EUtil.Read2(in) : EUtil.ReadInt(in); }
+			{ return binary ? EUtil.Read2(in) : EUtil.ReadInt((DataInputStream)in); }
 	}
 	public abstract static class ReaderFunctor {
 		public abstract boolean read(InputStream in, int version, 
 				boolean patch, int game, ShapeInfo info);
 	}
 	public static class PostFunctor {
-		void read(DataInputStream in, int version, boolean patch,
+		void read(InputStream in, int version, boolean patch,
 				int game, ShapeInfo info) {}
 	}
 
@@ -96,7 +96,7 @@ public final class DataUtils {
 		ReaderFunctor reader;
 		PostFunctor postread;
 		IDReaderFunctor idread;
-		public void read_data(DataInputStream in, int index, int version,
+		public void read_data(InputStream in, int index, int version,
 			boolean patch, int game, boolean binary) {
 			int id = idread.read(in, index, version, binary);
 			if (id >= 0) {
