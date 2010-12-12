@@ -57,9 +57,10 @@ public class TimeQueue {
 	public final void activateAlways(int ctime) {
 		if (entries.isEmpty())
 			return;
-		ListIterator<QueueEntry> it = entries.listIterator();
+		
 		boolean tryAgain = true;
 		while (tryAgain) {
+			ListIterator<QueueEntry> it = entries.listIterator();
 			tryAgain = false;
 			while (it.hasNext()) {
 				QueueEntry ent = it.next();
