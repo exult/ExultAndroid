@@ -57,6 +57,12 @@ public abstract class Gump extends ShapeID {
 	public GameObject getContainer() {
 		return null;
 	}
+	public void getShapeRect(Rectangle r, GameObject obj) {
+		r.set(0,0,0,0);	// Overridden for containers.
+	}
+	public GameObject findObject(int mx, int my) {
+		return null;
+	}
 	public boolean isPersistent() {
 		return false;
 	}
@@ -113,6 +119,34 @@ public abstract class Gump extends ShapeID {
 		}
 		public GameObject getContainer() {
 			return container;
+		}
+		public void getShapeRect(Rectangle r, GameObject obj) {
+			ShapeFrame s = obj.getShape();
+			if (s == null)
+				r.set(0, 0, 0, 0);
+			r.set(x + objectArea.x + obj.getTx() - s.getXLeft(), 
+					 y + objectArea.y + obj.getTy() - s.getYAbove(), 
+						 s.getWidth(), s.getHeight());
+		}
+		public GameObject findObject(int mx, int my) {
+			int cnt = 0;
+			if (container == null)
+				return null;
+			ObjectList.ObjectIterator iter = container.getIterator();
+			GameObject obj, found = null;
+			Rectangle box = new Rectangle();
+			while ((obj = iter.next()) != null) {
+				getShapeRect(box, obj);
+				if (box.hasPoint(mx, my)) {
+					ShapeFrame s = obj.getShape();
+					int ox = x + objectArea.x + obj.getTx(),
+						oy = y + objectArea.y + obj.getTy();
+					if (s.hasPoint(mx-ox, my-oy))
+						found = obj;
+				}
+			}
+							// ++++++Return top item.
+			return found;
 		}
 		public void paint() {
 			super.paint();

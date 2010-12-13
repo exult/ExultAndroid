@@ -33,6 +33,12 @@ public class IregGameObject extends GameObject {
 		else if (flag >= 32 && flag < 64)
 			flags2 &= ~(1 << (flag-32));
 	}
+	public ContainerGameObject getOwner() {
+		return owner;
+	}
+	public void setOwner(ContainerGameObject o) {
+		owner = o;
+	}
 	public static IregGameObject create(ShapeInfo info, int shnum, int frnum) {
 		return create(info, shnum, frnum, 0, 0, 0);
 	}

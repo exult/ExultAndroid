@@ -2,7 +2,7 @@ package com.exult.android;
 import java.util.LinkedList;
 import java.util.ListIterator;
 
-public class GumpManager extends GameSingletons {	
+public final class GumpManager extends GameSingletons {	
 	private static int gumpCount = 0;			// For staggering them.
 	private LinkedList<Gump> openGumps;
 	private int nonPersistentCount;
@@ -28,11 +28,20 @@ public class GumpManager extends GameSingletons {
 		}
 		return false;
 	}
+	public boolean showingGumps() {
+		return showingGumps(false);
+	}
+	public boolean gumpMode() {
+		return nonPersistentCount > 0;
+	}
 	/*
 	 *	Find the highest gump that the mouse cursor is on.
 	 *
 	 *	Output:	.gump, or null if none.
 	 */
+	public Gump findGump(int x, int y) {
+		return findGump(x, y, false);
+	}
 	public Gump findGump
 		(
 		int x, int y,			// Pos. on screen.

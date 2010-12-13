@@ -8,7 +8,7 @@ import android.graphics.Point;
 
 import android.graphics.Canvas;
 
-public class GameWindow {
+public class GameWindow extends GameSingletons {
 	private static GameWindow instance;
 	private EffectsManager effects;	// Manages speciall effects.
 	private Vector<GameMap> maps;	// Hold all terrain.
@@ -166,12 +166,10 @@ public class GameWindow {
 	 */
 	public final Rectangle getShapeRect(Rectangle r, GameObject obj) {
 		if (obj.getChunk() == null) {		// Not on map?
-			/* +++++FINISH
-			Gump *gump = gump_man.find_gump(obj);
-			if (gump)
-				return gump.get_shape_rect(obj);
+			Gump gump = gumpman.findGump(obj);
+			if (gump != null)
+				gump.getShapeRect(r, obj);
 			else
-			*/
 				r.set(0, 0, 0, 0);
 				return r;
 			}
@@ -293,12 +291,10 @@ public class GameWindow {
 			scrolltx = EConst.INCR_TILE(scrolltx);
 			scrollBounds.x = EConst.INCR_TILE(scrollBounds.x);
 		}
-		/*
-		if (gump_man.showing_gumps()) {		// Gump on screen?
-			paint();
+		if (gumpman.showingGumps()) {		// Gump on screen?
+			setAllDirty();
 			return;
 		}
-		*/
 		map.readMapData();		// Be sure objects are present.
 		synchronized(win) {
 		if (toleft) {			// Shift image to right.
@@ -326,13 +322,11 @@ public class GameWindow {
 			scrollty = EConst.INCR_TILE(scrollty);
 			scrollBounds.y = EConst.INCR_TILE(scrollBounds.y);
 		}
-		/*
-		if (gump_man.showing_gumps())			// Gump on screen?
+		if (gumpman.showingGumps())			// Gump on screen?
 			{
-			paint();
+			setAllDirty();
 			return;
 			}
-		*/
 		map.readMapData();		// Be sure objects are present.
 		synchronized(win) {
 		if (up) {
@@ -508,9 +502,10 @@ public class GameWindow {
 				mainActor.in_usecode_control() || 
 				mainActor.get_schedule_type() == Schedule::sleep */)
 			return;			// Zzzzz....
-		/*++++++++++
-		if (gump_man.gump_mode() && !gump_man.gumps_dont_pause_game())
+		
+		if (gumpman.gumpMode())
 			return;
+		/*++++++++++
 		if (moving_barge)
 			{			// Want to move center there.
 			int lift = mainActor.get_lift();
@@ -549,10 +544,8 @@ public class GameWindow {
 		*/
 			{
 			mainActor.stop();	// Stop and set resting state.
-			/* ++++++
-			if (!gump_man.gump_mode())
-					mainActor.get_followers();
-			*/
+			if (!gumpman.gumpMode())
+					mainActor.getFollowers();
 			}
 	}
 	/*
@@ -615,16 +608,15 @@ public class GameWindow {
 		int x, int y			// Coords. in window.
 		) {
 		GameObject obj;
-		/* ++++FINISH
 						// Look for obj. in open gump.
-		Gump *gump = gump_man.find_gump(x, y);
-		if (gump)
-		{
-			obj = gump.find_object(x, y);
-			if (!obj) obj = gump.get_cont_or_actor(x, y);
-		}
-		else				// Search rest of world.
-		*/
+		Gump gump = gumpman.findGump(x, y);
+		if (gump != null) {
+			obj = gump.findObject(x, y);
+			/* +++++++FINISH
+			if (obj == null) 
+				obj = gump.get_cont_or_actor(x, y);
+			*/
+		} else				// Search rest of world.
 			obj = findObject(x, y);
 		/*
 						// All other cases:  unselect.
@@ -803,15 +795,15 @@ public class GameWindow {
 			else
 				win.fill8((byte)0);
 			effects.paint();		// Draw sprites.
-			/*
-			gump_man.paint(false);
+			gumpman.paint();
+			/*+++++++++++++++
 			if (dragging) dragging.paint();	// Paint what user is dragging.
 			*/
 			effects.paintText();
 			Conversation conv = GameSingletons.conv;
 			if (conv != null)
 				conv.paint();		// Conversation.
-			GameSingletons.gumpman.paint();
+			
 			/*
 					// Complete repaint?
 			if (!gx && !gy && gw == get_width() && gh == get_height() && mainActor)

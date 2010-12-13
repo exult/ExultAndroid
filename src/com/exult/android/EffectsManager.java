@@ -123,15 +123,12 @@ public class EffectsManager extends GameSingletons {
 			if (r == null)
 				r = new Rectangle();
 			if (item != null) {
-				/*
-				Gump_manager *gumpman = gwin->get_gump_man();
 							// See if it's in a gump.
-				Gump *gump = gumpman->find_gump(item);
-				if (gump)
-					return gump->get_shape_rect(item);
-				else 
-				*/
-				{
+				Gump gump = gumpman.findGump(item);
+				if (gump != null) {
+					gump.getShapeRect(r,item);
+					System.out.println("Text posX = " + r.x);
+				} else  {
 					GameObject outer = item.getOutermost();
 					if (outer.getChunk() == null) {
 						r.set(0,0,1,1);	// Error?
