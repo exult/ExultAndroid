@@ -206,6 +206,30 @@ public final class GumpManager extends GameSingletons {
 				tqueue.resume(TimeQueue.ticks);
 		}
 	}
+	/*
+	 *	End gump mode.
+	 */
+	public void closeAllGumps(boolean pers) {
+		boolean removed = false;
+		ListIterator<Gump> iter = openGumps.listIterator();
+		while (iter.hasNext()) {		// Remove all gumps.
+			Gump gump = iter.next();
+			// Don't delete if persistant or modal.
+			if ((!gump.isPersistent() || pers) && !gump.isModal()) {
+				if (!gump.isPersistent())
+					tqueue.resume(TimeQueue.ticks);
+				iter.remove();
+				removed = true;
+			}
+		}
+		nonPersistentCount = 0;
+		setKbdFocus(null);
+		/* +++++FINISH
+		gwin->get_npc_prox()->wait(4);		// Delay "barking" for 4 secs.
+		*/
+		if (removed) 
+			gwin.setAllDirty();
+	}
 	public void setKbdFocus(Gump gump) {
 		if (gump != null && gump.canHandleKbd()) {
 			kbdFocus = gump;

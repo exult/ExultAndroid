@@ -70,6 +70,9 @@ public abstract class Gump extends ShapeID {
 	public boolean isPersistent() {
 		return false;
 	}
+	public boolean isModal() {
+		return false;
+	}
 	public boolean hasPoint(int sx, int sy) {
 		ShapeFrame s = getShape();
 		return s != null && s.hasPoint(sx - x, sy - y);
