@@ -5,6 +5,7 @@ import java.util.ListIterator;
 public final class GumpManager extends GameSingletons {	
 	private static int gumpCount = 0;			// For staggering them.
 	private LinkedList<Gump> openGumps;
+	private Gump kbdFocus = null;
 	private int nonPersistentCount;
 	private boolean dontPauseGame;	// NEVER SET THIS MANUALLY! YOU MUST 
 										// CALL set_gumps_dontPauseGame.
@@ -105,6 +106,7 @@ public final class GumpManager extends GameSingletons {
 	}
 	// Add to end of list.
 	public void addGump(Gump g) {
+		setKbdFocus(g);
 		openGumps.addLast(g);	
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 			// And pause the game, if we want it
@@ -135,8 +137,11 @@ public final class GumpManager extends GameSingletons {
 				break;
 		}
 		if (gump != null) {	// If found, move to end.
-			iter.remove();
-			addGump(gump);
+			if (iter.hasNext()) {
+				iter.remove();
+				addGump(gump);
+			} else
+				setKbdFocus(gump);
 			gwin.setAllDirty();
 			return;
 		}
@@ -189,6 +194,8 @@ public final class GumpManager extends GameSingletons {
 	public void removeGump(Gump g) {
 		if (g == null)
 			return;
+		if (g == kbdFocus)
+			kbdFocus = null;
 		openGumps.remove(g);	
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 				// And resume queue if last.
@@ -197,6 +204,13 @@ public final class GumpManager extends GameSingletons {
 				nonPersistentCount--;
 			if (!dontPauseGame) 
 				tqueue.resume(TimeQueue.ticks);
+		}
+	}
+	public void setKbdFocus(Gump gump) {
+		if (gump != null && gump.canHandleKbd()) {
+			kbdFocus = gump;
+		} else {
+			kbdFocus = null;
 		}
 	}
 	public void paint() {

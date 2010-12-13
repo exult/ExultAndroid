@@ -4,6 +4,7 @@ import java.util.Vector;
 public abstract class Gump extends ShapeID {
 	protected int x, y;			// Location on screen.
 	protected Vector<GumpWidget> elems;	// ie, checkmarks.
+	protected boolean handlesKbd;
 	protected void addElem(GumpWidget w) {
 		elems.add(w);
 	}
@@ -53,6 +54,9 @@ public abstract class Gump extends ShapeID {
 		int cnt = elems.size();
 		for (int i = 0; i < cnt; ++i)
 			elems.elementAt(i).paint();
+	}
+	public final boolean canHandleKbd() {
+		return handlesKbd;
 	}
 	public GameObject getContainer() {
 		return null;
