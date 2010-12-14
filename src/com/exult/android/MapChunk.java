@@ -7,7 +7,7 @@ public final class MapChunk extends GameSingletons {
 	private GameMap map;				// Map we're a part of.
 	private ChunkTerrain terrain;		// Flat landscape tiles.
 	private ObjectList objects;			// -'Flat'  obs. (lift=0,ht=0) stored 1st.
-	private GameObject firstNonflat;			// ->first nonflat in 'objects'.
+	private GameObject firstNonflat;			// .first nonflat in 'objects'.
 	// Counts of overlapping objects from chunks below, to right.
 	private short fromBelow, fromRight, fromBelowRight;
 	private byte dungeonLevels[];	// A 'dungeon' level value for each tile (4 bit).
@@ -108,7 +108,7 @@ public final class MapChunk extends GameSingletons {
 	 *	Add rendering dependencies for a new object to another chunk.
 	 *	NOTE:  This is static.
 	 *
-	 *	Output:	->chunk that was checked.
+	 *	Output:	.chunk that was checked.
 	 */
 
 	private MapChunk addOutsideDependencies
@@ -644,7 +644,46 @@ public final class MapChunk extends GameSingletons {
 		to.tz = (short) new_lift;
 		return true;			// All clear.
 	}
-
+	/*
+	 *	Is a given rectangle of tiles available at a given lift?
+	 *
+	 *	Output: 1 if so, else 0.
+	 *		If 1 (tile is free), loc.tz contains the new height where the
+	 *			space is available.
+	 */
+	public static boolean areaAvailable(				
+		int xtiles, int ytiles, int ztiles,	// Object dims:
+		Tile loc,		// Location we want.  Tz is updated.
+		int move_flags,
+		int max_drop,			// Max drop/rise allowed.
+		int max_rise			// Max. rise, or -1 to use old beha-
+								//   viour (max_drop if FLY, else 1).
+		) {
+		int tx, ty;
+		int new_lift = 0;
+		int startx = loc.tx%EConst.c_num_tiles;		// Watch for wrapping.
+		int starty = loc.ty%EConst.c_num_tiles;
+		int stopy = (starty + ytiles)%EConst.c_num_tiles, 
+		    stopx = (startx + xtiles)%EConst.c_num_tiles;
+		for (ty = starty; ty != stopy; ty = EConst.INCR_TILE(ty)) {
+						// Get y chunk, tile-in-chunk.
+			int cy = ty/EConst.c_tiles_per_chunk, rty = ty%EConst.c_tiles_per_chunk;
+			for (tx = startx; tx != stopx; tx = EConst.INCR_TILE(tx)) {
+				int this_lift;
+				MapChunk olist = gmap.getChunk(
+						tx/EConst.c_tiles_per_chunk, cy);
+				if ((this_lift = olist.spotAvailable(ztiles, 
+						tx%EConst.c_tiles_per_chunk, rty, loc.tz,
+						move_flags, max_drop,max_rise)) < 0)
+					return false;
+						// Take highest one.
+				new_lift = this_lift > new_lift ? this_lift : new_lift;
+			}
+		}
+		loc.tz = (short)new_lift;
+		return true;
+	}
+	
 	/*
 	 *  Finds if there is a 'roof' above lift in tile (tx, ty)
 	 *  of the chunk. Point is taken 4 above lift

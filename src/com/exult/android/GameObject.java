@@ -351,6 +351,9 @@ public abstract class GameObject extends ShapeID {
 	}
 	public void setOwner(ContainerGameObject o)
 		{  }
+	public boolean isDragable() {
+		return false;
+	}
 	public final GameObject getOutermost() {
 		GameObject top = this;
 		GameObject above;

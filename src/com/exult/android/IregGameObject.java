@@ -39,6 +39,9 @@ public class IregGameObject extends GameObject {
 	public void setOwner(ContainerGameObject o) {
 		owner = o;
 	}
+	public boolean isDragable() {
+		return getInfo().getWeight() > 0;	// 0 means 'too heavy'.
+	}
 	public static IregGameObject create(ShapeInfo info, int shnum, int frnum) {
 		return create(info, shnum, frnum, 0, 0, 0);
 	}

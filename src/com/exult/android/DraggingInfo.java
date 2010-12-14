@@ -148,11 +148,10 @@ public final class DraggingInfo extends GameSingletons {
 		GameObject obj,
 		int x, int y
 		) {
-		/* ++++++++FINISH
 		GameObject block = gwin.findObject(x, y);
 		if (block != null && block != obj && !block.isDragable())
 			return true;
-		else */
+		else 
 			return false;
 	}
 	/*
@@ -353,45 +352,47 @@ public final class DraggingInfo extends GameSingletons {
 	 *		(by buttonpress, drag)
 	 */
 	public boolean drop(int x, int y) {	// Drop obj. at given position.
-		/* ++++++++++FINISH
 		// Get orig. loc. info.
 		int oldcx = old_pos.tx/EConst.c_tiles_per_chunk, 
 		    oldcy = old_pos.ty/EConst.c_tiles_per_chunk;
-		Game_object *to_drop = obj;	// If quantity, split it off.
+		GameObject to_drop = obj;	// If quantity, split it off.
+		ShapeInfo info = obj.getInfo();
 						// Being liberal about taking stuff:
-		int okay_to_move = to_drop.get_flag(Obj_flags::okay_to_take);
-		int old_top = old_pos.tz + obj.get_info().get_3d_height();
+		boolean okay_to_move = to_drop.getFlag(GameObject.okay_to_take);
+		int old_top = old_pos.tz + info.get3dHeight();
 						// First see if it's a gump.
-		Gump *on_gump = gumpman.find_gump(x, y);
+		Gump on_gump = gumpman.findGump(x, y);
 						// Don't prompt if within same gump.
-		if (quantity > 1 && (!on_gump || on_gump != gump))
-			quantity = gumpman.prompt_for_number(0, quantity, 
-															   1, quantity);
+		/* ++++++++FINISH
+		if (quantity > 1 && (on_gump == null || on_gump != gump))
+			quantity = gumpman.prompt_for_number(0, quantity, 1, quantity);
+		*/
 		if (quantity <= 0)
 			return false;
-		if (quantity < obj.get_quantity())
-			{			// Need to drop a copy.
-			to_drop = gmap.create_ireg_object(
-					obj.get_shapenum(), obj.get_framenum());
-			to_drop.modify_quantity(quantity - 1);
+		if (quantity < obj.getQuantity()) {
+						// Need to drop a copy.
+			to_drop = IregGameObject.create(info,
+					obj.getShapeNum(), obj.getFrameNum());
+			to_drop.modifyQuantity(quantity - 1);
 			if (okay_to_move)	// Make sure copy is okay to take.
-				to_drop.set_flag(Obj_flags::okay_to_take);
-			}
+				to_drop.setFlag(GameObject.okay_to_take);
+		}
 						// Drop it.
-		if (!(on_gump ? drop_on_gump(x, y, to_drop, on_gump)
-				  : drop_on_map(x, y, to_drop)))
+		if (!(on_gump != null ? dropOnGump(x, y, to_drop, on_gump)
+				  : dropOnMap(x, y, to_drop)))
 			return false;
 						// Make a 'dropped' sound.
-		Audio::get_ptr().play_sound_effect(Audio::game_sfx(74));
-		if (!gump)			// Do eggs where it came from.
-			gmap.get_chunk(oldcx, oldcy).activate_eggs(obj,
+		// ++++++ Audio::get_ptr().play_sound_effect(Audio::game_sfx(74));
+		/* ++++++++FINISH
+		if (gump == null)			// Do eggs where it came from.
+			gmap.getChunk(oldcx, oldcy).activateEggs(obj,
 				    old_pos.tx, old_pos.ty, old_pos.tz, 
 						old_pos.tx, old_pos.ty);
 						// Special:  BlackSword in SI.
-		else if (readied_index >= 0 && obj.get_shapenum() == 806)
+		else if (readied_index >= 0 && obj.getShapeNum() == 806)
 						// Do 'unreadied' usecode.
-			gump.get_cont_or_actor(x,y).call_readied_usecode(
-				readied_index, obj, Usecode_machine::unreadied);
+			gump.getContOrActor(x,y).callReadiedUsecode(
+				readied_index, obj, UsecodeMachine.unreadied);
 						// On a barge?
 		Barge_object *barge = gwin.get_moving_barge();
 		if (barge)
@@ -400,15 +401,17 @@ public final class DraggingInfo extends GameSingletons {
 		if (!okay_to_move && !cheat.in_hack_mover() && possible_theft &&
 		    !gwin.is_in_dungeon())
 			gwin.theft();			
-		if (to_drop == obj)		// Whole thing?
-			{			// Watch for stuff on top of it.
-			if (old_foot.w > 0)
-				Map_chunk::gravity(old_foot, old_top);
-			return true;		// All done.
-			}
-						// Subtract quantity moved.
-		obj.modify_quantity(-quantity);
 		*/
+		if (to_drop == obj) {		// Whole thing?
+						// Watch for stuff on top of it.
+			/* ++++++FINISH
+			if (old_foot.w > 0)
+				MapChunk.gravity(old_foot, old_top);
+			*/
+			return true;		// All done.
+		}
+						// Subtract quantity moved.
+		obj.modifyQuantity(-quantity);
 		return false;			// Put back the rest.
 	}
 	/*
@@ -482,17 +485,15 @@ public final class DraggingInfo extends GameSingletons {
 			max_drop = 5;
 			move_flags = EConst.MOVE_WALK;
 		}
-		/* ++++++++FINISH.  Need this version in MapChunk.java
-		if (!MapChunk.areaAvailable(info.get3dHeight(), at_lift,
-			tx - xtiles + 1, ty - ytiles + 1, 
-			xtiles, ytiles, 
-				lift, move_flags, max_drop, -1) ||
+		Tile loc = new Tile(tx - xtiles + 1, ty - ytiles + 1, at_lift);
+		if (!MapChunk.areaAvailable(xtiles, ytiles, info.get3dHeight(),
+							loc, move_flags, max_drop, -1) /*++++ ||
 		      (!cheat.in_hack_mover() &&
 						// Check for path to location.
 		    !Fast_pathfinder_client::is_grabable(main_actor, 
-				Tile_coord(tx, ty, lift))))
+				Tile_coord(tx, ty, lift)))*/)
 			return 0;
-		*/
+		lift = loc.tz;
 		to_drop.setInvalid();
 		to_drop.move(tx, ty, lift);
 		Rectangle rect = new Rectangle();
