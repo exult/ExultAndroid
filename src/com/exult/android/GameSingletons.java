@@ -12,6 +12,7 @@ public class GameSingletons {
 	public static Conversation conv;	// This stays null until needed.
 	public static PartyManager partyman;
 	public static GumpManager gumpman;
+	public static Game game;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();

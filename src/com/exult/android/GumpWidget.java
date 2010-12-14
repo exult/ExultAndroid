@@ -81,7 +81,7 @@ public class GumpWidget extends ShapeID {
 	}
 	public static class Checkmark extends Button {
 		public Checkmark(Gump par, int px, int py) {
-			super(par, 2, px, py);//+++FINISH: game->get_shape("gumps/check")
+			super(par, game.getShape("gumps/check"), px, py);
 		}
 							// What to do when 'clicked':
 		public boolean activate(boolean button) {

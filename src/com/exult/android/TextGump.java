@@ -78,10 +78,10 @@ public class TextGump extends Gump {
 	}
 	public static class Book extends TextGump {
 		public Book() {
-			super(32);	//++++++FINISH:  game->get_shape("gumps/book")
+			super(game.getShape("gumps/book"));
 		}
 		public Book(int fontnum) {
-			super(32, fontnum);//++++++FINISH:  game->get_shape("gumps/book")
+			super(game.getShape("gumps/book"), fontnum);
 		}
 		public void paint() {
 						// Paint the gump itself.
@@ -94,10 +94,10 @@ public class TextGump extends Gump {
 	}
 	public static class Scroll extends TextGump {
 		public Scroll() {
-			super(55);	//++++++FINISH:  game->get_shape("gumps/scroll")
+			super(game.getShape("gumps/scroll"));
 		}
 		public Scroll(int fontnum) {
-			super(55, fontnum);//++++++FINISH:  game->get_shape("gumps/scroll")
+			super(game.getShape("gumps/scroll"), fontnum);
 		}
 		public void paint() {	
 			paintShape(x, y);	// The gump itself.

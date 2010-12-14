@@ -13,14 +13,11 @@ import android.content.Context;
 import android.graphics.Point;
 
 public class ExultActivity extends Activity {
-	public VgaFile vgaFile;
 	public long GameTime;
 	public long nextTickTime;
 	public static int stdDelay = 200;	// Frame delay in msecs.
 	public GameWindow gwin;
-	public AnimationSprite testSprite1;
 	public ImageBuf ibuf;
-	public Palette pal0;
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	
     /** Called when the activity is first created. */
@@ -28,10 +25,9 @@ public class ExultActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
     	// start tracing to "/sdcard/calc.trace"
         //Debug.startMethodTracing("calc");
-
+    	new Game.BGGame();	// Stores itself in GameSingletons.
     	EUtil.initSystemPaths();
     	ShapeFiles.load();
-    	vgaFile = ShapeFiles.SHAPES_VGA.getFile();
         super.onCreate(savedInstanceState);
         setContentView(new MySurfaceView(this));
     }
@@ -150,8 +146,6 @@ public class ExultActivity extends Activity {
     		setFocusable(true);
     		setFocusableInTouchMode(true);
     		requestFocus();
-    		//create a graphic
-    		testSprite1 = new AnimationSprite();
     		ItemNames.init(false, false);
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     		int width = display.getWidth(), height = display.getHeight();
@@ -293,51 +287,5 @@ public class ExultActivity extends Activity {
     		}
     	}
     } // End of MySurfaceView
-    public class AnimationSprite {
-    	private ShapeFrame shape;
-        private int mXPos;
-        private int mYPos;
-        private int mFPS;
-        private int mNoOfFrames;
-        private int mShapeNum;
-        private int mCurrentFrame;
-        private long mFrameTimer;
-        private int mUpdateCnt, mDir;
-        public AnimationSprite() {
-            mFrameTimer =0;
-            mCurrentFrame =0;
-            mXPos = 80;
-            mYPos = 200;
-            mUpdateCnt = 0;
-            mDir = 1;
-        } public void Init(int shapeNum, int theFPS) {
-        	mShapeNum = shapeNum;
-            mFPS = 1000 /theFPS;
-            shape = vgaFile.getShape(mShapeNum, 0);
-            mNoOfFrames = vgaFile.getNumFrames(mShapeNum);
-        }
-        public void Update(long GameTime) {
-            if(GameTime > mFrameTimer + mFPS ) {
-                mFrameTimer = GameTime;
-                mCurrentFrame +=1;
-                //mYPos += 2*mDir;
-                mXPos += 2*mDir;
-                if (mUpdateCnt == 40) {
-                	mDir = -mDir;
-                	mUpdateCnt = 0;
-                }
-                mUpdateCnt += 1;
-                if(mCurrentFrame >= mNoOfFrames) {
-                    mCurrentFrame = 0;
-                }
-                shape = vgaFile.getShape(mShapeNum, mCurrentFrame);
-            }
-        }
-        public void draw(Canvas canvas) {
-        	ibuf.fill8((byte)0);
-        	shape.paint(ibuf, mXPos, mYPos);
-        	ibuf.show(canvas);
-        }
-    } // End of AnimationSprite
    
 }

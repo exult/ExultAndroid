@@ -127,8 +127,52 @@ public abstract class Gump extends ShapeID {
 		private Rectangle objectArea = new Rectangle();
 		private Rectangle paintBox = new Rectangle();
 		private void initialize(int shnum) {		// Initialize objectArea.
-			//+++++FINISH	
-			setObjectArea(48, 20, 66, 44, 8, 66);//++++TESTING: BAG
+			if(shnum==game.getShape("gumps/box"))
+			{
+				setObjectArea(46, 28, 74, 32, 8, 56);
+			}
+			else if(shnum==game.getShape("gumps/crate"))
+			{
+				setObjectArea(50, 20, 80, 24, 8, 64);
+			}
+			else if(shnum==game.getShape("gumps/barrel"))
+			{
+				setObjectArea(32, 32, 40, 40, 12, 124);
+			}
+			else if(shnum==game.getShape("gumps/bag"))
+			{
+				setObjectArea(48, 20, 66, 44, 8, 66);
+			}
+			else if(shnum==game.getShape("gumps/backpack"))
+			{
+				setObjectArea(36, 36, 85, 40, 8, 62);
+			}
+			else if(shnum==game.getShape("gumps/basket"))
+			{
+				setObjectArea(42, 32, 70, 26, 8, 56);
+			}
+			else if(shnum==game.getShape("gumps/chest"))
+			{
+				setObjectArea(40, 18, 60, 37, 8, 46);
+			}
+			else if(shnum==game.getShape("gumps/shipshold"))
+			{
+				setObjectArea(38, 10, 82, 80, 8, 92);
+			}
+			else if(shnum==game.getShape("gumps/drawer"))
+			{
+				setObjectArea(36, 12, 70, 26, 8, 46);
+			}
+			else if(shnum==game.getShape("gumps/tree"))
+			{
+				setObjectArea(62, 22, 36, 44, 9, 100);
+			}
+			else if(shnum==game.getShape("gumps/body"))
+			{
+				setObjectArea(36, 46, 84, 40, 8, 70);
+			}
+			else
+				setObjectArea(52, 22, 60, 40, 8, 64);
 		}
 		public Container(ContainerGameObject cont, int initx, int inity, 
 								int shnum) {
@@ -164,7 +208,6 @@ public abstract class Gump extends ShapeID {
 			loc.y = y + objectArea.y + obj.getTy();
 		}
 		public GameObject findObject(int mx, int my) {
-			int cnt = 0;
 			if (container == null)
 				return null;
 			ObjectList.ObjectIterator iter = container.getIterator();
