@@ -112,6 +112,12 @@ public class GameWindow extends GameSingletons {
 		return /* ++++++ moving_barge ? moving_barge.is_moving()
 			    : */ mainActor.isMoving();
 	}
+	public final boolean inCombat() {
+		return false;	//++++++FINISH
+	}
+	public final boolean isTimeStopped() {
+		return false;	// +++++++FINISH
+	}
 	public final Actor getMainActor() {
 		return mainActor;
 	}

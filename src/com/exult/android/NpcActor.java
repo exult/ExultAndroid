@@ -4,7 +4,13 @@ public class NpcActor extends Actor {
 	public NpcActor(String nm, int shapenum) { //++++FINISH, num, uc
 		super(nm, shapenum, -1, -1); 
 	}
-	
+	/*
+	 *	Run usecode when double-clicked.
+	 */
+	public void activate(int event) {
+		if (!isDead())
+			super.activate(event);;
+	}
 	/*
 	 *	Handle a time event (for TimeSensitive).
 	 */

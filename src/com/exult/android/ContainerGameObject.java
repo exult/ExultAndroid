@@ -224,7 +224,7 @@ public class ContainerGameObject extends IregGameObject {
 	 *	Output:	Delta decremented by # removed.
 	 */
 
-	public int remove_quantity
+	public int removeQuantity
 		(
 		int delta,			// Quantity to remove.
 		int shapenum,			// Shape #.

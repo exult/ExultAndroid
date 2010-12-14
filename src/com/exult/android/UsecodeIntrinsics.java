@@ -385,7 +385,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		return(arr);
 	}
 	private final UsecodeValue getDistance(UsecodeValue p0, UsecodeValue p1) {
-		// Distance from parm[0] -> parm[1].  Guessing how it's computed.
+		// Distance from parm[0] to parm[1].  Guessing how it's computed.
 		GameObject obj0 = getItem(p0);
 		GameObject obj1 = getItem(p1);
 		if (obj0 == null || obj1 == null)
@@ -824,8 +824,65 @@ public class UsecodeIntrinsics extends GameSingletons {
 		gumpman.closeGump(sign);
 		gwin.setAllDirty();
 	}
-	public final UsecodeValue clickOnItem() {
-		return null;//+++++++++FINISH
+	public final UsecodeValue clickOnItem(int event) {
+		// Doesn't ret. until user single-
+		//   clicks on an item.  Rets. item.
+		GameObject obj;
+		GameObject callerItem = ucmachine.get_caller_item();
+		Tile t;
+
+		// intercept this click?
+		if (interceptItem != null) {
+			obj = interceptItem;
+			interceptItem = null;
+			interceptTile = null;
+			t = new Tile();
+			obj.getTile(t);
+		} else if (interceptTile != null) {
+			obj = null;
+			t = interceptTile;
+			interceptTile = null;
+		}
+			// Special case for weapon hit:
+		else if (event == UsecodeMachine.weapon && callerItem != null)
+			{
+	        // Special hack for weapons (needed for hitting Draygan with
+			// sleep arrows (SI) and worms with worm hammer (also SI)).
+			// Spells cast from readied spellbook in combat have been
+			// changed to use the interceptItem instead, setting it
+			// to the caster's target and restoring the old value after
+			// it is used.
+			obj = callerItem;
+			t = new Tile();
+			obj.getTile(t);
+		} else {
+			// +++++++++++Allow dragging while here:
+			//if (!Get_click(x, y, Mouse::greenselect, 0, true))
+				//return Usecode_value(0);
+			Point p = new Point();
+			ExultActivity.getClick(p);
+						// Get abs. tile coords. clicked on.
+			t = new Tile(gwin.getScrolltx() + p.x/EConst.c_tilesize,
+						 gwin.getScrollty() + p.y/EConst.c_tilesize, 0);
+						// Look for obj. in open gump.
+			Gump gump = gumpman.findGump(p.x, p.y);
+			if (gump != null) {
+				obj = gump.findObject(p.x, p.y);
+				if (obj == null) 
+					obj = gump.findActor(p.x, p.y);
+			} else {			// Search rest of world.
+				obj = gwin.findObject(p.x, p.y);
+				if (obj != null) {	// Found object?  Use its coords.
+					obj.getTile(t = new Tile());
+				}
+			}
+		}
+		// Ret. array with obj as 1st elem.
+		return new UsecodeValue.ArrayValue(
+				new UsecodeValue.ObjectValue(obj),
+				new UsecodeValue.IntValue(t.tx),
+				new UsecodeValue.IntValue(t.ty),
+				new UsecodeValue.IntValue(t.tz));
 	}
 	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
 						UsecodeValue distVal, UsecodeValue maskVal) {
@@ -1102,22 +1159,22 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// For SI, used for turtle.
 		// on_barge()
 		/* +++++++FINISH
-		Barge_object barge = Get_barge(gwin->get_main_actor());
+		Barge_object barge = Get_barge(gwin.get_main_actor());
 		if (barge)
 			{			// See if party is on barge.
-			Rectangle foot = barge->get_tile_footprint();
+			Rectangle foot = barge.get_tile_footprint();
 			Actor *party[9];
-			int cnt = gwin->get_party(party, 1);
+			int cnt = gwin.get_party(party, 1);
 			for (int i = 0; i < cnt; i++)
 				{
 				Actor *act = party[i];
-				Tile_coord t = act->get_tile();
+				Tile_coord t = act.get_tile();
 				if (!foot.has_point(t.tx, t.ty))
 					return Usecode_value(0);
 				}
 						// Force 'gather()' for turtle.
 			if (Game::get_game_type() == SERPENT_ISLE)
-				barge->done();
+				barge.done();
 			return Usecode_value(1);
 			} 
 		*/
@@ -1243,7 +1300,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x32:
 			displayRunes(parms[0], parms[1]); break;
 		case 0x33:
-			return clickOnItem();
+			return clickOnItem(event);
 			//++++++++++++++++++++++
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);

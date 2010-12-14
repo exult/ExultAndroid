@@ -160,6 +160,11 @@ public abstract class UsecodeValue {
 			elems = new UsecodeValue[3];
 			elems[0] = v0; elems[1] = v1; elems[2] = v2;
 		}
+		public ArrayValue(UsecodeValue v0, UsecodeValue v1, UsecodeValue v2,
+									UsecodeValue v3) {
+			elems = new UsecodeValue[4];
+			elems[0] = v0; elems[1] = v1; elems[2] = v2; elems[3] = v3;
+		}
 		public static final ArrayValue createObjectsList(Vector<GameObject> objs) {
 			int cnt = objs.size();
 			UsecodeValue elems[] = new UsecodeValue[cnt];

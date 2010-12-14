@@ -354,6 +354,21 @@ public abstract class GameObject extends ShapeID {
 	public boolean isDragable() {
 		return false;
 	}
+	// Drop another onto this one.
+	public boolean drop(GameObject obj) {
+		ShapeInfo inf = getInfo();
+		int shapenum = getShapeNum();	// It's possible if shapes match.
+		if (obj.getShapeNum() != shapenum || !inf.hasQuantity() ||
+		    (!inf.hasQuantityFrames() && getFrameNum() != obj.getFrameNum()))
+			return false;
+		int objq = obj.getQuantity();
+		int total_quant = getQuantity() + objq;
+		if (total_quant > MAX_QUANTITY)	// Too much?
+			return false;
+		modifyQuantity(objq);		// Add to our quantity.
+		obj.removeThis();		// It's been used up.
+		return true;
+	}
 	public final GameObject getOutermost() {
 		GameObject top = this;
 		GameObject above;
@@ -365,7 +380,7 @@ public abstract class GameObject extends ShapeID {
 		ShapeInfo inf = getInfo();
 		/* +++++++++FINISH
 		Frame_usecode_info *useinf = inf.get_frame_usecode(
-				get_framenum(), inf.has_quality() ? get_quality() : -1);
+				getFrameNum(), inf.has_quality() ? get_quality() : -1);
 		if (useinf)
 			{
 			// Shape has frame- or quality-dependent usecode.
@@ -541,8 +556,7 @@ public abstract class GameObject extends ShapeID {
 	}
 	public boolean add(GameObject obj, boolean dont_check,
 			boolean combine, boolean noset) {
-		// ++++ return combine ? drop(obj)!=0 : false;
-		return false;
+		return combine ? drop(obj) : false;
 	}
 	public final boolean add(GameObject obj, boolean dont_check) {
 		return add(obj, dont_check, false, false);

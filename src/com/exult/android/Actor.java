@@ -208,10 +208,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			{
 			// Seems to give the same results as in the originals.
 			Game_object *weapon = get_readied(lhand);
-			Weapon_info *winf = weapon ? weapon->get_info().get_weapon_info() : 0;
+			Weapon_info *winf = weapon ? weapon.get_info().get_weapon_info() : 0;
 			if (!winf)
 				return 0;
-			return (winf->get_uses() >= 2);
+			return (winf.get_uses() >= 2);
 			}
 		*/
 		return (prop >= 0 && prop < Actor.sex_flag) ? properties[prop] : 0;
@@ -340,11 +340,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		/* FINISH+++++++++++
 		ShapeID id(get_shapenum(), frnum, get_shapefile());
 		Shape_frame *shape = id.get_shape();
-		if (!shape || shape->is_empty())
+		if (!shape || shape.is_empty())
 			{		// Swap 1hand <=> 2hand frames.
 			frnum = (frnum&48)|visible_frames[frnum&15];
 			id.set_frame(frnum);
-			if (!(shape = id.get_shape()) || shape->is_empty())
+			if (!(shape = id.get_shape()) || shape.is_empty())
 				frnum = (frnum&48)|Actor::standing;
 			}
 		*/
@@ -361,7 +361,89 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setStepIndex(int i) {
 		stepIndex = i;
 	}
+	/*
+	 *	Run usecode when double-clicked.
+	 */
+	public void activate(int event) {
+		boolean show_party_inv = gumpman.showingGumps(true) || 
+								gwin.inCombat();
+		int sched = getScheduleType();
+		if (npcNum == 0 ||		// Avatar
+			(show_party_inv && partyId >= 0) /* +++++ || // Party
+			// Pickpocket cheat && double click
+			(cheat.in_pickpocket() && event == 1) */)
+			showInventory();
+		// Asleep (but not awakened)?
+		else if ((sched == Schedule.sleep &&
+				(getFrameNum()&0xf) == Actor.sleep_frame) ||
+					getFlag(GameObject.asleep))
+			return;
+		else if (sched == Schedule.combat && partyId < 0)
+			return;			// Too busy fighting.
+		// Usecode
+		// Failed copy-protection?
+		else if (game.isSI() &&
+				gwin.getMainActor().getFlag(GameObject.confused))
+			ucmachine.callUsecode(0x63d, this, event);	
+		else if (usecode == -1)
+			ucmachine.callUsecode(getUsecode(), this, event);
+		else if (partyId >= 0 || !gwin.isTimeStopped())
+			ucmachine.callUsecode(getUsecode(), this, event);
+	}
 	
+	public void showInventory() {
+		int shapenum = inventoryShapenum();
+		if (shapenum >= 0)
+			gumpman.addGump(this, shapenum, true);
+	}
+	public int inventoryShapenum() {
+		// We are serpent if we can use serpent isle paperdolls
+		boolean serpent = false; // +++++FINISH(sman->can_use_paperdolls() && sman->are_paperdolls_enabled());
+		
+		if (!serpent) {
+				// Can't display paperdolls (or they are disabled)
+				// Use BG gumps
+			int gump = getInfo().getGumpShape();
+			/* +++++++FINISH
+			if (gump < 0)
+				gump = ShapeID::get_info(get_sexed_coloured_shape()).get_gump_shape();
+			if (gump < 0)
+				gump = ShapeID::get_info(get_shape_real()).get_gump_shape();
+			
+			if (gump < 0) {
+				int shape = getTypeFlag(Actor.tf_sex) ?
+					Shapeinfo_lookup::GetFemaleAvShape() :
+					Shapeinfo_lookup::GetMaleAvShape();
+				gump = ShapeID::get_info(shape).get_gump_shape();
+			}
+			*/
+			if (gump < 0)
+				// No gump at ALL; should never happen...
+				return (65);	// Default to male (Pickpocket Cheat)
+			return gump;
+		} else /* if (serpent) */
+			return (123);		// Show paperdolls
+	}
+
+
+	/*
+	 *	Drop another onto this.
+	 *
+	 *	Output:	0 to reject, 1 to accept.
+	 */
+	// Drop another onto this one.
+	public boolean drop(GameObject obj) {
+		if (getFlag(GameObject.in_party)) {	// In party?
+			boolean res = add(obj, false, true, false);// We'll take it, and combine.
+			/* +++++++++FINISH
+			int ind = findReadied(obj);
+			if (ind >= 0)
+				callReadiedUsecode(ind,obj,Usecode_machine::readied);
+			*/
+			return res;
+		} else
+			return false;
+	}
 	/*
 	 *	Begin animation.
 	 */
@@ -399,7 +481,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		Actor *act = const_cast<Actor *>(this);
 		while ((scr = Usecode_script::find_active(act, scr)) != 0)
 			// no_halt scripts seem not to prevent movement.
-			if (!scr->is_no_halt())
+			if (!scr.is_no_halt())
 				return true;
 		*/
 		return false;
@@ -754,8 +836,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			f = EUtil.Read4(nfile);
 			flags |= f;
 			/* ++++++++
-			if (get_flag(GameObject.invisible))	// Force timer.	
-				need_timers()->start_invisibility();
+			if (getFlag(GameObject.invisible))	// Force timer.	
+				need_timers().start_invisibility();
 			*/
 			// SIFlags -- no longer used.
 			nfile.skip (2);
@@ -769,10 +851,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (usecode_name_used) {	// Support for named functions.
 				int funsize = nfile.read();
 				char *nm = new char[funsize+1];
-				nfile->read(nm, funsize);
+				nfile.read(nm, funsize);
 				nm[funsize] = 0;
 				usecode_name = nm;
-				usecode = ucmachine->find_function(nm);
+				usecode = ucmachine.find_function(nm);
 				delete [] nm;
 			}
 			*/
@@ -854,7 +936,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// but only if the monster is used.
 			// Maybe we should restore it to full health?
 			Monster_info *minf = get_info().get_monster_info();
-			if (minf && minf->cant_die())
+			if (minf && minf.cant_die())
 				setProperty(Actor.static_cast<int>(Actor::health),
 					get_property(static_cast<int>(Actor::strength)));
 		}
