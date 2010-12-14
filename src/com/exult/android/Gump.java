@@ -124,7 +124,7 @@ public abstract class Gump extends ShapeID {
 	 */
 	public static class Container extends Gump {
 		private ContainerGameObject container;
-		private Rectangle objectArea = new Rectangle();
+		protected Rectangle objectArea = new Rectangle();
 		private Rectangle paintBox = new Rectangle();
 		private void initialize(int shnum) {		// Initialize objectArea.
 			if(shnum==game.getShape("gumps/box"))
@@ -186,11 +186,14 @@ public abstract class Gump extends ShapeID {
 			container = cont;
 			initialize(shnum);
 		}
-		private void setObjectArea(int x, int y, int w, int h, 
+		protected final void setObjectArea(int x, int y, int w, int h, 
 									int checkx, int checky) {
 			objectArea.set(x, y, w, h);
 			checkx += 16; checky -= 12;
 			elems.add(new GumpWidget.Checkmark(this, checkx, checky));
+		}
+		protected final void setObjectArea(int x, int y, int w, int h) {
+			objectArea.set(x, y, w, h);
 		}
 		public ContainerGameObject getContainer() {
 			return container;

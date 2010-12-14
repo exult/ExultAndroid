@@ -806,6 +806,27 @@ public class UsecodeIntrinsics extends GameSingletons {
 		else
 			return UsecodeValue.getZero();
 	}
+	public final void displayRunes(UsecodeValue p0, UsecodeValue p1) {	
+		// Render text into runes for signs, tombstones, plaques and the like
+		// Display sign (gump #, array_of_text).
+		int cnt = p1.getArraySize();
+		if (cnt == 0)
+			cnt = 1;		// Try with 1 element.
+		SignGump sign = new SignGump(p0.getIntValue(), cnt);
+		for (int i = 0; i < cnt; i++) {	// Paint each line.
+			UsecodeValue lval = i == 0 ? p1.getElem0() : p1.getElem(i);
+			String str = lval.getStringValue();
+			sign.addText(i, str);
+		}
+		Point p = new Point();			// Paint it, and wait for click.
+		//Get_click(x, y, Mouse::hand, 0, false, sign);
+		ExultActivity.getClick(p);
+		gumpman.closeGump(sign);
+		gwin.setAllDirty();
+	}
+	public final UsecodeValue clickOnItem() {
+		return null;//+++++++++FINISH
+	}
 	private final UsecodeValue findNearby(UsecodeValue objVal, UsecodeValue shapeVal,
 						UsecodeValue distVal, UsecodeValue maskVal) {
 		int mval = maskVal.getIntValue();// Some kind of mask?  Guessing:
@@ -1219,7 +1240,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return findNearbyAvatar(parms[0]);
 		case 0x31:
 			return isNpc(parms[0]);
-		//++++++++++++
+		case 0x32:
+			displayRunes(parms[0], parms[1]); break;
+		case 0x33:
+			return clickOnItem();
+			//++++++++++++++++++++++
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
 		case 0x36:

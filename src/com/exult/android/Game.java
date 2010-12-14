@@ -2,7 +2,7 @@ package com.exult.android;
 import java.util.HashMap;
 
 public abstract class Game extends GameSingletons {
-	private int gameType;
+	protected int gameType;
 	private HashMap<String,Integer> shapes;
 	public Game() {
 		shapes = new HashMap<String,Integer>();
@@ -14,12 +14,19 @@ public abstract class Game extends GameSingletons {
 	public int getGameType() {
 		return gameType;
 	}
+	public final boolean isSI() {
+		return gameType == EConst.SERPENT_ISLE;
+	}
+	public final boolean isBG() {
+		return gameType == EConst.BLACK_GATE;
+	}
 	public int getShape(String nm) {
 		Integer i = shapes.get(nm);
 		return i == null ? 0 : i;
 	}
 	public static class BGGame extends Game {
 		public BGGame() {
+			gameType = EConst.BLACK_GATE;
 			addShape("gumps/check",2);
 			addShape("gumps/fileio",3);
 			addShape("gumps/fntext",4);
