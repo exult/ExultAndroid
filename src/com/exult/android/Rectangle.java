@@ -5,6 +5,9 @@ public class Rectangle {
 	public Rectangle(int xin, int yin, int win, int hin) {
 		x = xin; y = yin; w = win; h = hin;
 	}
+	public Rectangle(Rectangle r) {
+		x = r.x; y = r.y; w = r.w; h = r.h;
+	}
 	public Rectangle() {
 		x = y = w = h = -1;
 	}

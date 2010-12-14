@@ -13,6 +13,7 @@ public class GameSingletons {
 	public static PartyManager partyman;
 	public static GumpManager gumpman;
 	public static Game game;
+	public static DraggingInfo drag;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();

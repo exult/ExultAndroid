@@ -82,7 +82,7 @@ public final class DraggingInfo extends GameSingletons {
 		}
 					// Make a little bigger.
 		rect.enlarge(deltax > deltay ? deltax : deltay);
-		paintRect.set(rect);
+		paintRect = new Rectangle(rect);
 		gwin.clipToWin(paintRect);
 		gwin.paint(paintRect);		// Paint over obj's. area.
 		return true;
@@ -250,6 +250,13 @@ public final class DraggingInfo extends GameSingletons {
 		}
 		return true;
 	}	
+	public static boolean startDragging(int x, int y) {
+		drag = new DraggingInfo();
+		if (drag.init(x, y))
+			return true;
+		drag = null;
+		return false;
+	}
 	public DraggingInfo() {
 		old_lift = -1;
 		readied_index = -1;
@@ -306,7 +313,7 @@ public final class DraggingInfo extends GameSingletons {
 	public boolean moved(int x, int y) {	// Mouse moved.
 		if (obj == null && gump == null)
 			return (false);
-		if (rect.w == 0) {
+		if (rect == null) {
 			if (!start(x, y))
 				return false;
 		} else {
@@ -328,7 +335,7 @@ public final class DraggingInfo extends GameSingletons {
 		return true;
 	}
 	public void paint() {			// Paint object being dragged.
-		if (rect.w == 0)			// Not moved enough yet?
+		if (rect == null)			// Not moved enough yet?
 			return;
 		if (obj != null) {
 			/*++++++++++
