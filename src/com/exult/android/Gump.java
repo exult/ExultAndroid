@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.Vector;
+import android.graphics.Point;
 
 public abstract class Gump extends ShapeID {
 	protected int x, y;			// Location on screen.
@@ -30,6 +31,9 @@ public abstract class Gump extends ShapeID {
 	public final int getY() {
 		return y;
 	}
+	public final void setPos(int newx, int newy) {
+		x = newx; y = newy;
+	}
 	// Set centered.
 	public final void setPos() {
 		ShapeFrame shape = getShape();
@@ -58,11 +62,22 @@ public abstract class Gump extends ShapeID {
 	public final boolean canHandleKbd() {
 		return handlesKbd;
 	}
-	public GameObject getContainer() {
+	public ContainerGameObject getContainer() {
 		return null;
+	}
+	public ContainerGameObject findActor(int mx, int my) {
+		return null;
+	}
+	public final ContainerGameObject getContOrActor(int mx, int my) {
+		ContainerGameObject ret = findActor(mx, my);
+		if (ret != null) return ret;
+		return getContainer();
 	}
 	public void getShapeRect(Rectangle r, GameObject obj) {
 		r.set(0,0,0,0);	// Overridden for containers.
+	}
+	public void getShapeLocation(Point loc, GameObject obj) {
+		loc.set(0,0);
 	}
 	public GameObject findObject(int mx, int my) {
 		return null;
@@ -94,6 +109,15 @@ public abstract class Gump extends ShapeID {
 				return b;
 		}
 		return null;
+	}	
+	public boolean add(GameObject obj, int mx, int my,
+			int sx, int sy, boolean dont_check, boolean combine) {
+		return false;
+	}
+	public void remove(GameObject obj) {
+	}
+	public boolean isDraggable() {
+		return true;
 	}
 	/*
 	 *	A generic gump used by generic containers:
@@ -124,7 +148,7 @@ public abstract class Gump extends ShapeID {
 			checkx += 16; checky -= 12;
 			elems.add(new GumpWidget.Checkmark(this, checkx, checky));
 		}
-		public GameObject getContainer() {
+		public ContainerGameObject getContainer() {
 			return container;
 		}
 		public void getShapeRect(Rectangle r, GameObject obj) {
@@ -134,6 +158,10 @@ public abstract class Gump extends ShapeID {
 			r.set(x + objectArea.x + obj.getTx() - s.getXLeft(), 
 					 y + objectArea.y + obj.getTy() - s.getYAbove(), 
 						 s.getWidth(), s.getHeight());
+		}
+		public void getShapeLocation(Point loc, GameObject obj) {
+			loc.x = x + objectArea.x + obj.getTx();
+			loc.y = y + objectArea.y + obj.getTy();
 		}
 		public GameObject findObject(int mx, int my) {
 			int cnt = 0;
@@ -154,6 +182,55 @@ public abstract class Gump extends ShapeID {
 			}
 							// ++++++Return top item.
 			return found;
+		}
+		/*
+		 *	Add an object.  If mx, my, sx, sy are all -1, the object's position
+		 *	is calculated by 'paint()'.  If they're all -2, it's assumed that
+		 *	obj.tx, obj.ty are already correct.
+		 *
+		 *	Output:	0 if cannot add it.
+		 */
+		public boolean add(GameObject obj, int mx, int my,
+				int sx, int sy, boolean dont_check, boolean combine) {
+			if (container == null /*++++++ || (!cheat.in_hack_mover() &&
+					!dont_check && !container.has_room(obj))*/)
+				return false;		// Full.
+							// Dropping on same thing?
+			GameObject onobj = findObject(mx, my);
+							// If possible, combine.
+			/* ++++FINISH
+			if (onobj != null && onobj != obj && onobj.drop(obj))
+				return true;
+			*/
+			if (!container.add(obj, dont_check))	// DON'T combine here.
+				return false;
+							// Not a valid spot?
+			if (sx == -1 && sy == -1 && mx == -1 && my == -1)
+							// Let paint() set spot.
+				obj.setShapePos(255, 255);
+							// -2's mean tx, ty are already set.
+			else if (sx != -2 && sy != -2 && mx != -2 && my != -2) {
+				// Put it where desired.
+				sx -= x + objectArea.x;// Get point rel. to object_area.
+				sy -= y + objectArea.y;
+				ShapeFrame shape = obj.getShape();
+							// But shift within range.
+				if (sx - shape.getXLeft() < 0)
+					sx = shape.getXLeft();
+				else if (sx + shape.getXRight() > objectArea.w)
+					sx = objectArea.w - shape.getXRight();
+				if (sy - shape.getYAbove() < 0)
+					sy = shape.getYAbove();
+				else if (sy + shape.getYBelow() > objectArea.h)
+					sy = objectArea.h - shape.getYBelow();
+				obj.setShapePos(sx, sy);
+			}
+			return true;
+		}
+		public void remove(GameObject obj) {
+			container.remove(obj); 
+			// Paint Objects
+			gwin.setAllDirty();
 		}
 		public void paint() {
 			super.paint();

@@ -26,6 +26,9 @@ public class GumpWidget extends ShapeID {
 	public Button onButton(int mx, int my) {
 		return null;
 	}
+	public boolean isDraggable() {
+		return true;
+	}
 	public static abstract class Button extends GumpWidget {
 		private boolean pushed;		// In pushed state.
 
@@ -50,8 +53,8 @@ public class GumpWidget extends ShapeID {
 			}
 			return false;
 		}
-		public void unpush(int button) {
-			if (button == 1) {
+		public void unpush(boolean button) {
+			if (button) {
 				setPushed(false);
 				paint();
 				gwin.setPainted();
