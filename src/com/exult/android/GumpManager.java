@@ -237,11 +237,12 @@ public final class GumpManager extends GameSingletons {
 			kbdFocus = null;
 		}
 	}
-	public void paint() {
+	public void paint(boolean modal) {
 		ListIterator<Gump> iter = openGumps.listIterator();
 		while (iter.hasNext()) {
 			Gump g = iter.next();
-			g.paint();
+			if (g.isModal() == modal)
+				g.paint();
 		}
 	}
 }

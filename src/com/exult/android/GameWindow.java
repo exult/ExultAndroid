@@ -795,11 +795,12 @@ public class GameWindow extends GameSingletons {
 			else
 				win.fill8((byte)0);
 			effects.paint();		// Draw sprites.
-			gumpman.paint();
+			gumpman.paint(false);
 			/*+++++++++++++++
 			if (dragging) dragging.paint();	// Paint what user is dragging.
 			*/
 			effects.paintText();
+			gumpman.paint(true);
 			Conversation conv = GameSingletons.conv;
 			if (conv != null)
 				conv.paint();		// Conversation.
