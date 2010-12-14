@@ -90,6 +90,9 @@ public class ContainerGameObject extends IregGameObject {
 						// Update total volume.
 		volumeUsed += obj.getVolume() - oldvol;
 	}
+	GameObject getReadied(int index) {
+		return null;
+	}
 	private boolean canBeAdded(int shapenum) {
 		return true; /* ++++++++FINISH
 		ShapeInfo info = getInfo();

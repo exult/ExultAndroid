@@ -123,7 +123,7 @@ public abstract class Gump extends ShapeID {
 	 *	A generic gump used by generic containers:
 	 */
 	public static class Container extends Gump {
-		private ContainerGameObject container;
+		protected ContainerGameObject container;
 		protected Rectangle objectArea = new Rectangle();
 		private Rectangle paintBox = new Rectangle();
 		private void initialize(int shnum) {		// Initialize objectArea.
@@ -173,6 +173,11 @@ public abstract class Gump extends ShapeID {
 			}
 			else
 				setObjectArea(52, 22, 60, 40, 8, 64);
+		}
+		// For initializing ActorGumps.  Does NOT call initialize().
+		protected Container(Actor a, int initx, int inity, int shnum) {
+			super(initx, inity, shnum);
+			container = a;
 		}
 		public Container(ContainerGameObject cont, int initx, int inity, 
 								int shnum) {

@@ -424,8 +424,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		} else /* if (serpent) */
 			return (123);		// Show paperdolls
 	}
-
-
+	GameObject getReadied(int index) {
+		return index >= 0 && index < spots.length ? spots[index] : null;
+	}
 	/*
 	 *	Drop another onto this.
 	 *

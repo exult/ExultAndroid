@@ -158,14 +158,15 @@ public final class GumpManager extends GameSingletons {
 			y = gwin.getWidth()/10;
 		}
 		Gump new_gump = null;
-		/* ++++++++++FINISH
 		Actor npc = null;
 		if (obj != null)
 			npc = obj.asActor();
-		if (npc && paperdoll)
+		/* ++++++++++FINISH
+		if (npc != null && paperdoll)
 			new_gump = new Paperdoll_gump(npc, x, y, npc.get_npc_num());
-		else if (npc && actorgump) 
-			new_gump = new Actor_gump(npc, x, y, shapenum);
+		else */ if (npc != null && actorgump) 
+			new_gump = new ActorGump(npc, x, y, shapenum);
+		/* ++++++FINISH
 		else if (shapenum == game.get_shape("gumps/statsdisplay"))
 			new_gump = Stats_gump.create(obj, x, y);
 		else if (shapenum == game.get_shape("gumps/spellbook"))
@@ -178,8 +179,7 @@ public final class GumpManager extends GameSingletons {
 				new_gump = new CombatStats_gump(x, y);
 			else if (shapenum == game.get_shape("gumps/jawbone"))
 				new_gump = new Jawbone_gump((Jawbone_object*) obj, x, y);
-		}
-		*/
+		} */
 		if (new_gump == null)
 			new_gump = new Gump.Container(obj, x, y, shapenum);
 		if (++gumpCount == 8)
