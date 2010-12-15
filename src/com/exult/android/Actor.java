@@ -390,7 +390,219 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		else if (partyId >= 0 || !gwin.isTimeStopped())
 			ucmachine.callUsecode(getUsecode(), this, event);
 	}
-	
+	public boolean fitsInSpot(GameObject obj, int spot) {
+		ShapeInfo inf = obj.getInfo();
+		int rtype = inf.getReadyType(),
+			alt1 = inf.getAltReady1(),
+			alt2 = inf.getAltReady2();
+		boolean can_scabbard = (alt1 == Ready.scabbard || 
+					alt2 == Ready.scabbard);
+		boolean can_neck = (rtype == Ready.neck || 
+					alt1 == Ready.neck || alt2 == Ready.neck);
+		if (spot == Ready.both_hands)
+			spot = Ready.lhand;
+		else if (spot == Ready.lrgloves)
+			spot = Ready.lfinger;
+		else if (spot == Ready.neck)
+			spot = Ready.amulet;
+		else if (spot == Ready.scabbard)
+			spot = Ready.belt;
+
+		// If occupied, can't place
+		if (spots[spot] != null)
+			return false;
+		// If want to use 2h or a 2h is already equiped, can't go in right
+		else if ((rtype == Ready.both_hands || twoHanded) && spot == Ready.rhand)
+			return false;
+		// If want to use 2f or a 2f is already equiped, can't go in right or gloves
+		else if ((rtype == Ready.lrgloves || twoFingered) &&
+				(spot == Ready.rfinger || spot == Ready.gloves))
+			return false;
+		// If want to use scabbard or a scabbard is already equiped, can't go in others
+		else if ((can_scabbard || useScabbard) &&
+				(spot == Ready.back_2h || spot == Ready.back_shield))
+			return false;
+		// If want to use neck or neck is already filled, can't go in cloak
+		else if ((can_neck || useNeck) && spot == Ready.cloak)
+			return false;
+		// Can't use 2h in left if right occupied
+		else if (rtype == Ready.both_hands && spot == Ready.lhand && 
+					spots[Ready.rhand] != null)
+			return false;
+		// Can't use 2f in left if right occupied
+		else if (rtype == Ready.lrgloves && spot == Ready.lfinger && 
+					spots[Ready.rfinger] != null)
+			return false;
+		// Can't use scabbard in belt if back 2h or back shield occupied
+		else if (can_scabbard && spot == Ready.belt &&
+				(spots[Ready.back_2h] != null || spots[Ready.back_shield] != null))
+			return false;
+		// Can't use neck in amulet if cloak occupied
+		else if (can_neck && spot == Ready.amulet && spots[Ready.cloak] != null)
+			return false;
+		// If in left or right hand allow it
+		else if (spot == Ready.lhand || spot == Ready.rhand)
+			return true;
+		// Special Checks for Belt
+		else if (spot == Ready.belt)
+		{
+			if (inf.isSpell() || can_scabbard)
+				return true;
+		}
+		// Special Checks for back 2h and back shield
+		else if (spot == Ready.back_2h || spot == Ready.back_shield)
+		{
+			if (can_scabbard)
+				return true;
+		}
+		// Special Checks for amulet and cloak
+		else if (spot == Ready.amulet || spot == Ready.cloak)
+		{
+			if (can_neck)
+				return true;
+		}
+
+		// Lastly if we have gotten here, check the paperdoll table 
+		return inf.isObjectAllowed(obj.getFrameNum(), spot);
+	}
+	// Return the preferred, alt1, and alt2 slots where an item would prefer
+	//  to be readied.
+	public void getPreferedSlots(GameObject obj, int pref[]) {
+		ShapeInfo info = obj.getInfo();
+		pref[0] = info.getReadyType();
+		pref[1] = info.getAltReady1();
+		pref[2] = info.getAltReady2();
+		if (pref[1] < 0)
+			pref[1] = Ready.lhand;
+		if (pref[0] == Ready.lhand)
+			{
+			if (info.isObjectAllowed(obj.getFrameNum(), Ready.rhand))
+				if (!info.isObjectAllowed(obj.getFrameNum(), Ready.lhand))
+					pref[0] = Ready.rhand;
+				else
+					pref[1] = Ready.rhand;
+			else
+				pref[1] = Ready.rhand;
+			}
+	}
+	/*
+	 *	Find the best spot where an item may be readied.
+	 *	Output:	Index, or -1 if none found.
+	 */
+	public int findBestSpot(GameObject obj) {
+		int pref[] = new int[3];
+
+		// Get the preferences
+		getPreferedSlots (obj, pref);
+		// Check Prefered
+		if (fitsInSpot(obj, pref[0])) return pref[0];
+		// Alternate
+		else if (pref[1] >= 0 && fitsInSpot (obj, pref[1])) return pref[1];
+		// Second alternate
+		else if (pref[2] >= 0 && fitsInSpot (obj, pref[2])) return pref[2];
+		// Belt
+		else if (fitsInSpot (obj, Ready.belt)) return Ready.belt;
+		// Back - required???
+		else if (fitsInSpot (obj, Ready.backpack)) return Ready.backpack;
+		// Back2h
+		else if (fitsInSpot (obj, Ready.back_2h)) return Ready.back_2h;
+		// Sheild Spot
+		else if (fitsInSpot (obj, Ready.back_shield)) return Ready.back_shield;
+		// Left Hand
+		else if (fitsInSpot (obj, Ready.lhand)) return Ready.lhand;
+		// Right Hand
+		else if (fitsInSpot (obj, Ready.rhand)) return Ready.rhand;
+
+		return -1;
+	}
+	/*
+	 *	Add an object.
+	 *
+	 *	Output:	1, meaning object is completely contained in this.  Obj may
+	 *			be deleted in this case if combine==true.
+	 *		0 if not enough space, although obj's quantity may be
+	 *			reduced if combine==true.
+	 */
+	public boolean add(GameObject obj, boolean dont_check,
+			boolean combine, boolean noset) {
+		int index = findBestSpot(obj);// Where should it go?
+		
+		if (index < 0) {		// No free spot?  Look for a bag.
+			if (spots[Ready.backpack] != null && 
+					spots[Ready.backpack].add(obj, false, combine, false))
+				return true;
+			if (spots[Ready.belt] != null && 
+					spots[Ready.belt].add(obj, false, combine, false))
+				return true;
+			if (spots[Ready.lhand] != null && 
+					spots[Ready.lhand].add(obj, false, combine, false))
+				return true;
+			if (spots[Ready.rhand] != null && 
+					spots[Ready.rhand].add(obj, false, combine, false))
+				return true;
+			if (!dont_check)
+				return false;
+
+			// try again without checking volume/weight
+			if (spots[Ready.backpack] != null && 
+						spots[Ready.backpack].add(obj, true, combine, false))
+				return true;
+			if (spots[Ready.belt] != null && 
+						spots[Ready.belt].add(obj, true, combine, false))
+				return true;
+			if (spots[Ready.lhand] != null && 
+						spots[Ready.lhand].add(obj, true, combine, false))
+				return true;
+			if (spots[Ready.rhand] != null && 
+						spots[Ready.rhand].add(obj, true, combine, false))
+				return true;
+
+			if (partyId != -1 || npcNum==0) {
+				// WARNING.
+			}
+			return super.add(obj, dont_check, combine, false);
+		}
+						// Add to ourself (DON'T combine).
+		if (!super.add(obj, true, false, false))
+			return false;
+
+		if (index == Ready.both_hands) {	// Two-handed?
+			twoHanded = true;
+			index = Ready.lhand;
+		} else if (index == Ready.lrgloves) {	// BG Gloves?
+			twoFingered = true;
+			index = Ready.lfinger;
+		} else if (index == Ready.scabbard) {		// Use scabbard?
+			useScabbard = true;
+			index = Ready.belt;
+		} else if (index == Ready.neck) {		// Use neck?
+			useNeck = true;
+			index = Ready.amulet;
+		}
+
+		spots[index] = obj;		// Store in correct spot.
+		/* ++++++++++FINISH
+		if (index == Ready.lhand && schedule != null && !noset)
+			schedule.setWeapon();	// Tell combat-schedule about it.
+		obj.setShapePos(0, 0);	// Clear coords. (set by gump).
+		if (!dont_check)
+			callReadiedUsecode(index, obj, UsecodeMachine.readied);
+						// (Readied usecode now in drop().)
+		*/
+		ShapeInfo info = obj.getInfo();
+
+		if (info.isLightSource() &&
+				(index == Ready.lhand || index == Ready.rhand))
+			lightSources++;
+
+		// Refigure granted immunities.
+		/* ++++++FINISH
+		gear_immunities |= info.getArmorImmunity();
+		gear_powers |= info.getObjectFlags(obj.getFrameNum(),
+					info.hasQuality() ? obj.getQuality() : -1);
+		*/
+		return true;
+	}
 	public void showInventory() {
 		int shapenum = inventoryShapenum();
 		if (shapenum >= 0)
@@ -398,7 +610,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public int inventoryShapenum() {
 		// We are serpent if we can use serpent isle paperdolls
-		boolean serpent = false; // +++++FINISH(sman->can_use_paperdolls() && sman->are_paperdolls_enabled());
+		boolean serpent = false; // +++++FINISH(sman.can_use_paperdolls() && sman.are_paperdolls_enabled());
 		
 		if (!serpent) {
 				// Can't display paperdolls (or they are disabled)

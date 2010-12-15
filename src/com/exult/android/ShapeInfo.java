@@ -190,9 +190,11 @@ void clean_invalid_paperdolls();
 void clear_paperdoll_info();
 void add_paperdoll_info(Paperdoll_item& add);
 Paperdoll_item *get_item_paperdoll(int frame, int spot);
-bool is_object_allowed(int frame, int spot)
-{ return get_item_paperdoll(frame, spot) != 0; }
-
+*/
+	public final boolean isObjectAllowed(int frame, int spot) {
+		return false;// +++++FINISHreturn get_item_paperdoll(frame, spot) != 0; 
+	}
+/*
 bool has_content_rules() {;
 private vector<Content_rules>& get_content_rules()
 { return cntrules; }
