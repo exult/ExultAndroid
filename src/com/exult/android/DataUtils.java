@@ -83,11 +83,10 @@ public final class DataUtils {
 		public abstract boolean read(InputStream in, int version, 
 				boolean patch, int game, ShapeInfo info);
 	}
-	public static class PostFunctor {
-		void read(InputStream in, int version, boolean patch,
-				int game, ShapeInfo info) {}
+	public static interface PostFunctor {
+		void postProcess(InputStream in, int version, boolean patch,
+				int game, ShapeInfo info);
 	}
-
 	/*
 	 *	Generic functor-based reader class for maps.
 	 */
@@ -102,7 +101,8 @@ public final class DataUtils {
 			if (id >= 0) {
 				ShapeInfo inf = info[id];
 				reader.read(in, version, patch, game, inf);
-				postread.read(in, version, patch, game, inf);
+				if (postread != null)
+					postread.postProcess(in, version, patch, game, inf);
 			}
 		}
 		public FunctorMultidataReader(ShapeInfo nfo[],

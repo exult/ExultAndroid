@@ -557,12 +557,11 @@ int get_weapon_offset(int frame)
 		} catch (IOException e) { }
 		
 		//++++++++++LOTS MORE
-		DataUtils.PostFunctor null_post = new DataUtils.PostFunctor();
 		DataUtils.IDReaderFunctor idReader = new DataUtils.IDReaderFunctor();
 		
 		DataUtils.FunctorMultidataReader gump = 
 			new DataUtils.FunctorMultidataReader(
-				info, new GumpReaderFunctor(), null_post, idReader, true);
+				info, new GumpReaderFunctor(), null, idReader, true);
 		if (game == EConst.BLACK_GATE || game == EConst.SERPENT_ISLE)
 			gump.read(game, game == EConst.BLACK_GATE
 				? EFile.EXULT_BG_FLX_CONTAINER_DAT
@@ -570,6 +569,22 @@ int get_weapon_offset(int frame)
 		else
 			gump.read(EFile.CONTAINER, false, game);
 		gump.read(EFile.PATCH_CONTAINER, true, game);
+
+		ReadyTypeFunctor r = new ReadyTypeFunctor();
+		DataUtils.FunctorMultidataReader ready =
+			new DataUtils.FunctorMultidataReader(
+						info, r, r, idReader, false);
+		ready.read(EFile.READY, false, game);
+		ready.read(EFile.PATCH_READY, true, game);
+		//+++++Read text files?
+		// Ensure valid ready spots for all shapes.
+		byte defready = (byte) (game == EConst.BLACK_GATE
+								? Ready.backpack : Ready.rhand);
+		int cnt = info.length;
+		for (i = 0; i < cnt; ++i) {
+			if (info[i].readyType < 0)
+				info[i].readyType = defready;
+		}
 	}
 	/*
 	 * Readers
@@ -583,6 +598,39 @@ int get_weapon_offset(int frame)
 			else
 				info.gumpFont = -1;
 			return true;
+		}
+	}
+	// A few custom post-read functors.
+	static class ReadyTypeFunctor extends DataUtils.ReaderFunctor
+							implements DataUtils.PostFunctor {
+		public boolean read(InputStream in, int version, 
+								boolean patch, int game, ShapeInfo info) {
+			info.readyType = EUtil.Read1(in);
+			try { in.skip(6); } catch (IOException e) {}
+			return true;
+		}
+		public void postProcess(InputStream in, int version, boolean patch,
+				int game, ShapeInfo info)
+			{
+			byte ready = info.readyType;
+			info.spellFlag = (ready&1) != 0;
+			ready >>= 3;
+			int spot = game == EConst.BLACK_GATE ? Ready.spotFromBG(ready)
+			                               : Ready.spotFromSI(ready);
+			info.readyType = (byte)(spot&0xff);
+					// Init alternate spots.
+			switch (spot) {
+			case Ready.lfinger:
+				info.altReady1 = Ready.rfinger;
+				break;
+			case Ready.lhand:
+				info.altReady1 = Ready.rhand;
+				info.altReady2 = Ready.belt;
+				break;
+			case Ready.both_hands:
+				info.altReady1 = Ready.back_2h;
+				break;
+			}
 		}
 	}
 
