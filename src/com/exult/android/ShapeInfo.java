@@ -607,7 +607,8 @@ int get_weapon_offset(int frame)
 							implements DataUtils.PostFunctor {
 		public boolean read(InputStream in, int version, 
 								boolean patch, int game, ShapeInfo info) {
-			info.readyType = EUtil.Read1(in);
+			info.readyType = (byte)EUtil.Read1(in);
+			System.out.println("readyType = " + info.readyType);
 			try { in.skip(6); } catch (IOException e) {}
 			return true;
 		}

@@ -30,6 +30,7 @@ public final class DataUtils {
 			if (haveversion)
 				vers = EUtil.Read1(in);
 			int cnt = Read_count(in);
+			System.out.println("**** cnt = " + cnt);
 			for (int j = 0; j < cnt; j++)
 				read_data(in, j, vers, patch, game, true);
 			}
@@ -98,8 +99,10 @@ public final class DataUtils {
 		public void read_data(InputStream in, int index, int version,
 			boolean patch, int game, boolean binary) {
 			int id = idread.read(in, index, version, binary);
+			System.out.println("Reading entry for shape #" + id);
 			if (id >= 0) {
 				ShapeInfo inf = info[id];
+				
 				reader.read(in, version, patch, game, inf);
 				if (postread != null)
 					postread.postProcess(in, version, patch, game, inf);

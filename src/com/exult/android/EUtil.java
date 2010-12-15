@@ -75,11 +75,11 @@ public class EUtil {
 			return -1;
 		}
 	}
-	public static final byte Read1(InputStream in) {
+	public static final int Read1(InputStream in) {
 		try {
-			return (byte)(in.read()&0xff);
+			return ((int)in.read()&0xff);
 		} catch (IOException e) {
-			return (byte)-1;
+			return -1;
 		}
 	}
 	// Read integer from a text file.
