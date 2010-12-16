@@ -149,9 +149,10 @@ public final class DraggingInfo extends GameSingletons {
 		int x, int y
 		) {
 		GameObject block = gwin.findObject(x, y);
-		if (block != null && block != obj && !block.isDragable())
+		if (block != null && block != obj && !block.isDragable()) {
+			System.out.println("isInaccessible: returning TRUE");
 			return true;
-		else 
+		} else 
 			return false;
 	}
 	/*
@@ -232,14 +233,19 @@ public final class DraggingInfo extends GameSingletons {
 						//   it will end up hidden (-1).
 		for (lift = old_lift; dropped == 0 && lift <= max_lift; lift++)
 			dropped = dropAtLift(to_drop, posx, posy, lift);
-
+		System.out.println("Dropping " + to_drop.getShapeNum() +
+				" with old_lift = " + old_lift);
 		if (dropped <= 0) {
 			/* +++++++++++
 			Mouse::mouse.flash_shape(Mouse::blocked);
 			Audio::get_ptr().play_sound_effect(Audio::game_sfx(76));
 			*/
+			System.out.println("Could not find spot to drop " + 
+					to_drop.getShapeNum());
 			return false;
 		}
+		System.out.println("New pos is " + to_drop.getTileX() +
+				", " + to_drop.getTileY() + ", " + to_drop.getLift());
 						// Moved more than 2 tiles.
 		if (gump == null && !possible_theft) {
 			Tile t = new Tile();
@@ -493,6 +499,7 @@ public final class DraggingInfo extends GameSingletons {
 		    !Fast_pathfinder_client::is_grabable(main_actor, 
 				Tile_coord(tx, ty, lift)))*/)
 			return 0;
+		System.out.println("Past areaAvailable check.");
 		lift = loc.tz;
 		to_drop.setInvalid();
 		to_drop.move(tx, ty, lift);
@@ -509,6 +516,7 @@ public final class DraggingInfo extends GameSingletons {
 			isInaccessible(to_drop, 
 					rect.x + (rect.w >> 1), rect.y + (rect.h >> 1))) {
 			to_drop.removeThis();
+			System.out.println("dropAtLift returning -1");
 			return -1;
 		}
 						// On an egg?

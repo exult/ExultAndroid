@@ -407,7 +407,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			spot = Ready.amulet;
 		else if (spot == Ready.scabbard)
 			spot = Ready.belt;
-
 		// If occupied, can't place
 		if (spots[spot] != null)
 			return false;
@@ -526,7 +525,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public boolean add(GameObject obj, boolean dont_check,
 			boolean combine, boolean noset) {
 		int index = findBestSpot(obj);// Where should it go?
-		
+		if (npcNum == 0)
+		System.out.println("Adding shape " + obj.getShapeNum() +
+				", spot = " + index);
 		if (index < 0) {		// No free spot?  Look for a bag.
 			if (spots[Ready.backpack] != null && 
 					spots[Ready.backpack].add(obj, false, combine, false))

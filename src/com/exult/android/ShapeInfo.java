@@ -192,7 +192,7 @@ void add_paperdoll_info(Paperdoll_item& add);
 Paperdoll_item *get_item_paperdoll(int frame, int spot);
 */
 	public final boolean isObjectAllowed(int frame, int spot) {
-		return false;// +++++FINISHreturn get_item_paperdoll(frame, spot) != 0; 
+		return true;// +++++FINISHreturn get_item_paperdoll(frame, spot) != 0; 
 	}
 /*
 bool has_content_rules() {;
@@ -575,7 +575,7 @@ int get_weapon_offset(int frame)
 		ReadyTypeFunctor r = new ReadyTypeFunctor();
 		DataUtils.FunctorMultidataReader ready =
 			new DataUtils.FunctorMultidataReader(
-						info, r, r, idReader, false);
+						info, r, null, idReader, false);
 		ready.read(EFile.READY, false, game);
 		ready.read(EFile.PATCH_READY, true, game);
 		//+++++Read text files?
@@ -603,24 +603,19 @@ int get_weapon_offset(int frame)
 		}
 	}
 	// A few custom post-read functors.
-	static class ReadyTypeFunctor extends DataUtils.ReaderFunctor
-							implements DataUtils.PostFunctor {
+	static class ReadyTypeFunctor extends DataUtils.ReaderFunctor {
 		public boolean read(InputStream in, int version, 
 								boolean patch, int game, ShapeInfo info) {
 			info.readyType = (byte)EUtil.Read1(in);
-			System.out.println("readyType = " + info.readyType);
+			
 			try { in.skip(6); } catch (IOException e) {}
-			return true;
-		}
-		public void postProcess(InputStream in, int version, boolean patch,
-				int game, ShapeInfo info)
-			{
-			byte ready = info.readyType;
+			int ready = info.readyType;
 			info.spellFlag = (ready&1) != 0;
 			ready >>= 3;
 			int spot = game == EConst.BLACK_GATE ? Ready.spotFromBG(ready)
 			                               : Ready.spotFromSI(ready);
 			info.readyType = (byte)(spot&0xff);
+			//System.out.println("readyType = " + info.readyType);
 					// Init alternate spots.
 			switch (spot) {
 			case Ready.lfinger:
@@ -634,6 +629,7 @@ int get_weapon_offset(int frame)
 				info.altReady1 = Ready.back_2h;
 				break;
 			}
+			return true;
 		}
 	}
 
