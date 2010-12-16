@@ -604,6 +604,48 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		*/
 		return true;
 	}
+	public void remove(GameObject obj) {
+		int index = findReadied(obj);	// Remove from spot.
+		// Note:  gwin->drop() also does this,
+		//   but it needs to be done before
+		//   removal too.
+		// Definitely DO NOT call if dead!
+		/* +++++++++FINISH
+		if (!isDead() && !ucmachine.inUsecodeFor(
+									obj, UsecodeMachine.unreadied))
+			callReadiedUsecode(index, obj, UsecodeMachine.unreadied);
+		*/
+		super.remove(obj);
+		if (index >= 0) {
+			spots[index] = null;
+			if (index == Ready.rhand || index == Ready.lhand)
+				twoHanded = false;
+			if (index == Ready.rfinger || index == Ready.lfinger)
+				twoFingered = false;
+			if (index == Ready.belt || 
+					index == Ready.back_2h || index == Ready.back_shield)
+				useScabbard = false;
+			if (index == Ready.amulet || index == Ready.cloak)
+				useNeck = false;
+			/* ++++++++++FINISH
+			if (index == lhand && schedule != null)
+				schedule.setWeapon(true);
+			// Recheck armor immunities and frame powers.
+			refigure_gear();
+			*/
+		}
+	}
+	/*
+	 *	Find index of spot where an object is readied.
+	 *
+	 *	Output:	Index, or -1 if not found.
+	 */
+	public int findReadied(GameObject obj) {
+		for (int i = 0; i < spots.length; i++)
+			if (spots[i] == obj)
+				return (i);
+		return (-1);
+	}
 	public void showInventory() {
 		int shapenum = inventoryShapenum();
 		if (shapenum >= 0)

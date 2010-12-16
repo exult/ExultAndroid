@@ -78,10 +78,10 @@ public class GameRender {
 		skip = gwin.getRenderSkipLift(); 
 		ObjectList.NonflatObjectIterator iter = olist.getNonflatObjectIterator();
 
-		while ((obj = iter.next()) != null)
+		while ((obj = iter.next()) != null) {
 			if (obj.renderSeq != renderSeq)
 				paintObject(obj);
-
+		}
 		skip = 255;			// Back to a safe #.
 		return light_sources;
 		}

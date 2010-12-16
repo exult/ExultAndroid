@@ -604,6 +604,9 @@ public class GameWindow extends GameSingletons {
 					}
 				}
 			}
+		System.out.println("findObject at " + x + ", " + y + ", found ");
+		if (best != null)
+			System.out.println("Found " + best.getShapeNum());
 		return (best);
 	}
 	/*

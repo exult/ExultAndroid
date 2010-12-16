@@ -108,8 +108,6 @@ public final class GumpManager extends GameSingletons {
 	public void addGump(Gump g) {
 		setKbdFocus(g);
 		openGumps.addLast(g);	
-		System.out.println("Really added gump.  New count is " 
-				+ openGumps.size());
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 			// And pause the game, if we want it
 			nonPersistentCount++;

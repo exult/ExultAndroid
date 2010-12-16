@@ -2,6 +2,7 @@ package com.exult.android;
 import android.graphics.Point;
 
 public final class DraggingInfo extends GameSingletons {
+	public static GameObject lastDropped;	// For debugging.
 	private GameObject obj;		// What's being dragged.
 	private boolean is_new;			// Object was newly created.
 	private Gump gump;
@@ -150,7 +151,6 @@ public final class DraggingInfo extends GameSingletons {
 		) {
 		GameObject block = gwin.findObject(x, y);
 		if (block != null && block != obj && !block.isDragable()) {
-			System.out.println("isInaccessible: returning TRUE");
 			return true;
 		} else 
 			return false;
@@ -414,6 +414,7 @@ public final class DraggingInfo extends GameSingletons {
 			if (old_foot.w > 0)
 				MapChunk.gravity(old_foot, old_top);
 			*/
+			System.out.println("Dropped whole object");
 			return true;		// All done.
 		}
 						// Subtract quantity moved.
@@ -443,8 +444,12 @@ public final class DraggingInfo extends GameSingletons {
 		}
 		else if (!moved)		// For now, if not moved, leave it.
 			return handled;
-		else if (!drop(x, y))		// Drop it.
+		else if (!drop(x, y)) {		// Drop it.
+			System.out.println("Failed to drop.  Putting back.");
 			putBack();		// Wasn't (all) moved.
+		}
+		if (obj != null)
+			lastDropped = obj;
 		obj = null;			// Clear so we don't paint them.
 		gump = null;
 		gwin.paint();
@@ -499,7 +504,6 @@ public final class DraggingInfo extends GameSingletons {
 		    !Fast_pathfinder_client::is_grabable(main_actor, 
 				Tile_coord(tx, ty, lift)))*/)
 			return 0;
-		System.out.println("Past areaAvailable check.");
 		lift = loc.tz;
 		to_drop.setInvalid();
 		to_drop.move(tx, ty, lift);
@@ -516,7 +520,6 @@ public final class DraggingInfo extends GameSingletons {
 			isInaccessible(to_drop, 
 					rect.x + (rect.w >> 1), rect.y + (rect.h >> 1))) {
 			to_drop.removeThis();
-			System.out.println("dropAtLift returning -1");
 			return -1;
 		}
 						// On an egg?
