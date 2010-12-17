@@ -274,5 +274,11 @@ public class EUtil {
 	public static final int rand() {
 		return random.nextInt();
 	}
+	public static final int log2(int n) {
+		int result = 0;
+		for (n = n>>1; n != 0; n = n>>1)
+			result++;
+		return result;
+	}
 }
 

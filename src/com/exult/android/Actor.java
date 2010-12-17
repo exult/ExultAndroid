@@ -200,11 +200,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public final int getProperty(int prop) {
 		/* ++++++FINISH
-		if (prop == Actor::sex_flag)
+		if (prop == Actor.sex_flag)
 			// Correct in BG and SI, but the flag is never normally set
 			// for anyone but avatar in BG.
-			return get_type_flag(Actor::tf_sex);
-		else if (prop == Actor::missile_weapon)
+			return get_type_flag(Actor.tf_sex);
+		else if (prop == Actor.missile_weapon)
 			{
 			// Seems to give the same results as in the originals.
 			Game_object *weapon = get_readied(lhand);
@@ -217,7 +217,75 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return (prop >= 0 && prop < Actor.sex_flag) ? properties[prop] : 0;
 	}
 	public final void setProperty(int prop, int val) {
-		//+++++++++FINISH
+		/* ++++++++++
+		if (prop == health && ((partyId != -1) || (npcNum == 0)) && 
+				cheat.in_god_mode() && val < properties[prop])
+			return;
+		*/
+		switch (prop) {
+		case exp:
+			{			// Experience?  Check for new level.
+			int old_level = getLevel();
+			properties[exp] = val;
+			int delta = getLevel() - old_level;
+			if (delta > 0)
+				properties[training] += 3*delta;
+			break;
+			}
+		case food_level:
+			if (val > 31)		// Never seems to get above this.
+				val = 31;
+			else if (val < 0)
+				val = 0;
+			properties[prop] = val;
+			break;
+		case combat:			// These two are limited to 30.
+		case magic:
+			properties[prop] = val > 30 ? 30 : val;
+			break;
+		case training:			// Don't let this go negative.
+			properties[prop] = val < 0 ? 0 : val;
+			break;
+		case sex_flag:
+			// Doesn't seem to be settable in original BG except by hex-editing
+			// the save game, but there is no problem in allowing it in Exult.
+			/*++++++FINISH
+			if (val != 0)
+				setTypeFlag(tf_sex);
+			else
+				clearTypeFlag(tf_sex);
+			*/
+			break;
+		default:
+			if (prop >= 0 && prop < missile_weapon)
+				properties[prop] = val;
+			break;
+		}
+		if (gumpman.showingGumps())
+			gwin.setAllDirty();
+	} 
+	public final int getEffectiveProp(int prop) {
+		int val = getProperty(prop);
+		switch (prop)
+			{
+		case Actor.dexterity:
+		case Actor.combat:
+			if (getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep) ||
+				getProperty(Actor.health) < 0)
+				return prop == Actor.dexterity ? 0 : 1;
+		case Actor.intelligence:
+			if (isDead())
+				return prop == Actor.dexterity ? 0 : 1;
+			else if (getFlag(GameObject.charmed) || getFlag(GameObject.asleep))
+				val--;
+		case Actor.strength:
+			if (getFlag(GameObject.might))
+				val += (val < 15 ? val : 15);	// Add up to 15.
+			if (getFlag(GameObject.cursed))
+				val -= 3;	// Matches originals.
+			break;
+			}
+		return val;
 	}
 	public void setFlag(int flag) {
 		//++++FINISH
@@ -271,6 +339,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean isDead() {
 		return (flags&(1<<GameObject.dead)) != 0; 
 	}
+	public final int getLevel() {
+		return 1 + EUtil.log2(getProperty(exp)/50);
+	}
 	public final boolean isDormant() {
 		return dormant;
 	}
@@ -321,12 +392,76 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final String getNpcName() {
 		return (name == null || name == "") ? super.getName() : name;	
 	}
-	int get_temperature()	// Get/set measure of coldness.
+	int getTemperature()	// Get/set measure of coldness.
 		{ return temperature; }
-	void set_temperature(int t) {
-		//+++++++FINISH
+	void setTemperature(int v) {	
+		if (v < 0)
+			v = 0;
+		else if (v > 63)
+			v = 63;
+		temperature = (byte)v;
+	}/*
+	 *	Figure warmth based on what's worn.  In trying to mimic the original
+	 *	SI, the base value is -75.
+	 */
+	static final int warmthLocs[] = {Ready.head, Ready.cloak, Ready.feet, 
+				Ready.torso, Ready.gloves, Ready.legs};
+	public final int figureWarmth() {
+		int warmth = -75;		// Base value.
+		for (int i = 0; i < warmthLocs.length; i++) {
+			GameObject worn = spots[warmthLocs[i]];
+			/* +++++++FINISH
+			if (worn != null)
+				warmth += worn.getInfo().getObjectWarmth(
+											worn.getFrameNum());
+			*/
+			}
+		return warmth;
+		}
+	/*
+	 *	Get maximum weight in stones that can be held.
+	 *
+	 *	Output:	Max. allowed, or 0 if no limit (i.e., not carried by an NPC).
+	 */
+	public int getMaxWeight() {
+		return 2*getEffectiveProp(Actor.strength);
 	}
-	public void set_actor_shape() { 	// Set shape based on sex, skin color
+	/*
+	 *	Call usecode function for an object that's readied/unreadied.
+	 */
+
+	public void callReadiedUsecode
+		(
+		int index,
+		GameObject obj,
+		int eventid
+		) {
+		ShapeInfo info = obj.getInfo();
+						// Limit to certain types.
+		if (!info.hasUsecodeEvents())
+			return;
+		if (info.getShapeClass() != ShapeInfo.container)
+			ucmachine.callUsecode(obj.getUsecode(), obj, eventid);
+	}
+	/*
+	 *	Returns true if NPC is in a non-no_halt usecode script or if
+	 *	dont_move flag is set.
+	 */
+	public final boolean inUsecodeControl() {
+		if (getFlag(GameObject.dont_render) || 
+							getFlag(GameObject.dont_move))
+			return true;
+		/* +++++++++FINISH
+		UsecodeScript scr = null;
+		while ((scr = UsecodeScript.findActive(this, scr)) != null)
+			// no_halt scripts seem not to prevent movement.
+			if (!scr.isNoHalt())
+				return true;
+		*/
+		return false;
+	}
+
+	public void setActorShape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
 	}
 	public final boolean addDirty(boolean figureWeapon) {
@@ -345,7 +480,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			frnum = (frnum&48)|visible_frames[frnum&15];
 			id.set_frame(frnum);
 			if (!(shape = id.get_shape()) || shape.is_empty())
-				frnum = (frnum&48)|Actor::standing;
+				frnum = (frnum&48)|Actor.standing;
 			}
 		*/
 		restTime = 0;
@@ -606,7 +741,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public void remove(GameObject obj) {
 		int index = findReadied(obj);	// Remove from spot.
-		// Note:  gwin->drop() also does this,
+		// Note:  gwin.drop() also does this,
 		//   but it needs to be done before
 		//   removal too.
 		// Definitely DO NOT call if dead!
@@ -728,19 +863,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean canAct() {
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)
 				|| isDead() || getProperty(health) <= 0);
-	}
-	public boolean inUsecodeControl() {
-		if (getFlag(GameObject.dont_render) || getFlag(GameObject.dont_move))
-			return true;
-		/* +++++++
-		Usecode_script *scr = 0;
-		Actor *act = const_cast<Actor *>(this);
-		while ((scr = Usecode_script::find_active(act, scr)) != 0)
-			// no_halt scripts seem not to prevent movement.
-			if (!scr.is_no_halt())
-				return true;
-		*/
-		return false;
 	}
 	/*
 	 *	Walk towards a given tile.
@@ -1012,7 +1134,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		setProperty(Actor.magic, magic);
 		// Need to make sure that mana is less than magic
 		setProperty(Actor.mana, mana<magic ? mana : magic);
-		set_temperature (temp);
+		setTemperature (temp);
 		set_ident(ident);
 		if (((flags3 >> 0) & 1) != 0) 
 			setFlag (GameObject.met);
@@ -1052,9 +1174,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			setTypeFlags (tflags);
 		/* ++++++++FINISH
 		if (num == 0 && Game::get_avsex() == 0) {
-			clear_type_flag (Actor::tf_sex);
+			clear_type_flag (Actor.tf_sex);
 		} else if (num == 0 && Game::get_avsex() == 1) {
-			set_type_flag (Actor::tf_sex);
+			set_type_flag (Actor.tf_sex);
 		}
 		*/
 		nfile.skip (5);	// Unknown
@@ -1068,7 +1190,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (!fix_first && shnum != 0) {
 				// ++++ Testing
 			if (npcNum == 0)
-				set_actor_shape();
+				setActorShape();
 			else
 				setShape(shnum);		// 16 Bit Shape Number
 
@@ -1193,8 +1315,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// Maybe we should restore it to full health?
 			Monster_info *minf = get_info().get_monster_info();
 			if (minf && minf.cant_die())
-				setProperty(Actor.static_cast<int>(Actor::health),
-					get_property(static_cast<int>(Actor::strength)));
+				setProperty(Actor.static_cast<int>(Actor.health),
+					get_property(static_cast<int>(Actor.strength)));
 		}
 
 		// Only do ready best weapon if we are in BG, this is the first time
