@@ -68,16 +68,13 @@ public class ActorGump extends Container {
 	ActorGump(Actor npc, int initx, int inity, int shnum) {
 		super(npc, initx, inity, shnum);	
 		setObjectArea(26, 0, 104, 132, 6, 136);
-		/* +++++++++++++++
-		add_elem(new Heart_button(this, heartx, hearty));
-		if (npc.get_npc_num() == 0)
-			{
-			add_elem(new Disk_button(this, diskx, disky));
-			add_elem(new Combat_button(this, combatx, combaty));
+		addElem(new GumpWidget.HeartButton(this, heartx, hearty));
+		if (npc.getNpcNum() == 0) {
+			addElem(new GumpWidget.DiskButton(this, diskx, disky));
+			addElem(new GumpWidget.CombatButton(this, combatx, combaty));
 			}
-		add_elem(new Halo_button(this, halox, haloy, npc));
-		add_elem(new Combat_mode_button(this, cmodex, cmodey, npc));
-		*/	
+		addElem(new GumpWidget.HaloButton(this, halox, haloy, npc));
+		addElem(new GumpWidget.CombatModeButton(this, cmodex, cmodey, npc));
 		for (int i = 0; i < coords.length/2; i++) {
 					// Set object coords.
 			GameObject obj = container.getReadied(i);

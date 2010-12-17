@@ -94,4 +94,120 @@ public class GumpWidget extends ShapeID {
 			return true;
 		}
 	}
+	/*
+	 *	A 'heart' button for bringing up stats.
+	 */
+	public static class HeartButton extends Button {
+		public HeartButton(Gump par, int px, int py) {
+			super(par, game.getShape("gumps/heart"), px, py);
+		}
+						// What to do when 'clicked':
+		public boolean activate(boolean button) {
+			if (!button) 
+				return false;
+			/* +++++++FINISH
+			else
+				gumpman.addGump(parent.getContainer(), game.getShape(
+						"gumps/statsdisplay"));
+			*/
+			return true;
+		}
+	}
+	/*
+	 *	A diskette for bringing up the 'save' box.
+	 */
+	public static class DiskButton extends Button {
+		public DiskButton(Gump par, int px, int py) {
+			super(par, game.getShape("gumps/disk"), px, py);
+		}
+						// What to do when 'clicked':
+		public boolean activate(boolean button) {
+			if (!button) 
+				return false;
+			/* ++++++FINISH
+			Gamemenu_gump *menu = new Gamemenu_gump();
+			gumpman->do_modal_gump(menu, Mouse::hand);
+			*/
+			return true;
+		}
+	};
+	/*
+	 *	The combat toggle button.
+	 */
+	public static class CombatButton extends Button {
+		public CombatButton(Gump par, int px, int py) {
+			super(par, game.getShape("gumps/combat"), px, py);
+		}
+						// What to do when 'clicked':
+		public boolean activate(boolean button) {
+			if (!button) 
+				return false;
+			//++++++FINISH gwin.toggleCombat();
+			setPushed(gwin.inCombat());
+			parent.paint();
+			return true;
+		}
+		public void paint() {
+			setPushed(gwin.inCombat());
+			super.paint();
+		}
+	};
+
+	/*
+	 *	The halo button.
+	 */
+	public static class HaloButton extends Button {
+		Actor actor;			// Who this represents.
+		public HaloButton(Gump par, int px, int py, Actor a) {
+			super(par, game.getShape("gumps/halo"), px, py);
+			actor = a;
+		}
+						// What to do when 'clicked':
+		public boolean activate(boolean button) {
+			if (!button) 
+				return false;
+			// Want to toggle it.
+			/* +++++++FINISH
+			boolean prot = !actor.isCombatProtected();
+			setPushed(prot);
+			parent.paint();
+			actor.setCombatProtected(prot);
+			if (!prot)			// Toggled off?
+				return true;
+			// On?  Got to turn off others.
+			Actor *party[9];		// Get entire party, including Avatar.
+			int cnt = gwin->get_party(party, 1);
+			for (int i = 0; i < cnt; i++) {
+				if (party[i] != actor && party[i]->is_combat_protected())
+					party[i]->set_combat_protected(false);
+			// +++++Should also update gumps.
+			}
+			*/
+			return true;	
+		}
+	};
+
+	/*
+	 *	Combat mode.  Has 10 frames corresponding to Actor::Attack_mode.
+	 */
+	public static class CombatModeButton extends Button {
+		Actor actor;			// Who this represents.
+		public CombatModeButton(Gump par, int px, int py, Actor a) {
+			super(par, game.getShape("gumps/combatmode"), px, py);
+			actor = a;
+		}
+		public boolean activate(boolean button) {
+			if (!button) 
+				return false;
+			// Only Avatar gets last frame (manual)
+			int nframes = actor == gwin.getMainActor() ? 10 : 9;
+			setFrame((getFrameNum() + 1)%nframes);
+			// Flag that player set the mode.
+			// +++++++FINISH actor.setAttackMmode(getFrameNum(), true);
+			paint();
+			gwin.setPainted();
+			return true;
+		}
+	};
+
 }
