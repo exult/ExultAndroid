@@ -51,7 +51,6 @@ public final class DraggingInfo extends GameSingletons {
 		}
 		//+++++++++ Mouse::mouse.set_shape(Mouse::hand);
 					// Store original pos. on screen.
-		rect = new Rectangle();
 		if (gump != null) {
 			if (obj != null) {
 				gump.getShapeRect(rect, obj);
@@ -83,7 +82,7 @@ public final class DraggingInfo extends GameSingletons {
 		}
 					// Make a little bigger.
 		rect.enlarge(deltax > deltay ? deltax : deltay);
-		paintRect = new Rectangle(rect);
+		
 		gwin.clipToWin(paintRect);
 		gwin.paint(paintRect);		// Paint over obj's. area.
 		return true;
@@ -256,18 +255,37 @@ public final class DraggingInfo extends GameSingletons {
 		return true;
 	}	
 	public static boolean startDragging(int x, int y) {
-		drag = new DraggingInfo();
+		if (drag == null)
+			drag = new DraggingInfo();
 		if (drag.init(x, y))
 			return true;
-		drag = null;
 		return false;
 	}
 	public DraggingInfo() {
 		old_lift = -1;
 		readied_index = -1;
+		old_pos = new Tile();
+		old_foot = new Rectangle();
+		rect = new Rectangle();
+		paintRect = new Rectangle(rect);
+	}
+	public static GameObject getObject() {
+		return drag.obj;
+	}
+	public static void abort() {
+		drag.clear();
+	}
+	public void clear() {
+		obj = null;
+		gump = null;
+		button = null;
+		rect.w = -1;
 	}
 	public boolean init(int x, int y) {		
 		mousex = x; mousey = y;
+		obj = null;
+		button = null;
+		rect.w = -1;
 		// First see if it's a gump.
 		gump = gumpman.findGump(x, y);
 		if (gump != null) {
@@ -275,7 +293,7 @@ public final class DraggingInfo extends GameSingletons {
 			if (obj != null) {		// Save location info.
 				paint = new Point();
 				gump.getShapeLocation(paint, obj);
-				old_pos = new Tile(obj.getTx(), obj.getTy(), 0);
+				old_pos.set(obj.getTx(), obj.getTy(), 0);
 			} else if ((button = gump.onButton(x, y)) != null) {
 				gump = null;
 				if (!button.isDraggable())
@@ -298,9 +316,7 @@ public final class DraggingInfo extends GameSingletons {
 				return false;
 						// Get coord. where painted.
 			gwin.getShapeLocation(paint = new Point(), obj);
-			old_pos = new Tile();
 			obj.getTile(old_pos);
-			old_foot = new Rectangle();
 			obj.getFootprint(old_foot);
 		}
 		if (obj != null) {
@@ -318,7 +334,7 @@ public final class DraggingInfo extends GameSingletons {
 	public boolean moved(int x, int y) {	// Mouse moved.
 		if (obj == null && gump == null)
 			return (false);
-		if (rect == null) {
+		if (rect.w == -1) {
 			if (!start(x, y))
 				return false;
 		} else {
@@ -340,7 +356,7 @@ public final class DraggingInfo extends GameSingletons {
 		return true;
 	}
 	public void paint() {			// Paint object being dragged.
-		if (rect == null)			// Not moved enough yet?
+		if (rect.w <= 0)			// Not moved enough yet?
 			return;
 		if (obj != null) {
 			/*++++++++++

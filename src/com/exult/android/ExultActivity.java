@@ -91,6 +91,8 @@ public class ExultActivity extends Activity {
     	private long lastB1Click = 0;
     	private int leftDownX = -1, leftDownY = -1;
     	private boolean dragging = false, dragged = false;
+    	private boolean movingAvatar = false;
+    	private int avatarStartX, avatarStartY;
     	@Override
     	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
     		System.out.println("Size changed.  Old w was " + oldw +
@@ -109,11 +111,11 @@ public class ExultActivity extends Activity {
                 	}
                 }
                 // If mouse still down, keep moving.
-                if (avatarMotion != null && !gwin.isMoving()) {
+                if (movingAvatar && !gwin.isMoving()) {
                 	int x = (int)gwin.getWin().screenToGameX(avatarMotion.getX()), 
     					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
                 	System.out.println("Keep moving");
-                	gwin.startActor(x, y, 1);
+                	gwin.startActor(avatarStartY, avatarStartY, x, y, 1);
                 }
                 // Handle delayed showing of items clicked on.
                 if (showItemsX >= 0 && GameTime > showItemsTime) {
@@ -174,17 +176,19 @@ public class ExultActivity extends Activity {
     			float sx = event.getX(), sy = event.getY();
     			int x = (int)gwin.getWin().screenToGameX(sx), 
     				y = (int)gwin.getWin().screenToGameY(sy);
-    			int state = event.getMetaState();
+    			// int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
     				if (clickPoint == null && UsecodeMachine.running <= 0) {
-    					if ((state & KeyEvent.META_SHIFT_ON) != 0) {
+    					dragging = DraggingInfo.startDragging(x, y);
+    					dragged = false;
+    					if (dragging && DraggingInfo.getObject() ==
+    											gwin.getMainActor()) {
+    						DraggingInfo.abort();
+    						dragging = false;
     						System.out.println("Starting motion");
-    						avatarMotion = MotionEvent.obtain(event);
-    						gwin.startActor(x, y, 1);
-    					} else {
-    						dragging = DraggingInfo.startDragging(x, y);
-    						dragged = false;
+        					avatarMotion = MotionEvent.obtain(event);
+        					avatarStartX = x; avatarStartY = y;
     					}
     				}
     				leftDownX = x; leftDownY = y;
@@ -193,6 +197,7 @@ public class ExultActivity extends Activity {
     				boolean clickHandled = false;
     				gwin.stopActor();
     				avatarMotion = null;
+    				movingAvatar = false;
     				if (clickPoint != null) {
     					if (leftDownX - 1 <= x && x <= leftDownX + 1 &&
     						leftDownY - 1 <= y && y <= leftDownY + 1) {
@@ -228,8 +233,9 @@ public class ExultActivity extends Activity {
     				return true;
     			case MotionEvent.ACTION_MOVE:
     				if (avatarMotion != null && clickPoint == null) {
+    					movingAvatar = true;
     					avatarMotion.setLocation(sx, sy);
-    					gwin.startActor(x, y, 1);
+    					gwin.startActor(avatarStartX, avatarStartY, x, y, 1);
     				} else if (dragging)
     					dragged = GameSingletons.drag.moved(x, y);
     				return true;

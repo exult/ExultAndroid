@@ -352,17 +352,15 @@ public class GameWindow extends GameSingletons {
 	 */
 	private void startActorSteps
 		(
+		int fromx, int fromy,// Mouse position to use as start.
 		int winx, int winy,	// Mouse position to aim for.
 		int speed			// Ticks between frames.
 		) {
-		Point a = tempPoint;
-		getShapeLocation(a, mainActor);
-	
 		mainActor.getTile(tempTile);
 		Tile start = tempTile;
 		int dir;
 		Tile dest = tempTile2;
-		dir = EUtil.getDirection (a.y - winy, winx - a.x);
+		dir = EUtil.getDirection (fromy - winy, winx - fromx);
 		int tflags = mainActor.getTypeFlags();
 		start.getNeighbor(dest, dir);
 		if (!mainActor.areaAvailable(dest, start, tflags)) {
@@ -409,38 +407,38 @@ public class GameWindow extends GameSingletons {
 												//   but causes probs. with followers.
 		switch (dir) {
 		case EConst.north:
-			a.y -= delta;
+			fromy -= delta;
 			break;
 		case EConst.northeast:
-			a.y -= delta;
-			a.x += delta;
+			fromy -= delta;
+			fromx += delta;
 			break;
 		case EConst.east:
-			a.x += delta;
+			fromx += delta;
 			break;
 		case EConst.southeast:
-			a.y += delta;
-			a.x += delta;
+			fromy += delta;
+			fromx += delta;
 			break;
 		case EConst.south:
-			a.y += delta;
+			fromy += delta;
 			break;
 		case EConst.southwest:
-			a.y += delta;
-			a.x -= delta;
+			fromy += delta;
+			fromx -= delta;
 			break;
 		case EConst.west:
-			a.x -= delta;
+			fromx -= delta;
 			break;
 		case EConst.northwest:
-			a.y -= delta;
-			a.x -= delta;
+			fromy -= delta;
+			fromx -= delta;
 			break;
 		}
 		int lift = mainActor.getLift();
 		int liftpixels = 4*lift;	// Figure abs. tile.
-		int tx = scrolltx + (a.x + liftpixels)/EConst.c_tilesize,
-	    	ty = scrollty + (a.y + liftpixels)/EConst.c_tilesize;
+		int tx = scrolltx + (fromx + liftpixels)/EConst.c_tilesize,
+	    	ty = scrollty + (fromy + liftpixels)/EConst.c_tilesize;
 					// Wrap:Game_window::start_actor
 		tx = (tx + EConst.c_num_tiles)%EConst.c_num_tiles;
 		ty = (ty + EConst.c_num_tiles)%EConst.c_num_tiles;
@@ -500,7 +498,8 @@ public class GameWindow extends GameSingletons {
 	 */
 	public void startActor
 		(
-		int winx, int winy, // Mouse position to aim for.
+		int fromx, int fromy,	// Mouse position to use as start.
+		int tox, int toy, // Mouse position to aim for.
 		int speed			// Ticks between frames.
 		) {
 		if (mainActor.getFlag(GameObject.asleep) ||
@@ -539,7 +538,7 @@ public class GameWindow extends GameSingletons {
 					!mainActor.get_flag(Obj_flags::asleep))
 				mainActor.set_schedule_type(Schedule::follow_avatar);
 			*/
-			startActorSteps(winx, winy, speed);
+			startActorSteps(fromx, fromy, tox, toy, speed);
 		}
 	}
 	public final void stopActor() {
