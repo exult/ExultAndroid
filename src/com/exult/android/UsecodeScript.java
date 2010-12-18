@@ -88,6 +88,9 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	public boolean isActivated() {
 		return i > 0;
 	}
+	public boolean isNoHalt() {
+		return no_halt;
+	}
 	/*
 	 *	Enter into the time-queue and our own chain.  Terminate existing
 	 *	scripts for this object unless 'dont_halt' is set.
@@ -160,7 +163,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	 *	Output:	.Usecode_script if found, else 0.
 	 */
 
-	public static UsecodeScript find_active
+	public static UsecodeScript findActive
 		(
 		GameObject srch,
 		UsecodeScript last_found	// Find next after this.

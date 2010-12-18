@@ -267,6 +267,47 @@ public class ImageBuf {
 			to += width; 
 		}
 	}
+	/*
+	 *	Get a rectangle from here into another Image_buffer.
+	 */
+	public void get
+		(
+		ImageBuf dest,			// Copy to here.
+		int srcx, int srcy		// Upper-left corner of source rect.
+		) {
+		int srcw = dest.width, srch = dest.height;
+		int destx = 0, desty = 0;
+		/*+++++++++FINISH  Still needed?
+						// Constrain to window's space. (Note
+						//   convoluted use of clip().)
+		if (!clip(destx, desty, srcw, srch, srcx, srcy))
+			return;
+		*/
+		int to =  desty*dest.width + destx;
+		int from = srcy*width + srcx;
+						// Figure # pixels to next line.
+		int to_next = dest.width - srcw;
+		int from_next = width - srcw;
+		while (srch-- > 0) {			// Do each line.
+			System.arraycopy(pixels, from, dest.pixels, to, srcw);
+			to += srcw + to_next;
+			from += srcw + from_next;
+			}
+		}
+
+	/*
+	 *	Retrieve data from another buffer.
+	 */
+
+	public final void put
+		(
+		ImageBuf src,		// Copy from here.
+		int destx, int desty		// Copy to here.
+		) {
+		copy8(src.pixels, 0,
+			src.getWidth(), src.getHeight(), destx, desty);
+		}
+
 	// Slightly Optimized RLE Painter
 	public void paintRle (int xoff, int yoff, byte inptr[])
 	{

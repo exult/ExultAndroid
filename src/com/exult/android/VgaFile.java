@@ -130,6 +130,13 @@ public class VgaFile {
 		public ShapeFile(byte data[]) {
 			super.load(data);
 		}
+		public ShapeFile(String nm) {
+			try {
+				load(nm);
+			} catch (IOException e) {
+				System.out.println("ERROR loading " + nm);
+			}
+		}
 		/*
 		ShapeFile(const char *nm);
 		Shape_file(Shape_frame *fr): Shape(fr) {}
