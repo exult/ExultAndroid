@@ -168,6 +168,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		GameObject srch,
 		UsecodeScript last_found	// Find next after this.
 		) {
+		if (scripts == null)
+			return null;
 		ListIterator<UsecodeScript> iter = scripts.listIterator();
 		if (last_found != null) {
 			while (iter.hasNext() && iter.next() != last_found)

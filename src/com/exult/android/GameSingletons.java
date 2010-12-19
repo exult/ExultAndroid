@@ -14,6 +14,7 @@ public class GameSingletons {
 	public static GumpManager gumpman;
 	public static Game game;
 	public static DraggingInfo drag;
+	public static Mouse mouse;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();
@@ -25,5 +26,6 @@ public class GameSingletons {
 		ucmachine = gwin.getUsecode();
 		partyman = new PartyManager();
 		gumpman = new GumpManager();
+		mouse = new Mouse();
 	}
 }

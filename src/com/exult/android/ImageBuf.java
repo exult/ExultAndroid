@@ -286,15 +286,14 @@ public class ImageBuf {
 		int to =  desty*dest.width + destx;
 		int from = srcy*width + srcx;
 						// Figure # pixels to next line.
-		int to_next = dest.width - srcw;
-		int from_next = width - srcw;
+		int to_next = dest.width;
+		int from_next = width;
 		while (srch-- > 0) {			// Do each line.
 			System.arraycopy(pixels, from, dest.pixels, to, srcw);
-			to += srcw + to_next;
-			from += srcw + from_next;
-			}
+			to += to_next;
+			from += from_next;
 		}
-
+	}
 	/*
 	 *	Retrieve data from another buffer.
 	 */

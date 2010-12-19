@@ -15,6 +15,7 @@ public final class DraggingInfo extends GameSingletons {
 	private int readied_index;		// If it was a 'readied' item.
 					// Last mouse, paint positions:
 	private int mousex, mousey;
+	private int mouseShape;			// Save starting mouse shape.
 	private Point paint;
 	//+++++Mouse::Mouse_shapes mouse_shape;// Save starting mouse shape.
 	private Rectangle rect;			// Rectangle to repaint.
@@ -49,7 +50,6 @@ public final class DraggingInfo extends GameSingletons {
 				*/
 			}
 		}
-		//+++++++++ Mouse::mouse.set_shape(Mouse::hand);
 					// Store original pos. on screen.
 		if (gump != null) {
 			if (obj != null) {
@@ -285,6 +285,8 @@ public final class DraggingInfo extends GameSingletons {
 		mousex = x; mousey = y;
 		obj = null;
 		button = null;
+		mouseShape = mouse.getShape();
+		mouse.setShape(Mouse.hand);
 		rect.w = -1;
 		// First see if it's a gump.
 		gump = gumpman.findGump(x, y);
@@ -444,7 +446,7 @@ public final class DraggingInfo extends GameSingletons {
 	 */
 	public boolean drop(int x, int y, boolean moved) {
 		boolean handled = moved;
-		// ++++++++++ Mouse::mouse.set_shape(mouse_shape);
+		// ++++MAYBE not needed anymore. mouse.setShape(mouseShape);
 		if (button != null) {
 			button.unpush(true);
 			if (button.onWidget(x, y))

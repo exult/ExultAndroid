@@ -57,6 +57,7 @@ public final class Mouse extends GameSingletons {
 		box.h = maxh;
 		
 		onscreen = false;                   // initially offscreen
+		setShape(getShortArrow(EConst.east));		// +++++For now.
 	}
 	public static final int // enum int :List of shapes' frame #'s.
 		dontchange = 1000,	// Flag to not change.
@@ -89,15 +90,14 @@ public final class Mouse extends GameSingletons {
 	 *  combat short arrow      -          8               -   1
 	 *  combat medium arrow     -          6               -   4/3
 	 */
-	public static final int // enum AvatarSpeedFactors
-		slowSpeedFactor          = 100,
-		mediumCombatSpeedFactor = 150,
-		mediumSpeedFactor        = 200,
-		fastSpeedFactor          = 400;
-	public int avatarSpeed;
+	public static final int // Avatar speeds in ticks/step.
+		slow = 3,
+		mediumCombat = 2,
+		medium = 2,
+		fast = 1;
+	public int avatarSpeed;	// One of the above.
 
-	static boolean mouse_update;
-	static Mouse mouse;
+	public static boolean mouseUpdate;
 
 	Mouse() {
 		pointers = new VgaFile.ShapeFile(EFile.POINTERS);
@@ -107,7 +107,7 @@ public final class Mouse extends GameSingletons {
 		if (!onscreen){
 			onscreen = true;
 						// Save background.
-			gwin.getWin().get(backup, box.x, box.y);
+			//++++++ gwin.getWin().get(backup, box.x, box.y);
 						// Paint new location.
 			cur.paintRle(gwin.getWin(), mousex, mousey);
 		}
@@ -115,11 +115,12 @@ public final class Mouse extends GameSingletons {
 	void hide() {			// Restore area under mouse.
 		if (onscreen) {
 			onscreen = false;
-			gwin.getWin().put(backup, box.x, box.y);
+			// gwin.getWin().put(backup, box.x, box.y);
+			gwin.addDirty(box);//+++++TESTING
 			dirty.set(box);	// Init. dirty to box.
 			}
 	}
-	void setShape(int framenum) {	// Set to desired shape.
+	public void setShape(int framenum) {	// Set to desired shape.
 		if (framenum != cur_framenum)
 			setShape0(framenum);
 		}
@@ -133,8 +134,10 @@ public final class Mouse extends GameSingletons {
 		mousey = y;
 	}
 	void blitDirty(Canvas c) {	// Blit dirty area.
+		/*+++++++++++++++
 		gwin.getWin().show(c, dirty.x - 1, dirty.y - 1, dirty.w + 2, 
 							dirty.h + 2); 
+		*/
 		}
 	void setLocation(int x, int y) {// Set to given location.
 		mousex = x;
@@ -166,9 +169,8 @@ public final class Mouse extends GameSingletons {
 		return onscreen; 
 	}
 	// Sets hand or speed cursors
-	void setSpeedCursor() {
+	void setSpeedCursor(int ax, int ay) {
 		int cursor = dontchange;
-		int ax, ay;			// Get Avatar/barge screen location.
 
 		// Check if we are in dont_move mode, in this case display the hand cursor
 		if (gwin.mainActorDontMove())
@@ -194,10 +196,6 @@ public final class Mouse extends GameSingletons {
 			}
 			else	
 			*/
-			{
-				gwin.getShapeLocation(avLoc, gwin.getMainActor());
-				ax = avLoc.x; ay = avLoc.y;
-			}
 			int dy = ay - mousey, dx = mousex - ax;
 			int dir = EUtil.getDirection(dy, dx);
 			int gamew = gwin.getWidth(), gameh = gwin.getHeight();
@@ -214,14 +212,12 @@ public final class Mouse extends GameSingletons {
 					has_active_nohalt_scr = true;
 					break;
 				}
-
-			int baseSpeed = 200;
 			if(speed_section < 0.4 ) {
 				if( gwin.inCombat() )
 					cursor = getShortCombatArrow( dir );
 				else
 					cursor = getShortArrow( dir );
-				avatarSpeed = baseSpeed/slowSpeedFactor;
+				avatarSpeed = slow;
 			}
 			else if( speed_section < 0.8 || gwin.inCombat() || nearby_hostile 
 						|| has_active_nohalt_scr) {
@@ -230,15 +226,15 @@ public final class Mouse extends GameSingletons {
 				else
 					cursor = getMediumArrow( dir );
 				if( gwin.inCombat() || nearby_hostile )
-					avatarSpeed = baseSpeed/mediumCombatSpeedFactor;
+					avatarSpeed = mediumCombat;
 				else
-					avatarSpeed = baseSpeed/mediumSpeedFactor;
+					avatarSpeed = medium;
 			}
 			else /* Fast - NB, we can't get here in combat mode; there is no
 			      * long combat arrow, nor is there a fast combat speed. */
 			{
 			cursor = getLongArrow( dir );
-				avatarSpeed = baseSpeed/fastSpeedFactor;
+				avatarSpeed = fast;
 			}
 		}
 		
