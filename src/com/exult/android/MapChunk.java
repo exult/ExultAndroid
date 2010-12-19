@@ -393,7 +393,7 @@ public final class MapChunk extends GameSingletons {
 				lift, ztiles);
 	}
 	private void setTflags(int tx, int ty, int maxz) {
-		int zlevel = maxz/8, bsize = blocked.size();
+		int zlevel = maxz/8, bsize = blocked == null ? 0 : blocked.size();
 		if (zlevel >= bsize) {
 			Arrays.fill(tflags, bsize, zlevel + 1, 0);
 			zlevel = bsize - 1;

@@ -149,6 +149,7 @@ public class GameMap extends GameSingletons {
 	 */
 	public void readMapData() {
 		GameWindow gwin = GameWindow.instanceOf();
+		
 		int scrolltx = gwin.getScrolltx(), scrollty = gwin.getScrollty();
 		int w = gwin.getWidth(), h = gwin.getHeight();
 						// Start one tile to left.

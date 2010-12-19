@@ -303,6 +303,7 @@ public class GameWindow extends GameSingletons {
 		}
 		map.readMapData();		// Be sure objects are present.
 		synchronized(win) {
+		mouse.hide();
 		if (toleft) {			// Shift image to right.
 			win.copy(0, 0, w - EConst.c_tilesize, h, EConst.c_tilesize, 0);
 			paint(0, 0, EConst.c_tilesize, h);
@@ -335,6 +336,7 @@ public class GameWindow extends GameSingletons {
 			}
 		map.readMapData();		// Be sure objects are present.
 		synchronized(win) {
+		mouse.hide();
 		if (up) {
 			win.copy(0, 0, w, h - EConst.c_tilesize, 0, EConst.c_tilesize);
 			paint(0, 0, w, EConst.c_tilesize);

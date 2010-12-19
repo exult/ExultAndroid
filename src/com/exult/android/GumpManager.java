@@ -17,8 +17,10 @@ public final class GumpManager extends GameSingletons {
 	 */
 	public boolean showingGumps(boolean no_pers)  {
 		// If no gumps, or we do want to check for persistent, just check to see if any exist
-		if (!no_pers || openGumps == null) 
-			return openGumps != null;
+		if (openGumps.isEmpty())
+			return false;
+		else if (!no_pers) 
+			return true;
 
 		// If we don't want to check for persistent
 		ListIterator<Gump> iter = openGumps.listIterator();

@@ -181,12 +181,12 @@ public class ImageBuf {
 		w &= ~3;
 		h &= ~3;
 		// Fill RGBA using palette.
-		int to = 0, from = y*width + x, hcnt = h;
+		int ind = y*width + x, hcnt = h;
 		while (hcnt-- > 0) {
 			for (int i = 0; i < w; ++i) {
-				rgba[to++] = pal[(int)pixels[from++]&0xff];
+				rgba[ind++] = pal[(int)pixels[ind++]&0xff];
 			}
-			from += width - w;
+			ind += width - w;
 		}
 		if (toScale == null)
 			c.drawBitmap(rgba, 0, w, x, y, w, h, false, null);
@@ -277,12 +277,15 @@ public class ImageBuf {
 		) {
 		int srcw = dest.width, srch = dest.height;
 		int destx = 0, desty = 0;
-		/*+++++++++FINISH  Still needed?
 						// Constrain to window's space. (Note
 						//   convoluted use of clip().)
-		if (!clip(destx, desty, srcw, srch, srcx, srcy))
+		tempClipSrc.set(destx, desty, srcw, srch);
+		tempClipDest.set(srcx, srcy);
+		if (!clip(tempClipSrc, tempClipDest))
 			return;
-		*/
+		destx = tempClipSrc.x; desty = tempClipSrc.y;
+		srcw = tempClipSrc.w; srch = tempClipSrc.h;
+		srcx = tempClipDest.x; srcy = tempClipDest.y;				 
 		int to =  desty*dest.width + destx;
 		int from = srcy*width + srcx;
 						// Figure # pixels to next line.

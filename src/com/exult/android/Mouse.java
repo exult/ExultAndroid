@@ -106,17 +106,25 @@ public final class Mouse extends GameSingletons {
 	void show() { // Paint it.
 		if (!onscreen){
 			onscreen = true;
+			synchronized(gwin.getWin()) {
+				/* ++++++ISN'T WORKING
 						// Save background.
-			//++++++ gwin.getWin().get(backup, box.x, box.y);
+				gwin.getWin().get(backup, box.x, box.y);
+				*/
 						// Paint new location.
-			cur.paintRle(gwin.getWin(), mousex, mousey);
+				cur.paintRle(gwin.getWin(), mousex, mousey);
+			}
 		}
 	}
 	void hide() {			// Restore area under mouse.
 		if (onscreen) {
 			onscreen = false;
-			// gwin.getWin().put(backup, box.x, box.y);
-			gwin.addDirty(box);//+++++TESTING
+			/* ++++++JUST isn't working right.
+			synchronized(gwin.getWin()) {
+				gwin.getWin().put(backup, box.x, box.y);
+			}
+			*/
+			gwin.addDirty(box);//+++++SLOW but reliable.
 			dirty.set(box);	// Init. dirty to box.
 			}
 	}
@@ -127,6 +135,7 @@ public final class Mouse extends GameSingletons {
 	int getShape()
 		{ return cur_framenum; }
 	void move(int x, int y) {	// Move to new location (mouse motion).
+		hide();
 		// Shift to new position.
 		box.shift(x - mousex, y - mousey);
 		dirty.add(box);	// Enlarge dirty area.
@@ -134,8 +143,8 @@ public final class Mouse extends GameSingletons {
 		mousey = y;
 	}
 	void blitDirty(Canvas c) {	// Blit dirty area.
-		/*+++++++++++++++
-		gwin.getWin().show(c, dirty.x - 1, dirty.y - 1, dirty.w + 2, 
+		/*++++++++ISN't working.
+		gwin.getWin().show(c , dirty.x - 1, dirty.y - 1, dirty.w + 2, 
 							dirty.h + 2); 
 		*/
 		}
