@@ -5,6 +5,29 @@ public class EffectsManager extends GameSingletons {
 	private SpecialEffect effects;	// Sprite effects, projectiles, etc.
 	private TextEffect texts;		// Text snippets.
 	
+	/* 
+	 * Add an effect at the start of the chain.
+	 */
+	public void addEffect(SpecialEffect effect) {
+		effect.next = effects;		// Insert into chain.
+		effect.prev = null;
+		if (effect.next != null)
+			effect.next.prev = effect;
+			effects = effect;
+	}
+	/*
+	 *	Remove a sprite from the chain and delete it.
+	 */
+	public void removeEffect(SpecialEffect effect) {
+		if (effect.inQueue())
+			tqueue.remove(effect);
+		if (effect.next != null)
+			effect.next.prev = effect.prev;
+		if (effect.prev != null)
+			effect.prev.next = effect.next;
+		else				// Head of chain.
+			effects = effect.next;
+	}
 	/*
 	 *  Add text over a given item.
 	 */
@@ -77,18 +100,58 @@ public class EffectsManager extends GameSingletons {
 	 */
 	public static abstract class SpecialEffect extends GameSingletons implements TimeSensitive
 		{
+		private int timeQueueCount;
+		protected boolean always;			// For TimeQueue.
 		private SpecialEffect next, prev;	// All of them are chained together.
 						// Render.
 		public abstract void paint();
 		public boolean isWeather()	// Need to distinguish weather.
 			{ return false; }
+		/*
+		 * For TimeSensitive
+		 */
+		public void addedToQueue() {
+				++timeQueueCount;
+		}
+		public void removedFromQueue() {
+			--timeQueueCount;
+		}
+		public final boolean inQueue() {
+			return timeQueueCount > 0;
+		}
+		public boolean alwaysHandle() {
+			return always;
+		}
+	}
+	/*
+	 * A mouse flash for about 1/2 second.
+	 */
+	public static class MouseFlash extends SpecialEffect {
+		private int x, y;
+		private ShapeFrame shape;
+		public MouseFlash(ShapeFrame s, int mx, int my) {
+			shape = s;
+			x = mx;
+			y = my;
+			always = true;
+			gwin.setAllDirty();
+			eman.addEffect(this);
+			tqueue.add(tqueue.ticks + (1000/tqueue.tickMsecs)/2, this, null);
+		}
+		public void paint() {
+			shape.paintRle(win, x, y);
+		}					// At timeout, remove from screen.
+		public void handleEvent(int ctime, Object udata) {
+			gwin.setAllDirty();
+			eman.removeEffect(this);
+		}
 	}
 	/*
 	 *	A text object is a message that stays on the screen for just a couple
 	 *	of seconds.  These are all kept in a single list, and managed by
 	 *	Game_window.
 	 */
-	public static class TextEffect extends GameSingletons implements TimeSensitive {
+	public static class TextEffect extends SpecialEffect {
 		private TextEffect next, prev;	// All of them are chained together.
 		private String msg;		// What to print.
 		private GameObject item;	// Item text is on.  May be null.
@@ -98,7 +161,7 @@ public class EffectsManager extends GameSingletons {
 		private int numTicks;			// # ticks passed.
 		private static Rectangle updRect = new Rectangle(), dirtyRect = new Rectangle();
 		private static Point tempLoc = new Point();
-		private int timeQueueCount;
+		
 		private void addDirty() {
 			// Repaint slightly bigger rectangle.
 			dirtyRect.set(pos.x - EConst.c_tilesize,
@@ -108,6 +171,7 @@ public class EffectsManager extends GameSingletons {
 			gwin.addDirty(dirtyRect);
 		}
 		private void init() {
+			always = true;
 			width = 8 + fonts.getTextWidth(0, msg);
 			height = 8 + fonts.getTextHeight(0);
 			addDirty();			// Force first paint.
@@ -181,21 +245,6 @@ public class EffectsManager extends GameSingletons {
 			addDirty();			// Force repaint of old area.
 			pos.set(npos);			// Then set to repaint new.
 			addDirty();
-		}
-		/*
-		 * For TimeSensitive
-		 */
-		public boolean alwaysHandle() {	
-			return true;
-		}
-		public void addedToQueue() {
-			++timeQueueCount;
-		}
-		public void removedFromQueue() {
-			--timeQueueCount;
-		}
-		public final boolean inQueue() {
-			return timeQueueCount > 0;
 		}
 	}
 

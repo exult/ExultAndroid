@@ -7,6 +7,7 @@ public class TimeQueue {
 	private int pauseTime;		// Time when paused.
 	private int paused;			// # calls to 'pause'.
 	public static int ticks = 0;
+	public static int tickMsecs = 10;
 	/*
 	 *	Remove all entries.
 	 */

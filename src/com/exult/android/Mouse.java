@@ -154,7 +154,9 @@ public final class Mouse extends GameSingletons {
 	}
 					// Flash desired shape for 1/2 sec.
 	void flashShape(int flash) {
-		//+++++++++++FINISH
+		ShapeFrame s = pointers.getFrame(flash);
+		if (s != null)
+			new EffectsManager.MouseFlash(s, mousex, mousey);
 	}
 					// Set to short arrow.
 	int getShortArrow(int dir)

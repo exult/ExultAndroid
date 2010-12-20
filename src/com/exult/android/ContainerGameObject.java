@@ -93,6 +93,9 @@ public class ContainerGameObject extends IregGameObject {
 	GameObject getReadied(int index) {
 		return null;
 	}
+	public int findReadied(GameObject obj) {
+		return -1;
+	}
 	private boolean canBeAdded(int shapenum) {
 		return true; /* ++++++++FINISH
 		ShapeInfo info = getInfo();

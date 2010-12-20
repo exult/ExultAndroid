@@ -15,6 +15,7 @@ public class GameSingletons {
 	public static Game game;
 	public static DraggingInfo drag;
 	public static Mouse mouse;
+	public static Cheat cheat;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();
@@ -27,5 +28,6 @@ public class GameSingletons {
 		partyman = new PartyManager();
 		gumpman = new GumpManager();
 		mouse = new Mouse();
+		cheat = new Cheat();
 	}
 }

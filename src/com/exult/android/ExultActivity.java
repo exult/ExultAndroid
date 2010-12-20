@@ -156,6 +156,7 @@ public class ExultActivity extends Activity {
     		setFocusableInTouchMode(true);
     		requestFocus();
     		ItemNames.init(false, false);
+    		TimeQueue.tickMsecs = stdDelay;
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     		int width = display.getWidth(), height = display.getHeight();
     		gwin = new GameWindow(320, 200);	// Standard U7 dims.

@@ -28,19 +28,17 @@ public final class DraggingInfo extends GameSingletons {
 		if (deltax <= 2 && deltay <= 2)
 			return (false);		// Wait for greater motion.
 		if (obj != null) {			// Don't want to move walls.
-			/* ++++++FINISH
-			if (!cheat.in_hack_mover() && !obj.is_dragable() &&
-					      !obj.getOwner()) {
-				Mouse::mouse.flash_shape(Mouse::tooheavy);
-				obj = 0;
-				gump = 0;
+			if (!cheat.inHackMover() && !obj.isDragable() &&
+					      obj.getOwner() == null) {
+				mouse.flashShape(Mouse.tooheavy);
+				obj = null;
+				gump = null;
 				return (false);
 			}
-			*/
 			GameObject owner = obj.getOutermost();
 			if (owner == obj) {
 				/* ++++++++
-		    	if (!cheat.in_hack_mover() && 
+		    	if (!cheat.inHackMover() && 
 				!Fast_pathfinder_client::is_grabable(
 				   gwin.getMainActor(), obj)) {
 		    		Mouse::mouse.flash_shape(Mouse::blocked);
@@ -61,16 +59,16 @@ public final class DraggingInfo extends GameSingletons {
 				Actor main_actor = gwin.getMainActor();
 				// Check the range
 				/* ++++++FINISH
-				if (!cheat.in_hack_mover() &&
+				if (!cheat.inHackMover() &&
 						!Fast_pathfinder_client::is_grabable(main_actor, owner_obj)) {
 					obj = 0;
 					gump = 0;
 					Mouse::mouse.flash_shape(Mouse::outofrange);
 					return false;
 				}
+				*/
 				if (owner != null)
 					readied_index = owner.findReadied(obj);
-				*/
 				gump.remove(obj);
 			} else {
 				gump.getDirty(rect);
@@ -115,7 +113,7 @@ public final class DraggingInfo extends GameSingletons {
 		Actor main_actor = gwin.getMainActor(); 
 		// Check the range
 		/* +++++++FINISH
-		if (owner_obj && !cheat.in_hack_mover() &&
+		if (owner_obj && !cheat.inHackMover() &&
 			!Fast_pathfinder_client::is_grabable(main_actor, owner_obj))
 			{	  		// Object was not grabable
 			Mouse::mouse.flash_shape(Mouse::outofrange);
@@ -135,7 +133,7 @@ public final class DraggingInfo extends GameSingletons {
 				if (nq < quantity)
 					obj.modifyQuantity(quantity - nq);
 				}
-			//+++++++++ Mouse::mouse.flash_shape(Mouse::wontfit);
+			mouse.flashShape(Mouse.wontfit);
 			return false;
 			}
 		return true;
@@ -164,10 +162,8 @@ public final class DraggingInfo extends GameSingletons {
 		GameObject to_drop,
 		GameObject owner		// Who the new owner will be.
 		) {
-		/* ++++++++++++++
-		if (cheat.in_hack_mover())	// hack-mover  . no weight checking
+		if (cheat.inHackMover())	// hack-mover  . no weight checking
 			return true;
-		*/
 		if (owner == null)
 			return true;
 		owner = owner.getOutermost();
@@ -175,7 +171,7 @@ public final class DraggingInfo extends GameSingletons {
 			return true;		// Not a party member, so okay.
 		int wt = owner.getWeight() + to_drop.getWeight();
 		if (wt/10 > owner.getMaxWeight()) {
-			// +++++ Mouse::mouse.flash_shape(Mouse::tooheavy);
+			mouse.flashShape(Mouse.tooheavy);
 			return false;
 		}
 		return true;
@@ -189,13 +185,14 @@ public final class DraggingInfo extends GameSingletons {
 	private boolean dropOnMap(int x, int y, GameObject to_drop) {
 		// Attempting to drop off screen?
 		if (x < 0 || y < 0 || x >= gwin.getWidth() || y >= gwin.getHeight()) {
-			/* ++++++++++
-			Mouse::mouse.flash_shape(Mouse::redx);
+			
+			mouse.flashShape(Mouse.redx);
+			/*
 			Audio::get_ptr().play_sound_effect(Audio::game_sfx(76));
 			*/
 			return false;
 		}
-		int max_lift = /* +++++++ cheat.in_hack_mover() ? 255 : */
+		int max_lift = /* +++++++ cheat.inHackMover() ? 255 : */
 						gwin.getMainActor().getLift() + 5;
 		int skip = gwin.getRenderSkipLift();
 		if (max_lift >= skip)		// Don't drop where we cannot see.
@@ -220,8 +217,9 @@ public final class DraggingInfo extends GameSingletons {
 				// Try to place on 'found'.
 				dropped = dropAtLift(to_drop,posx, posy, lift);
 			else {		// Too high.
+				
+				mouse.flashShape(Mouse.redx);
 				/*+++++++++
-				Mouse::mouse.flash_shape(Mouse::redx);
 				Audio::get_ptr().play_sound_effect(
 								Audio::game_sfx(76));
 				*/
@@ -235,8 +233,9 @@ public final class DraggingInfo extends GameSingletons {
 		System.out.println("Dropping " + to_drop.getShapeNum() +
 				" with old_lift = " + old_lift);
 		if (dropped <= 0) {
+			
+			mouse.flashShape(Mouse.blocked);
 			/* +++++++++++
-			Mouse::mouse.flash_shape(Mouse::blocked);
 			Audio::get_ptr().play_sound_effect(Audio::game_sfx(76));
 			*/
 			System.out.println("Could not find spot to drop " + 
@@ -422,7 +421,7 @@ public final class DraggingInfo extends GameSingletons {
 		if (barge)
 			barge.set_to_gather();	// Refigure what's on barge.
 						// Check for theft.
-		if (!okay_to_move && !cheat.in_hack_mover() && possible_theft &&
+		if (!okay_to_move && !cheat.inHackMover() && possible_theft &&
 		    !gwin.is_in_dungeon())
 			gwin.theft();			
 		*/
@@ -502,7 +501,7 @@ public final class DraggingInfo extends GameSingletons {
 		int xtiles = info.get3dXtiles(frame), ytiles = info.get3dYtiles(frame);
 		int max_drop, move_flags;
 		/* +++++++++++++++
-		if (cheat.in_hack_mover())
+		if (cheat.inHackMover())
 			{
 			max_drop = at_lift - cheat.get_edit_lift();
 //			max_drop = max_drop < 0 ? 0 : max_drop;
@@ -517,7 +516,7 @@ public final class DraggingInfo extends GameSingletons {
 		Tile loc = new Tile(tx - xtiles + 1, ty - ytiles + 1, at_lift);
 		if (!MapChunk.areaAvailable(xtiles, ytiles, info.get3dHeight(),
 							loc, move_flags, max_drop, -1) /*++++ ||
-		      (!cheat.in_hack_mover() &&
+		      (!cheat.inHackMover() &&
 						// Check for path to location.
 		    !Fast_pathfinder_client::is_grabable(main_actor, 
 				Tile_coord(tx, ty, lift)))*/)

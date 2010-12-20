@@ -1,0 +1,6 @@
+12-18-2010
+	Show mouse when dragging or moving. 
+	Set Avatar speed to 1-3 ticks/frame.
+12-19-2010
+	Fixed bug in GumpManager that caused bad rendering and crashes.
+	Show mouse 'flash'.
