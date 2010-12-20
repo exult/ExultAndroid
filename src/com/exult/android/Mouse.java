@@ -4,13 +4,14 @@ import android.graphics.Point;
 
 public final class Mouse extends GameSingletons {
 	private VgaFile.ShapeFile pointers; // Pointers from 'pointers.shp'.
-	private ImageBuf backup;			// Stores image below mouse shape.Rectangle box;			// Area backed up.
-	Rectangle dirty;		// Dirty area from mouse move.
-	Rectangle box;			// Area backed up.
-	Point avLoc;
-	int mousex, mousey;		// Last place where mouse was.
-	int cur_framenum;		// Frame # of current shape.
-	ShapeFrame cur;		// Current shape.
+	private int maxw, maxh;	// Max size.  Used as size of 'backup'.
+	private byte backup[];	// Stores image below mouse shape.Rectangle box;			// Area backed up.
+	private Rectangle dirty;		// Dirty area from mouse move.
+	private Rectangle box;			// Area backed up.
+	private Point avLoc;
+	private int mousex, mousey;		// Last place where mouse was.
+	private int cur_framenum;		// Frame # of current shape.
+	private ShapeFrame cur;		// Current shape.
 	boolean onscreen;			// true if mouse is drawn on screen.
 	// Frame #'s of short arrows, by int (0-7, 0=east).
 	private static int shortArrows[] =
@@ -50,9 +51,10 @@ public final class Mouse extends GameSingletons {
 			if (ybelow > maxbelow)
 				maxbelow = ybelow;
 		}
-		int maxw = maxleft + maxright, maxh = maxabove + maxbelow;
+		maxw = maxleft + maxright; 
+		maxh = maxabove + maxbelow;
 						// Create backup buffer.
-		backup = new ImageBuf(maxw, maxh);
+		backup = new byte[maxw * maxh];
 		box.w = maxw;
 		box.h = maxh;
 		
@@ -107,10 +109,8 @@ public final class Mouse extends GameSingletons {
 		if (!onscreen){
 			onscreen = true;
 			synchronized(gwin.getWin()) {
-				/* ++++++ISN'T WORKING
 						// Save background.
-				gwin.getWin().get(backup, box.x, box.y);
-				*/
+				gwin.getWin().get(backup, maxw, maxh, box.x, box.y);
 						// Paint new location.
 				cur.paintRle(gwin.getWin(), mousex, mousey);
 			}
@@ -119,12 +119,10 @@ public final class Mouse extends GameSingletons {
 	void hide() {			// Restore area under mouse.
 		if (onscreen) {
 			onscreen = false;
-			/* ++++++JUST isn't working right.
 			synchronized(gwin.getWin()) {
-				gwin.getWin().put(backup, box.x, box.y);
+				gwin.getWin().put(backup, maxw, maxh, box.x, box.y);
 			}
-			*/
-			gwin.addDirty(box);//+++++SLOW but reliable.
+			//gwin.addDirty(box);//+++++SLOW but reliable.
 			dirty.set(box);	// Init. dirty to box.
 			}
 	}
@@ -143,7 +141,7 @@ public final class Mouse extends GameSingletons {
 		mousey = y;
 	}
 	void blitDirty(Canvas c) {	// Blit dirty area.
-		/*++++++++ISN't working.
+		/* +++++++++++  Looks like this isnt' needed (and never worked).
 		gwin.getWin().show(c , dirty.x - 1, dirty.y - 1, dirty.w + 2, 
 							dirty.h + 2); 
 		*/

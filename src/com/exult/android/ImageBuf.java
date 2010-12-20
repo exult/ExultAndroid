@@ -162,6 +162,7 @@ public class ImageBuf {
 	public boolean isVisible(int x, int y, int w, int h)
 		{ return (!(x >= clipx + clipw || y >= clipy + cliph ||
 			x + w <= clipx || y + h <= clipy)); }
+	/* +++++++NOT USED
 	public synchronized void show(Canvas c, int x, int y, int w, int h) {
 		Rectangle rect = tempShowRect;
 		rect.set(x, y, w, h);
@@ -193,6 +194,7 @@ public class ImageBuf {
 		else 
 			blit(c);// +++++++++FOR NOW.
 	}
+	*/
 	public void blit(Canvas c) {
 		if (toScale != null) {
 			toScale.setPixels(rgba, 0, width, 0, 0, width, height);
@@ -272,29 +274,27 @@ public class ImageBuf {
 	 */
 	public void get
 		(
-		ImageBuf dest,			// Copy to here.
+		byte dest[],				// Copy to here.
+		int destw, int desth,
 		int srcx, int srcy		// Upper-left corner of source rect.
 		) {
-		int srcw = dest.width, srch = dest.height;
-		int destx = 0, desty = 0;
+		int destx = 0, desty = 0, fulldestw = destw;
 						// Constrain to window's space. (Note
 						//   convoluted use of clip().)
-		tempClipSrc.set(destx, desty, srcw, srch);
+		tempClipSrc.set(destx, desty, destw, desth);
 		tempClipDest.set(srcx, srcy);
 		if (!clip(tempClipSrc, tempClipDest))
 			return;
 		destx = tempClipSrc.x; desty = tempClipSrc.y;
-		srcw = tempClipSrc.w; srch = tempClipSrc.h;
+		destw = tempClipSrc.w; desth = tempClipSrc.h;
 		srcx = tempClipDest.x; srcy = tempClipDest.y;				 
-		int to =  desty*dest.width + destx;
+		int to =  desty*fulldestw + destx;
 		int from = srcy*width + srcx;
 						// Figure # pixels to next line.
-		int to_next = dest.width;
-		int from_next = width;
-		while (srch-- > 0) {			// Do each line.
-			System.arraycopy(pixels, from, dest.pixels, to, srcw);
-			to += to_next;
-			from += from_next;
+		while (desth-- > 0) {			// Do each line.
+			System.arraycopy(pixels, from, dest, to, destw);
+			to += fulldestw;
+			from += width;
 		}
 	}
 	/*
@@ -303,13 +303,12 @@ public class ImageBuf {
 
 	public final void put
 		(
-		ImageBuf src,		// Copy from here.
+		byte src[],		// Copy from here.
+		int srcw, int srch,
 		int destx, int desty		// Copy to here.
 		) {
-		copy8(src.pixels, 0,
-			src.getWidth(), src.getHeight(), destx, desty);
-		}
-
+		copy8(src, 0, srcw, srch, destx, desty);
+	}
 	// Slightly Optimized RLE Painter
 	public void paintRle (int xoff, int yoff, byte inptr[])
 	{
