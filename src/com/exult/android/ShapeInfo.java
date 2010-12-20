@@ -589,6 +589,23 @@ int get_weapon_offset(int frame)
 		}
 	}
 	/*
+	 * Base class for reading various info. files.
+	 */
+	static public abstract class BaseInfo {
+		public final static int //	Flags.
+			nfo_modified = 1,
+			From_patch = 2,
+			Have_static = 4,
+			Is_invalid = 8;
+		private int infoFlags;
+		public boolean isInvalid() {
+			return (infoFlags&Is_invalid) != 0;
+		}
+		public abstract BaseInfo create();
+		public abstract boolean read(InputStream in, int version, 
+				boolean patch, int game, ShapeInfo info);
+	}
+	/*
 	 * Readers
 	 */
 	static class GumpReaderFunctor extends DataUtils.ReaderFunctor {
