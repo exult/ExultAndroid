@@ -10,7 +10,7 @@ public class EggObject extends IregGameObject {
 	protected byte flags;		// Formed from below flags.
 	protected short data1, data2, data3;	// More data, dep. on type.
 	protected Rectangle area;			// Active area.
-	protected byte solid_area;	// 1 if area is solid, 0 if outline.
+	protected boolean solid_area;	// 1 if area is solid, 0 if outline.
 	// +++++FINISH Animator *animator;		// Controls animation.
 	protected void initField(byte ty) {
 		//+++++++++++++
@@ -149,9 +149,9 @@ public class EggObject extends IregGameObject {
 		byte do_once = (byte)((itype >> 8) & 1);
 						// Missile eggs can be rehatched
 		byte htch = (byte)((type == missile) ? 0 : ((itype >> 9) & 1));
-		solid_area = (byte)((criteria == something_on || criteria == cached_in ||
+		solid_area = ((criteria == something_on || criteria == cached_in ||
 						// Teleports need solid area.
-			type == teleport || type == intermap) ? 1 : 0);
+			type == teleport || type == intermap));
 		byte ar = (byte)((itype >> 15) & 1);
 		flags = (byte)((noct << nocturnal) + (do_once << once) +
 						(htch << hatched) + (ar << auto_reset));
@@ -170,9 +170,117 @@ public class EggObject extends IregGameObject {
 		area = new Rectangle(0, 0, 0, 0);
 		criteria = party_footpad;
 		distance = 0;
-		solid_area = 0;
+		solid_area = false;
 		//++++++++FINISH animator = null;
 		flags = (1 << auto_reset);
+	}
+	public void setArea() { // Set up active area.
+		//+++++++++++FINISH
+	}
+	public final int getDistance()
+		{ return distance; }
+	public final int getCriteria()
+		{ return criteria; }
+	public final int getType()
+		{ return type; }
+	public String getStr1()
+		{ return ""; }
+	public void setStr1(String s)
+		{  }
+				// Can this be clicked on?
+	public boolean isFindable() {
+		/* +++++++FINISH
+		if (animator != null)
+			return super.isFindable();
+		else */
+			return gwin.paintEggs && super.isFindable();
+	}
+	public void set(int crit, int dist) {
+		/* ++++++++FINISH
+		MapChunk echunk = getChunk();
+		echunk.removeEgg(this);	// Got to add it back.
+		criteria = crit;
+		distance = dist; 
+		echunk.addEgg(this);
+		*/
+	}
+				// Can it be activated?
+	public boolean isActive(GameObject obj,
+			int tx, int ty, int tz, int from_tx, int from_ty) {
+		//+++++++++++++FINISH
+		return false;
+	}
+	public final Rectangle getArea()	// Get active area.
+		{ return area; }
+	public final boolean isSolidArea()
+		{ return solid_area; }
+	/* +++++++FINISH
+	void set_animator(Animator *a);
+	void stop_animation();
+	*/
+	public void paint() {
+		/* +++++++++
+		if (animator) {
+			animator->want_animation();	// Be sure animation is on.
+			Ireg_game_object::paint();	// Always paint these.
+		} else */
+			if (gwin.paintEggs)
+				super.paint();
+	}
+				// Run usecode function.
+	public void activate(int event) {
+		hatch(null, false);
+		/* +++++++++FINISH
+		if (animator)
+			flags &= ~(1 << (int) hatched);	// Moongate:  reset always.
+		 */
+	}
+	public static void setWeather(int weather) {
+		setWeather(weather, 15, null);
+	}
+	public static void setWeather(int weather, int len,
+			GameObject egg) {
+		//+++++++++FINISH
+	}
+		// Move to new abs. location.
+	public void move(int newtx, int newty, int newlift, int newmap) {
+		// Figure new chunk.
+		int newcx = newtx/EConst.c_tiles_per_chunk, newcy = newty/EConst.c_tiles_per_chunk;
+		GameMap eggmap = newmap >= 0 ? gwin.getMap(newmap) : getMap();
+		if (eggmap == null) 
+			eggmap = gmap;
+		MapChunk newchunk = eggmap.getChunk(newcx, newcy);
+		if (newchunk == null)
+			return;			// Bad loc.
+		removeThis();			// Remove from old.
+		setLift(newlift);		// Set new values.
+		setShapePos(newtx%EConst.c_tiles_per_chunk, newty%EConst.c_tiles_per_chunk);
+		// ++++++++FINISH newchunk.addEgg(this);	// Updates cx, cy.
+		gwin.addDirty(this);		// And repaint new area.
+	}
+		// Remove/delete this object.
+	public void removeThis() {
+		ContainerGameObject owner = getOwner();
+		if (owner != null)		// Watch for this.
+			owner.remove(this);
+		else {
+		 	if (chunk != null) {
+				gwin.addDirty(this);	// (Make's ::move() simpler.).
+				// +++++++FINISH chunk.removeEgg(this);
+			}
+		}
+	}
+	public boolean isEgg() { 
+		return true; 
+	}
+	/* +++++++FINISH
+		// Write out to IREG file.
+	virtual void write_ireg(DataSource* out);
+	// Get size of IREG. Returns -1 if can't write to buffer
+	virtual int get_ireg_size();
+	*/
+	public void reset() { 
+		flags &= ~(1 << hatched); 
 	}
 	public void hatchNow(GameObject obj, boolean must)
 		{  }
