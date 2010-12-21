@@ -196,13 +196,11 @@ public class EggObject extends IregGameObject {
 			return gwin.paintEggs && super.isFindable();
 	}
 	public void set(int crit, int dist) {
-		/* ++++++++FINISH
 		MapChunk echunk = getChunk();
 		echunk.removeEgg(this);	// Got to add it back.
-		criteria = crit;
-		distance = dist; 
+		criteria = (byte)crit;
+		distance = (byte)dist; 
 		echunk.addEgg(this);
-		*/
 	}
 				// Can it be activated?
 	public boolean isActive(GameObject obj,
@@ -255,7 +253,7 @@ public class EggObject extends IregGameObject {
 		removeThis();			// Remove from old.
 		setLift(newlift);		// Set new values.
 		setShapePos(newtx%EConst.c_tiles_per_chunk, newty%EConst.c_tiles_per_chunk);
-		// ++++++++FINISH newchunk.addEgg(this);	// Updates cx, cy.
+		newchunk.addEgg(this);	// Updates cx, cy.
 		gwin.addDirty(this);		// And repaint new area.
 	}
 		// Remove/delete this object.
@@ -266,7 +264,7 @@ public class EggObject extends IregGameObject {
 		else {
 		 	if (chunk != null) {
 				gwin.addDirty(this);	// (Make's ::move() simpler.).
-				// +++++++FINISH chunk.removeEgg(this);
+				chunk.removeEgg(this);
 			}
 		}
 	}
@@ -382,10 +380,9 @@ public class EggObject extends IregGameObject {
 				ShapeInfo info = ShapeID.getInfo(mshape);
 				GameObject nobj = IregGameObject.create(info,
 				    mshape, mframe, getTx(), getTy(), getLift());
-				/* ++++++++FINISH
 				if (nobj.isEgg())
 					chunk.addEgg((EggObject) nobj);
-				else */
+				else
 					chunk.add(nobj);
 				gwin.addDirty(nobj);
 				nobj.setFlag(GameObject.okay_to_take);

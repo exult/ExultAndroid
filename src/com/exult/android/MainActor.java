@@ -165,9 +165,6 @@ public class MainActor extends Actor {
 				yto = newcy < EConst.c_num_chunks - 1 ? newcy + 1 : newcy;
 				}
 			}
-		for (int y = yfrom; y <= yto; y++)
-			for (int x = xfrom; x <= xto; x++)
-				nlist.getMap().getChunk(Tile.fix(x), Tile.fix(y)).setupCache();
 
 		// If change in Superchunk number, apply Old Style caching emulation
 		// +++++FINISH gwin.emulate_cache(olist, nlist);

@@ -20,6 +20,7 @@ public final class MapChunk extends GameSingletons {
 	// bits for each bit level for #objs blocking there.
 	private Vector<short[]> blocked;	// Each element represents the chunk for 8 lifts.
 	private HashSet<GameObject> doors;
+	private Vector<EggObject> eggObjects;
 	private short eggs[];				// Eggs which influence this chunk.
 	// Mask gives low bits (b0) for a given # of ztiles:
 	private static final int tmasks[] = {
@@ -32,7 +33,8 @@ public final class MapChunk extends GameSingletons {
       0x555,
      0x1555};
 	private static Rectangle footRect = new Rectangle(),	// Temp.
-							 tilesRect = new Rectangle();
+							 tilesRect = new Rectangle(),
+							 eggRect = new Rectangle();
 	// Temp. storage for 'blocked' flags for a single tile.
 	private static int tflags[] = new int[256/8];
 	private static int tflagsMaxz;
@@ -205,11 +207,103 @@ public final class MapChunk extends GameSingletons {
 		objects.remove(remove);		// Remove from list.
 		remove.setInvalid();		// No longer part of world.
 	}
+	private void setEgged(EggObject egg, Rectangle tiles, boolean add) {
+		// Egg already there?
+		int eggnum = -1, spot = -1;
+		if (eggObjects == null) {
+			if (!add)
+				return;
+			eggObjects = new Vector<EggObject>(4);
+		}
+		int cnt = eggObjects.size();
+		for (int i = 0; i < cnt; ++i) {
+			EggObject e = eggObjects.elementAt(i);
+			if (e == egg) {
+				eggnum = i;;
+				break;
+			} else if (e == null && spot == -1)
+				spot = i;
+		}
+		if (add) {
+			if (eggnum < 0) {		// No, so add it.
+				eggnum = spot >= 0 ? spot : eggObjects.size();
+				if (spot >= 0)
+					eggObjects.setElementAt(egg, spot);
+				else
+					eggObjects.add(egg);
+			}
+			if (eggnum > 15)	// We only have 16 bits.
+				eggnum = 15;
+			short mask = (short)(1<<eggnum);
+			int stopx = tiles.x + tiles.w, stopy = tiles.y + tiles.h;
+			for (int ty = tiles.y; ty < stopy; ++ty)
+				for (int tx = tiles.x; tx < stopx; ++tx)
+					eggs[ty*EConst.c_tiles_per_chunk + tx] |= mask;
+		} else {			// Remove.
+			if (eggnum < 0)
+				return;		// Not there.
+			eggObjects.setElementAt(null, eggnum);
+			if (eggnum >= 15) {	// We only have 16 bits.
+								// Last one at 15 or above?
+				for (int i = 15; i < cnt; ++i) {
+					EggObject e = eggObjects.elementAt(i);
+					if (e != null)
+						// No, so leave bits alone.
+						return;
+				}
+				eggnum = 15;
+			}
+			short mask = (short)(~(1<<eggnum));
+			int stopx = tiles.x + tiles.w, stopy = tiles.y + tiles.h;
+			for (int ty = tiles.y; ty < stopy; ty++)
+				for (int tx = tiles.x; tx < stopx; tx++)
+					eggs[ty*EConst.c_tiles_per_chunk + tx] &= mask;
+		}
+	}
+	private void updateEgg(EggObject egg, boolean add) {
+		// Get footprint with abs. tiles.
+		Rectangle foot = egg.getArea();
+		if (foot.w == 0)
+			return;			// Empty (probability = 0).
+		MapChunk chunk;
+		ChunkIntersectIterator iter = new ChunkIntersectIterator();
+		if (egg.isSolidArea()) {
+						// Do solid rectangle.
+			iter.set(foot);
+			while ((chunk = iter.getNext(eggRect)) != null)
+				chunk.setEgged(egg, eggRect, add);
+			return;
+			}
+						// Just do the perimeter.
+						// Go through intersected chunks.
+		eggRect.set(foot.x, foot.y, foot.w, 1);		// Top.
+		iter.set(eggRect);
+		while ((chunk = iter.getNext(eggRect)) != null)
+			chunk.setEgged(egg, eggRect, add);
+		eggRect.set(foot.x, foot.y + foot.h - 1, foot.w, 1);		// Bottom.
+		iter.set(eggRect);
+		while ((chunk = iter.getNext(eggRect)) != null)
+			chunk.setEgged(egg, eggRect, add);
+		eggRect.set(foot.x, foot.y + 1, 1, foot.h - 2);		// Left
+		iter.set(eggRect);
+		while ((chunk = iter.getNext(eggRect)) != null)
+			chunk.setEgged(egg, eggRect, add);
+		eggRect.set(foot.x + foot.w - 1, foot.y + 1, 1, foot.h - 2);		// Right.
+		iter.set(eggRect);
+		while ((chunk = iter.getNext(eggRect)) != null)
+			chunk.setEgged(egg, eggRect, add);
+	}
+	public void addEgg(EggObject egg) {
+		add(egg);
+		egg.setArea();
+		updateEgg(egg, true);
+	}
+	public void removeEgg(EggObject egg) {
+		remove(egg);			// Remove it normally.
+		updateEgg(egg, false);
+	}
 	public ImageBuf getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;
-	}
-	public void setupCache() {
-		//++++++++++++FINISH
 	}
 	/*
 	 *	Set (actually, increment count) for a given tile.
@@ -711,8 +805,8 @@ public final class MapChunk extends GameSingletons {
 						// Chunk #'s covered:
 		private int startcx, stopcx, stopcy;
 		private int curcx, curcy;		// Next chunk to return.
-		ChunkIntersectIterator(Rectangle t) {
-			tiles = new Rectangle(); tiles.set(t);
+		void set(Rectangle t) {
+			tiles.set(t);
 			startcx = t.x/EConst.c_tiles_per_chunk;
 			stopcx = EConst.INCR_CHUNK((t.x + t.w - 1)/EConst.c_tiles_per_chunk);
 			stopcy = EConst.INCR_CHUNK((t.y + t.h - 1)/EConst.c_tiles_per_chunk);
@@ -724,7 +818,14 @@ public final class MapChunk extends GameSingletons {
 			if (t.x < 0 || t.y < 0) {		// Empty to begin with.
 				curcx = stopcx;
 				curcy = stopcy;
-				}
+			}
+		}
+		ChunkIntersectIterator(Rectangle t) {
+			tiles = new Rectangle(); 
+			set(t);
+		}
+		ChunkIntersectIterator() {
+			tiles = new Rectangle();
 		}
 		// Intersect is ranged within chunk.
 		MapChunk getNext(Rectangle intersect) {
