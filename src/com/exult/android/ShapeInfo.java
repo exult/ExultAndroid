@@ -558,6 +558,25 @@ int get_weapon_offset(int frame)
 				s.setTfaData();
 			}
 		} catch (IOException e) { }
+		// Get 'equip.dat'.
+		InputStream equip = EUtil.U7openStream2(EFile.PATCH_EQUIP, EFile.EQUIP);
+		if (equip != null) {
+				// Get # entries (with Exult extension).
+			int num_recs = DataUtils.ReadCount(equip);
+			MonsterInfo.reserveEquip(num_recs);
+			for (i = 0; i < num_recs; i++) {
+				MonsterInfo.EquipRecord erec = new MonsterInfo.EquipRecord();
+						// 10 elements/record.
+				for (int elem = 0; elem < 10; elem++) {
+					int shnum = EUtil.Read2(equip);
+					int prob = EUtil.Read1(equip);
+					int quant = EUtil.Read1(equip);
+					EUtil.Read2(equip);
+					erec.set(elem, shnum, prob, quant);
+					}
+				MonsterInfo.addEquip(erec);
+			}
+		} 
 		/*
 		 * 	CLOSE all the files.
 		 */
@@ -565,6 +584,7 @@ int get_weapon_offset(int frame)
 			shpdims.close();
 			wgtvol.close();
 			tfa.close();
+			equip.close();
 		} catch (IOException e) { }
 		
 		//++++++++++LOTS MORE

@@ -206,7 +206,8 @@ public class EUtil {
 		if (nm != null) try {
 			return new RandomAccessFile(nm, "r");
 		} catch (IOException e) { }
-		nm = U7exists(nm2);if (nm != null) try {
+		nm = U7exists(nm2);
+		if (nm != null) try {
 			return new RandomAccessFile(nm, "r");
 		} catch (IOException e) { }
 		return null;
@@ -215,6 +216,18 @@ public class EUtil {
 								throws IOException {
 		String fname = getSystemPath(nm);
 		return new BufferedInputStream(new FileInputStream(fname), 0x8000);
+	}
+	// First try nm1, then nm2.  Returns null if neither found.
+	public static InputStream U7openStream2(String nm1, String nm2) {
+		String nm = U7exists(nm1);
+		if (nm != null) try {
+			return new BufferedInputStream(new FileInputStream(nm), 0x8000);
+		} catch (IOException e) { }
+		nm = U7exists(nm2);
+		if (nm != null) try {
+			return new BufferedInputStream(new FileInputStream(nm), 0x8000);
+		} catch (IOException e) { }
+		return null;
 	}
 	public static void U7remove(String nm) {
 		String fname = U7exists(nm);

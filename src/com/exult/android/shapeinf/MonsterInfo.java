@@ -116,9 +116,10 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		}
 		return default_info;
 	}
-	static void reserve_equip(int cnt)
-		{ equip.ensureCapacity(cnt); }
-	public static void add_equip(EquipRecord eq)
+	public static void reserveEquip(int cnt) {
+		equip = new Vector<EquipRecord>(cnt);
+	}
+	public static void addEquip(EquipRecord eq)
 		{ equip.add(eq); }
 	public static int getEquipCnt()
 		{ return equip.size(); }
@@ -224,7 +225,31 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		return expval;
 	}
 	
+	public static class EquipElement {
+		public int shapenum;	// What to create, or 0 for nothing.
+		public int probability;	// 0-100:  probability of creation.
+		public int quantity;		// # to create.
+		public EquipElement(int shnum, int prob, int quant) {
+			shapenum = shnum;
+			probability = prob;
+			quantity = quant;
+		}
+		public int getShapenum()
+			{ return shapenum; }
+		public int getProbability()
+			{ return probability; }
+		public int getQuantity()
+			{ return quantity; }
+	}
 	public static class EquipRecord {
-		
+		private EquipElement elements[];
+		public EquipRecord() {
+			elements = new EquipElement[10];
+		}
+							// Set i'th element.
+		public void set(int i, int shnum, int prob, int quant)
+			{ elements[i] = new EquipElement(shnum, prob, quant); }
+		public EquipElement get(int i)
+			{ return elements[i]; }
 	}
 }

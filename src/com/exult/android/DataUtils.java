@@ -9,7 +9,7 @@ public final class DataUtils {
 	/*
 	 *	Get # entries of binary data file (with Exult extension).
 	 */
-	private static int Read_count(InputStream in) {
+	public static int ReadCount(InputStream in) {
 		int cnt = EUtil.Read1(in);	// How the originals did it.
 		if (cnt == 255)
 			cnt = EUtil.Read2(in);	// Exult extension.
@@ -29,7 +29,7 @@ public final class DataUtils {
 			int vers = 0;
 			if (haveversion)
 				vers = EUtil.Read1(in);
-			int cnt = Read_count(in);
+			int cnt = ReadCount(in);
 			System.out.println("**** cnt = " + cnt);
 			for (int j = 0; j < cnt; j++)
 				read_data(in, j, vers, patch, game, true);
