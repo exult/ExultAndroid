@@ -677,14 +677,12 @@ public class GameWindow extends GameSingletons {
 		*/
 						// Look for obj. in open gump.
 		GameObject obj = null;
-		boolean gump = false; //+++++TESTING
-		/*
-		boolean gump = gump_man.double_clicked(x, y, obj);
-		
-		*/
+		Gump gump = gumpman.findGump(x, y);
 		boolean avatar_can_act = mainActorCanAct();
+		if (gump != null) {
+			obj = gumpman.doubleClicked(gump, x, y);
 		// If gump manager didn't handle it, we search the world for an object
-		if (!gump) {
+		} else {
 			obj = findObject(x, y);
 			/* ++++++++++++++
 			if (!avatarCanAct && obj && obj.as_actor()
