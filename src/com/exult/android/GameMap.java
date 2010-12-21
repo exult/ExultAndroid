@@ -598,6 +598,10 @@ public class GameMap extends GameSingletons {
 		return findNearby(vec, pos, shapenum, delta, mask, EConst.c_any_qual,
 														EConst.c_any_framenum);
 	}
+	public final int findNearbyEggs(Vector<GameObject> vec, Tile pos, int shapenum,
+			int delta, int qual, int frnum) {
+		return findNearby(vec, pos, shapenum, delta, 16, qual, frnum);
+	}
 	public final int findNearby
 		(
 		Vector<GameObject> vec,	// Objects appended to this.

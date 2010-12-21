@@ -284,6 +284,40 @@ public class EUtil {
 			return (deltay > -deltax ? EConst.north : deltay < deltax ? EConst.south
 									: EConst.west);
 	}
+	/*
+	 *	Return the direction for a given slope (0-15).
+	 *	NOTE:  Assumes cartesian coords, NOT screen coords. (which have y
+	 *		growing downwards).
+	 */
+	public static final int getDirection16(int deltay, int deltax) {
+		if (deltax == 0)
+			return deltay > 0 ? 0 : 8;
+		int dydx = (1024*deltay)/deltax;// Figure 1024*tan.
+		int adydx = dydx < 0 ? -dydx : dydx;
+		int angle = 0;
+		if (adydx < 1533) {		// 1024*tan(5*11.25)
+			if (adydx < 204)	// 1024*tan(11.25).
+				angle = 4;
+			else if (adydx < 684)	// 1024*tan(3*11.25).
+				angle = 3;
+			else
+				angle = 2;
+		} else {
+			if (adydx < 5148)	// 1024*tan(7*11.25).
+				angle = 1;
+			else
+				angle = 0;
+		}
+		if (deltay < 0)			// Check quadrants.
+			if (deltax > 0)
+				angle = 8 - angle;
+			else
+				angle += 8;
+		else if (deltax < 0)
+			angle = 16 - angle;
+		return angle % 16;
+	}
+
 	public static final int rand() {
 		return random.nextInt();
 	}
