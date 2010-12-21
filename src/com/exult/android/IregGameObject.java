@@ -39,6 +39,12 @@ public class IregGameObject extends GameObject {
 	public void setOwner(ContainerGameObject o) {
 		owner = o;
 	}
+	public void removeThis() {
+		if (owner != null)			// In a bag, box, or person.
+			owner.remove(this);
+		else if (chunk != null)			// In the outside world.
+			chunk.remove(this);
+	}
 	public boolean isDragable() {
 		return getInfo().getWeight() > 0;	// 0 means 'too heavy'.
 	}

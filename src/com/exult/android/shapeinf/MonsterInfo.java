@@ -123,7 +123,7 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ equip.add(eq); }
 	public static int getEquipCnt()
 		{ return equip.size(); }
-	public static EquipRecord get_equip(int i)
+	public static EquipRecord getEquip(int i)
 		{ return equip.elementAt(i); }
 	public boolean splits()
 		{ return m_splits; }
@@ -151,7 +151,7 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return m_int_b1; }
 	byte getByte13()
 		{ return m_byte13; }
-	byte getAttackmode()
+	public byte getAttackmode()
 		{ return m_attackmode; }
 	public boolean canTeleport()
 		{ return m_can_teleport; }
@@ -225,7 +225,7 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		return expval;
 	}
 	
-	public static class EquipElement {
+	public static final class EquipElement {
 		public int shapenum;	// What to create, or 0 for nothing.
 		public int probability;	// 0-100:  probability of creation.
 		public int quantity;		// # to create.
@@ -241,10 +241,13 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		public int getQuantity()
 			{ return quantity; }
 	}
-	public static class EquipRecord {
+	public static final class EquipRecord {
 		private EquipElement elements[];
 		public EquipRecord() {
 			elements = new EquipElement[10];
+		}
+		public int getNumElements() {
+			return elements.length;
 		}
 							// Set i'th element.
 		public void set(int i, int shnum, int prob, int quant)

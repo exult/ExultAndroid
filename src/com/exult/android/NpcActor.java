@@ -1,8 +1,11 @@
 package com.exult.android;
 
 public class NpcActor extends Actor {
-	public NpcActor(String nm, int shapenum) { //++++FINISH, num, uc
+	public NpcActor(String nm, int shapenum) { 
 		super(nm, shapenum, -1, -1); 
+	}
+	public NpcActor(String nm, int shapenum, int num, int uc) {
+		super(nm, shapenum, num, uc);
 	}
 	/*
 	 *	Run usecode when double-clicked.

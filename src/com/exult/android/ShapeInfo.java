@@ -259,17 +259,11 @@ void clean_invalid_warmth_info();
 void clear_warmth_info();
 void add_warmth_info(Warmth_info& add);
 int get_object_warmth(int frame);
-
-int get_monster_food() {
-{ return monster_food; }
-void set_monster_food(int sh)
-{
-if (monster_food != (short)sh)
-{
-modified_flags |= monster_food_flag;
-monster_food = (short)sh;
-}
-}
+*/
+	public int getMonsterFood() {
+		return monsterFood; 
+	}
+/*
 
 int get_mountain_top_type() {
 { return mountain_top; }
