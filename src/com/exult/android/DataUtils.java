@@ -16,22 +16,6 @@ public final class DataUtils {
 		return cnt;
 	}
 	/*
-	 * Reader for classes derived from BaseInfo.
-	 */
-	public static class ClassReaderFunctor {
-		private ShapeInfo.BaseInfo template;
-		public ClassReaderFunctor(ShapeInfo.BaseInfo t) {
-			template = t;
-		}
-		public boolean read(InputStream in, int version, 
-				boolean patch, int game, ShapeInfo info) {
-			ShapeInfo.BaseInfo cls = template.create();
-			if (!cls.read(in, version, patch, game, info))
-				return false;
-			return true;
-		}
-	}
-	/*
 	 *	Generic base data-agnostic reader class.
 	 */
 	public static class BaseReader {
@@ -96,8 +80,8 @@ public final class DataUtils {
 				boolean binary)
 			{ return binary ? EUtil.Read2(in) : EUtil.ReadInt((DataInputStream)in); }
 	}
-	public abstract static class ReaderFunctor {
-		public abstract boolean read(InputStream in, int version, 
+	public static interface ReaderFunctor {
+		public boolean read(InputStream in, int version, 
 				boolean patch, int game, ShapeInfo info);
 	}
 	public static interface PostFunctor {

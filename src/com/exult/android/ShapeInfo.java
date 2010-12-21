@@ -1,4 +1,5 @@
 package com.exult.android;
+import com.exult.android.shapeinf.*;
 import java.io.RandomAccessFile;
 import java.io.InputStream;
 import java.io.IOException;
@@ -15,7 +16,9 @@ public final class ShapeInfo {
 	private ArmorInfo armor;		// From armor.dat.
 	private WeaponInfo weapon;		// From weapon.dat, if a weapon.
 	private AmmoInfo ammo;		// From ammo.dat, if ammo.
+	*/
 	private MonsterInfo monstinf;		// From monster.dat.
+	/*
 	private SFXInfo sfxinf;
 	private AnimationInfo aniinf;
 	private ExplosionInfo explosion;
@@ -145,9 +148,15 @@ Armor_info *set_armor_info(bool tf);
 
 bool has_monster_info() {
 { return monstinf != 0; }
-Monster_info *get_monster_info_safe() {;
-Monster_info *get_monster_info() {
-{ return monstinf; }
+	public MonsterInfo getMonsterInfoafe()
+*/
+	public MonsterInfo getMonsterInfo() {
+		return monstinf; 
+	}
+	public void setMonsterInfo(MonsterInfo m) {
+		monstinf = m;
+	}
+/*
 Monster_info *set_monster_info(bool tf);
 
 bool has_npc_paperdoll_info() {
@@ -561,6 +570,12 @@ int get_weapon_offset(int frame)
 		//++++++++++LOTS MORE
 		DataUtils.IDReaderFunctor idReader = new DataUtils.IDReaderFunctor();
 		
+		DataUtils.FunctorMultidataReader monstinf = 
+			new DataUtils.FunctorMultidataReader(
+					info, new MonsterInfo(), null, idReader, false);
+		monstinf.read(EFile.MONSTERS, false, game);
+		monstinf.read(EFile.PATCH_MONSTERS, true, game);
+		
 		DataUtils.FunctorMultidataReader gump = 
 			new DataUtils.FunctorMultidataReader(
 				info, new GumpReaderFunctor(), null, idReader, true);
@@ -572,10 +587,9 @@ int get_weapon_offset(int frame)
 			gump.read(EFile.CONTAINER, false, game);
 		gump.read(EFile.PATCH_CONTAINER, true, game);
 
-		ReadyTypeFunctor r = new ReadyTypeFunctor();
 		DataUtils.FunctorMultidataReader ready =
 			new DataUtils.FunctorMultidataReader(
-						info, r, null, idReader, false);
+					info, new ReadyTypeFunctor(), null, idReader, false);
 		ready.read(EFile.READY, false, game);
 		ready.read(EFile.PATCH_READY, true, game);
 		//+++++Read text files?
@@ -589,26 +603,9 @@ int get_weapon_offset(int frame)
 		}
 	}
 	/*
-	 * Base class for reading various info. files.
-	 */
-	static public abstract class BaseInfo {
-		public final static int //	Flags.
-			nfo_modified = 1,
-			From_patch = 2,
-			Have_static = 4,
-			Is_invalid = 8;
-		private int infoFlags;
-		public boolean isInvalid() {
-			return (infoFlags&Is_invalid) != 0;
-		}
-		public abstract BaseInfo create();
-		public abstract boolean read(InputStream in, int version, 
-				boolean patch, int game, ShapeInfo info);
-	}
-	/*
 	 * Readers
 	 */
-	static class GumpReaderFunctor extends DataUtils.ReaderFunctor {
+	static class GumpReaderFunctor implements DataUtils.ReaderFunctor {
 		public boolean read(InputStream in, int version, 
 							boolean patch, int game, ShapeInfo info) {
 			info.gumpShape = (short) EUtil.Read2(in);
@@ -620,7 +617,7 @@ int get_weapon_offset(int frame)
 		}
 	}
 	// A few custom post-read functors.
-	static class ReadyTypeFunctor extends DataUtils.ReaderFunctor {
+	static class ReadyTypeFunctor implements DataUtils.ReaderFunctor {
 		public boolean read(InputStream in, int version, 
 								boolean patch, int game, ShapeInfo info) {
 			info.readyType = (byte)EUtil.Read1(in);
