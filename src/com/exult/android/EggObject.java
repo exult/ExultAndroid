@@ -14,6 +14,7 @@ public class EggObject extends IregGameObject {
 	private static Rectangle world = new Rectangle(0, 0, 
 			EConst.c_num_chunks*EConst.c_tiles_per_chunk,
 			EConst.c_num_chunks*EConst.c_tiles_per_chunk);
+	private static Rectangle inside = new Rectangle();	// A temp.
 	// +++++FINISH Animator *animator;		// Controls animation.
 	protected void initField(byte ty) {
 		//+++++++++++++
@@ -244,9 +245,84 @@ public class EggObject extends IregGameObject {
 	}
 				// Can it be activated?
 	public boolean isActive(GameObject obj,
-			int tx, int ty, int tz, int from_tx, int from_ty) {
-		//+++++++++++++FINISH
-		return false;
+			int tx, int ty, int tz, int from_tx, int from_ty) {	
+		System.out.println("Egg.isActive start, tx = " + tx + ", ty = " + ty + 
+				", flags = " + flags);
+		if ((flags & (1 << (int) hatched)) != 0 &&
+					(flags & (1 << (int) auto_reset)) == 0)
+			return false;		// For now... Already hatched.
+		/* +++++++++++FINISH
+		if ((flags & (1 << (int) nocturnal)) != 0) {	// Nocturnal.
+				int hour = gclock.getHour();
+				if (!(hour >= 9 || hour <= 5))
+					return false;	// It's not night.
+		}
+		*/
+		int cri = getCriteria();
+		int deltaz = tz - getLift();
+		System.out.println("Checking criteria " + cri + ", deltaz = " + deltaz);
+		switch (cri) {
+		case cached_in:			// Anywhere in square.
+			// This seems to be true for SI in general. It has the side effect
+			// of "fixing" Fawn Tower goblins.
+			// It does NOT happen in BG, though.
+			if (game.isSI() && deltaz/5 != 0 && type == monster) {
+				// Mark hatched if not auto-reset.
+				if ((flags & (1 << auto_reset)) == 0)
+					flags |= (1 << hatched);
+				return false;
+			}
+			if (obj != gwin.getMainActor() || !area.hasPoint(tx, ty))
+				return false;	// Not in square.
+			if ((flags & (1 << hatched)) == 0) {
+				System.out.println("cached_in egg is active");
+				return true;	// First time.
+			}
+							// Must have autoreset.
+							// Just activate when reentering.
+			return !area.hasPoint(from_tx, from_ty);
+		case avatar_near:
+			if (obj != gwin.getMainActor())
+				return false;
+			// fall through
+		case party_near:		// Avatar or party member.
+			if (!obj.getFlag(GameObject.in_party))
+				return false;
+			if (type == teleport ||	// Teleports:  Any tile, exact lift.
+				    type == intermap)
+				return deltaz == 0 && area.hasPoint(tx, ty);
+			else if (type == jukebox || type == soundsfx || type == voice)
+				// Guessing. Fixes shrine of Spirituality and Sacrifice.
+				return area.hasPoint(tx, ty);
+			if (!((deltaz/2 == 0 || 
+						// Using trial&error here:
+				 (game.isSI() && type != missile) ||
+					(type == missile && deltaz/5 == 0)) &&
+						// New tile is in, old is out.
+						area.hasPoint(tx, ty) &&
+						!area.hasPoint(from_tx, from_ty)))
+				return false;
+			return true;
+		case avatar_far:		// New tile is outside, old is inside.
+			if (obj != gwin.getMainActor() || !area.hasPoint(tx, ty))
+				return false;
+			inside.set(area.x + 1, area.y + 1, 
+								area.w - 2, area.h - 2);
+			return inside.hasPoint(from_tx, from_ty) &&
+					!inside.hasPoint(tx, ty);
+		case avatar_footpad:
+			return obj == gwin.getMainActor() && deltaz == 0 &&
+								area.hasPoint(tx, ty);
+		case party_footpad:
+			return area.hasPoint(tx, ty) && deltaz == 0 &&
+						obj.getFlag(GameObject.in_party);
+		case something_on:
+			return	 		// Guessing.  At SI end, deltaz == -1.
+				deltaz/4 == 0 && area.hasPoint(tx, ty) && obj.asActor() == null;
+		case external_criteria:
+		default:
+			return false;
+		}
 	}
 	public final Rectangle getArea()	// Get active area.
 		{ return area; }
@@ -259,7 +335,7 @@ public class EggObject extends IregGameObject {
 	public void paint() {
 		/* +++++++++
 		if (animator) {
-			animator->want_animation();	// Be sure animation is on.
+			animator.want_animation();	// Be sure animation is on.
 			Ireg_game_object::paint();	// Always paint these.
 		} else */
 			if (gwin.paintEggs)

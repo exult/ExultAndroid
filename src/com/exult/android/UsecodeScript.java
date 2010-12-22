@@ -5,7 +5,6 @@ import java.util.Vector;
 
 public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	private static int count;		// Total # of these around.
-	private static UsecodeScript first;// .chain of all of them.
 	private static LinkedList<UsecodeScript> scripts =
 						new LinkedList<UsecodeScript>();
 	private GameObject obj;		// From objval.
@@ -126,6 +125,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		while (iter.hasNext()) {
 			UsecodeScript each = iter.next();
 			if (each.obj == obj) {
+				System.out.println("Halting script for obj " + obj.getName());
 				each.halt();
 				iter.remove();
 			}
@@ -659,7 +659,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		/* ++++++++FINISH
 		if (act && act.get_casting_mode() == Actor::show_casting_frames)
 			act.end_casting_mode(delay);
-		*/
+		 */
 		scripts.remove(this);	// All done.
 	}
 }

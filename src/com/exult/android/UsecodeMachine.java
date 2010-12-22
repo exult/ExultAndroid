@@ -153,11 +153,15 @@ public class UsecodeMachine extends GameSingletons {
 			return (0);
 
 		conv.clearAnswers();
-
+		System.out.println("UsecodeMachine.callUsecode: " + id);
 		int ret;
 		if (call_function(id, event, item, true, false)) {
 			Thread t = new Thread() {
 				public void run() {
+					while (running > 0)	// Want to wait until existing thread is done.
+						try {
+			    			Thread.sleep(200);
+			    		} catch (InterruptedException e) { }
 					myRun();// ? 1 : 0;
 				}
 			};
@@ -1270,7 +1274,6 @@ public class UsecodeMachine extends GameSingletons {
 				 int eventid,
 				 GameObject caller,
 				 boolean entrypoint, boolean orig) {
-		System.out.println("UsecodeMachine.call_function: " + funcid);
 		UsecodeFunction fun = find_function(funcid);
 		if (fun == null)
 			return false;
