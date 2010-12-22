@@ -319,7 +319,7 @@ public class EUtil {
 	}
 
 	public static final int rand() {
-		return random.nextInt();
+		return Math.abs(random.nextInt());
 	}
 	public static final int log2(int n) {
 		int result = 0;

@@ -5,6 +5,7 @@ public class MainActor extends Actor {
 	public MainActor(String nm, int shapenum) {
 		super(nm, shapenum, -1, -1);
 		frames = avatarFrames; 
+		setFlag(GameObject.in_party);
 	}
 	/*
 	 *	Handle a time event (for TimeSensitive).

@@ -246,8 +246,6 @@ public class EggObject extends IregGameObject {
 				// Can it be activated?
 	public boolean isActive(GameObject obj,
 			int tx, int ty, int tz, int from_tx, int from_ty) {	
-		System.out.println("Egg.isActive start, tx = " + tx + ", ty = " + ty + 
-				", flags = " + flags);
 		if ((flags & (1 << (int) hatched)) != 0 &&
 					(flags & (1 << (int) auto_reset)) == 0)
 			return false;		// For now... Already hatched.
@@ -286,8 +284,10 @@ public class EggObject extends IregGameObject {
 				return false;
 			// fall through
 		case party_near:		// Avatar or party member.
-			if (!obj.getFlag(GameObject.in_party))
+			System.out.println("Party_near");
+			if (!obj.getFlag(GameObject.in_party) && obj != gwin.getMainActor())
 				return false;
+			System.out.println("Party near: Area = " + area);
 			if (type == teleport ||	// Teleports:  Any tile, exact lift.
 				    type == intermap)
 				return deltaz == 0 && area.hasPoint(tx, ty);
@@ -411,6 +411,8 @@ public class EggObject extends IregGameObject {
 		}
 		/* end hack */
 		int roll = must ? 0 : 1 + EUtil.rand()%100;
+		System.out.println("Hatch: roll = " + roll + "prob = " + probability +
+				", tx = " + getTileX() + ", ty = " + getTileY());
 		if (roll <= probability) {
 			// Time to hatch the egg.
 			hatchNow(obj, must);
@@ -537,7 +539,6 @@ public class EggObject extends IregGameObject {
 			super(shnum, frnum, tx, ty, tz, itype, prob, d1, d2, (short)0);
 			
 			fun = (d2);  
-			System.out.println("New UsecodeEgg: fun = " + fun);
 			setQuality(d1&0xff);
 			super.setStr1(fnm);
 		}
@@ -553,6 +554,7 @@ public class EggObject extends IregGameObject {
 			if (fun == 0 && fun_name != null && fun_name != "")
 				fun = ucmachine.findFunction(fun_name);
 			*/
+			System.out.println("Hatched UsecodeEgg: fun = " + fun);
 			if (must)		// From script?  Do immediately.
 				ucmachine.callUsecode(fun, this,
 						UsecodeMachine.egg_proximity);
