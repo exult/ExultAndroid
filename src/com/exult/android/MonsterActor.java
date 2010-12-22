@@ -163,6 +163,9 @@ public class MonsterActor extends NpcActor {
 	/*
 	 *	Create an instance of a monster and initialize from monstinf.dat.
 	 */
+	public static MonsterActor create(int shnum, Tile pos, int sched, int align) {
+		return create(shnum, pos, sched, align, true, true);
+	}
 	public static MonsterActor create
 		(
 		int shnum,			// Shape to use.

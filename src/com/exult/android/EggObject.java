@@ -397,17 +397,18 @@ public class EggObject extends IregGameObject {
 		byte mframe;
 		byte sched, align, cnt;
 		void createMonster(MonsterInfo inf) {
-			/*+++++++++++FINISH
+			/*++++++++
 			Tile_coord dest = Map_chunk::find_spot(
 					get_tile(), 5, mshape, 0, 1);
-			if (dest.tx != -1) {
-				Monster_actor *monster = 
-				    Monster_actor::create(mshape, dest, sched, align);
-				monster.change_frame(mframe);
-				gwin.add_dirty(monster);
-				gwin.add_nearby_npc(monster);
-			}
 			*/
+			Tile dest = new Tile(); getTile(dest);// +++++TESTING
+			if (dest.tx != -1) {
+				MonsterActor monster = 
+				    MonsterActor.create((int)mshape, dest, sched, align);
+				monster.changeFrame(mframe);
+				gwin.addDirty(monster);
+				// +++++FINISH gwin.add_nearby_npc(monster);
+			}
 		}
 		public MonsterEgg(int shnum, int frnum, int tx, int ty,
 				int tz, short itype, byte prob, short d1, short d2, short d3) {
