@@ -1270,6 +1270,7 @@ public class UsecodeMachine extends GameSingletons {
 				 int eventid,
 				 GameObject caller,
 				 boolean entrypoint, boolean orig) {
+		System.out.println("UsecodeMachine.call_function: " + funcid);
 		UsecodeFunction fun = find_function(funcid);
 		if (fun == null)
 			return false;

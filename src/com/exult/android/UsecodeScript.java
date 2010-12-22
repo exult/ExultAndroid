@@ -244,10 +244,12 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		int delay = 1;	// Start with default delay.
 		boolean do_another = true;			// Flag to keep going.
 		int opcode;
+		System.out.println("UsecodeScript.exec: cnt = " + cnt);
 		// If a 1 follows, keep going.
 		for (; i < cnt && ((opcode = code.getElem(i).getIntValue()) 
 							== 0x1 || do_another); i++)
 			{
+			System.out.println("Opcode is " + opcode);
 			do_another = finish;
 			switch (opcode)
 				{

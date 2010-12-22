@@ -59,8 +59,8 @@ public class EggObject extends IregGameObject {
 			int ty, int tz) {
 		short type = (short)(entry[4] + 256*entry[5]);
 		byte prob = entry[6];		// Probability (1-100).
-		int data1 = entry[7] + 256*entry[8];
-		int data2 = entry[10] + 256*entry[11];
+		int data1 = ((int)entry[7]&0xff) + 256*((int)entry[8]&0xff);
+		int data2 = ((int)entry[10]&0xff) + 256*((int)entry[11]&0xff);
 		int data3 = entlen >= 14 ? (entry[12] + 256*entry[13]) : 0;
 		return createEgg(animated, shnum, frnum, tx, ty, tz, type, prob, 
 				(short)data1, (short)data2, (short)data3, null);
@@ -79,7 +79,6 @@ public class EggObject extends IregGameObject {
 							// Teleport destination?
 		if (type == teleport && frnum == 6 && shnum == 275)
 			type = path;		// (Mountains N. of Vesper).
-
 		EggObject obj = null;
 		switch (type) {		// The type:
 		case monster:
@@ -459,9 +458,11 @@ public class EggObject extends IregGameObject {
 		public UsecodeEgg(int shnum, int frnum, int tx, int ty,
 				int tz, short itype, byte prob, short d1, short d2, String fnm) {
 			super(shnum, frnum, tx, ty, tz, itype, prob, d1, d2, (short)0);
+			
 			fun = (d2);  
+			System.out.println("New UsecodeEgg: fun = " + fun);
 			setQuality(d1&0xff);
-			//+++++++FINISH super.setStr1(fnm);
+			super.setStr1(fnm);
 		}
 		public void setStr1(String s) {
 			fun_name = s;
