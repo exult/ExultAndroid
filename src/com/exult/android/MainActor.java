@@ -115,10 +115,12 @@ public class MainActor extends Actor {
 		else if (roof_height < 31 && gwin.set_in_dungeon(nlist.has_dungeon()?
 	 					nlist.is_dungeon(tx, ty):0))
 			gwin.set_all_dirty();
+		*/
 						// Near an egg?  (Do this last, since
 						//   it may teleport.)
-		nlist.activate_eggs(this, t.tx, t.ty, t.tz,
-							stepFrom.tx, stepFrom.ty);
+		nlist.activateEggs(this, t.tx, t.ty, t.tz,
+							stepFrom.tx, stepFrom.ty, false);
+		/*
 		quake_on_walk();
 		*/
 		return true;

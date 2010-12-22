@@ -540,7 +540,7 @@ public final class DraggingInfo extends GameSingletons {
 			return -1;
 		}
 						// On an egg?
-		//++++++ FINISH chunk.activate_eggs(to_drop, tx, ty, lift, tx, ty);
+		chunk.activateEggs(to_drop, tx, ty, lift, tx, ty, false);
 		if (to_drop == gwin.getMainActor()) {
 			gwin.centerView(to_drop.getTileX(), to_drop.getTileY());
 			gwin.paint();

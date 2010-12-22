@@ -11,6 +11,9 @@ public class EggObject extends IregGameObject {
 	protected short data1, data2, data3;	// More data, dep. on type.
 	protected Rectangle area;			// Active area.
 	protected boolean solid_area;	// 1 if area is solid, 0 if outline.
+	private static Rectangle world = new Rectangle(0, 0, 
+			EConst.c_num_chunks*EConst.c_tiles_per_chunk,
+			EConst.c_num_chunks*EConst.c_tiles_per_chunk);
 	// +++++FINISH Animator *animator;		// Controls animation.
 	protected void initField(byte ty) {
 		//+++++++++++++
@@ -175,7 +178,45 @@ public class EggObject extends IregGameObject {
 		flags = (1 << auto_reset);
 	}
 	public void setArea() { // Set up active area.
-		//+++++++++++FINISH
+		if (area == null)
+			area = new Rectangle();	
+		if (probability == 0 || type == path) { // No chance of normal activation?
+			area.set(0, 0, 0, 0);
+			return;
+		}
+		int tilex = getTileX(), tiley = getTileY();	// Get absolute tile coords.
+		switch (criteria) {		// Set up active area.
+		case cached_in:			// Make it really large.
+			area.set(tilex - 32, tiley - 32, 64, 64);
+			break;
+		case avatar_footpad:
+		case party_footpad:
+			{
+			ShapeInfo info = getInfo();
+			int frame = getFrameNum();
+			int xtiles = info.get3dXtiles(frame), 
+			    ytiles = info.get3dYtiles(frame);
+			area.set(tilex - xtiles + 1, tiley - ytiles + 1, xtiles, ytiles);
+			break;
+			}
+		case avatar_far:		// Make it 1 tile bigger each dir.
+			area.set(tilex - distance - 1, tiley - distance - 1, 
+							2*distance + 3, 2*distance + 3);
+			break;
+		default:
+			{
+			int width = 2*distance;
+			width++;		// Added 8/1/01.
+			if (distance <= 1) {	// Small?
+							// More guesswork:
+				if (criteria == external_criteria)
+					width += 2;
+			}
+			area.set(tilex - distance, tiley - distance, width, width);
+			break;
+			}
+		}
+		area.intersect(world);	// Don't go outside the world.
 	}
 	public final int getDistance()
 		{ return distance; }
@@ -283,9 +324,29 @@ public class EggObject extends IregGameObject {
 	public void hatchNow(GameObject obj, boolean must)
 		{  }
 	public void hatch(GameObject obj, boolean must) {
-		//+++++++++++FINISH
+		/*
+		  MAJOR HACK!
+		  This is an attempt at a work-around of a potential bug in the original
+		  Serpent Isle. See SourceForge bug #879253
+
+		  Prevent the Serpent Staff egg from hatching only once
+		*/
+		if (game.isSI() && getTileX() == 1287 && getTileY() == 2568 && getLift() == 0) {
+			flags &= ~(1 << (int) hatched);
+		}
+		/* end hack */
+		int roll = must ? 0 : 1 + EUtil.rand()%100;
+		if (roll <= probability) {
+			// Time to hatch the egg.
+			hatchNow(obj, must);
+			if ((flags & (1 << (int) once)) != 0) {
+				removeThis();
+				return;
+			}
+		}
+			// Flag it as done, whether or not it has been hatched.
+		flags |= (1 << (int) hatched);
 	}
-	
 	
 	/*
 	 *	Each egg type:

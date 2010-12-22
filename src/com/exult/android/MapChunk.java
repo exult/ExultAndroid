@@ -207,6 +207,46 @@ public final class MapChunk extends GameSingletons {
 		objects.remove(remove);		// Remove from list.
 		remove.setInvalid();		// No longer part of world.
 	}
+	
+	public void activateEggs(GameObject obj, int tx, int ty, int tz, 
+					int from_tx, int from_ty, boolean now) {
+		if (eggs == null)
+			return;
+		int eggbits = ((int)eggs[
+			(ty%EConst.c_tiles_per_chunk)*EConst.c_tiles_per_chunk + 
+						(tx%EConst.c_tiles_per_chunk)]&0xffff);
+		if (eggbits == 0)
+			return;
+		int i;				// Go through eggs.
+		for (i = 0; i < 15 && eggbits != 0; i++, eggbits = (eggbits >> 1)) {
+			EggObject egg;
+			if ((eggbits&1) != 0 && i < eggObjects.size() &&
+			    (egg = eggObjects.elementAt(i)) != null &&
+			    egg.isActive(obj, tx, ty, tz, from_tx, from_ty)) {
+				egg.hatch(obj, now);
+				/*++++++STILL NEEDED?
+				if (chunk.get_cache() != this)
+					return;	// A teleport could have deleted us!
+				*/
+			}
+		}
+		if (eggbits != 0) {			// Check 15th bit.
+						// DON'T use an iterator here, since
+						//   the list can change as eggs are
+						//   activated, causing a CRASH!
+			int sz = eggObjects.size();
+			for (  ; i < sz; i++) {
+				EggObject egg = eggObjects.elementAt(i);
+				if (egg != null && egg.isActive(obj, tx, ty, tz, from_tx, from_ty)) {
+					egg.hatch(obj, now);
+					/* ++++++NEEDED?
+					if (chunk.get_cache() != this)
+						return;	// A teleport could have deleted us!	
+					*/		
+				}
+			}
+		}
+	}
 	private void setEgged(EggObject egg, Rectangle tiles, boolean add) {
 		// Egg already there?
 		int eggnum = -1, spot = -1;
@@ -225,6 +265,8 @@ public final class MapChunk extends GameSingletons {
 				spot = i;
 		}
 		if (add) {
+			if (eggs == null)
+				eggs = new short[256];
 			if (eggnum < 0) {		// No, so add it.
 				eggnum = spot >= 0 ? spot : eggObjects.size();
 				if (spot >= 0)

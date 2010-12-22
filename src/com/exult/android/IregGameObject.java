@@ -66,9 +66,10 @@ public class IregGameObject extends GameObject {
 		else if (info.is_animated() || info.has_sfx())
 			return new Animated_ireg_object(
 				   shnum, frnum, tilex, tiley, lift);
-		else if (shnum == 607)		// Path.
-			return new Egglike_game_object(
+		else */ if (shnum == 607)		// Path.
+			return new EggObject.PathMarker(
 					shnum, frnum, tilex, tiley, lift);
+		/*++++++++++++++
 		else if (info.is_mirror())	// Mirror
 			return new Mirror_object(shnum, frnum, tilex, tiley, lift);
 		else if (info.is_body_shape())

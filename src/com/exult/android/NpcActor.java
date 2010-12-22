@@ -154,11 +154,9 @@ public class NpcActor extends Actor {
 		addDirty(false);			// Set to repaint old area.
 						// Move it.
 		movef(olist, nlist, tx, ty, frame, t.tz);
-		/* +++++++++FINISH
 						// Near an egg?  (Do this last, since
 						//   it may teleport.)
-		nlist.activate_eggs(this, t.tx, t.ty, t.tz, oldtx, oldty);
-		*/
+		nlist.activateEggs(this, t.tx, t.ty, t.tz, oldtx, oldty, false);
 						// Offscreen, but not in party?
 		if (!addDirty(true) && partyId < 0 &&
 						// And > a screenful away?

@@ -6,7 +6,8 @@ import java.util.Vector;
 public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	private static int count;		// Total # of these around.
 	private static UsecodeScript first;// .chain of all of them.
-	private static LinkedList<UsecodeScript> scripts;
+	private static LinkedList<UsecodeScript> scripts =
+						new LinkedList<UsecodeScript>();
 	private GameObject obj;		// From objval.
 	private UsecodeValue code;		// Array of code to execute.
 	private int cnt;			// Length of arrval.

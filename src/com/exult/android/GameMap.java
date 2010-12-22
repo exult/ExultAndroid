@@ -367,12 +367,10 @@ public class GameMap extends GameSingletons {
 			if (info.getShapeClass() == ShapeInfo.hatchable) {
 				boolean anim = info.isAnimated() || info.hasSfx();
 				lift = ((int)entbuf[9]&0xff) >> 4;
-				/*
-				Egg_object *egg = Egg_object::create_egg(entry, entlen,
+				EggObject egg = EggObject.createEgg(entbuf, entlen,
 								anim, shnum, frnum, tilex, tiley, lift);
 				getChunk(scx + cx, scy + cy).addEgg(egg);
 				last_obj = egg;
-				*/
 				continue;
 			} else if (testlen == 6 || testlen == 10) {	// Simple entry?
 				type = 0;
