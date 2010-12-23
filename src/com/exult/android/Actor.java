@@ -1,4 +1,5 @@
 package com.exult.android;
+import com.exult.android.shapeinf.*;
 import java.io.InputStream;
 import java.io.IOException;
 
@@ -106,7 +107,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected static FramesSequence avatarFrames[] = new FramesSequence[4];
 	protected static FramesSequence npcFrames[] = new FramesSequence[4];
 	protected FramesSequence frames[];
-	protected byte scheduleType;	// Schedule type (Schedule_type).	
+	protected byte scheduleType;	// Schedule type (scheduleType).	
 	// Location (x,y) of Shedule
 	protected int schedule_loc_tx, schedule_loc_ty, schedule_loc_tz;
 	protected byte next_schedule;	// Used so correct schedule type 
@@ -289,135 +290,139 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return val;
 	}
 	public void setFlag(int flag) {	
-		/*Monster_info *minf = get_info().get_monster_info_safe();
-	switch (flag)
-	{
-case Obj_flags::asleep:
-	if (minf->sleep_safe() || minf->power_safe() ||
-			(gear_powers&(Frame_flags::power_safe|Frame_flags::sleep_safe)))
-		return;		// Don't do anything.
-				// Avoid waking Penumbra.
-	if (schedule_type == Schedule::sleep && Bg_dont_wake(gwin, this))
-		break;
+		MonsterInfo minf = getInfo().getMonsterInfo();
+		if (minf == null)
+			minf = MonsterInfo.getDefault();
+		switch (flag) {
+		/* ++++++++FINISH
+		case GameObject.asleep:
+			if (minf.sleepSafe() || minf.powerSafe() ||
+					(gear_powers&(Frame_flags::power_safe|Frame_flags::sleep_safe)))
+				return;		// Don't do anything.
+						// Avoid waking Penumbra.
+			if (scheduleType == Schedule.sleep && Bg_dont_wake(gwin, this))
+				break;
 				// Set timer to wake in a few secs.
-	need_timers()->start_sleep();
-	set_action(0);		// Stop what you're doing.
-	lay_down(false);	// Lie down.
-	break;
-case Obj_flags::poisoned:
-	if (minf->poison_safe() || (gear_powers&Frame_flags::poison_safe))
-		return;		// Don't do anything.
-	need_timers()->start_poison();
-	break;
-case Obj_flags::protection:
-	need_timers()->start_protection();
-	break;
-case Obj_flags::might:
-	need_timers()->start_might();
-	break;
-case Obj_flags::cursed:
-	if (minf->curse_safe() || minf->power_safe() ||
-			(gear_powers&(Frame_flags::power_safe|Frame_flags::curse_safe)))
-		return;		// Don't do anything.
-	need_timers()->start_curse();
-	break;
-case Obj_flags::charmed:
-	if (minf->charm_safe() || minf->power_safe() ||
-			(gear_powers&(Frame_flags::power_safe|Frame_flags::charm_safe)))
-		return;		// Don't do anything.
-	need_timers()->start_charm();
-	set_target(0);		// Need new opponent if in combat.
-	break;
-case Obj_flags::paralyzed:
-	if (minf->paralysis_safe() || minf->power_safe() ||
-			(gear_powers&(Frame_flags::power_safe|Frame_flags::paralysis_safe)))
-		return;		// Don't do anything.
-	fall_down();
-	need_timers()->start_paralyze();
-	break;
-case Obj_flags::invisible:
-	flags |= ((uint32) 1 << flag);
-	need_timers()->start_invisibility();
-	Combat_schedule::stop_attacking_invisible(this);
-	gclock->set_palette();
-	break;
-case Obj_flags::dont_move:
-case Obj_flags::bg_dont_move:
-	stop();			// Added 7/6/03.
-	set_action(0);	// Force actor to stop current action.
-	break;
-case Obj_flags::naked:
-	{
-	// set_polymorph needs this, and there are no problems
-	// in setting this twice.
-	flags2 |= ((uint32) 1 << (flag-32));
-	if (get_npc_num() != 0)	// Ignore for all but avatar.
-		break;
-	int sn;
-	int female = get_type_flag(tf_sex)?1:0;
-	Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(this);
+			need_timers().start_sleep();
+			set_action(0);		// Stop what you're doing.
+			lay_down(false);	// Lie down.
+			break;
+		case GameObject.poisoned:
+			if (minf.poison_safe() || (gear_powers&Frame_flags::poison_safe))
+					return;		// Don't do anything.
+			need_timers().start_poison();
+			break;
+		case GameObject.protection:
+			need_timers().start_protection();
+			break;
+		case GameObject.might:
+			need_timers().start_might();
+			break;
+		case GameObject.cursed:
+			if (minf.curse_safe() || minf.power_safe() ||
+				(gear_powers&(Frame_flags::power_safe|Frame_flags::curse_safe)))
+				return;		// Don't do anything.
+			need_timers().start_curse();
+			break;
+		case GameObject.charmed:
+			if (minf.charm_safe() || minf.power_safe() ||
+					(gear_powers&(Frame_flags::power_safe|Frame_flags::charm_safe)))
+				return;		// Don't do anything.
+			need_timers().start_charm();
+			set_target(0);		// Need new opponent if in combat.
+			break;
+		case GameObject.paralyzed:
+			if (minf.paralysis_safe() || minf.power_safe() ||
+					(gear_powers&(Frame_flags::power_safe|Frame_flags::paralysis_safe)))
+				return;		// Don't do anything.
+			fall_down();
+			need_timers().start_paralyze();
+			break;
+		case GameObject.invisible:
+			flags |= ((uint32) 1 << flag);
+			need_timers().start_invisibility();
+			Combat_Schedule.stop_attacking_invisible(this);
+			gclock.set_palette();
+			break;
+		*/
+		case GameObject.dont_move:
+		case GameObject.bg_dont_move:
+			stop();			// Added 7/6/03.
+			setAction(null);	// Force actor to stop current action.
+			break;
+		/* +++++++++++++
+		case GameObject.naked:
+			{
+			// set_polymorph needs this, and there are no problems
+			// in setting this twice.
+			flags2 |= ((uint32) 1 << (flag-32));
+			if (get_npc_num() != 0)	// Ignore for all but avatar.
+				break;
+			int sn;
+			int female = getTypeFlag(tf_sex)?1:0;
+			Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(this);
 	
-	if (!skin ||	// Should never happen, but hey...
-		(!sman->have_si_shapes() &&
-			Shapeinfo_lookup::IsSkinImported(skin->naked_shape)))
-		sn = Shapeinfo_lookup::GetBaseAvInfo(female != 0)->shape_num;
-	else
-		sn = skin->naked_shape;
-	set_polymorph(sn);
-	break;
-	}
-	}
-
-// Doing it here to prevent problems with immunities.
-if (flag >= 0 && flag < 32)
-	flags |= ((uint32) 1 << flag);
-else if (flag >= 32 && flag < 64)
-	flags2 |= ((uint32) 1 << (flag-32));
+			if (!skin ||	// Should never happen, but hey...
+				(!sman.have_si_shapes() &&
+					Shapeinfo_lookup::IsSkinImported(skin.naked_shape)))
+				sn = Shapeinfo_lookup::GetBaseAvInfo(female != 0).shape_num;
+			else
+				sn = skin.naked_shape;
+			set_polymorph(sn);
+			break;
+			}
+			*/
+		}
+		// Doing it here to prevent problems with immunities.
+		if (flag >= 0 && flag < 32)
+			flags |= (1 << flag);
+		else if (flag >= 32 && flag < 64)
+			flags2 |= (1 << (flag-32));
 				// Update stats if open.
-if (gumpman->showing_gumps())
-	gwin->set_all_dirty();
-set_actor_shape();*/
-		//++++FINISH
+		if (gumpman.showingGumps())
+			gwin.setAllDirty();
+		setActorShape();
 	}
 	public final void set_type_flag(int flag) {
 		//+++++++++FINISH
 	}
 	public void clearFlag(int flag) {
-		/*
 		if (flag >= 0 && flag < 32)
 			flags &= ~(1 << flag);
 		else if (flag >= 32 && flag < 64)
 			flags2 &= ~(1 << (flag-32));
-		if (flag == Obj_flags::invisible)	// Restore normal palette.
-			gclock->set_palette();
-		else if (flag == Obj_flags::asleep)
-			{
-			if (schedule_type == Schedule::sleep)
-				set_schedule_type(Schedule::stand);
-			else if ((get_framenum()&0xf) == Actor::sleep_frame)
-				{		// Find spot to stand.
-				Tile_coord pos = get_tile();
+		if (flag == GameObject.invisible)	// Restore normal palette.
+			;// ++++FINISH gclock.set_palette();
+		else if (flag == GameObject.asleep) {
+			if (scheduleType == Schedule.sleep)
+				setScheduleType(Schedule.stand);
+			else if ((getFrameNum()&0xf) == Actor.sleep_frame) {
+				/* +++++++++FINISH
+						// Find spot to stand.
+				Tile pos = get_tile();
 				pos.tz -= pos.tz%5;	// Want floor level.
 				pos = Map_chunk::find_spot(pos, 6, get_shapenum(),
-					Actor::standing, 0);
+					Actor.standing, 0);
 				if (pos.tx >= 0)
 					move(pos);
-				change_frame(Actor::standing);
-				}
-			Usecode_script::terminate(this);
+				changeFrame(Actor.standing);
+				*/
 			}
-		else if (flag == Obj_flags::charmed)
+			UsecodeScript.terminate(this);
+		}
+		/*++++++++++++
+		else if (flag == GameObject.charmed)
 			set_target(0);			// Need new opponent.
-		else if (flag == Obj_flags::bg_dont_move || flag == Obj_flags::dont_move)
-			// Start again after a little while
-			start_std();
-		else if (flag == Obj_flags::polymorph && get_flag(Obj_flags::naked))
-			clear_flag(Obj_flags::naked);
-		else if (flag == Obj_flags::naked && get_flag(Obj_flags::polymorph))
-			clear_flag(Obj_flags::polymorph);
-		
-		set_actor_shape();
 		*/
+		else if (flag == GameObject.bg_dont_move || flag == GameObject.dont_move)
+			// Start again after a little while
+			start(1, 1);
+		else if (flag == GameObject.polymorph && getFlag(GameObject.naked))
+			clearFlag(GameObject.naked);
+		else if (flag == GameObject.naked && getFlag(GameObject.polymorph))
+			clearFlag(GameObject.polymorph);
+		
+		setActorShape();
 	}
 	public void clear_type_flag(int flag) {
 		//++++++++FINISH

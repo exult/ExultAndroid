@@ -917,27 +917,27 @@ public class GameWindow extends GameSingletons {
 			System.out.println("FAILED to read NPCs!");
 		}
 		// CYCLE_RED_PLASMA();
-		/* 
+		/* ++++++++++FINISH 
 		Notebook_gump::initialize();		// Read in journal.
 		usecode.read();		// Read the usecode flags
 		CYCLE_RED_PLASMA();
-
-		if (Game::get_game_type() == BLACK_GATE)
-		{
+		*/
+		if (game.isBG()) {
+			/* +++++++FINISH
 			string yn;		// Override from config. file.
 						// Skip intro. scene?
 			config.value("config/gameplay/skip_intro", yn, "no");
 			if (yn == "yes")
 				usecode.set_global_flag(
 					Usecode_machine::did_first_scene, 1);
-
+			*/
 						// Should Avatar be visible?
-			if (usecode.get_global_flag(Usecode_machine::did_first_scene))
-				mainActor.clear_flag(Obj_flags::bg_dont_render);
+			if (usecode.getGlobalFlag(UsecodeMachine.did_first_scene))
+				mainActor.clearFlag(GameObject.bg_dont_render);
 			else
-				mainActor.set_flag(Obj_flags::bg_dont_render);
+				mainActor.setFlag(GameObject.bg_dont_render);
 		}
-
+		/* +++++++++++FINISH
 		CYCLE_RED_PLASMA();
 
 		// Fade out & clear screen before palette change
