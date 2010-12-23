@@ -709,7 +709,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public void paint() {
 		int flag = game.isBG() ? GameObject.bg_dont_render : GameObject.dont_render;
-		if ((flags & (1L << flag)) != 0) {
+		if ((flags & (1L << flag)) == 0) {
 			int xoff, yoff;
 			gwin.getShapeLocation(paintLoc, this);
 			boolean invis = (flags & (1L << GameObject.invisible)) != 0;
