@@ -288,14 +288,136 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 		return val;
 	}
-	public void setFlag(int flag) {
+	public void setFlag(int flag) {	
+		/*Monster_info *minf = get_info().get_monster_info_safe();
+	switch (flag)
+	{
+case Obj_flags::asleep:
+	if (minf->sleep_safe() || minf->power_safe() ||
+			(gear_powers&(Frame_flags::power_safe|Frame_flags::sleep_safe)))
+		return;		// Don't do anything.
+				// Avoid waking Penumbra.
+	if (schedule_type == Schedule::sleep && Bg_dont_wake(gwin, this))
+		break;
+				// Set timer to wake in a few secs.
+	need_timers()->start_sleep();
+	set_action(0);		// Stop what you're doing.
+	lay_down(false);	// Lie down.
+	break;
+case Obj_flags::poisoned:
+	if (minf->poison_safe() || (gear_powers&Frame_flags::poison_safe))
+		return;		// Don't do anything.
+	need_timers()->start_poison();
+	break;
+case Obj_flags::protection:
+	need_timers()->start_protection();
+	break;
+case Obj_flags::might:
+	need_timers()->start_might();
+	break;
+case Obj_flags::cursed:
+	if (minf->curse_safe() || minf->power_safe() ||
+			(gear_powers&(Frame_flags::power_safe|Frame_flags::curse_safe)))
+		return;		// Don't do anything.
+	need_timers()->start_curse();
+	break;
+case Obj_flags::charmed:
+	if (minf->charm_safe() || minf->power_safe() ||
+			(gear_powers&(Frame_flags::power_safe|Frame_flags::charm_safe)))
+		return;		// Don't do anything.
+	need_timers()->start_charm();
+	set_target(0);		// Need new opponent if in combat.
+	break;
+case Obj_flags::paralyzed:
+	if (minf->paralysis_safe() || minf->power_safe() ||
+			(gear_powers&(Frame_flags::power_safe|Frame_flags::paralysis_safe)))
+		return;		// Don't do anything.
+	fall_down();
+	need_timers()->start_paralyze();
+	break;
+case Obj_flags::invisible:
+	flags |= ((uint32) 1 << flag);
+	need_timers()->start_invisibility();
+	Combat_schedule::stop_attacking_invisible(this);
+	gclock->set_palette();
+	break;
+case Obj_flags::dont_move:
+case Obj_flags::bg_dont_move:
+	stop();			// Added 7/6/03.
+	set_action(0);	// Force actor to stop current action.
+	break;
+case Obj_flags::naked:
+	{
+	// set_polymorph needs this, and there are no problems
+	// in setting this twice.
+	flags2 |= ((uint32) 1 << (flag-32));
+	if (get_npc_num() != 0)	// Ignore for all but avatar.
+		break;
+	int sn;
+	int female = get_type_flag(tf_sex)?1:0;
+	Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(this);
+	
+	if (!skin ||	// Should never happen, but hey...
+		(!sman->have_si_shapes() &&
+			Shapeinfo_lookup::IsSkinImported(skin->naked_shape)))
+		sn = Shapeinfo_lookup::GetBaseAvInfo(female != 0)->shape_num;
+	else
+		sn = skin->naked_shape;
+	set_polymorph(sn);
+	break;
+	}
+	}
+
+// Doing it here to prevent problems with immunities.
+if (flag >= 0 && flag < 32)
+	flags |= ((uint32) 1 << flag);
+else if (flag >= 32 && flag < 64)
+	flags2 |= ((uint32) 1 << (flag-32));
+				// Update stats if open.
+if (gumpman->showing_gumps())
+	gwin->set_all_dirty();
+set_actor_shape();*/
 		//++++FINISH
 	}
 	public final void set_type_flag(int flag) {
 		//+++++++++FINISH
 	}
-	public void clear_flag(int flag) {
-		// +++++++++FINISH
+	public void clearFlag(int flag) {
+		/*
+		if (flag >= 0 && flag < 32)
+			flags &= ~(1 << flag);
+		else if (flag >= 32 && flag < 64)
+			flags2 &= ~(1 << (flag-32));
+		if (flag == Obj_flags::invisible)	// Restore normal palette.
+			gclock->set_palette();
+		else if (flag == Obj_flags::asleep)
+			{
+			if (schedule_type == Schedule::sleep)
+				set_schedule_type(Schedule::stand);
+			else if ((get_framenum()&0xf) == Actor::sleep_frame)
+				{		// Find spot to stand.
+				Tile_coord pos = get_tile();
+				pos.tz -= pos.tz%5;	// Want floor level.
+				pos = Map_chunk::find_spot(pos, 6, get_shapenum(),
+					Actor::standing, 0);
+				if (pos.tx >= 0)
+					move(pos);
+				change_frame(Actor::standing);
+				}
+			Usecode_script::terminate(this);
+			}
+		else if (flag == Obj_flags::charmed)
+			set_target(0);			// Need new opponent.
+		else if (flag == Obj_flags::bg_dont_move || flag == Obj_flags::dont_move)
+			// Start again after a little while
+			start_std();
+		else if (flag == Obj_flags::polymorph && get_flag(Obj_flags::naked))
+			clear_flag(Obj_flags::naked);
+		else if (flag == Obj_flags::naked && get_flag(Obj_flags::polymorph))
+			clear_flag(Obj_flags::polymorph);
+		
+		set_actor_shape();
+		*/
 	}
 	public void clear_type_flag(int flag) {
 		//++++++++FINISH
@@ -1284,7 +1406,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				if (shnum != getShapeNum())
 					; /* +++++ finish set_polymorph(shnum); */
 				else
-					clear_flag(GameObject.polymorph);
+					clearFlag(GameObject.polymorph);
 			}
 		} else {
 			nfile.skip (2);
@@ -1308,7 +1430,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			f = EUtil.Read4(nfile);
 			flags2 |= f;
 			if (!polym && getFlag(GameObject.polymorph))
-				clear_flag(GameObject.polymorph);
+				clearFlag(GameObject.polymorph);
 			/*
 			if (usecode_name_used) {	// Support for named functions.
 				int funsize = nfile.read();

@@ -360,6 +360,9 @@ public abstract class GameObject extends ShapeID {
 		return shnum >= 0 && shnum < ItemNames.names.length ? ItemNames.names[shnum]
 		         : new String("Unknown");
 	}
+	public String toString() {
+		return "obj:" + getName();
+	}
 	public void removeThis() {
 		if (chunk != null)
 			chunk.remove(this);

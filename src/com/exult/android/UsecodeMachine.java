@@ -153,7 +153,7 @@ public class UsecodeMachine extends GameSingletons {
 			return (0);
 
 		conv.clearAnswers();
-		System.out.println("UsecodeMachine.callUsecode: " + id);
+		System.out.printf("UsecodeMachine.callUsecode: %1$04x with event %2$d\n", id, event);
 		int ret;
 		if (call_function(id, event, item, true, false)) {
 			Thread t = new Thread() {
@@ -1310,11 +1310,21 @@ public class UsecodeMachine extends GameSingletons {
 			pushi(0); // add zeroes
 			oldstack++;
 		}
-		// Store args in first num_args locals
 		int i;
+		// Store args in first num_args locals
+		
 		for (i = 0; i < num_args; i++) {
 			UsecodeValue val = pop();
 			frame.locals[num_args - i - 1] = val;
+		}
+		if (true) {	// ++++LATER, debug
+			System.out.printf("Running usecode %1$04x ()", funcid);
+			for (i = 0; i < num_args; i++) {
+				if (i > 0)
+					System.out.printf(", ");
+				System.out.printf(frame.locals[i].toString());
+			}
+			System.out.println(")");
 		}
 		// save stack pointer
 		frame.save_sp = sp;
@@ -1492,14 +1502,25 @@ public class UsecodeMachine extends GameSingletons {
 		int intrinsic,			// The ID.
 		int num_parms			// # parms on stack.
 		) {
-		System.out.println("Called intrinsic " + intrinsic + " with " + num_parms +
-				" params.");
+		
 		UsecodeValue parms[] = new UsecodeValue[num_parms];	// Get parms.
 		for (int i = 0; i < num_parms; i++) {
 			UsecodeValue val = pop();
 			intrinsicParms[i] = val;
 		}
-		return intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
+		if (true) {	// ++++LATER, debug
+			System.out.printf("Intrinsic %1$02x(", intrinsic);
+			for (int i = 0; i < num_parms; i++) {
+				if (i > 0)
+					System.out.printf(", ");
+				System.out.printf(intrinsicParms[i].toString());
+			}
+			System.out.println(")");
+		}
+		UsecodeValue ret = intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
+		if (true) //++++++DEBUG
+			System.out.printf("...returned %1$s\n", ret);
+		return ret;
 	}
 	/*
 	 *	Wait for user to click inside a conversation.

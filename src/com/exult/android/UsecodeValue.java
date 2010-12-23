@@ -87,6 +87,9 @@ public abstract class UsecodeValue {
 		public boolean isFalse() {
 			return intval == 0;
 		}
+		public String toString() {
+			return Integer.toHexString(intval);
+		}
 		public UsecodeValue plus(UsecodeValue v2) {
 			if (v2 instanceof StringValue) {
 				String s = intval + v2.getStringValue();
@@ -125,6 +128,9 @@ public abstract class UsecodeValue {
 			} catch (NumberFormatException n) {
 				return 0;
 			}
+		}
+		public String toString() {
+			return '"' + str + '"';
 		}
 		public final UsecodeValue plus(UsecodeValue v2) {
 			if (v2 instanceof IntValue) {
@@ -174,6 +180,17 @@ public abstract class UsecodeValue {
 		}
 		public int needIntValue() {
 			return elems.length > 0 ? elems[0].needIntValue() : 0;
+		}
+		public String toString() {
+			StringBuffer s = new StringBuffer(50);
+			s.append('[');
+			for (int i = 0; i < elems.length; ++i) {
+				if (i > 0)
+					s.append(", ");
+				s.append(elems[i].toString());
+			}
+			s.append(']');
+			return s.toString();
 		}
 		public boolean isFalse() {
 			return elems.length == 0;
@@ -280,6 +297,9 @@ public abstract class UsecodeValue {
 		public int needIntValue() {
 			//++++++++???
 			return 0;
+		}
+		public String toString() {
+			return obj != null ? obj.toString() : "null";
 		}
 		public GameObject getObjectValue() {
 			return obj;

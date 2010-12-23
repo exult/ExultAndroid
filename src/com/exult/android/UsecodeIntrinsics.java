@@ -1467,7 +1467,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			clearItemFlag(parms[0], parms[1]); break;
 		//+++++++++++++++
 		default:
-			System.out.println("*** UNHANDLED intrinsic # " + id);
+			System.out.printf("*** UNHANDLED intrinsic # %1$02x\n", id);
 			break;
 		}
 		return UsecodeValue.getZero();

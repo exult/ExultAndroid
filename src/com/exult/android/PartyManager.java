@@ -69,7 +69,7 @@ public final class PartyManager extends GameSingletons {
 				npc2.setPartyId(i - 1);
 			party[i - 1] = party[i];
 		}
-		npc.clear_flag (GameObject.in_party);
+		npc.clearFlag (GameObject.in_party);
 		partyCount--;
 		party[partyCount] = 0;
 		npc.setPartyId(-1);
