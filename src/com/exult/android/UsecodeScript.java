@@ -272,6 +272,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				else
 					{	// Decr. and loop.
 					cntval = new UsecodeValue.IntValue(cnt - 1);
+					code = code.putElem(i + 2, cntval);
 					UsecodeValue offval = code.getElem(i + 1);
 					i += offval.getIntValue() - 1;
 					if (i < -1)	// Before start?
@@ -289,15 +290,16 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 					// the originals.
 
 				do_another = true;
+				int cntInd = i + 2;
 				UsecodeValue cntval = code.getElem(i + 2);
 				UsecodeValue origval = code.getElem(i + 3);
 				int cnt = cntval.getIntValue();
 				if (cnt <= 0) {
 						// Done.
 					i += 3;
-					cntval = origval; // restore counter
+					code = code.putElem(cntInd, origval); // restore counter
 				} else {	// Decr. and loop.
-					cntval = new UsecodeValue.IntValue(cnt - 1);
+					code = code.putElem(cntInd, new UsecodeValue.IntValue(cnt - 1));
 					UsecodeValue offval = code.getElem(i + 1);
 					i += offval.getIntValue() - 1;
 				}
