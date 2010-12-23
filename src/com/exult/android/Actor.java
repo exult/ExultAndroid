@@ -707,6 +707,43 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setStepIndex(int i) {
 		stepIndex = i;
 	}
+	public void paint() {
+		int flag = game.isBG() ? GameObject.bg_dont_render : GameObject.dont_render;
+		if ((flags & (1L << flag)) != 0) {
+			int xoff, yoff;
+			gwin.getShapeLocation(paintLoc, this);
+			boolean invis = (flags & (1L << GameObject.invisible)) != 0;
+			if (invis && partyId < 0 && this != gwin.getMainActor())
+				return;	// Don't render invisible NPCs not in party.
+			/* ++++++++++FINISH else if (invis)
+				paint_invisible(xoff, yoff);
+			*/ else
+				paintShape(paintLoc.x, paintLoc.y);
+			/* +++++++++FINISH
+			paint_weapon();
+			if (hit)		// Want a momentary red outline.
+				ShapeID::paint_outline(xoff, yoff, HIT_PIXEL);
+			else if (flags & ((1L<<GameObject.protection) | 
+			    (1L << GameObject.poisoned) | (1 << GameObject.cursed) |
+			    	(1 << GameObject.charmed) | (1 << GameObject.paralyzed)))
+				{
+				if (flags & (1L << GameObject.poisoned))
+					ShapeID::paint_outline(xoff,yoff,POISON_PIXEL);
+				else if (flags & (1L << GameObject.cursed))
+					ShapeID::paint_outline(xoff,yoff,CURSED_PIXEL);
+				else if (flags & (1L << GameObject.charmed))
+					ShapeID::paint_outline(xoff, yoff,
+									CHARMED_PIXEL);
+				else if (flags & (1L << GameObject.paralyzed))
+					ShapeID::paint_outline(xoff, yoff,
+									PARALYZE_PIXEL);
+				else
+					ShapeID::paint_outline(xoff, yoff,
+									PROTECT_PIXEL);
+				}
+			*/
+		}
+	}
 	/*
 	 *	Run usecode when double-clicked.
 	 */
