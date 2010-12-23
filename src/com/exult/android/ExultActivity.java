@@ -11,6 +11,8 @@ import android.view.MotionEvent;
 import android.graphics.Canvas;
 import android.content.Context;
 import android.graphics.Point;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 public class ExultActivity extends Activity {
 	public long GameTime;
@@ -19,12 +21,14 @@ public class ExultActivity extends Activity {
 	public GameWindow gwin;
 	public ImageBuf ibuf;
 	private static Point clickPoint;	// Non-null if getClick() is active.
+	private static ExultActivity instance;
 	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	// start tracing to "/sdcard/calc.trace"
         //Debug.startMethodTracing("calc");
+    	instance = this;
     	new Game.BGGame();	// Stores itself in GameSingletons.
     	EUtil.initSystemPaths();
     	ShapeFiles.load();
@@ -49,6 +53,22 @@ public class ExultActivity extends Activity {
     		}
     	}
     	clickPoint = save;
+    }
+    public static void fileFatal(String nm) {
+    	fatal("Error reading '" + EUtil.getSystemPath(nm) + "'");
+    }
+    public static void fatal(String msg) {
+    	AlertDialog alertDialog = new AlertDialog.Builder(instance).create();
+    	alertDialog.setTitle("Exult Fatal");
+    	alertDialog.setMessage(msg);
+    	alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+    	   public void onClick(DialogInterface dialog, int which) {
+    	      // here you can add functions
+    		   instance.finish();
+    	   }
+    	});
+    	alertDialog.setIcon(R.drawable.icon);
+    	alertDialog.show();
     }
     /*
      * Subclasses.

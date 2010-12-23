@@ -66,12 +66,16 @@ public final class DataUtils {
 			if (game != EConst.BLACK_GATE && game != EConst.SERPENT_ISLE)
 				return;
 			boolean bg = game == EConst.BLACK_GATE;
-			String flexfile =
+			String flexfile = 
 					bg ? EFile.EXULT_BG_FLX : EFile.EXULT_SI_FLX;
 			byte[] txt = EFileManager.instanceOf().retrieve(
 					flexfile, resource);
-			InputStream strin = new ByteArrayInputStream(txt);
-			read_binary_internal(strin, false, game);
+			if (txt == null)
+				ExultActivity.fileFatal(flexfile);
+			else {
+				InputStream strin = new ByteArrayInputStream(txt);
+				read_binary_internal(strin, false, game);
+			}
 		}
 	}
 

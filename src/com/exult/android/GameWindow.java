@@ -1052,16 +1052,17 @@ public class GameWindow extends GameSingletons {
 						// Create gamedat files 1st time.
 		if (create) {
 			System.out.println("Creating 'gamedat' files.");
+			String fname = EFile.PATCH_INITGAME;
 			try {
-				if (EUtil.U7exists(EFile.PATCH_INITGAME) != null)
-					restoreGamedat(EFile.PATCH_INITGAME);
+				if (EUtil.U7exists(fname) != null)
+					restoreGamedat(fname);
 				else {
 						// Flag that we're reading U7 file.
 					// Game::set_new_game();
-					restoreGamedat(EFile.INITGAME);
+					restoreGamedat(fname = EFile.INITGAME);
 				}
 			} catch (IOException e) {
-				//+++++++ABORT
+				ExultActivity.fileFatal(fname);
 			}
 			/*
 			// log version of exult that was used to start this game
@@ -1129,7 +1130,8 @@ public class GameWindow extends GameSingletons {
 										// use GAMEDAT define cause that's got a
 										// trailing slash
 		RandomAccessFile in = EUtil.U7open(fname, true);
-
+		if (in == null)
+			ExultActivity.fatal("Can't open file: " + EUtil.getSystemPath(fname));
 		EUtil.U7remove (EFile.USEDAT);
 		EUtil.U7remove (EFile.USEVARS);
 		EUtil.U7remove (EFile.U7NBUF_DAT);
