@@ -222,6 +222,7 @@ public final class MapChunk extends GameSingletons {
 			EggObject egg;
 			if ((eggbits&1) != 0 && i < eggObjects.size() &&
 			    (egg = eggObjects.elementAt(i)) != null &&
+			    !egg.isDormant() &&
 			    egg.isActive(obj, tx, ty, tz, from_tx, from_ty)) {
 				egg.hatch(obj, now);
 				/*++++++STILL NEEDED?

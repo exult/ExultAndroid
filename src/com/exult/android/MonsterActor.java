@@ -47,6 +47,9 @@ public class MonsterActor extends NpcActor {
 			animator = Animator::create(this);
 		*/
 	}
+	public boolean moveAside(Actor forActor, int dir) {
+		return false;	// Monsters don't move aside.
+	}
 	/*
 	 *	Render.
 	 */

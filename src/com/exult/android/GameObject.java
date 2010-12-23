@@ -55,7 +55,7 @@ public abstract class GameObject extends ShapeID {
 								//   gump's rectangle.
 	protected byte lift;		// Raise by 4* this number.
 	protected short quality;	// Some sort of game attribute.
-	public GameObject next, prev;	// ->next in chunk list or container.
+	public GameObject next, prev;	// .next in chunk list or container.
 	private HashSet<GameObject> dependencies;	// Objects which must be painted before
 						//   this can be rendered.
 	private HashSet<GameObject> dependors;	// Objects which must be painted after.
@@ -177,10 +177,31 @@ public abstract class GameObject extends ShapeID {
 	    	y = chunk.getCy()*EConst.c_tiles_per_chunk + ty - dy;
 	    t.set(x, y, lift + dz);
 	}
+	public final int getDirection(GameObject o2) {
+		Tile t = new Tile();
+		o2.getCenterTile(t);
+		int x2 = t.tx, y2 = t.ty;
+		getCenterTile(t);
+		return EUtil.getDirection(t.ty - y2, x2 - t.tx);
+	}
 	public final int getDirection(Tile t2) {
 		Tile t1 = new Tile();
 		getCenterTile(t1);
 		return EUtil.getDirection(t1.ty - t2.ty, t2.tx - t1.tx);
+	}
+	// Find object blocking a given tile.
+	public static GameObject findBlocking(Tile tile) {
+		tile.fixme();
+		MapChunk chunk = gmap.getChunk(tile.tx/EConst.c_tiles_per_chunk,
+			    tile.ty/EConst.c_tiles_per_chunk);
+		GameObject obj;
+		ObjectList.ObjectIterator iter = new ObjectList.ObjectIterator(
+													chunk.getObjects());
+		while ((obj = iter.next()) != null) {
+			if (obj.blocks(tile))
+				return obj;
+		}
+		return null;
 	}
 	// Does this object block a given tile?
 	public final boolean blocks(Tile tile) {
@@ -384,12 +405,12 @@ public abstract class GameObject extends ShapeID {
 		if (useinf)
 			{
 			// Shape has frame- or quality-dependent usecode.
-			std::string ucname = useinf->get_usecode_name();
+			std::string ucname = useinf.get_usecode_name();
 			int ucid = -1;
 			if (ucname.length())	// Try by name first.
-				ucid = ucmachine->find_function(ucname.c_str(), true);
+				ucid = ucmachine.find_function(ucname.c_str(), true);
 			if (ucid == -1)			// Now try usecode number.
-				ucid = useinf->get_usecode();
+				ucid = useinf.get_usecode();
 			if (ucid >= 0)			// Have frame usecode.
 				return ucid;
 			}
@@ -464,6 +485,24 @@ public abstract class GameObject extends ShapeID {
 		gwin.addDirty(this);		// Set to repaint old area.
 		setFrame(frnum);
 		gwin.addDirty(this);		// Set to repaint new.
+	}
+	public final boolean swapPositions(GameObject obj2) {
+		ShapeInfo inf1 = getInfo();
+		ShapeInfo inf2 = obj2.getInfo();
+		int frame1 = getFrameNum();
+		int frame2 = obj2.getFrameNum();
+		if (inf1.get3dXtiles(frame1) != inf2.get3dXtiles(frame2) ||
+		    inf1.get3dYtiles(frame1) != inf2.get3dYtiles(frame2))
+			return false;		// Not the same size.
+		int x1 = getTileX(), y1 = getTileY(), z1 = getLift();
+		int x2 = obj2.getTileX(), y2 = obj2.getTileY(), z2 = obj2.getLift();
+		removeThis();			// Remove (but don't delete) each.
+		setInvalid();
+		obj2.removeThis();
+		obj2.setInvalid();
+		move(x2, y2, z2);	// Move to new locations.
+		obj2.move(x1, y1, z1);
+		return true;
 	}
 	//	Step:  Overridden by Actors.
 	public boolean step(Tile t, int frame, boolean force) {

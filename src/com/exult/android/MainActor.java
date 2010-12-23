@@ -75,17 +75,14 @@ public class MainActor extends Actor {
 		get_tile_info(this, gwin, nlist, tx, ty, water, poison);
 		*/
 		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
-			/* ++++++++++FINISH
-			if (is_really_blocked(t, force))
-			*/
-				{
+			if (isReallyBlocked(t, force)) {
 				/*++++++++++++
 				if (schedule != null)		// Tell scheduler.
 					schedule.set_blocked(t);
 				*/
 				stop();
 				return false;
-				}
+			}
 		}
 		/*
 		if (poison && t.tz == 0)

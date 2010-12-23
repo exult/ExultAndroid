@@ -19,7 +19,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected short castingMode;		//For displaying casting frames.
 	protected int castingShape;	//Shape of casting frames.
 	// Walking:
-	private Tile walkSrc = new Tile();
+	private static Tile walkSrc = new Tile(), swapTile1 = new Tile(), 
+						swapTile2 = new Tile();
 	private ZombiePathFinder zombiePath;
 	// These 2 are set by the Usecode function 'set_to_attack':
 	protected GameObject targetObject;
@@ -425,6 +426,89 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 */
 	public int getMaxWeight() {
 		return 2*getEffectiveProp(Actor.strength);
+	}	
+	// Step aside to a free tile, or try to swap places
+	protected boolean moveAside(Actor forActor, int dir) {	
+		Tile cur = swapTile1; getTile(cur);
+		Tile to = swapTile2;
+		int i;
+		int d = 8;
+		// Try orthogonal directions first.
+		cur.getNeighbor(to, (dir + 2)%8);
+		if (areaAvailable(to, null, getTypeFlags()))
+			d = (dir + 2)%8;
+		else {
+			cur.getNeighbor(to, (dir + 6)%8);
+			if (areaAvailable(to, null, getTypeFlags()))
+				d = (dir + 6)%8;
+			else {
+				for (i = 0; i < 4; i++) {		// Try diagonals now.
+					cur.getNeighbor(to, 2*i+1);
+					if (areaAvailable(to, null, getTypeFlags())) {
+						d = 2*i+1;
+						break;
+					}
+				}
+			}
+		}
+		int stepdir = d;		// This is the direction.
+		if (d == 8 || to.tx < 0)	// Failed?  Try to swap places.
+			return swapPositions(forActor);
+					// Step, and face direction.
+		step(to, getDirFramenum(stepdir, Actor.standing), false);
+		return (getTileX() == to.tx && getTileY() == to.ty);
+	}
+	protected final GameObject findBlocking(Tile tile, int dir) {
+		Rectangle footprint = new Rectangle();
+		getFootprint(footprint);
+		Rectangle base = new Rectangle(footprint.x, footprint.y, footprint.w,
+														footprint.h);
+		switch (dir) {
+			case EConst.north:
+				footprint.shift(0, -1); break;
+			case EConst.northeast:
+				footprint.shift(1, -1); break;
+			case EConst.east:
+				footprint.shift(1, 0); break;
+			case EConst.southeast:
+				footprint.shift(1, 1); break;
+			case EConst.south:
+				footprint.shift(0, 1); break;
+			case EConst.southwest:
+				footprint.shift(-1, 1); break;
+			case EConst.west:
+				footprint.shift(-1, 0); break;
+			case EConst.northwest:
+				footprint.shift(-1, -1); break;
+		}
+		GameObject block;
+		Tile pos = new Tile();
+		for (int i = footprint.x; i < footprint.x+footprint.w; i++)
+			for (int j = footprint.y; j < footprint.y+footprint.h; j++)
+				if (base.hasPoint(i, j))
+					continue;
+				else  {
+					pos.set(i, j, getLift());
+					if ((block = GameObject.findBlocking(pos)) != null)
+						return block;
+				}
+		return null;
+	}
+	protected final boolean isReallyBlocked(Tile t, boolean force) {
+		if (Math.abs(t.tz - getLift()) > 1)
+			return true;
+		GameObject block = findBlocking(t, getDirection(t));
+		if (block == null)
+			return true;		// IE, water.
+		if (block == this)
+			return false;
+		Actor a = block.asActor();
+						// Try to get blocker to move aside.
+		if (a != null && a.moveAside(this, getDirection(block)))
+			return false;
+		// (May have swapped places.)  If okay, try one last time.
+		return ((t.tx != getTileX() || t.ty != getTileY() || t.tz != getLift()) && 
+				!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0));
 	}
 	/*
 	 *	Call usecode function for an object that's readied/unreadied.

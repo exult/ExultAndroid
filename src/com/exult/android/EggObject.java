@@ -243,11 +243,17 @@ public class EggObject extends IregGameObject {
 		distance = (byte)dist; 
 		echunk.addEgg(this);
 	}
+	public final boolean isDormant() {
+		if ((flags & (1 << hatched)) != 0 &&
+				(flags & (1 << auto_reset)) == 0)
+			return true;
+		else
+			return false;
+	}
 				// Can it be activated?
 	public boolean isActive(GameObject obj,
 			int tx, int ty, int tz, int from_tx, int from_ty) {	
-		if ((flags & (1 << (int) hatched)) != 0 &&
-					(flags & (1 << (int) auto_reset)) == 0)
+		if (isDormant())
 			return false;		// For now... Already hatched.
 		/* +++++++++++FINISH
 		if ((flags & (1 << (int) nocturnal)) != 0) {	// Nocturnal.
