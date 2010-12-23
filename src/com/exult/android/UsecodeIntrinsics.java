@@ -1,4 +1,5 @@
 package com.exult.android;
+import com.exult.android.shapeinf.*;
 import java.util.Vector;
 import java.util.LinkedList;
 import android.graphics.Point;
@@ -14,6 +15,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	private static GameObject interceptItem;
 	private static Tile interceptTile;
+	private static GameObject sailor;	// Current barge captain.
 	
 	private static final Actor asActor(GameObject obj) {
 		return obj == null ? null : obj.asActor();
@@ -102,12 +104,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			// the avatar's correct face shape and frame:
 			if (shape == 0)
 				{
-				Actor *ava = gwin.get_main_actor();
+				Actor *ava = gwin.getMainActor();
 				bool sishapes = Shape_manager::get_instance().have_si_shapes();
 				Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(
 						ava.get_skin_color(), npc ? (npc.get_type_flag(Actor::tf_sex)!=0)
 							: (ava.get_type_flag(Actor::tf_sex)!=0), sishapes);
-				if (gwin.get_main_actor().get_flag(Obj_flags::tattooed))
+				if (gwin.getMainActor().get_flag(GameObject.tattooed))
 					{
 					shape = skin.alter_face_shape;
 					frame = skin.alter_face_frame;
@@ -141,7 +143,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		/* ++++++++++++
 		if (gumpman.showing_gumps(true)) {
 			gumpman.close_all_gumps();
-			gwin.set_all_dirty();
+			gwin.setAllDirty();
 			init_conversation();	// jsf-Added 4/20/01 for SI-Lydia.
 		}
 		*/
@@ -415,7 +417,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		return tile;
 	}
 	private final UsecodeValue findDirection(UsecodeValue from, UsecodeValue to) {
-		// Direction from parm[0] -> parm[1].
+		// Direction from parm[0] . parm[1].
 		// Rets. 0-7.  Is 0 east?
 		int angle;			// Gets angle 0-7 (north - northwest)
 		Tile t1 = getPosition(from);
@@ -446,15 +448,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 		Actor npc = asActor(getItem(p0));
 		if (npc == null)
 			return UsecodeValue.getZero();
-		// +++++ FINISH Schedule *schedule = npc->get_schedule();
-		int sched = /* +++++ schedule ? schedule->get_actual_type(npc) 
+		// +++++ FINISH Schedule *schedule = npc.get_schedule();
+		int sched = /* +++++ schedule ? schedule.get_actual_type(npc) 
 				     : */ npc.getScheduleType();
 						// Path_run_usecode?  (This is to fix
 						//   a bug in the Fawn Trial.)
 						//+++++Should be a better way to check.
 		/* +++++++++FINISH
 		if (Game::get_game_type() == SERPENT_ISLE &&
-		    npc->get_action() && npc->get_action()->as_usecode_path())
+		    npc.get_action() && npc.get_action().as_usecode_path())
 						// Give a 'fake' schedule.
 			sched = Schedule.walk_to_schedule;
 		*/
@@ -471,12 +473,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			npc.setScheduleType(newsched);
 			/* ++++++++++FINISH
 						// Taking Avatar out of combat?
-			if (npc == gwin.getMainActor() && gwin->in_combat() &&
+			if (npc == gwin.getMainActor() && gwin.in_combat() &&
 			    newsched != Schedule::combat)
 						// End combat mode (for L.Field).
 				{
-				Audio::get_ptr()->stop_music();
-				gwin->toggle_combat();
+				Audio::get_ptr().stop_music();
+				gwin.toggle_combat();
 				}
 			*/
 		}
@@ -575,7 +577,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		ucmachine.setModifiedMap();
 		/* +++++++++FINISH
 						// +++Not sure if 1st test is needed.
-		if (info.get_monster_info() || info.isNpc()) {
+		if (info.getMonsterInfo() || info.isNpc()) {
 						// (Wait sched. added for FOV.)
 			// don't add equipment (Erethian's transform sequence)
 			/* +++++FINISH
@@ -584,7 +586,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						(int) Actor::neutral, true, equip);
 						// FORCE it to be neutral (dec04,01).
 			monster.set_alignment((int) Actor::neutral);
-			gwin.add_dirty(monster);
+			gwin.addDirty(monster);
 			gwin.add_nearby_npc(monster);
 			gwin.show();
 			last_created.push_back(monster);
@@ -1070,12 +1072,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (shnum < 0)
 			return UsecodeValue.getZero();
 		/* ++++++FINISH
-		Weapon_info *winf = ShapeID::get_info(shnum).get_weapon_info();
+		Weapon_info *winf = ShapeID::getInfo(shnum).get_weapon_info();
 		if (!winf)
 			return Usecode_value(0);
 
 		Usecode_value& tval = parms[1];
-		Game_object *to = get_item(tval.getElem0());
+		GameObject to = get_item(tval.getElem0());
 		int nelems;
 		if (to)
 			{
@@ -1159,7 +1161,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// For SI, used for turtle.
 		// on_barge()
 		/* +++++++FINISH
-		Barge_object barge = Get_barge(gwin.get_main_actor());
+		Barge_object barge = Get_barge(gwin.getMainActor());
 		if (barge)
 			{			// See if party is on barge.
 			Rectangle foot = barge.get_tile_footprint();
@@ -1204,7 +1206,116 @@ public class UsecodeIntrinsics extends GameSingletons {
 		ucmachine.setModifiedMap();
 	}
 	
-	
+	private final static UsecodeValue getItemFlag(UsecodeValue p0, UsecodeValue p1) {
+		// Get npc flag(item, flag#).
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return UsecodeValue.getZero();
+		int fnum = p1.getIntValue();
+						// Special cases:
+		/* +++++++++FINISH
+		if (Is_moving_barge_flag(fnum))
+			{			// Test for moving barge.
+			Barge_object *barge;
+			if (!gwin.get_moving_barge() || !(barge = Get_barge(obj)))
+				return Usecode_value(0);
+			return Usecode_value(barge == gwin.get_moving_barge());
+			}
+		else if (fnum == (int) GameObject.okay_to_land)
+			{			// Okay to land flying carpet?
+			Barge_object *barge = Get_barge(obj);
+			if (!barge)
+				return Usecode_value(0);
+			return Usecode_value(barge.okay_to_land());
+			}
+		else if (fnum == (int) GameObject.immunities) {
+			Actor npc = obj.asActor();
+			MonsterInfo inf = obj.getInfo().getMonsterInfo();
+			return Usecode_value((inf != 0 && inf.power_safe()) ||
+					(npc && npc.check_gear_powers(Frame_flags::power_safe)));
+			}
+		else if (fnum == (int) GameObject.cant_die)
+			{
+			Actor npc = obj.asActor();
+			MonsterInfo inf = obj.getInfo().getMonsterInfo();
+			return Usecode_value((inf != 0 && inf.death_safe()) ||
+					(npc && npc.check_gear_powers(Frame_flags::death_safe)));
+			}
+						// +++++0x18 is used in testing for
+						//   blocked gangplank. What is it?????
+		else */ if (fnum == 0x18 && game.isBG())
+			return UsecodeValue.getOne();
+		/* +++++++FINISH
+		else if (fnum == (int) GameObject.in_dungeon)
+			return Usecode_value(obj == gwin.getMainActor() &&
+						gwin.isInDungeon());
+		*/
+		else if (fnum == 0x14)		// Must be the sailor, as this is used
+						//   to check for Ferryman.
+			return new UsecodeValue.ObjectValue(sailor);
+		return obj.getFlag(fnum) ? UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
+
+	private final static void setItemFlag(UsecodeValue p0, UsecodeValue p1) {
+		// Set npc flag(item, flag#).
+		GameObject obj = getItem(p0);
+		int flag = p1.getIntValue();
+		if (obj == null)
+			return;
+		switch (flag)
+			{
+		case GameObject.dont_move:
+		case GameObject.bg_dont_move:
+			obj.setFlag(flag);
+						// Get out of combat mode.
+			/* ++++++++FINISH
+			if (obj == gwin.getMainActor() && gwin.inCombat())
+				gwin.toggleCombat();
+			*/
+						// Show change in status.
+			gwin.setAllDirty();
+			break;
+		case GameObject.invisible:
+			obj.setFlag(flag);
+			gwin.addDirty(obj);
+			break;
+		case 0x14:			// The sailor (Ferryman).
+			sailor = obj;
+		default:
+			obj.setFlag(flag);
+			/* +++++++FINISH
+			if (Is_moving_barge_flag(flag))
+				{		// Set barge in motion.
+				Barge_object *barge = Get_barge(obj);
+				if (barge)
+					gwin.set_moving_barge(barge);
+				}
+			*/
+			break;
+		}
+	}
+	private final static void clearItemFlag(UsecodeValue p0, UsecodeValue p1) {
+		// Clear npc flag(item, flag#).
+		GameObject obj = getItem(p0);
+		int flag = p1.getIntValue();
+		if (obj != null) {
+			obj.clearFlag(flag);
+			if (flag == GameObject.dont_move || flag == GameObject.bg_dont_move) {
+					// Show change in status.
+				ucmachine.show_pending_text();	// Fixes Lydia-tatoo.
+				gwin.setAllDirty();
+			} /* +++++ FINISH else if (Is_moving_barge_flag(flag))
+				{	// Stop barge object is on or part of.
+				Barge_object *barge = Get_barge(obj);
+				if (barge && barge == gwin.get_moving_barge())
+					gwin.set_moving_barge(0);
+				}
+			else if (flag == 0x14)		// Handles Ferryman
+				sailor = 0;
+			*/
+		}
+	}
+
 	//	For BlackGate.
 	public UsecodeValue execute(int id, int event, int num_parms, UsecodeValue parms[]) {
 		switch (id) {
@@ -1348,6 +1459,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x6f:
 			removeItem(parms[0]); break;
 		//++++++++++++++
+		case 0x88:
+			return getItemFlag(parms[0], parms[1]);
+		case 0x89:
+			setItemFlag(parms[0], parms[1]); break;
+		case 0x8a:
+			clearItemFlag(parms[0], parms[1]); break;
+		//+++++++++++++++
 		default:
 			System.out.println("*** UNHANDLED intrinsic # " + id);
 			break;

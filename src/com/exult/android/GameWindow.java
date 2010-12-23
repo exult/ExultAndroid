@@ -956,19 +956,19 @@ public class GameWindow extends GameSingletons {
 			party[i].initReadied();
 		}
 		time_stopped = 0;
+		*/
 	//+++++The below wasn't prev. done by ::read(), so maybe it should be
 	//+++++controlled by a 'first-time' flag.
 						// Want to activate first egg.
 		MapChunk olist = mainActor.getChunk();
-		olist.setupCache();
-
 		int tx = mainActor.getTileX(), ty = mainActor.getTileY(), tz = mainActor.getLift();
 		// Do them immediately.
 		olist.activateEggs(mainActor, tx, ty, tz, -1,-1,true);
 		// Force entire repaint.
 		setAllDirty();
 		painted = true;			// Main loop uses this.
-		gump_man.close_all_gumps(true);		// Kill gumps.
+		gumpman.closeAllGumps(true);		// Kill gumps.
+		/*+++++++++FINISH
 		Face_stats::load_config(config);
 
 		// Set palette for time-of-day.
