@@ -125,7 +125,7 @@ public class ExultActivity extends Activity {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
                 GameSingletons.mouse.hide();
-                if (!dragging) {
+                if (!dragging && clickPoint == null) {
                 	synchronized (gwin.getTqueue()) {
                 		gwin.getTqueue().activate(TimeQueue.ticks);
                 	}
