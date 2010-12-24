@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.concurrent.Semaphore;
 import java.lang.InterruptedException;
 import android.graphics.Point;
 
@@ -31,7 +32,8 @@ public class UsecodeMachine extends GameSingletons {
 	private Point clickPoint = new Point();
 	private int sp;				// Stack-pointer index.
 	public static int running;	// >0 when we are running.
-	
+	private final Semaphore available = new Semaphore(1, true);
+
 	public static final int 	// enum Usecode_events
 		npc_proximity = 0,
 		double_click = 1,
@@ -133,14 +135,30 @@ public class UsecodeMachine extends GameSingletons {
 			vec.set(i, fun);
 		}
 	}
+	static class UsecodeThread extends Thread {
+		private int id, event;
+		private GameObject item;
+		public UsecodeThread(int i, GameObject itm, int ev) {
+			id = i; item = itm; event = ev;
+		}
+		public void run() {
+			try {		// Want to wait until existing thread is done.
+				ucmachine.available.acquire();
+			} catch (InterruptedException e) { }
+			if (ucmachine.call_function(id, event, item, true, false)) {
+				ucmachine.myRun();// ? 1 : 0;
+			} else {
+				ucmachine.available.release();
+			}
+		}
+	}
 	/*
 	 *	This is the main entry for outside callers.
 	 *
-	 *	Output:	-1 if not found.
+	 *	Output:	-1 if not found. +++++ CURRENTLY always returns 1 or 0.
 	 *		0 if can't execute now or if aborted.
 	 *		1 otherwise.
 	 */
-	
 	public int callUsecode
 		(
 		int id, 			// Function #.
@@ -152,26 +170,11 @@ public class UsecodeMachine extends GameSingletons {
 			event == npc_proximity /* ++++ && Game::get_game_type() ==
 									BLACK_GATE*/)
 			return (0);
-
 		conv.clearAnswers();
 		System.out.printf("UsecodeMachine.callUsecode: %1$04x with event %2$d\n", id, event);
-		int ret;
-		if (call_function(id, event, item, true, false)) {
-			Thread t = new Thread() {
-				public void run() {
-					while (running > 0)	// Want to wait until existing thread is done.
-						try {
-			    			Thread.sleep(200);
-			    		} catch (InterruptedException e) { }
-					myRun();// ? 1 : 0;
-				}
-			};
-			t.start();
-			ret = 1;
-		} else
-			ret = -1; // failed to call the function
-		
-		return ret;
+		UsecodeThread t = new UsecodeThread(id, item, event);
+		t.start();
+		return 1;
 	}
 	public void initConversation() {
 		conv.initFaces();
@@ -182,6 +185,7 @@ public class UsecodeMachine extends GameSingletons {
 				// Default to 'old-style' high shape functions.
 				: */ 0x1000 + (n - 0x400));
 	}
+	// Acquire 'available' before calling this.
 	private boolean myRun() {
 		++running;
 		boolean ret = run();
@@ -189,7 +193,7 @@ public class UsecodeMachine extends GameSingletons {
 		setBook(null);
 						// Left hanging (BG)?
 		if (conv.getNumFacesOnScreen() > 0) {
-			System.out.println("myRun: initFaces()");
+			System.out.println("myRun: initFaces(), running = " + running);
 			conv.initFaces();	// Remove them.
 			gwin.setAllDirty();	// Force repaint.
 		}
@@ -203,6 +207,8 @@ public class UsecodeMachine extends GameSingletons {
 			}
 		*/
 		--running;
+		System.out.println("End of myRun");
+		available.release();
 		return ret;
 	}
 	/*
