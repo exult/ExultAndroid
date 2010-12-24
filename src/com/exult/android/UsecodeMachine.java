@@ -8,6 +8,7 @@ import java.lang.InterruptedException;
 import android.graphics.Point;
 
 public class UsecodeMachine extends GameSingletons {
+	public boolean debug = true;
 	private boolean gflags[];	// Global flags.
 	// ++++ protected Conversation conv;		// Handles conversations.
 	// Functions: I'th entry contains funs for ID's 256*i + n.
@@ -1317,7 +1318,7 @@ public class UsecodeMachine extends GameSingletons {
 			UsecodeValue val = pop();
 			frame.locals[num_args - i - 1] = val;
 		}
-		if (true) {	// ++++LATER, debug
+		if (debug) {
 			System.out.printf("Running usecode %1$04x ()", funcid);
 			for (i = 0; i < num_args; i++) {
 				if (i > 0)
@@ -1348,16 +1349,30 @@ public class UsecodeMachine extends GameSingletons {
 		}
 	}
 	private void return_from_function(UsecodeValue retval) {
+		int oldfunction = callStack.getFirst().function.id;	// For debug.
 		// back up a stack frame
 		previous_stack_frame();
 		// push the return value
 		push(retval);
+		if (debug) {
+			StackFrame parent_frame = callStack.getFirst();
+			System.out.printf("Returning (%1$s) from usecode %2$04x\n",
+					retval.toString(), oldfunction);
+			if (parent_frame != null) {
+				int newfunction = callStack.getFirst().function.id;
+				System.out.printf("...back into usecode %1$04x\n", newfunction);
+			}
+		}
 	}
 	private void return_from_procedure() {
 		// back up a stack frame
 		previous_stack_frame();
 	}
 	private void abort_function() {
+		if (debug) {
+			int funid = callStack.getFirst().function.id;
+			System.out.printf("Aborting from usecode %1$04x\n", funid);
+		}
 		// clear the entire call stack up to the entry point
 		while (callStack.getFirst() != null)
 			previous_stack_frame();
@@ -1449,8 +1464,10 @@ public class UsecodeMachine extends GameSingletons {
 			gwin.setAllDirty();
 		}
 						// Normal conversation:
-		else if (conv.isNpcTextPending())
+		else if (conv.isNpcTextPending()) {
+			System.out.println("show_pending_text: waiting for click");
 			click_to_continue();
+		}
 	}
 	/*
 	 *	Show book or scroll text.
@@ -1483,11 +1500,14 @@ public class UsecodeMachine extends GameSingletons {
 			int eol = str.indexOf('~', ind);
 			if (eol < 0) {		// Not found?
 				conv.showNpcMessage(str);
+				
 				click_to_continue();
 				break;
 			}
 			String text = str.substring(ind, eol);
 			conv.showNpcMessage(text);
+			if (debug)
+				System.out.printf("say_string: %1$s\n", text);
 			click_to_continue();
 			if (eol < str.length() - 1 && str.charAt(eol + 1) == '~')
 				++eol;		// 2 in a row.
@@ -1508,7 +1528,7 @@ public class UsecodeMachine extends GameSingletons {
 			UsecodeValue val = pop();
 			intrinsicParms[i] = val;
 		}
-		if (true) {	// ++++LATER, debug
+		if (debug) {
 			System.out.printf("Intrinsic %1$02x(", intrinsic);
 			for (int i = 0; i < num_parms; i++) {
 				if (i > 0)
@@ -1518,7 +1538,7 @@ public class UsecodeMachine extends GameSingletons {
 			System.out.println(")");
 		}
 		UsecodeValue ret = intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
-		if (true) //++++++DEBUG
+		if (debug)
 			System.out.printf("...returned %1$s\n", ret);
 		return ret;
 	}

@@ -153,7 +153,7 @@ public final class Mouse extends GameSingletons {
 		box.y = mousey - cur.getYAbove();
 	}
 					// Flash desired shape for 1/2 sec.
-	void flashShape(int flash) {
+	public void flashShape(int flash) {
 		ShapeFrame s = pointers.getFrame(flash);
 		if (s != null)
 			new EffectsManager.MouseFlash(s, mousex, mousey);

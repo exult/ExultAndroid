@@ -1144,6 +1144,26 @@ public class UsecodeIntrinsics extends GameSingletons {
 			cnt = 1;
 		return new UsecodeValue.IntValue(cnt);
 	}
+	private final void flashMouse(UsecodeValue p0) {
+		int shape;
+		switch (p0.needIntValue()) {
+		case 2:
+			shape = Mouse.outofrange; break;
+		case 3:
+			shape = Mouse.outofammo; break;
+		case 4:
+			shape = Mouse.tooheavy; break;
+		case 5:
+			shape = Mouse.wontfit; break;
+		case 7:
+			shape = Mouse.blocked; break;
+		case 0:
+		case 1:
+		default:
+			shape = Mouse.redx; break;
+			}
+		mouse.flashShape(shape);
+	}
 	private final UsecodeValue getItemFrameRot(UsecodeValue p0) {
 		// Same as get_item_frame, but (guessing!) include rotated bit.
 		GameObject obj = getItem(p0);
@@ -1448,6 +1468,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x5e:
 			return getArraySize(parms[0]);
 		//+++++++++++++++
+		case 0x68:
+			return UsecodeValue.getOne();	// MouseExists().
+		//++++++++++++++
+		case 0x6a:
+			flashMouse(parms[0]); break;
 		case 0x6b:
 			return getItemFrameRot(parms[0]);
 		case 0x6c:

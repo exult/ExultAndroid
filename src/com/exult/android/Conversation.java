@@ -256,7 +256,6 @@ public final class Conversation extends GameSingletons {
 	public void showNpcMessage(String msg) {
 		if (lastFaceShown == -1)
 			return;
-		System.out.println("Showing npc msg: " + msg);
 		NpcFaceInfo info = faceInfo[lastFaceShown];
 		int font = info.largeFace ? 7 : 0;	// Use red for Guardian, snake.
 		info.curText = msg;
@@ -275,7 +274,7 @@ public final class Conversation extends GameSingletons {
 						// All fit?  Store height painted.
 		info.lastTextHeight = height;
 		info.textPending = true;
-		gwin.setPainted();
+		gwin.addDirty(info.textRect);
 	}
 	/*
 	 *	Is there NPC text that the user hasn't had a chance to read?
