@@ -185,10 +185,11 @@ public class UsecodeMachine extends GameSingletons {
 	private boolean myRun() {
 		++running;
 		boolean ret = run();
-		--running;
+		
 		setBook(null);
 						// Left hanging (BG)?
 		if (conv.getNumFacesOnScreen() > 0) {
+			System.out.println("myRun: initFaces()");
 			conv.initFaces();	// Remove them.
 			gwin.setAllDirty();	// Force repaint.
 		}
@@ -201,6 +202,7 @@ public class UsecodeMachine extends GameSingletons {
 			modified_map = false;
 			}
 		*/
+		--running;
 		return ret;
 	}
 	/*

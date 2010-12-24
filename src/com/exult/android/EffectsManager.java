@@ -104,7 +104,8 @@ public class EffectsManager extends GameSingletons {
 		protected boolean always;			// For TimeQueue.
 		private SpecialEffect next, prev;	// All of them are chained together.
 						// Render.
-		public abstract void paint();
+		public void paint() {
+		}
 		public boolean isWeather()	// Need to distinguish weather.
 			{ return false; }
 		/*
@@ -144,6 +145,59 @@ public class EffectsManager extends GameSingletons {
 		public void handleEvent(int ctime, Object udata) {
 			gwin.setAllDirty();
 			eman.removeEffect(this);
+		}
+	}
+	/*
+	 * Earthquakes.
+	 */
+	public static class Earthquake extends SpecialEffect {
+		private static boolean soundOnce;
+		private int len;			// From Usecode intrinsic.
+		private int i;				// Current index.
+		public Earthquake(int l) {
+		len = l;
+		eman.addEffect(this);
+		}
+						// Execute when due.
+		public void handleEvent(int ctime, Object udata) {
+			if (!soundOnce) {
+				soundOnce = true;;
+				// Play earthquake SFX once
+		  		//++++++FINISH Audio::get_ptr().play_sound_effect(Audio::game_sfx(60));
+			}
+			ImageBuf win = gwin.getWin();
+			int w = win.getWidth(), h = win.getHeight();
+			int sx = 0, sy = 0;
+			int dx = EUtil.rand()%9 - 4;
+			int dy = EUtil.rand()%9 - 4;
+			System.out.printf("Earthquake: dx = %1$d, dy = %2$d\n", dx, dy);
+			if (dx > 0)
+				w -= dx;
+			else {
+				w += dx;
+				sx -= dx;
+				dx = 0;
+			}
+			if (dy > 0)
+				h -= dy;
+			else {
+				h += dy;
+				sy -= dy;
+				dy = 0;
+			}
+			gwin.paint();
+			gwin.clearDirty();
+			win.copy(sx, sy, w, h, dx, dy);
+			gwin.setPainted();
+			// gwin.show(true);
+							// Shake back.
+			win.copy(dx, dy, w, h, sx, sy);
+			if (++i < len)			// More to do?  Put back in queue.
+				tqueue.add(ctime + 1, this, udata);
+			else {
+				soundOnce = false;	
+				eman.removeEffect(this);
+			}
 		}
 	}
 	/*

@@ -427,9 +427,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void clear_type_flag(int flag) {
 		//++++++++FINISH
 	}
-	public int getTypeFlag(int flag) {
+	public boolean getTypeFlag(int flag) {
 		//++++++++++++FINISH
-		return 0;
+		return false;
 	}
 	public void setTypeFlags(int tflags) {
 		typeFlags = tflags;

@@ -1136,6 +1136,22 @@ public class UsecodeIntrinsics extends GameSingletons {
 			gump = new TextGump.Book();
 		ucmachine.setBook(gump);
 	}
+	private final void earthquake(UsecodeValue p0) {
+		int len = p0.getIntValue();
+		tqueue.add(tqueue.ticks + 1,
+			new EffectsManager.Earthquake(len), this);
+	}
+	private final UsecodeValue isPCFemale() {
+		// Is player female?
+		return gwin.getMainActor().getTypeFlag(Actor.tf_sex) ?
+				UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
+	private final void haltScheduled(UsecodeValue p0) {
+		// Halt_scheduled(item)
+		GameObject obj = getItem(p0);
+		if (obj != null)
+			UsecodeScript.terminate(obj);
+	}
 	private final UsecodeValue getArraySize(UsecodeValue p0) {
 		int cnt;
 		if (p0.isArray())	// An array?  We might return 0.
@@ -1465,6 +1481,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x55:
 			bookMode(parms[0]); break;
 		//++++++++++++
+		case 0x59:
+			earthquake(parms[0]); break;
+		case 0x5a:
+			return isPCFemale();
+		//++++++++++++
+		case 0x5c:
+			haltScheduled(parms[0]); break;
 		case 0x5e:
 			return getArraySize(parms[0]);
 		//+++++++++++++++

@@ -160,6 +160,7 @@ public final class Conversation extends GameSingletons {
 			if (faceInfo[i] != null && faceInfo[i].faceNum == shape) {
 				info = faceInfo[i];
 				lastFaceShown = i;
+				System.out.println("Found face slot " + i);
 				break;
 			}
 		if (info == null) {			// New one?
@@ -171,6 +172,7 @@ public final class Conversation extends GameSingletons {
 				slot = numFaces;
 						// Get last one shown.
 			NpcFaceInfo prev = slot != 0 ? faceInfo[slot - 1] : null;
+			System.out.println("New face slot is " + slot + " for shape " + shape);
 			lastFaceShown = slot;
 			if (faceInfo[slot] == null)
 				numFaces++;	// We're adding one (not replacing).
@@ -254,6 +256,7 @@ public final class Conversation extends GameSingletons {
 	 *	Show what the NPC had to say.
 	 */
 	public void showNpcMessage(String msg) {
+		System.out.println("showNpcMessage: lastFaceShown = " + lastFaceShown);
 		if (lastFaceShown == -1)
 			return;
 		NpcFaceInfo info = faceInfo[lastFaceShown];
