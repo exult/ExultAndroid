@@ -1,22 +1,17 @@
 package com.exult.android;
 
 public final class PartyManager extends GameSingletons {
-	public static final int EXULTParty_MAX = 8;
+	public static final int EXULT_PARTY_MAX = 8;
 	private int party[];	// NPC #'s of party members.
 	private int partyCount;		// # of NPC's in party.
 	private int deadParty[];		// NPC #'s of dead party members.
 	private int deadPartyCount;
 	private Actor valid[];	// NPC's able to walk with Avatar.
 	private int validcnt;
-					// Formation-walking:
-	/* ++++++++FINISH
-	void moveFollowers(Actor npc, int vindex, int dir);
-	int step(Actor npc, Actor leader, int dir, Tile dest);
-	*/
 	public PartyManager() {
-		party = new int[EXULTParty_MAX];
+		party = new int[EXULT_PARTY_MAX];
 		deadParty = new int[16];
-		valid = new Actor[EXULTParty_MAX];
+		valid = new Actor[EXULT_PARTY_MAX];
 	}
 	public void setCount(int n)		// For initializing from file.
 		{ partyCount = n; }

@@ -4,6 +4,7 @@ import java.util.ListIterator;
 import java.util.Vector;
 
 public class UsecodeScript extends GameSingletons implements TimeSensitive {
+	public static boolean debug = false;
 	private static int count;		// Total # of these around.
 	private static LinkedList<UsecodeScript> scripts =
 						new LinkedList<UsecodeScript>();
@@ -125,7 +126,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		while (iter.hasNext()) {
 			UsecodeScript each = iter.next();
 			if (each.obj == obj) {
-				System.out.println("Halting script for obj " + obj.getName());
+				if (debug)
+					System.out.println("Halting script for obj " + obj.getName());
 				each.halt();
 				iter.remove();
 			}
@@ -204,7 +206,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				// Force it to halt.
 				each.no_halt = false;
 				if (each.must_finish) {
-					System.out.println("MUST finish this script");
+					if (debug)
+						System.out.println("MUST finish this script");
 					each.exec(true);
 				}
 				each.halt();
@@ -244,12 +247,14 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		int delay = 1;	// Start with default delay.
 		boolean do_another = true;			// Flag to keep going.
 		int opcode;
-		System.out.println("UsecodeScript.exec: cnt = " + cnt);
+		if (debug)
+			System.out.println("UsecodeScript.exec: cnt = " + cnt);
 		// If a 1 follows, keep going.
 		for (; i < cnt && ((opcode = code.getElem(i).getIntValue()) 
 							== 0x1 || do_another); i++)
 			{
-			System.out.println("Opcode is " + opcode);
+			if (debug)
+				System.out.println("Opcode is " + opcode);
 			do_another = finish;
 			switch (opcode)
 				{

@@ -1,6 +1,7 @@
 package com.exult.android;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
@@ -10,7 +11,7 @@ import android.graphics.Point;
 
 public class UsecodeMachine extends GameSingletons {
 	public boolean debug = true;
-	private boolean gflags[];	// Global flags.
+	private byte gflags[];	// Global flags.
 	// ++++ protected Conversation conv;		// Handles conversations.
 	// Functions: I'th entry contains funs for ID's 256*i + n.
 	private Vector<Vector<UsecodeFunction>> funs = 
@@ -25,6 +26,7 @@ public class UsecodeMachine extends GameSingletons {
 	private Actor path_npc;		// Last NPC in path_run_usecode()
 	private boolean found_answer;		// Did we already handle the conv. option?
 	private Tile saved_pos;		// For a couple SI intrinsics.
+	private int saved_map;
 	private String theString;	// The single string register.
 	private UsecodeValue stack[];
 	private UsecodeIntrinsics intrinsics;
@@ -59,7 +61,7 @@ public class UsecodeMachine extends GameSingletons {
 		 saved_map = -1;
 		 telekenesis_fun = -1;
 		 */
-		gflags = new boolean[EConst.c_last_gflag + 1];
+		gflags = new byte[EConst.c_last_gflag + 1];
 		stack = new UsecodeValue[1024];
 		intrinsics = new UsecodeIntrinsics();	// ++++FOR NOW. Later do BG, SI.
 		if (conv == null)
@@ -82,9 +84,9 @@ public class UsecodeMachine extends GameSingletons {
 		} catch (IOException e) { }
 	}
 	public final boolean getGlobalFlag(int i)	// Get/set ith flag.
-		{ return gflags[i]; }
+		{ return gflags[i] != 0; }
 	public final void setGlobalFlag(int i, int val)
-		{ gflags[i] = (val == 1); }
+		{ gflags[i] = (byte)((val == 1)?1:0); }
 	public final void setModifiedMap() {
 		modifiedMap = true;
 	}
@@ -200,9 +202,9 @@ public class UsecodeMachine extends GameSingletons {
 		/*
 		if (modifiedMap)
 			{			// On a barge, and we changed the map.
-			Barge_object *barge = gwin->get_moving_barge();
+			Barge_object *barge = gwin.get_moving_barge();
 			if (barge)
-				barge->set_to_gather();	// Refigure what's on barge.
+				barge.set_to_gather();	// Refigure what's on barge.
 			modified_map = false;
 			}
 		*/
@@ -858,7 +860,7 @@ public class UsecodeMachine extends GameSingletons {
 						// FLAG_ERROR(offset);
 						pushi(0);
 					} else {
-						pushi(gflags[offset] ? 1 : 0);
+						pushi(gflags[offset]);
 					}
 					break;
 				case 0x43:		// POPF.
@@ -870,7 +872,7 @@ public class UsecodeMachine extends GameSingletons {
 					if (offset < 0 || offset >= gflags.length) {
 						// FLAG_ERROR(offset);
 					} else {
-						gflags[offset] = popi() == 0 ? false : true;
+						gflags[offset] = popi() == 0 ? (byte)0 : (byte)1;
 						/* ++++++LATER maybe
 						if (gflags[offset]) {
 							Notebook_gump::add_gflag_text(offset);
@@ -1208,7 +1210,7 @@ public class UsecodeMachine extends GameSingletons {
 	/*
 	 *	Get user's choice from among the possible responses.
 	 *
-	 *	Output:	->user choice string.
+	 *	Output:	.user choice string.
 	 *		0 if no possible choices or user quit.
 	 */
 	public String get_user_choice() {
@@ -1237,9 +1239,9 @@ public class UsecodeMachine extends GameSingletons {
 			/*  +++++++++
 			int result=Get_click(x, y, Mouse::hand, &chr, false, conv, true);
 			if (result<=0) {	// ESC pressed, select 'bye' if poss.
-				choice_num = conv->locate_answer("bye");
+				choice_num = conv.locate_answer("bye");
 			} else if (chr) {		// key pressed
-				if (chr>='1' && chr <='0'+conv->get_num_answers()) {
+				if (chr>='1' && chr <='0'+conv.get_num_answers()) {
 					choice_num = chr - '1';
 				} else
 					choice_num = -1;	//invalid key
@@ -1250,7 +1252,7 @@ public class UsecodeMachine extends GameSingletons {
 		while (choice_num  < 0 || choice_num >= conv.getNumAnswers());
 
 		conv.clearAvatarChoices();
-						// Store ->answer string.
+						// Store .answer string.
 		conv.setUserChoice(conv.getAnswer(choice_num));
 		return (choice_num);		// Return choice #.
 		}
@@ -1274,7 +1276,7 @@ public class UsecodeMachine extends GameSingletons {
 	private final boolean is_object_fun(int n) {
 		// +++++++ if (symtbl == null)
 			return (n < 0x800);
-		// ++++ return symtbl->is_object_fun(n);
+		// ++++ return symtbl.is_object_fun(n);
 	}
 	private boolean call_function(int funcid, int eventid) {
 		return call_function(funcid, eventid, null, false, false);
@@ -1430,7 +1432,7 @@ public class UsecodeMachine extends GameSingletons {
 	 *	Get a game object from an "itemref", which might be the actual
 	 *	pointer, or might be -(npc number).
 	 *
-	 *	Output:	->game object.
+	 *	Output:	.game object.
 	 */
 	public GameObject get_item(UsecodeValue itemref) {
 						// If array, take 1st element.
@@ -1564,8 +1566,116 @@ public class UsecodeMachine extends GameSingletons {
 		conv.clearTextPending();
 		//	user_choice = 0;		// Clear it.
 		}
+	/*
+	 *	Read in global data from 'gamedat/usecode.dat'.
+	 *	(and 'gamedat/keyring.dat')
+	 */
+	public void read() {
+		/* +++++++++++FINISH
+		if (game.isSI())
+			keyring.read();	// read keyring data
+		*/
+		InputStream in;
+		try {
+			in = EUtil.U7openStream(EFile.FLAGINIT);	// Read global flags.
+			int filesize = in.available();
+			if (filesize > gflags.length)
+				filesize = gflags.length;
+			Arrays.fill(gflags, (byte)0);
+			in.read(gflags, 0, filesize);
+			System.out.println("Usecode: Read " + filesize + " global flags.");
+			in.close();
+		} catch(IOException e) {
+			ExultActivity.fileFatal(EFile.FLAGINIT);
+		}
 
-
+		clear_usevars(); // first clear all statics
+		try
+		{
+			in = EUtil.U7openStream(EFile.USEVARS);
+			read_usevars(in);
+			in.close();
+		}
+		catch (IOException e) {
+			;			// Okay if this doesn't exist.
+		}
+		try {
+			in = EUtil.U7openStream(EFile.USEDAT);
+		} catch (IOException e) {
+			partyman.setCount(0);
+			partyman.linkParty();	// Still need to do this.
+			return;			// Not an error if no saved game yet.
+		}
+		partyman.setCount(EUtil.Read2(in));	// Read party.
+		int i;	// Blame MSVC
+		for (i = 0; i < PartyManager.EXULT_PARTY_MAX; i++)
+			partyman.setMember(i, EUtil.Read2(in));
+		partyman.linkParty();
+						// Timers.
+		int cnt = EUtil.Read4(in);
+		if (cnt == -1) {
+			int tmr = 0;
+			while ((tmr = EUtil.Read2(in)) != 0xffff)
+				timers.put(tmr, EUtil.Read4(in));
+		} else {
+			timers.put(0, cnt);
+			for (int t = 1; t < 20; t++)
+				timers.put(t, EUtil.Read4(in));
+		}
+		if (saved_pos == null)
+			saved_pos = new Tile();
+		saved_pos.tx = (short)EUtil.Read2(in);	// Read in saved position.
+		saved_pos.ty = (short)EUtil.Read2(in);
+		saved_pos.tz = (short)EUtil.Read2(in);
+		saved_map = EUtil.Read2(in);
+		}
+	/*
+	 *	Read in static variables from USEVARS.
+	 */
+	private void read_usevars(InputStream in) throws IOException {
+		int cnt = EUtil.Read4(in);		// Global statics.
+		statics.setSize(cnt);
+		int i;
+		for (i = 0; i < cnt; i++)
+			statics.setElementAt(UsecodeValue.restore(in), i);
+		long funid;
+		while (in.available() != 0 && (funid = EUtil.Read4(in)) != 0xffffffff) {
+			if (funid == 0xfffffffe) {
+				// ++++ FIXME: Write code for the cases when symtbl == 0 or
+				// fsym == 0 (neither of which *should* happen...)
+				int len = EUtil.Read2(in);
+				byte nm[] = new byte[len + 1];
+				in.read(nm, 0, len);
+				nm[len] = 0;
+				/* +++++++++FINISH
+				Usecode_symbol *fsym = symtbl ? (*symtbl)[nm] : 0;
+				if (fsym)
+					funid = fsym->get_val();
+				delete [] nm;
+				*/
+			}
+			cnt = EUtil.Read4(in);
+			UsecodeFunction fun = find_function((int)funid);
+			if (fun == null)
+				continue;
+			fun.statics.setSize(cnt);
+			for (i = 0; i < cnt; i++)
+				fun.statics.setElementAt(UsecodeValue.restore(in), i);
+			}
+		}
+	private void clear_usevars() {
+		if (statics != null)
+			statics.clear();
+		int nslots = funs.size();
+		for (int i = 0; i < nslots; ++i) {
+			Vector<UsecodeFunction> slot = funs.elementAt(i);
+			for (int j = 0; j < slot.size(); ++j) {
+				UsecodeFunction fun = slot.elementAt(j);
+				if (fun != null && fun.statics != null) 
+					fun.statics.clear();
+			}
+		}
+	}
 	
 	/*
 	 * One Usecode function.

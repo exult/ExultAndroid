@@ -919,7 +919,9 @@ public class GameWindow extends GameSingletons {
 		// CYCLE_RED_PLASMA();
 		/* ++++++++++FINISH 
 		Notebook_gump::initialize();		// Read in journal.
+		*/
 		usecode.read();		// Read the usecode flags
+		/*
 		CYCLE_RED_PLASMA();
 		*/
 		if (game.isBG()) {

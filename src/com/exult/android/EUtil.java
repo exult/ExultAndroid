@@ -188,6 +188,7 @@ public class EUtil {
 		addSystemPath("<PATCH>", bgbase + "/PATCH");
 		addSystemPath("<STATIC>", bgbase + "/STATIC");
 		addSystemPath("<GAMEDAT>", bgbase + "/GAMEDAT");
+		addSystemPath("<SAVEGAME>", bgbase + "/SAVEGAME");
 	}
 	public static RandomAccessFile U7open(String nm, boolean hardfail)
 												throws IOException {

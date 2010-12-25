@@ -1,6 +1,8 @@
 package com.exult.android;
 
 import java.util.Vector;
+import java.io.InputStream;
+import java.io.IOException;
 
 public abstract class UsecodeValue {
 	private static UsecodeValue zval = new IntValue(0);
@@ -68,8 +70,59 @@ public abstract class UsecodeValue {
 	}
 	public static final UsecodeValue getNullObj() {
 		return nullObj;
+	}	
+	private static final int // For save/restore
+		int_type = 0,
+		string_type = 1,	// Allocated string.
+		array_type = 2,
+		pointer_type = 3,
+		class_sym_type = 4,	// ->Usecode_class_symbol
+		class_obj_type = 5	// An 'array_type' for a class obj.
+		;
+	public static UsecodeValue restore(InputStream in) throws IOException {
+		int type = in.read();
+		switch (type) {
+		case int_type:
+			return new IntValue(EUtil.Read4(in));
+		case pointer_type:
+			in.skip(4);
+			return new ObjectValue(null); //DON'T dereference this pointer!
+			// Maybe add a new type "serialized_pointer" to prevent "accidents"?
+		case class_sym_type:
+			{
+			int len = EUtil.Read2(in);
+			byte nm[] = new byte[len + 1];
+			in.read(nm, 0, len);
+			nm[len] = 0;
+			/* +++++++FINISH
+			Game_window *gwin = Game_window::get_instance();
+			value.cptr = gwin->get_usecode()->get_class(nm);
+			*/
+			return new IntValue(0);	//++++++++++
+			}
+		case string_type:
+			{
+			int len = EUtil.Read2(in);
+			byte str[] = new byte[len];
+			in.read(str);
+			return new StringValue(new String(str));
+			}
+		case array_type:
+		case class_obj_type:
+			{
+			int len = EUtil.Read2(in);
+			UsecodeValue elems[] = new UsecodeValue[len];
+			for (int i=0; i < len; i++) {
+				elems[i] = restore(in);
+				if (elems[i] == null)
+					return null;
+			}
+			return new ArrayValue(elems);
+			}
+		default:
+			return null;
+		}
 	}
-	
 	/*
 	 * All these subclasses are intended to be immutable.
 	 */
