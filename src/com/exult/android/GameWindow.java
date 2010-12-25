@@ -3,6 +3,8 @@ import java.util.Vector;
 import java.io.RandomAccessFile;
 import java.io.OutputStream;
 import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.io.IOException;
 import android.graphics.Point;
 
@@ -1116,41 +1118,21 @@ public class GameWindow extends GameSingletons {
 			if (!ok)
 				return;
 			}
-		*/
-		/*
-		// Check for a ZIP file first
-		if (restore_gamedat_zip(fname) != false)
-			return;
-		*/
-	/*
-	#ifdef RED_PLASMA
+		#ifdef RED_PLASMA
 		// Display red plasma during load...
 		setup_load_palette();
-	#endif
-	*/								
+		#endif
+		 */								
 		EUtil.U7mkdir("<GAMEDAT>");		// Create dir. if not already there. Don't
 										// use GAMEDAT define cause that's got a
 										// trailing slash
+		// Check for a ZIP file first
+		//++++++ FINISH if (restoreGamedatZip(fname))
+		//++++++	return;
 		RandomAccessFile in = EUtil.U7open(fname, true);
 		if (in == null)
 			ExultActivity.fatal("Can't open file: " + EUtil.getSystemPath(fname));
-		EUtil.U7remove (EFile.USEDAT);
-		EUtil.U7remove (EFile.USEVARS);
-		EUtil.U7remove (EFile.U7NBUF_DAT);
-		EUtil.U7remove (EFile.NPC_DAT);
-		EUtil.U7remove (EFile.MONSNPCS);
-		EUtil.U7remove (EFile.FLAGINIT);
-		EUtil.U7remove (EFile.GWINDAT);
-		EUtil.U7remove (EFile.IDENTITY);
-		EUtil.U7remove (EFile.GSCHEDULE);
-		EUtil.U7remove ("<STATIC>/flags.flg");
-		EUtil.U7remove (EFile.GSCRNSHOT);
-		EUtil.U7remove (EFile.GSAVEINFO);
-		EUtil.U7remove (EFile.GNEWGAMEVER);
-		EUtil.U7remove (EFile.GEXULTVER);
-		EUtil.U7remove (EFile.KEYRINGDAT);
-		EUtil.U7remove (EFile.NOTEBOOKXML);
-
+		removeBeforeRestore();
 		restoreFlexFiles(in, EFile.GAMEDAT);
 		in.close();
 	/* #ifdef RED_PLASMA
@@ -1175,8 +1157,7 @@ public class GameWindow extends GameSingletons {
 		}
 		int baselen = basepath.length();
 		byte nm13[] = new byte[13];
-		for (i = 0; i < numfiles; i++)	// Now read each file.
-			{
+		for (i = 0; i < numfiles; i++) {	// Now read each file.
 						// Get file length.
 			int len = finfo[2*i + 1] - 13, pos = finfo[2*i];
 			if (len <= 0)
@@ -1204,6 +1185,62 @@ public class GameWindow extends GameSingletons {
 			}
 			
 			// CYCLE_RED_PLASMA();
-			}
 		}
+	}
+	private boolean restoreGamedatZip(String fname) {
+		if (EUtil.isFlex(fname))
+			return false;
+		InputStream in;
+		ZipInputStream zin;
+		try {
+			in = EUtil.U7openStream(fname);
+			zin = new ZipInputStream(in);
+		} catch (IOException e) {
+			return false;
+		}
+		removeBeforeRestore();
+		ZipEntry ze = null;
+		byte buf[] = null;
+		try {
+			while ((ze = zin.getNextEntry()) != null) {
+				String fnm = ze.getName();
+				
+				//+++++FINISH: multimap stuff here.
+				//++++++++++++
+				int len = (int)ze.getSize();
+				System.out.println("Unzipping " + fnm + " of length " + len);
+				if (buf == null || buf.length < len)
+					buf = new byte[len];
+				zin.read(buf, 0, len);
+				OutputStream out = EUtil.U7create(fname);
+				out.write(buf);	// Then write it out.
+				out.close();
+			} 
+			// CYCLE_RED_PLASMA();
+	        zin.closeEntry();
+	        zin.close();
+	    } catch (IOException e) {
+			// abort("Error writing '%s'.", fname);
+			return false;
+		}
+	    return true;
+	}
+	private void removeBeforeRestore() {
+		EUtil.U7remove (EFile.USEDAT);
+		EUtil.U7remove (EFile.USEVARS);
+		EUtil.U7remove (EFile.U7NBUF_DAT);
+		EUtil.U7remove (EFile.NPC_DAT);
+		EUtil.U7remove (EFile.MONSNPCS);
+		EUtil.U7remove (EFile.FLAGINIT);
+		EUtil.U7remove (EFile.GWINDAT);
+		EUtil.U7remove (EFile.IDENTITY);
+		EUtil.U7remove (EFile.GSCHEDULE);
+		EUtil.U7remove ("<STATIC>/flags.flg");
+		EUtil.U7remove (EFile.GSCRNSHOT);
+		EUtil.U7remove (EFile.GSAVEINFO);
+		EUtil.U7remove (EFile.GNEWGAMEVER);
+		EUtil.U7remove (EFile.GEXULTVER);
+		EUtil.U7remove (EFile.KEYRINGDAT);
+		EUtil.U7remove (EFile.NOTEBOOKXML);
+	}
 }
