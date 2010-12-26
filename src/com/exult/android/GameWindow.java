@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import java.io.IOException;
 import android.graphics.Point;
 
@@ -49,6 +50,7 @@ public class GameWindow extends GameSingletons {
 							//   means 'terrain-editing' mode.
 	public boolean paintEggs = true;//++++TRUE for testing.
 	public int blits;		// For frame-counting.
+	public boolean skipFirstScene = true;	// ++++TESTING.
 	
 	static public GameWindow instanceOf() {
 		return instance;
@@ -936,6 +938,8 @@ public class GameWindow extends GameSingletons {
 				usecode.set_global_flag(
 					Usecode_machine::did_first_scene, 1);
 			*/
+			if (skipFirstScene)
+				usecode.setGlobalFlag(UsecodeMachine.did_first_scene, 1);
 						// Should Avatar be visible?
 			if (usecode.getGlobalFlag(UsecodeMachine.did_first_scene))
 				mainActor.clearFlag(GameObject.bg_dont_render);
@@ -1246,7 +1250,7 @@ public class GameWindow extends GameSingletons {
 			restoreFlexFiles(in, EFile.GAMEDAT);
 		} catch (IOException e) {
 			ExultActivity.fatal("Error restoring from: " + EUtil.getSystemPath(fname));
-			throw e;
+			return;
 		}
 		in.close();
 	/* #ifdef RED_PLASMA
@@ -1297,7 +1301,7 @@ public class GameWindow extends GameSingletons {
 			} catch (IOException e) {
 				ExultActivity.fatal(String.format("Error writing '%1$s'.", 
 														EUtil.getSystemPath(fname)));
-				throw e;
+				return;
 			}
 			
 			// CYCLE_RED_PLASMA();
@@ -1364,5 +1368,100 @@ public class GameWindow extends GameSingletons {
 		EUtil.U7remove (EFile.GEXULTVER);
 		EUtil.U7remove (EFile.KEYRINGDAT);
 		EUtil.U7remove (EFile.NOTEBOOKXML);
+	}
+	/*
+	 *	List of 'gamedat' files to save (in addition to 'iregxx'):
+	 */
+	private static final String bgsavefiles[] = {
+		EFile.GSCRNSHOT,	EFile.GSAVEINFO,	// MUST BE FIRST!!
+		EFile.IDENTITY,			// MUST BE #2
+		EFile.GEXULTVER, 	EFile.GNEWGAMEVER,
+		EFile.NPC_DAT,	/* ++++ EFile.MONSNPCS,
+		EFile.USEVARS,	EFile.USEDAT,
+		EFile.FLAGINIT,	EFile.GWINDAT,
+		EFile.GSCHEDULE /* ,	EFile.NOTEBOOKXML */
+		};
+	private static final int bgnumsavefiles = bgsavefiles.length;
+
+	private static final String sisavefiles[] = {
+		EFile.GSCRNSHOT,	EFile.GSAVEINFO,	// MUST BE FIRST!!
+		EFile.IDENTITY,			// MUST BE #2
+		EFile.GEXULTVER,	EFile.GNEWGAMEVER,
+		EFile.NPC_DAT,	EFile.MONSNPCS,
+		EFile.USEVARS,	EFile.USEDAT,
+		EFile.FLAGINIT,	EFile.GWINDAT,
+		EFile.GSCHEDULE,	EFile.KEYRINGDAT,
+		EFile.NOTEBOOKXML
+		};
+	private static final int sinumsavefiles = sisavefiles.length;
+	private static final int saveNameSize = 0x50;
+	//	Save, using user's 'savename'.
+	public void saveGamedat(int num, String savename) throws IOException {
+		String nm = String.format(EFile.SAVENAME, num, game.isBG() ? "bg" : "si");
+		saveGamedat(nm, savename);
+		/* ++++++OLD savegames.
+		if (num >=0 && num < 10) {
+			saveNames[num] = savename;
+		}
+		*/
+	}
+	private boolean saveOneZip(ZipOutputStream zout, String fname, byte buf[]) 
+											throws IOException {
+		int sz;
+		InputStream in;
+		System.out.println("Saving to zip: " + fname);
+		try {
+			in = EUtil.U7openStream(fname);
+			sz = in.available();
+			if (buf == null || buf.length < sz)
+				buf = new byte[sz];
+			in.read(buf, 0, sz);
+		} catch (IOException e) {
+			//++++FOR NOW, ignore   ExultActivity.fileFatal(fname);
+			// ++++++++return false;
+			return true;
+		}
+		ZipEntry entry = new ZipEntry(fname);
+		zout.putNextEntry(entry); // Store entry
+		zout.write(buf, 0, sz);
+		in.close();
+		return true;
+	}
+	private void saveGamedat(String fname, String savename) throws IOException {
+		// setup correct file list 
+		int numsavefiles = game.isBG() ? bgnumsavefiles : sinumsavefiles;
+		String savefiles[] = game.isBG() ? bgsavefiles : sisavefiles;	
+		OutputStream out = EUtil.U7create(fname);
+		byte namebytes[] = savename.getBytes();
+		int namelen = Math.min(namebytes.length, saveNameSize);
+		byte namebuf[] = new byte[saveNameSize];
+		System.arraycopy(namebytes, 0, namebuf, 0, namelen);
+		out.write(namebuf);
+		ZipOutputStream zout = new ZipOutputStream(out);
+		System.out.println("Saving to " + fname);
+		byte buf[] = null;
+		int sz;
+		for (int i = 0; i < numsavefiles; ++i) {
+			if (!saveOneZip(zout, savefiles[i], buf))
+				return;
+		}
+		// Now the IREG files.
+		int mapcnt =  maps.size();
+		for (int j = 0; j < mapcnt; ++j) {
+			GameMap map = maps.elementAt(j);
+			if (map != null) {
+				for (int schunk = 0; schunk < 12*12; schunk++) {
+					//Check to see if the ireg exists before trying to
+					//save it; prevents crash when creating new maps
+					//for existing games
+					String iname = map.getSchunkFileName(EFile.U7IREG, schunk);
+					if (EUtil.U7exists(iname) != null) {
+						if (!saveOneZip(zout, iname, buf))
+							return;
+					}
+				}
+			}
+		}
+		zout.close();
 	}
 }

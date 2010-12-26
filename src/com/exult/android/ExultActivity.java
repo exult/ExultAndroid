@@ -310,18 +310,25 @@ public class ExultActivity extends Activity {
 		        			return true;
 		        		} else
 		        			return false;
-		        	/* ++++++++DOESN'T work yet.
 		        	case KeyEvent.KEYCODE_R:
 		        		if (event.isAltPressed()) {
 		        			try {
-		        				gwin.restoreGamedat(0);	//++++++++++TESTING.
+		        				gwin.restoreGamedat(1);	//++++++++++TESTING.
 		        				gwin.read();
 		        			} catch (IOException e) {
 		        				fatal("Failed to restore Game 0");
 		        			}
 		        		}
 		        		return true;
-		        	*/
+		        	case KeyEvent.KEYCODE_S:
+		        		if (event.isAltPressed()) {
+		        			try {
+		        				gwin.saveGamedat(1, "Test save to zip");	//++++++++++TESTING.
+		        			} catch (IOException e) {
+		        				fatal("Failed to save Game 1");
+		        			}
+		        		}
+		        		return true;
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {
 		        			finish();
