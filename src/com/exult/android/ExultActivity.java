@@ -1,5 +1,6 @@
 package com.exult.android;
 
+import java.io.IOException;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Debug;
@@ -281,8 +282,8 @@ public class ExultActivity extends Activity {
     	};
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
-    		if (UsecodeMachine.running > 0 || clickPoint != null)
-    			return false;
+    			if (UsecodeMachine.running > 0 || clickPoint != null)
+    				return false;
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
 		        	if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ||
 		        		keyCode == KeyEvent.KEYCODE_SHIFT_RIGHT)
@@ -309,6 +310,18 @@ public class ExultActivity extends Activity {
 		        			return true;
 		        		} else
 		        			return false;
+		        	/* ++++++++DOESN'T work yet.
+		        	case KeyEvent.KEYCODE_R:
+		        		if (event.isAltPressed()) {
+		        			try {
+		        				gwin.restoreGamedat(0);	//++++++++++TESTING.
+		        				gwin.read();
+		        			} catch (IOException e) {
+		        				fatal("Failed to restore Game 0");
+		        			}
+		        		}
+		        		return true;
+		        	*/
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {
 		        			finish();

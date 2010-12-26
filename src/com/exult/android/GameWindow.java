@@ -39,6 +39,7 @@ public class GameWindow extends GameSingletons {
 	// Options:
 	int stepTileDelta = 8;				// Multiplier for the delta in startActor.
 	//	Game state values.
+	private boolean combat;			// True if in combat.
 	private int skipAboveActor;		// Level above actor to skip rendering.
 	private int numNpcs1;			// Number of type1 NPC's.
 	/*
@@ -1098,13 +1099,120 @@ public class GameWindow extends GameSingletons {
 			}
 		// ++++++ read_save_names();		// Read in saved-game names.	
 		return true;
+	}
+	/*
+	 *	Clear out world's contents.  Should be used during a 'restore'.
+	 */
+	private void clearWorld() {
+		/* +++++++FINISH
+		Combat::resume();
+		*/
+		tqueue.clear();		// Remove all entries.
+		clearDirty();
+		UsecodeScript.clear();	// Clear out all scheduled usecode.
+		int cnt = maps.size();
+		for (int i = 0; i < cnt; ++i)
+			maps.elementAt(i).clear();
+		setMap(0);			// Back to main map.
+		MonsterActor.deleteAll();	// To be safe, del. any still around.
+		//+++++++++ Notebook_gump::clear();
+		mainActor = null;
+		cameraActor = null;
+		numNpcs1 = 0;
+		//++++++FINISH theftCx = theftCy = -1;
+		combat = false;
+		npcs.setSize(0);			// NPC's already deleted above.
+		/* ++++++FINISH
+		bodies.setSize(0);
+		moving_barge = 0;		// Get out of barge mode.
+		special_light = 0;		// Clear out light spells.
+		ambient_light = false;	// And ambient lighting.
+		*/
+		effects.removeAllEffects();
+		/* ++++++FINISH
+		Schedule_change::clear();
+		*/
+	}
+	/*
+	 *	Restore game by reading in 'gamedat'.
+	 */
+	public void read() {
+		/* +++++++++FINISH
+		Audio::get_ptr().cancel_streams();
+	#ifdef RED_PLASMA
+		// Display red plasma during load...
+		setup_load_palette();
+	#endif
+		*/
+		clearWorld();			// Wipe clean.
+		readGwin();			// Read our data.
+						// DON'T do anything that might paint()
+						//   before calling read_npcs!!
+		setupGame();	// Read NPC's, usecode.
+	}
+	/*
+	 *	Read data for the game.
+	 *	 */
+	private void readGwin() {
+		/* +++++++++++FINISH
+		if (!clock.in_queue())		// Be sure clock is running.
+			tqueue.add(Game::get_ticks(), clock, 
+						reinterpret_cast<long>(this));
+		*/
+		InputStream gin = null;
+		try {
+			gin = EUtil.U7openStream(EFile.GWINDAT);	// Gamewin.dat.
+		} catch (IOException e) {
+			return;
 		}
+						// Start with scroll coords (in tiles).
+		scrolltx = EUtil.Read2(gin);
+		scrollty = EUtil.Read2(gin);
+		/* ++++++++++FINISH
+						// Read clock.
+		clock.reset();
+		clock.set_day(gin.read2());
+		clock.set_hour(gin.read2());
+		clock.set_minute(gin.read2());
+		special_light = gin.read4();
+		armageddon = false;		// Old saves may not have this yet.
+		
+		if (gin.available() == 0) {
+			special_light = 0;
+			return;//++++++CLOSE
+		}
+		int track_num = gin.read4();
+		int repeat = gin.read4();
+		if (!gin_stream.good())
+		{
+			Audio::get_ptr().stop_music();
+			return;//++++++++++CLOSE
+		}
+
+		Audio::get_ptr().start_music(track_num, repeat != false);
+		armageddon = gin.read1() == 1 ? true : false;
+		if (!gin_stream.good())
+			armageddon = false;
+
+		ambient_light = gin.read1() == 1 ? true : false;
+		if (!gin_stream.good())
+			ambient_light = false;
+		*/
+		try {
+			gin.close();
+		} catch (IOException e) { }
+	}
 	/*
 	 *	Write out the gamedat directory from a saved game.
 	 *
 	 *	Output: Aborts if error.
 	 */
+	void restoreGamedat(int num) throws IOException {
+		String nm = String.format(EFile.SAVENAME, num, game.isBG() ? "bg" : "si");
+		restoreGamedat(nm);
+	}
 	void restoreGamedat(String fname) throws IOException {
+		System.out.println("restoreGamedat:  " + fname);
 		/*
 						// Check IDENTITY.
 		const char *id = get_game_identity(fname);
@@ -1126,14 +1234,20 @@ public class GameWindow extends GameSingletons {
 		EUtil.U7mkdir("<GAMEDAT>");		// Create dir. if not already there. Don't
 										// use GAMEDAT define cause that's got a
 										// trailing slash
-		// Check for a ZIP file first
-		//++++++ FINISH if (restoreGamedatZip(fname))
-		//++++++	return;
+		if (!EUtil.isFlex(fname)) {
+			restoreGamedatZip(fname);
+			return;
+		}
 		RandomAccessFile in = EUtil.U7open(fname, true);
 		if (in == null)
 			ExultActivity.fatal("Can't open file: " + EUtil.getSystemPath(fname));
 		removeBeforeRestore();
-		restoreFlexFiles(in, EFile.GAMEDAT);
+		try {
+			restoreFlexFiles(in, EFile.GAMEDAT);
+		} catch (IOException e) {
+			ExultActivity.fatal("Error restoring from: " + EUtil.getSystemPath(fname));
+			throw e;
+		}
 		in.close();
 	/* #ifdef RED_PLASMA
 		load_palette_timer = 0;
@@ -1147,6 +1261,7 @@ public class GameWindow extends GameSingletons {
 	void restoreFlexFiles(RandomAccessFile in, String basepath) throws IOException {
 		in.seek(0x54);			// Get to where file count sits.
 		int numfiles = EUtil.Read4(in);
+		System.out.println("RestoreFlexFiles: cnt = " + numfiles);
 		in.seek(0x80);			// Get to file info.
 						// Read pos., length of each file.
 		int finfo[] = new int[2*numfiles];
@@ -1169,7 +1284,7 @@ public class GameWindow extends GameSingletons {
 				;
 			if (nm13[nlen] == '.')	// Watch for names ending in '.'.
 				nlen--;
-			String fname = basepath + new String(nm13, 0, nlen);;
+			String fname = basepath + new String(nm13, 0, nlen);
 						// Now read the file.
 			byte buf[] = new byte[len];
 			in.read(buf);
@@ -1180,7 +1295,8 @@ public class GameWindow extends GameSingletons {
 				out.write(buf);	// Then write it out.
 				out.close();
 			} catch (IOException e) {
-				// abort("Error writing '%s'.", fname);
+				ExultActivity.fatal(String.format("Error writing '%1$s'.", 
+														EUtil.getSystemPath(fname)));
 				throw e;
 			}
 			
@@ -1188,19 +1304,23 @@ public class GameWindow extends GameSingletons {
 		}
 	}
 	private boolean restoreGamedatZip(String fname) {
-		if (EUtil.isFlex(fname))
-			return false;
+		System.out.println("restoreGamedatZip: " + fname);
 		InputStream in;
 		ZipInputStream zin;
 		try {
 			in = EUtil.U7openStream(fname);
 			zin = new ZipInputStream(in);
+			String nm = EUtil.getSystemPath(fname);
+			System.out.println("restoreGamedatZip: opening " + nm);
 		} catch (IOException e) {
+			System.out.println("Zip exception: " + e.getMessage());
+			ExultActivity.fileFatal(fname);
 			return false;
 		}
 		removeBeforeRestore();
 		ZipEntry ze = null;
 		byte buf[] = null;
+		System.out.println("About to read zip entries");
 		try {
 			while ((ze = zin.getNextEntry()) != null) {
 				String fnm = ze.getName();
@@ -1215,12 +1335,14 @@ public class GameWindow extends GameSingletons {
 				OutputStream out = EUtil.U7create(fname);
 				out.write(buf);	// Then write it out.
 				out.close();
+				zin.closeEntry();
 			} 
 			// CYCLE_RED_PLASMA();
-	        zin.closeEntry();
+	        
 	        zin.close();
 	    } catch (IOException e) {
-			// abort("Error writing '%s'.", fname);
+	    	ExultActivity.fatal(String.format("Error writing '%1$s': %2$s", 
+	    							EUtil.getSystemPath(fname), e.getMessage()));
 			return false;
 		}
 	    return true;

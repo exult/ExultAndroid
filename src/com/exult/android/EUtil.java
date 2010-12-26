@@ -188,7 +188,7 @@ public class EUtil {
 		addSystemPath("<PATCH>", bgbase + "/PATCH");
 		addSystemPath("<STATIC>", bgbase + "/STATIC");
 		addSystemPath("<GAMEDAT>", bgbase + "/GAMEDAT");
-		addSystemPath("<SAVEGAME>", bgbase + "/SAVEGAME");
+		addSystemPath("<SAVEGAME>", bgbase);
 	}
 	public static RandomAccessFile U7open(String nm, boolean hardfail)
 												throws IOException {
@@ -246,7 +246,7 @@ public class EUtil {
 	}
 	public static OutputStream U7create(String nm) throws IOException {
 		String fname = getSystemPath(nm);
-		return new BufferedOutputStream(new FileOutputStream(fname));
+		return new BufferedOutputStream(new FileOutputStream(fname), 0x8000);
 	}
 	/*
 	 *	Return the direction for a given slope (0-7).

@@ -1,7 +1,7 @@
 package com.exult.android;
 import android.graphics.Point;
 
-public class EffectsManager extends GameSingletons {
+public final class EffectsManager extends GameSingletons {
 	private SpecialEffect effects;	// Sprite effects, projectiles, etc.
 	private TextEffect texts;		// Text snippets.
 	
@@ -27,6 +27,12 @@ public class EffectsManager extends GameSingletons {
 			effect.prev.next = effect.next;
 		else				// Head of chain.
 			effects = effect.next;
+	}
+	public void removeAllEffects() {
+		while (effects != null)
+			removeEffect(effects);
+		while (texts != null)
+			removeTextEffect(texts);
 	}
 	/*
 	 *  Add text over a given item.

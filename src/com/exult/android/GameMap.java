@@ -62,6 +62,26 @@ public class GameMap extends GameSingletons {
 	public final int getNum() {
 		return num;
 	}
+	public final void clear() {
+		if (num == 0)
+			clearChunks();
+						// Delete all chunks (& their objs).
+		for (int i = 0; i < EConst.c_num_chunks*EConst.c_num_chunks; i++)
+				objects[i] = null;
+						// Clear 'read' flags.
+		Arrays.fill(schunkRead, false);
+	}
+	/*
+	 *	Clear the static data.
+	 */
+	private void clearChunks() {
+		chunkTerrains = null;
+		try {
+			chunks.close();	// Close 'u7chunks'.
+		} catch (IOException e) { }
+		chunks = null;
+		readAllTerrain = false;
+	}
 	// Init. the static data.
 	public static void initChunks() {
 		int numChunkTerrains;
