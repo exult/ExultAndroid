@@ -169,4 +169,19 @@ public class MainActor extends Actor {
 		// If change in Superchunk number, apply Old Style caching emulation
 		// +++++FINISH gwin.emulate_cache(olist, nlist);
 	}
+	/*
+	 *	Move (teleport) to a new spot.
+	 */
+	public void move(int newtx, int newty, int newlift, int newmap) {
+		MapChunk olist = getChunk();	// Store old chunk list.
+		// Move it.
+		super.move(newtx, newty, newlift, newmap);
+		MapChunk nlist = getChunk();
+		if (nlist != olist)
+			switchedChunks(olist, nlist);
+		int tx = getTx(), ty = getTy();
+		// +++++++FINISH gwin.set_ice_dungeon(nlist->is_ice_dungeon(tx, ty));
+		if (gwin.setAboveMainActor(nlist.isRoof(tx, ty, newlift)))
+			;// +++++FINISH gwin.set_in_dungeon(nlist.hasDungeon() ? nlist.isDungeon(tx, ty) : 0);
+	}
 }

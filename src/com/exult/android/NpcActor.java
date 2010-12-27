@@ -175,5 +175,37 @@ public class NpcActor extends Actor {
 		*/
 		return true;			// Add back to queue for next time.
 	}
-
+	/*
+	 *	Remove an object from its container, or from the world.
+	 *	The object is deleted.
+	 */
+	public void removeThis() {
+		setAction(null);
+	// Messes up resurrection	num_schedules = 0;
+		tqueue.remove(this);// Remove from time queue.
+		// +++++++++ FINISH gwin.remove_nearby_npc(this);	// Remove from nearby list.
+						// Store old chunk list.
+		MapChunk olist = getChunk();
+		super.removeThis();	// Remove, but don't ever delete an NPC
+		switchedChunks(olist, null);
+		setInvalid();
+		/* +++++ I think we don't need this.
+		if (!nodel && npc_num > 0)	// Really going?
+			unused = true;		// Mark unused if a numbered NPC.
+		*/
+	}
+	/*
+	 *	Move (teleport) to a new spot.
+	 */
+	public void move(int newtx, int newty, int newlift, int newmap) {
+		MapChunk olist = getChunk();	// Store old chunk list.
+						// Move it.
+		super.move(newtx, newty, newlift, newmap);
+		MapChunk nlist = getChunk();
+		if (nlist != olist) {
+			switchedChunks(olist, nlist);
+			if (olist != null)		// Moving back into world?
+				dormant = true;	// Cause activation if painted.
+			}
+	}
 }

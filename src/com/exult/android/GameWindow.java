@@ -1090,7 +1090,7 @@ public class GameWindow extends GameSingletons {
 					restoreGamedat(fname);
 				else {
 						// Flag that we're reading U7 file.
-					// Game::set_new_game();
+					game.setNewGame();
 					restoreGamedat(fname = EFile.INITGAME);
 				}
 			} catch (IOException e) {
@@ -1256,27 +1256,20 @@ public class GameWindow extends GameSingletons {
 	 *	Save game by writing out to the 'gamedat' directory.  Call before saveGamedat().
 	 */
 	public void write() throws IOException {
-		setBusyMessage("Saving Game");
-		Thread t = new Thread() {
-			public void run() {
-				int mapcnt = maps.size();
-				try {
-					for (int i = 0; i < mapcnt; ++i)
-						maps.elementAt(i).writeIreg();	// Write ireg files.
-					writeNpcs();			// Write out npc.dat.
-					/*+++++++++FINISH
-					usecode.write();		// Usecode.dat (party, global flags).
-					//+++++ Notebook_gump::write();		// Write out journal.
-					writeGwin();			// Write our data.
-					write_saveinfo();
-					 */
-				} catch (IOException e) {
-					ExultActivity.fatal("Error saving: " + e.getMessage());
-				}
-				setBusyMessage(null);
-			}
-		};
-		t.start();
+		int mapcnt = maps.size();
+		try {
+			for (int i = 0; i < mapcnt; ++i)
+				maps.elementAt(i).writeIreg();	// Write ireg files.
+			writeNpcs();			// Write out npc.dat.
+			/*+++++++++FINISH
+			usecode.write();		// Usecode.dat (party, global flags).
+			//+++++ Notebook_gump::write();		// Write out journal.
+			writeGwin();			// Write our data.
+			write_saveinfo();
+			 */
+		} catch (IOException e) {
+			ExultActivity.fatal("Error saving: " + e.getMessage());
+		}
 	}
 	/*
 	 * The whole 'save'.
@@ -1294,6 +1287,7 @@ public class GameWindow extends GameSingletons {
 			} catch (IOException e) {
 				ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
 			}
+			System.out.println("Finished save");
 			gwin.setBusyMessage(null);
 		}
 	}	
@@ -1549,6 +1543,7 @@ public class GameWindow extends GameSingletons {
 		try {
 			in = EUtil.U7openStream(fname);
 			sz = in.available();
+			System.out.println("Saving to zip: " + fname + ", sz = " + sz);
 			if (buf == null || buf.length < sz)
 				buf = new byte[sz];
 			in.read(buf, 0, sz);
@@ -1557,7 +1552,7 @@ public class GameWindow extends GameSingletons {
 			// ++++++++return false;
 			return true;
 		}
-		System.out.println("Saving to zip: " + fname + ", sz = " + sz);
+		
 		ZipEntry entry = new ZipEntry(fname);
 		zout.putNextEntry(entry); // Store entry
 		zout.write(buf, 0, sz);

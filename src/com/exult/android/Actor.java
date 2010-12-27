@@ -1200,18 +1200,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		// This is used to get around parts of the files that we don't know
 		// what the uses are. 'fix_first' is used fix issues in the originals
 		// files that cause problems for the extra info we save.
-		boolean fix_first = true; // +++++++ Game::is_new_game();
+		boolean fix_first = game.isNewGame();
 							
 		init();				// Clear rest of stuff.
 		int locx = out.read()&0xff;	// Get chunk/tile coords.
 		int locy = out.read()&0xff;
 							// Read & set shape #, frame #.
 		int shnum = EUtil.Read2(out)&0xffff;
-		/* +++++
-		if (num == 0 && Game::get_game_type() != BLACK_GATE && 
-								(shnum & 0x3ff) < 12)
+		if (num == 0 && !game.isBG() && (shnum & 0x3ff) < 12)
 			setShape((shnum & 0x3ff) | 0x400);
-		else */
+		else
 			setShape(shnum & 0x3ff);
 
 		setFrame(shnum >> 10);
@@ -1293,7 +1291,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		// In SI - Strength (0-4), skin colour(5-6), freeze (7)
 		int strength_val = out.read();
 
-		if (true /* +++++ Game::get_game_type() == BLACK_GATE */) {
+		if (game.isBG()) {
 			setProperty(Actor.strength, strength_val & 0x3F);
 
 			if (num == 0) {
@@ -1514,7 +1512,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		out.skip(7);
 		byte namebuf[] = new byte[16];
 		out.read(namebuf);
-		//+++++++++++++++
 		int len;
 		for (len = 0; len < 16; len++)
 			if (namebuf[len] == 0) 
@@ -1546,9 +1543,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 							// Get tile #'s.
 		int tilex = locx & 0xf;
 		int tiley = locy & 0xf;
-		if (num == 0)//+++++++DEBUG
-			System.out.printf("Reading Avatar, locx = %1$d, cx = %2$d, tilex = %3$d",
-					locx, cx, tilex);
+		// if (num == 0)//+++++++DEBUG
+			System.out.printf("Reading %1$s, locx = %2$d, cx = %3$d, tilex = %4$d\n",
+					getName(), locx, cx, tilex);
 		setShapePos(tilex, tiley);
 		MapChunk olist = npcmap.getChunk(scx + cx, scy + cy);
 		setInvalid();			// Not in world yet.

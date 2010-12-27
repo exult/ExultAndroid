@@ -3,10 +3,17 @@ import java.util.HashMap;
 
 public abstract class Game extends GameSingletons {
 	protected int gameType;
+	private boolean newGame;
 	private HashMap<String,Integer> shapes;
 	public Game() {
 		shapes = new HashMap<String,Integer>();
 		GameSingletons.game = this;
+	}
+	public boolean isNewGame() {
+		return newGame;
+	}
+	public void setNewGame() {
+		newGame = true;
 	}
 	public void addShape(String nm, int shapenum) {
 		shapes.put(nm, shapenum);
