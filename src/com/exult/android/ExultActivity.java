@@ -315,12 +315,7 @@ public class ExultActivity extends Activity {
 		        			return false;
 		        	case KeyEvent.KEYCODE_R:
 		        		if (event.isAltPressed()) {
-		        			try {
-		        				gwin.restoreGamedat(1);	//++++++++++TESTING.
-		        				gwin.read();
-		        			} catch (IOException e) {
-		        				fatal("Failed to restore Game 1");
-		        			}
+		        			gwin.read(1);	// +++++++TESTING
 		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_S:

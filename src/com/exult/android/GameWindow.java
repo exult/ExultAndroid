@@ -1161,6 +1161,29 @@ public class GameWindow extends GameSingletons {
 		*/
 	}
 	/*
+	 * The whole 'restore'.
+	 */
+	static class RestoreThread extends Thread {
+		private int num;
+		public RestoreThread(int n) {
+			num = n;
+		}
+		public void run() {
+			try {
+				gwin.restoreGamedat(num);
+				gwin.read();
+			} catch (IOException e) {
+				ExultActivity.fatal(String.format("Failed restoring: %1$s", e.getMessage()));
+			}
+			gwin.setBusyMessage(null);
+		}
+	}	
+	public void read(int num) {
+		setBusyMessage("Restoring Game");
+		Thread t = new RestoreThread(num);
+		t.start();
+	}
+	/*
 	 *	Restore game by reading in 'gamedat'.
 	 */
 	public void read() {
@@ -1289,6 +1312,7 @@ public class GameWindow extends GameSingletons {
 			npcs.elementAt(i).write(out);
 			
 		out.close();
+		/* ++++++++++++++PUT BACK
 		//++++++FINISH writeSchedules();		// Write schedules
 					// Now write out monsters in world.
 		out = EUtil.U7create(EFile.MONSNPCS);
@@ -1308,6 +1332,7 @@ public class GameWindow extends GameSingletons {
 				mact.write(out);
 		}
 		out.close();
+		*/
 	}
 	/*
 	 *	Write out the gamedat directory from a saved game.
