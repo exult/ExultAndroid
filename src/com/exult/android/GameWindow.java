@@ -894,13 +894,12 @@ public class GameWindow extends GameSingletons {
 		Game::clear_avname();
 		Game::clear_avsex();
 		Game::clear_avskin();
-
+		*/
 		// Update gamedat if there was a change
 		if (changed) {
-			schedule_npcs(6,7,false);
-			write_npcs();
+			//++++++++++FINISH schedule_npcs(6,7,false);
+			writeNpcs();
 		}
-		*/
 	}
 	public void initFiles(boolean cycle) {
 		ShapeID.loadStatic();
@@ -1214,7 +1213,7 @@ public class GameWindow extends GameSingletons {
 	/*
 	 *	Save game by writing out to the 'gamedat' directory.  Call before saveGamedat().
 	 */
-	public void write() {
+	public void write() throws IOException {
 		// Lets just show a nice message on screen first
 		int width = getWidth();
 		int centre_x  = width/2;
@@ -1229,11 +1228,11 @@ public class GameWindow extends GameSingletons {
 		fonts.paintText(0, "Saving Game", centre_x-text_width/2, 
 								centre_y-text_height);
 		// ++++++++ show(true);
-		/*+++++++++FINISH
 		int mapcnt = maps.size();
 		for (int i = 0; i < mapcnt; ++i)
 			maps.elementAt(i).writeIreg();	// Write ireg files.
 		writeNpcs();			// Write out npc.dat.
+		/*+++++++++FINISH
 		usecode.write();		// Usecode.dat (party, global flags).
 		//+++++ Notebook_gump::write();		// Write out journal.
 		writeGwin();			// Write our data.
@@ -1244,12 +1243,16 @@ public class GameWindow extends GameSingletons {
 	 * The whole 'save'.
 	 */
 	public void write(int num, String savename) {
-		write();
+		
 		try {
+			write();
 			saveGamedat(num, savename);
 		} catch (IOException e) {
 			ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
 		}
+	}
+	private void writeNpcs() throws IOException {
+		//++++++++++++FINISH
 	}
 	/*
 	 *	Write out the gamedat directory from a saved game.

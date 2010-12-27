@@ -598,6 +598,21 @@ public class GameMap extends GameSingletons {
 		return ter != null ? ter : readTerrain(tnum);
 	}
 	/*
+	 *	Write string entry and/or return length of what's written.
+	 */
+	public static void writeString(OutputStream ireg, String str) throws IOException {
+		int len = 1 + str.length();
+		ireg.write(IREG_SPECIAL);
+		ireg.write(IREG_STRING);
+		EUtil.Write2(ireg, len);
+		ireg.write(str.getBytes());
+		ireg.write(0);
+	}
+	public static int getIregStringLength(String str) {
+		int len = 1 + str.length();
+		return len + 4;
+	}
+	/*
 	 * Write modified 'u7ireg' files.
 	 */
 	public void writeIreg() throws IOException {

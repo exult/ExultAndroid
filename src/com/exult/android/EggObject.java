@@ -1,5 +1,7 @@
 package com.exult.android;
 import com.exult.android.shapeinf.*;
+import java.io.OutputStream;
+import java.io.IOException;
 import java.util.Vector;
 
 public class EggObject extends IregGameObject {
@@ -13,7 +15,9 @@ public class EggObject extends IregGameObject {
 	protected boolean solid_area;	// 1 if area is solid, 0 if outline.
 	private static Rectangle world = new Rectangle(0, 0, 
 			EConst.c_num_chunks*EConst.c_tiles_per_chunk,
-			EConst.c_num_chunks*EConst.c_tiles_per_chunk);
+			EConst.c_num_chunks*EConst.c_tiles_per_chunk);	
+	private static final byte writeBuf[] = new byte[30];
+
 	private static Rectangle inside = new Rectangle();	// A temp.
 	// +++++FINISH Animator *animator;		// Controls animation.
 	protected void initField(byte ty) {
@@ -393,12 +397,54 @@ public class EggObject extends IregGameObject {
 	public boolean isEgg() { 
 		return true; 
 	}
-	/* +++++++FINISH
-		// Write out to IREG file.
-	virtual void write_ireg(DataSource* out);
+	/*
+	 *	Write out.
+	 */
+
+	public void writeIreg(OutputStream out) throws IOException {
+		
+		int sz = data3 > 0 ? 14 : 12;
+		int ind = writeCommonIreg(sz, writeBuf);
+		int tword = type&0xf;// Set up 'type' word.
+		tword |= ((criteria&7)<<4);
+		tword |= (((flags>>nocturnal)&1)<<7);
+		tword |= (((flags>>once)&1)<<8);
+		tword |= (((flags>>hatched)&1)<<9);
+		tword |= ((distance&0x1f)<<10);
+		tword |= (((flags>>auto_reset)&1)<<15);
+		EUtil.Write2(writeBuf, ind, tword);
+		ind += 2;
+		writeBuf[ind++] = probability;
+		EUtil.Write2(writeBuf, ind, data1);
+		ind += 2;
+		writeBuf[ind++] = (byte)((getLift()&15)<<4);
+		EUtil.Write2(writeBuf, ind, data2);
+		ind += 2;
+		if (data3 > 0) {
+			EUtil.Write2(writeBuf, ind, data3);
+			ind += 2;
+		}
+		out.write(writeBuf, 0, ind);
+		String str1 = getStr1();
+		if (str1 != null && str1.charAt(0) != 0)	// This will be usecode fun. name.
+			GameMap.writeString(out, str1);
+						// Write scheduled usecode.
+		/* +++++++++FINISH
+		GameMap.writeScheduled(out, this);	
+		*/
+	}
 	// Get size of IREG. Returns -1 if can't write to buffer
-	virtual int get_ireg_size();
-	*/
+	public int getIregSize() {
+		// These shouldn't ever happen, but you never know
+		/*  +++++++++FINISH
+		if (gumpman.findGump(this) || UsecodeScript.find(this))
+			return -1;
+		*/
+		String str1 = getStr1();
+		boolean hasStr = str1 != null && str1.length() != 0;
+		return 8 + getCommonIregSize() + ((data3 > 0) ? 2 : 0)
+			+ (hasStr ? GameMap.getIregStringLength(str1) : 0);
+	}
 	public void reset() { 
 		flags &= ~(1 << hatched); 
 	}

@@ -1,4 +1,6 @@
 package com.exult.android;
+import java.io.OutputStream;
+import java.io.IOException;
 
 /*
  * These are moveable objects.
@@ -7,6 +9,7 @@ public class IregGameObject extends GameObject {
 	private ContainerGameObject owner;	// Container this is in, or 0.
 	protected int flags;		// 32 flags used in 'usecode'.
 	protected int flags2;		// Another 32 flags used in 'usecode'.
+	private static final byte writeBuf[] = new byte[20];
 	
 	public IregGameObject(int shapenum, int framenum, int tilex, int tiley, int lft) {
 		super(shapenum, framenum, tilex, tiley, lft);
@@ -92,9 +95,71 @@ public class IregGameObject extends GameObject {
 							tilex, tiley, lift, 0);
 		} else
 			return new IregGameObject(shnum, frnum, tilex, tiley, lift);
-	}				// Write common IREG data.
+	}				// Write 1 IREG data.
 	public final int getCommonIregSize() {
 		return (getShapeNum() >= 1024 || getFrameNum() >= 64) 
 								? 7 : 5; 
+	}
+	/*
+	 *	Write the common IREG data for an entry.
+	 *	Note:  Length is incremented if this is an extended entry (shape# >
+	 *		1023).
+	 *	Output:	Index past data written.
+	 */
+	protected int writeCommonIreg
+		(
+		int norm_len,			// Normal length (if not extended).
+		byte buf[]		// Buffer to be filled.
+		)
+		{
+		int endptr;
+		int ind = 0;
+		int shapenum = getShapeNum(), framenum = getFrameNum();
+		if (shapenum >= 1024 || framenum >= 64) {
+			buf[ind++] = (byte)GameMap.IREG_EXTENDED;
+			norm_len++;
+			buf[3] = (byte)(shapenum&0xff);
+			buf[4] = (byte)((shapenum>>8)&0xff);
+			buf[5] = (byte)framenum;
+			endptr = 6;
+		} else {
+			buf[3] = (byte)(shapenum&0xff);
+			buf[4] = (byte)(((shapenum>>8)&3) | (framenum<<2));
+			endptr = 5;
+		}
+		buf[0] = (byte)norm_len;
+		if (owner != null) {			// Coords within gump.
+			buf[1] = (byte)getTx();
+			buf[2] = (byte)getTy();
+		} else {			// Coords on map.
+			int cx = chunk != null ? chunk.getCx() : 255;
+			int cy = chunk != null ? chunk.getCy() : 255;
+			buf[1] = (byte)(((cx%16) << 4) | (getTx()&0xff));
+			buf[2] = (byte)(((cy%16) << 4) | (getTy()&0xff));
+		}
+		return endptr;
+	}
+	public void writeIreg(OutputStream out) throws IOException {
+		int ind = writeCommonIreg(10, writeBuf);
+		writeBuf[ind++] = (byte)((getLift()&15)<<4);
+		writeBuf[ind] = (byte)getQuality();
+		ShapeInfo info = getInfo();
+		if (info.hasQualityFlags()) {			// Store 'quality_flags'.
+			writeBuf[ind] = (byte)((getFlag(GameObject.invisible)?1:0) +
+					((getFlag(GameObject.okay_to_take)?1:0) << 3));
+		}
+					// Special case for 'quantity' items:
+		else if (getFlag(GameObject.okay_to_take) && info.hasQuantity())
+			writeBuf[ind] |= 0x80;
+		++ind;
+		writeBuf[ind++] = (byte)(getFlag(GameObject.is_temporary) ? 1 : 0);
+		writeBuf[ind++] = 0;			// Filler, I guess.
+		writeBuf[ind++] = 0;
+		writeBuf[ind++] = 0;
+		out.write(writeBuf, 0, ind);
+					// Write scheduled usecode.
+		/* +++++++++FINISH
+		GameMap.writeScheduled(out, this);	
+		 */
 	}
 }

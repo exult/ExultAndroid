@@ -6,6 +6,7 @@ import java.util.Vector;
 public class ContainerGameObject extends IregGameObject {
 	private int volumeUsed;		// Amount of volume occupied.
 	private byte resistance;	// Resistance to attack.
+	private static final byte writeBuf[] = new byte[20];
 	protected ObjectList objects;
 	
 	public ContainerGameObject(int shapenum, int framenum, int tilex, 
@@ -412,33 +413,33 @@ public class ContainerGameObject extends IregGameObject {
 	/*
 	 *	Write out container and its members.
 	 */
-	public void writeIreg(OutputStream out) {
-		/* +++++++FINISH
-		unsigned char buf[20];		// 12-byte entry.
-		uint8 *ptr = write_common_ireg(12, buf);
-		GameObject first = objects.get_first(); // Guessing: +++++
-		unsigned short tword = first ? first.get_prev().getShapeNum() 
+	public void writeIreg(OutputStream out) throws IOException {
+		int ind = writeCommonIreg(12, writeBuf);
+		GameObject first = objects.getFirst(); // Guessing: +++++
+		int tword = first != null ? first.getPrev().getShapeNum() 
 										: 0;
-		Write2(ptr, tword);
-		*ptr++ = 0;			// Unknown.
-		*ptr++ = getQuality();
-		*ptr++ = 0;		// "Quantity".
-		*ptr++ = (get_lift()&15)<<4;	// Lift 
-		*ptr++ = (unsigned char)resistance;		// Resistance.
+		EUtil.Write2(writeBuf, ind, tword);
+		ind += 2;
+		writeBuf[ind++] = 0;			// Unknown.
+		writeBuf[ind++] = (byte)getQuality();
+		writeBuf[ind++] = 0;		// "Quantity".
+		writeBuf[ind++] = (byte)((getLift()&15)<<4);	// Lift 
+		writeBuf[ind++] = resistance;		// Resistance.
 						// Flags:  B0=invis. B3=okay_to_take.
-		*ptr++ = (getFlag(GameObject.invisible) != 0) +
-			 ((getFlag(GameObject.okay_to_take) != 0) << 3);
-		out.write((char*)buf, ptr - buf);
+		writeBuf[ind++] = (byte)((getFlag(GameObject.invisible) ? 1 : 0) +
+			 ((getFlag(GameObject.okay_to_take) ? 1 : 0) << 3));
+		out.write(writeBuf, 0, ind);
 		writeContents(out);		// Write what's contained within.
 						// Write scheduled usecode.
-		Game_map.write_scheduled(out, this);	
+		/* ++++++++FINISH
+		GameMap.writeScheduled(out, this);	
 		*/
-		}
+	}
 	// Get size of IREG. Returns -1 if can't write to buffer
 	public int getIregSize() {
-		/* ++++++++++
+		/* ++++++++++++
 		// These shouldn't ever happen, but you never know
-		if (gumpman.find_gump(this) || Usecode_script.find(this))
+		if (gumpman.findGump(this) || UsecodeScript.find(this))
 			return -1;
 		*/
 		int total_size = 8 + getCommonIregSize();
@@ -459,7 +460,6 @@ public class ContainerGameObject extends IregGameObject {
 	/*
 	 *	Write contents (if there is any).
 	 */
-
 	public void  writeContents(OutputStream out) throws IOException {
 		if (!objects.isEmpty()) {	// Now write out what's inside.
 			GameObject obj;

@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Vector;
 import android.graphics.Point;
 import java.io.OutputStream;
+import java.io.IOException;
 
 public abstract class GameObject extends ShapeID {
 	//	Flags
@@ -562,7 +563,7 @@ public abstract class GameObject extends ShapeID {
 	public boolean isFindable() { 
 		return true; 
 	}
-	public void writeIreg(OutputStream out) {
+	public void writeIreg(OutputStream out) throws IOException {
 	}
 	public int getIregSize() {
 		return 0;

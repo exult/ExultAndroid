@@ -1,6 +1,7 @@
 package com.exult.android;
 import com.exult.android.shapeinf.*;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 
 public abstract class Actor extends ContainerGameObject implements TimeSensitive {
@@ -1576,6 +1577,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (Game::get_game_type() == BLACK_GATE && Game::get_avname() && (num == 0 || num == 1))
 			ready_best_weapon();
 		*/				
+	}
+	public void writeIreg(OutputStream out) throws IOException {	// Don't write to IREG.
+	}
+	public void writeContents(OutputStream out) throws IOException {
+		//++++++++++++FINISH
 	}
 	/*
 	 * For TimeSensitive
