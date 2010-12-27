@@ -228,12 +228,18 @@ public abstract class GameObject extends ShapeID {
 	public final GameObject getPrev() {
 		return prev;
 	}
+	public final int getCx() {
+		return chunk != null ? chunk.getCx() : 255;
+	}
+	public final int getCy() {
+		return chunk != null ? chunk.getCy() : 255;
+	}
 	//	Get absolute tile coords.
 	public final int getTileX() {
-		return chunk != null ? chunk.getCx()*EConst.c_tiles_per_chunk + tx : 255*EConst.c_tiles_per_chunk;
+		return getCx()*EConst.c_tiles_per_chunk + tx;
 	}
 	public final int getTileY() {
-		return chunk != null ? chunk.getCy()*EConst.c_tiles_per_chunk + ty : 255*EConst.c_tiles_per_chunk;
+		return getCy()*EConst.c_tiles_per_chunk + ty;
 	}
 	//	Get footprint in absolute tiles.
 	public final void getFootprint(Rectangle r) {

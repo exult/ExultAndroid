@@ -1,5 +1,7 @@
 package com.exult.android;
 import java.util.Vector;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.io.RandomAccessFile;
 import java.io.OutputStream;
 import java.io.InputStream;
@@ -1251,8 +1253,35 @@ public class GameWindow extends GameSingletons {
 			ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
 		}
 	}
-	private void writeNpcs() throws IOException {
-		//++++++++++++FINISH
+	private void writeNpcs() throws IOException {	
+		int num_npcs = npcs.size();
+		OutputStream out = EUtil.U7create(EFile.NPC_DAT);
+
+		EUtil.Write2(out, numNpcs1);	// Start with counts.
+		EUtil.Write2(out, npcs.size() - numNpcs1);
+		for (int i = 0; i < num_npcs; i++)
+			npcs.elementAt(i).write(out);
+			
+		out.close();
+		//++++++FINISH writeSchedules();		// Write schedules
+					// Now write out monsters in world.
+		out = EUtil.U7create(EFile.MONSNPCS);
+		int cnt = 0;
+		HashSet<MonsterActor> monsters = MonsterActor.getAll();
+		Iterator<MonsterActor> iter = monsters.iterator();
+		while (iter.hasNext()) {		// Count them.
+			MonsterActor mact = iter.next();
+			if (!mact.isDead())		// Alive?
+				cnt++;
+		}
+		EUtil.Write2(out, cnt);
+		iter = monsters.iterator();
+		while (iter.hasNext()) {
+			MonsterActor mact = iter.next();
+			if (!mact.isDead())		// Alive?
+				mact.write(out);
+		}
+		out.close();
 	}
 	/*
 	 *	Write out the gamedat directory from a saved game.

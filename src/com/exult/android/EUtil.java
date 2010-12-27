@@ -86,6 +86,12 @@ public class EUtil {
 		out.write(v&0xff);
 		out.write((v>>8)&0xff);
 	}
+	public static final void Write4(OutputStream out, int v) throws IOException {
+		out.write(v&0xff);
+		out.write((v>>8)&0xff);
+		out.write((v>>16)&0xff);
+		out.write((v>>24)&0xff);
+	}
 	// Read integer from a text file.
 	public static final int ReadInt(DataInputStream in) {
 		return ReadInt(in, 0);

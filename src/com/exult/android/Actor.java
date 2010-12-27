@@ -110,7 +110,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected FramesSequence frames[];
 	protected byte scheduleType;	// Schedule type (scheduleType).	
 	// Location (x,y) of Shedule
-	protected int schedule_loc_tx, schedule_loc_ty, schedule_loc_tz;
+	protected int scheduleLocTx, scheduleLocTy, scheduleLocTz;
 	protected byte next_schedule;	// Used so correct schedule type 
 									//   will be saved
 	// protected Schedule *schedule;		// Current schedule.
@@ -402,7 +402,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// Find spot to stand.
 				Tile pos = get_tile();
 				pos.tz -= pos.tz%5;	// Want floor level.
-				pos = Map_chunk::find_spot(pos, 6, get_shapenum(),
+				pos = Map_chunk::find_spot(pos, 6, getShapeNum(),
 					Actor.standing, 0);
 				if (pos.tx >= 0)
 					move(pos);
@@ -685,7 +685,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void changeFrame(int frnum) {
 		addDirty(false);			// Set to repaint old area.
 		/* FINISH+++++++++++
-		ShapeID id(get_shapenum(), frnum, get_shapefile());
+		ShapeID id(getShapeNum(), frnum, get_shapefile());
 		Shape_frame *shape = id.get_shape();
 		if (!shape || shape.is_empty())
 			{		// Swap 1hand <=> 2hand frames.
@@ -1191,7 +1191,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 */
 	public void read
 		(
-		InputStream nfile,		// 'npc.dat', generally.
+		InputStream out,		// 'npc.dat', generally.
 		int num,			// NPC #, or -1.
 		boolean has_usecode		// 1 if a 'type1' NPC.
 		) throws IOException {
@@ -1203,10 +1203,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		boolean fix_first = true; // +++++++ Game::is_new_game();
 							
 		init();				// Clear rest of stuff.
-		int locx = nfile.read()&0xff;	// Get chunk/tile coords.
-		int locy = nfile.read()&0xff;
+		int locx = out.read()&0xff;	// Get chunk/tile coords.
+		int locy = out.read()&0xff;
 							// Read & set shape #, frame #.
-		int shnum = EUtil.Read2(nfile)&0xffff;
+		int shnum = EUtil.Read2(out)&0xffff;
 		/* +++++
 		if (num == 0 && Game::get_game_type() != BLACK_GATE && 
 								(shnum & 0x3ff) < 12)
@@ -1216,7 +1216,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		setFrame(shnum >> 10);
 			
-		int iflag1 = EUtil.Read2(nfile);	// Inventory flag.
+		int iflag1 = EUtil.Read2(out);	// Inventory flag.
 							// We're going to use these bits.
 							// iflag1:0 == has_contents.
 							// iflag1:1 == sched. usecode follows,
@@ -1232,13 +1232,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			usecodeAssigned = true;
 		boolean extended_skin = !fix_first && (iflag1&16) != 0;
 
-		int schunk = nfile.read();	// Superchunk #.
+		int schunk = out.read();	// Superchunk #.
 							// For multi-map:
-		int map_num = nfile.read();
+		int map_num = out.read();
 		if (fix_first)
 			map_num = 0;
 		GameMap npcmap = gwin.getMap(map_num);
-		int usefun = EUtil.Read2(nfile);	// Get usecode function #.
+		int usefun = EUtil.Read2(out);	// Get usecode function #.
 		setLift(usefun >> 12);		// Lift is high 4 bits.
 		usecode = usefun & 0xfff;
 							// Need this for BG. (Not sure if SI.)
@@ -1249,10 +1249,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			          usecode != 0x400 + npcNum) || usecode == 0xfff)
 			usecode = -1;		// Let's try this.
 							// Guessing:  !!  (Want to get signed.)
-		int health_val = nfile.read();
+		int health_val = out.read();
 		setProperty(Actor.health, health_val);
-		nfile.skip(3);	// Skip 3 bytes.
-		int iflag2 = EUtil.Read2(nfile);	// The 'used-in-game' flag.
+		out.skip(3);	// Skip 3 bytes.
+		int iflag2 = EUtil.Read2(out);	// The 'used-in-game' flag.
 		if (iflag2 == 0 && num >= 0 /* ++++ && !fix_unused */) {
 			if (num == 0)		// Old (bad) savegame?
 				/* +++++ fix_unused = true; */;
@@ -1261,7 +1261,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		boolean has_contents = fix_first ? (iflag1 != 0 && !unused) : (iflag1&1) != 0;
 		// Read first set of flags
-		int rflags = EUtil.Read2(nfile);
+		int rflags = EUtil.Read2(out);
 			
 		if (((rflags >> 0x7) & 1) != 0) setFlag (GameObject.asleep);
 		if (((rflags >> 0x8) & 1) != 0) setFlag (GameObject.charmed);
@@ -1291,7 +1291,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		// In BG - Strength (0-5), skin colour(6-7)
 		// In SI - Strength (0-4), skin colour(5-6), freeze (7)
-		int strength_val = nfile.read();
+		int strength_val = out.read();
 
 		if (true /* +++++ Game::get_game_type() == BLACK_GATE */) {
 			setProperty(Actor.strength, strength_val & 0x3F);
@@ -1326,9 +1326,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		    npcNum > 0)		// DON'T do this for Avatar!
 			setFlag(GameObject.dead);	// Fixes older savegames.
 		// Dexterity
-		setProperty(Actor.dexterity, nfile.read());
+		setProperty(Actor.dexterity, out.read());
 		// Intelligence (0-4), read(5), Tournament (6), polymorph (7)
-		int intel_val = nfile.read();
+		int intel_val = out.read();
 
 		setProperty(Actor.intelligence, intel_val & 0x1F);
 		if (((intel_val >> 5) & 1) != 0) 
@@ -1340,29 +1340,29 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			setFlag (GameObject.polymorph);
 
 			// Combat skill (0-6), Petra (7)
-		int combat_val = nfile.read();
+		int combat_val = out.read();
 
 		setProperty(Actor.combat, combat_val & 0x7F);
 		if (((combat_val << 7) & 1) != 0) 
 			setFlag (GameObject.petra);
-		scheduleType = (byte) nfile.read();
-		int amode = nfile.read();	// Default attack mode
+		scheduleType = (byte) out.read();
+		int amode = out.read();	// Default attack mode
 							// Just stealing 2 spare bits:
 		combatProtected = (amode&(1<<4)) != 0;
 		userSetAttack = (amode&(1<<5)) != 0;
 		attackMode = (amode&0xf);
 
-		nfile.skip(1); 		// Unknown
-		int unk0 = nfile.read();	// We set high bit of this value.
-		int unk1 = nfile.read();
+		out.skip(1); 		// Unknown
+		int unk0 = out.read();	// We set high bit of this value.
+		int unk1 = out.read();
 		int magic = 0, mana= 0, temp, flags3, ident = 0;
 		if (fix_first || unk0 == 0) {	// How U7 stored things.
 			// If NPC 0: MaxMagic (0-4), TempHigh (5-7) and Mana(0-4), 
 			//						TempLow (5-7)
 			// Else: ID# (0-4), TempHigh (5-7) and Met (0), 
 			//	No Spell Casting (1), Zombie (2), TempLow (5-7)
-			int magic_val = nfile.read();
-			int mana_val = nfile.read();
+			int magic_val = out.read();
+			int mana_val = out.read();
 			temp = ((magic_val >> 2) & 0x38) + ((mana_val >> 5) & 7);
 			if (num == 0) {
 				magic = magic_val&0x1f;
@@ -1375,8 +1375,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		} else {			// Exult stores magic for all NPC's.
 			magic = unk0 & 0x7f;
 			mana = unk1;
-			temp = nfile.read();
-			flags3 = nfile.read();
+			temp = out.read();
+			flags3 = out.read();
 			ident = flags3 >> 3;
 			flags3 &= 0x7;
 		}
@@ -1392,25 +1392,25 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (((flags3 >> 2) & 1) != 0)
 			setFlag (GameObject.si_zombie);
 
-		faceNum = (short)EUtil.Read2(nfile);	// NOTE:  Exult's using 2 bytes,
+		faceNum = (short)EUtil.Read2(out);	// NOTE:  Exult's using 2 bytes,
 		if (fix_first)	// Not used in the original.
 			//faceNum &= 0xff;	// Just 1 byte in orig.
 			faceNum = npcNum;
 		else if (faceNum == 0 && npcNum > 0)	// Fix older savegames.
 			faceNum = npcNum;
-		nfile.skip(1);	// Unknown
+		out.skip(1);	// Unknown
 
-		setProperty(Actor.exp, EUtil.Read4(nfile));
-		setProperty(Actor.training, nfile.read());
+		setProperty(Actor.exp, EUtil.Read4(out));
+		setProperty(Actor.training, out.read());
 
-		nfile.skip (2);	// Primary Attacker
-		nfile.skip (2);	// Secondary Attacker
-		oppressor = (short)EUtil.Read2(nfile);	// Oppressor NPC id.
-		nfile.skip (4);	//I-Vr ??? (refer to U7tech.txt)
-		schedule_loc_tx = EUtil.Read2(nfile);	//S-Vr Where npc is supposed to 
-		schedule_loc_ty = EUtil.Read2(nfile);	//be for schedule)
+		out.skip (2);	// Primary Attacker
+		out.skip (2);	// Secondary Attacker
+		oppressor = (short)EUtil.Read2(out);	// Oppressor NPC id.
+		out.skip (4);	//I-Vr ??? (refer to U7tech.txt)
+		scheduleLocTx = EUtil.Read2(out);	//S-Vr Where npc is supposed to 
+		scheduleLocTy = EUtil.Read2(out);	//be for schedule)
 		// Type flags 2
-		int tflags = EUtil.Read2(nfile);
+		int tflags = EUtil.Read2(out);
 		// First time round, all the flags are garbage
 		if (fix_first) {
 			setTypeFlags (1 << tf_walk);
@@ -1428,14 +1428,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			set_type_flag (Actor.tf_sex);
 		}
 		*/
-		nfile.skip (5);	// Unknown
-		next_schedule = (byte)nfile.read();	// Acty ????? what is this??
-		nfile.skip (1);	// SN ????? (refer to U7tech.txt)
-		nfile.skip (2);	// V1 ????? (refer to U7tech.txt)
-		nfile.skip (2);	// V2 ????? (refer to U7tech.txt)
+		out.skip (5);	// Unknown
+		next_schedule = (byte)out.read();	// Acty ????? what is this??
+		out.skip (1);	// SN ????? (refer to U7tech.txt)
+		out.skip (2);	// V1 ????? (refer to U7tech.txt)
+		out.skip (2);	// V2 ????? (refer to U7tech.txt)
 
 		// 16 Bit Shape Numbers, allows for shapes > 1023
-		shnum = EUtil.Read2(nfile);
+		shnum = EUtil.Read2(out);
 		if (!fix_first && shnum != 0) {
 				// ++++ Testing
 			if (npcNum == 0)
@@ -1443,7 +1443,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			else
 				setShape(shnum);		// 16 Bit Shape Number
 
-			shnum = EUtil.Read2(nfile);	// 16 Bit Polymorph Shape Number
+			shnum = EUtil.Read2(out);	// 16 Bit Polymorph Shape Number
 			if (getFlag (GameObject.polymorph)) {
 						// Try to fix messed-up flag.
 				if (shnum != getShapeNum())
@@ -1452,7 +1452,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					clearFlag(GameObject.polymorph);
 			}
 		} else {
-			nfile.skip (2);
+			out.skip (2);
 			// +++++++++ set_polymorph_default();
 		}
 
@@ -1460,32 +1460,32 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (!fix_first) {
 			int	f;
 			// Flags
-			f = EUtil.Read4(nfile);
+			f = EUtil.Read4(out);
 			flags |= f;
 			/* ++++++++
 			if (getFlag(GameObject.invisible))	// Force timer.	
 				need_timers().start_invisibility();
 			*/
 			// SIFlags -- no longer used.
-			nfile.skip (2);
+			out.skip (2);
 			// Flags2	But don't set polymorph.
 			boolean polym = getFlag(GameObject.polymorph)!= false;
-			f = EUtil.Read4(nfile);
+			f = EUtil.Read4(out);
 			flags2 |= f;
 			if (!polym && getFlag(GameObject.polymorph))
 				clearFlag(GameObject.polymorph);
 			/*
 			if (usecode_name_used) {	// Support for named functions.
-				int funsize = nfile.read();
+				int funsize = out.read();
 				char *nm = new char[funsize+1];
-				nfile.read(nm, funsize);
+				out.read(nm, funsize);
 				nm[funsize] = 0;
 				usecode_name = nm;
 				usecode = ucmachine.find_function(nm);
 				delete [] nm;
 			}
 			*/
-			int skin = nfile.read();
+			int skin = out.read();
 			/*++++++++++++++++
 			if (extended_skin) {
 				if (Game::get_avskin() >= 0)
@@ -1496,24 +1496,24 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			*/
 		} else {
 			// Flags
-			nfile.skip (4);
+			out.skip (4);
 			// SIFlags
-			nfile.skip (2);
+			out.skip (2);
 			// Flags2 
-			nfile.skip (4);
+			out.skip (4);
 			// Extended skins
-			nfile.skip (1);
+			out.skip (1);
 		}
 		// Skip 14
-		nfile.skip (14);
+		out.skip (14);
 						// Get (signed) food level.
-		int food_read = nfile.read();
+		int food_read = out.read();
 		if (fix_first) food_read = 18;
 		setProperty(Actor.food_level, food_read);
 		// Skip 7
-		nfile.skip(7);
+		out.skip(7);
 		byte namebuf[] = new byte[16];
-		nfile.read(namebuf);
+		out.read(namebuf);
 		//+++++++++++++++
 		int len;
 		for (len = 0; len < 16; len++)
@@ -1535,10 +1535,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int scy = 16*(schunk/12);
 		int scx = 16*(schunk%12);
 		if (has_contents)		// Inventory?  Read.
-			npcmap.readIregObjects(nfile, scx, scy, this, 0);
+			npcmap.readIregObjects(out, scx, scy, this, 0);
 		/* +++++++FINISH
 		if (read_sched_usecode)		// Read in scheduled usecode.
-			npcmap.read_special_ireg(nfile, this);
+			npcmap.read_special_ireg(out, this);
 		*/
 		int cx = locx >> 4;		// Get chunk indices within schunk.
 		int cy = locy >> 4;
@@ -1569,7 +1569,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			Monster_info *minf = get_info().get_monster_info();
 			if (minf && minf.cant_die())
 				setProperty(Actor.static_cast<int>(Actor.health),
-					get_property(static_cast<int>(Actor.strength)));
+					getProperty(static_cast<int>(Actor.strength)));
 		}
 
 		// Only do ready best weapon if we are in BG, this is the first time
@@ -1580,8 +1580,232 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public void writeIreg(OutputStream out) throws IOException {	// Don't write to IREG.
 	}
+	public final void write(OutputStream out) throws IOException {
+		int i;
+		byte buf4[] = new byte[4]; // Write coords., shape, frame.
+
+		int old_shape = getShapeNum();	// Backup shape because we might change it
+		setShape( getShapeReal() );	// Change the shape out non polymorph one
+		int shapenum = getShapeNum(), framenum = getFrameNum();
+		buf4[0] = (byte)(((getCx()%16) << 4) | getTx());
+		buf4[1] = (byte)(((getCy()%16) << 4) | getTy());
+		// ++++++Is this even needed anymore? We already save 16-bit shapes below.
+		buf4[2] = (byte)(shapenum&0xff);
+		buf4[3] = (byte)(((shapenum>>8)&3) | (framenum<<2));
+		out.write(buf4);
+		setShape( old_shape );		// Revert the shape to what it was
+
+						// Inventory flag.
+						// Bit0 = has_contents (our use).
+						// Bit1 = our savegame, with sched.
+						//   usecode script following this.
+						// iflag1:2 == usecode # assigned by
+						//   ES, so always use it.
+						// iflag1:3 == usecode fun name assigned
+						//   by ES, so use it instead.
+						// iflag1:4 == Extended skin number
+		int iflag1 = objects.isEmpty() ? 0 : 1;
+		iflag1 |= 2;			// We're always doing write_scheduled()
+		if (usecodeAssigned) {	// # assigned by EStudio?
+			// If we have a name, use it instead of the usecode #.
+			if (usecodeName.length() != 0)
+				iflag1 |= 8;		// Set bit 3.
+			else
+				iflag1 |= 4;		// Set bit 2.
+		}
+		iflag1 |= 16;	// Set bit 4.
+
+		EUtil.Write2(out, iflag1);
+				// Superchunk #.
+		out.write((getCy()/16)*12 + getCx()/16);
+
+		int map_num = getMapNum();
+		if (map_num < 0)
+			// we store all off-map actors in map 0
+			map_num = 0;
+		assert(map_num >= 0 && map_num < 256);
+		out.write(map_num);		// Borrowing for map #.
+						// Usecode.
+		int usefun = getUsecode() & 0xfff;
+						// Lift is in high 4 bits.
+		usefun |= ((getLift()&15) << 12);
+		EUtil.Write2(out, usefun);
+		out.write(getProperty(Actor.health));
+		out.write(0);			// Unknown 3 bytes.
+		EUtil.Write2(out, 0);
+		EUtil.Write2(out, unused ? 0 : 1);	// Write 0 if unused.
+
+		//Write first set of flags
+		int iout = 0;
+		
+		if (getFlag (GameObject.asleep)) iout |= 1 << 0x7;
+		if (getFlag (GameObject.charmed)) iout |= 1 << 0x8;
+		if (getFlag (GameObject.cursed)) iout |= 1 << 0x9;
+		if (getFlag (GameObject.in_party)) iout |= 1 << 0xB;
+		if (getFlag (GameObject.paralyzed)) iout |= 1 << 0xC;
+		if (getFlag (GameObject.poisoned)) iout |= 1 << 0xD;
+		if (getFlag (GameObject.protection)) iout |= 1 << 0xE;
+
+		// Guess
+		if (getFlag (GameObject.on_moving_barge)) iout |= 1 << 0xA;
+						// Alignment is bits 3-4.
+
+		// Unknownm using for is_temp
+		if (getFlag (GameObject.is_temporary)) iout |= 1 << 0x6;
+
+		iout |= ((alignment&3) << 3);
+		EUtil.Write2(out, iout);
+						// Write char. attributes.
+		iout = getProperty(Actor.strength);
+		/* ++++++++FINISH
+		if (!game.isBG() && npcNum == 0) 
+			iout |= (getSkinColor () & 3) << 5;
+		else if (npcNum == 0) iout |= ((getSkinColor()+1) & 3) << 6;
+		*/
+		if (getFlag(GameObject.freeze)) 
+			iout |= 1 << 7;
+		out.write(iout);
+		out.write(getProperty(Actor.dexterity));
+		
+		iout = getProperty(Actor.intelligence);
+		if (getFlag (GameObject.read)) iout |= 1 << 5;
+						// Tournament
+		if (getFlag (GameObject.tournament)) iout |= 1 << 6;
+		if (getFlag (GameObject.polymorph)) iout |= 1 << 7;
+		out.write(iout);
+
+		iout = getProperty(Actor.combat);
+		if (getFlag (GameObject.petra)) iout |= 1 << 7;
+		out.write(iout);
+		
+		out.write(getScheduleType());
+		int amode = attackMode | 
+			(combatProtected ? (1<<4) : 0) |
+			(userSetAttack ? (1<<5) : 0);
+		out.write((byte)amode);
+		out.write(0);		// Skip 1.
+		// Exult is using the 2 unknown bytes to store magic, mana for all
+		//   NPC's, and to store temperature more simply.
+		int magic = getProperty(Actor.magic);
+		out.write(magic|0x80);	// Set high bit to flag new format.
+		out.write(getProperty(Actor.mana));
+		out.write(getTemperature());
+		int flags3 = 0;
+		if (getFlag (GameObject.met)) flags3 |= 1;
+		if (getFlag (GameObject.no_spell_casting)) flags3 |= 1 << 1;
+		if (getFlag (GameObject.si_zombie)) flags3 |= 1 << 2;
+		flags3 |= (get_ident()<<3);
+		out.write(flags3);
+
+		EUtil.Write2(out, faceNum);
+		out.write(0);		// Skip 2
+
+		EUtil.Write4(out, getProperty(Actor.exp));
+		out.write(getProperty(Actor.training));
+				// 0x40 unknown.
+
+		EUtil.Write2(out, 0);	// Skip 2*2
+		EUtil.Write2(out, 0);
+		EUtil.Write2(out, oppressor);	// Oppressor.
+
+		EUtil.Write4(out, 0);	// Skip 2*2
+		
+		EUtil.Write2(out, scheduleLocTx);	//S-Vr Where npc is supposed to 
+		EUtil.Write2(out, scheduleLocTy);	//be for schedule)
+		//EUtil.Write4(out, 0);
+
+		EUtil.Write2(out, getTypeFlags());	// Typeflags
+		
+		EUtil.Write4(out, 0);	// Skip 5
+		out.write(0);
+
+		out.write(next_schedule);	// Acty ????? what is this??
+
+		out.write(0);		// Skip 1
+		EUtil.Write2(out, 0);	// Skip 2
+		EUtil.Write2(out, 0);	// Skip 2
+
+		// 16 Bit Shapes
+		if (getFlag (GameObject.polymorph)) {
+			EUtil.Write2(out, shapeSave);	// 16 Bit Shape Num
+			EUtil.Write2(out, getShapeNum());	// 16 Bit Polymorph Shape
+		} else {
+			EUtil.Write2(out, getShapeNum());	// 16 Bit Shape Num
+			EUtil.Write2(out, 0);		// 16 Bit Polymorph Shape
+		}
+
+		// Flags
+		EUtil.Write4(out, flags);
+
+		// SIFlags 
+		EUtil.Write2(out, 0);
+
+		// flags2
+		EUtil.Write4(out, flags2);
+
+		if (usecodeAssigned && usecodeName.length() > 0) {
+			// Support for named functions.
+			int size = usecodeName.length();
+			out.write(size);
+			byte nm[] = usecodeName.getBytes();
+			out.write(nm);
+		}
+
+		out.write(0 /* ++++++FINISH (byte)getSkinColor()*/);
+		// Skip 14
+		for (i = 0; i < 14; i++)
+			out.write(0);
+		// Food
+		out.write(getProperty (Actor.food_level));
+		// Skip 7
+		for (i = 0; i < 7; i++)
+			out.write(0);
+		// Write 16 byte name.
+		byte namestr[] = name.length() == 0 ? super.getName().getBytes() : name.getBytes();
+		int namelen = Math.min(16, namestr.length);
+		out.write(namestr, 0, namelen);
+		for ( ; namelen < 16; ++namelen)
+			out.write(0);
+		writeContents(out);		// Write what he holds.
+		/* ++++++++++FINISH
+		if (atts != null) {
+			Actor.Atts_vector attlist;
+			get_attributes(attlist);
+			GameMap.writeAttributes(out, attlist);
+		}
+						// Write scheduled usecode.
+		GameMap.writeScheduled(out, this, true);
+		*/
+	}
 	public void writeContents(OutputStream out) throws IOException {
-		//++++++++++++FINISH
+		if (!objects.isEmpty()) {	// Now write out what's inside.
+			int num_spots = spots.length;
+			int i;
+			for (i = 0; i < num_spots; ++i) {
+				// Spot Increment
+				if (spots[i] != null) {
+					// Write 2 byte index id
+					out.write(0x02);
+					EUtil.Write2(out, i);
+					spots[i].writeIreg(out);
+				}
+			}
+			GameObject obj;
+			ObjectList.ObjectIterator iter = new ObjectList.ObjectIterator(objects);
+			while ((obj = iter.next()) != null) {
+				for (i = 0; i < num_spots; ++i)
+					if (spots[i] == obj)
+						break;
+				if (i == num_spots) {
+					// Write 2 byte index id (-1 = no slot)
+					i = -1;
+					out.write(0x02);
+					EUtil.Write2(out, i);
+					obj.writeIreg(out);
+				}
+			}
+			out.write(0x01);		// A 01 terminates the list.
+		}
 	}
 	/*
 	 * For TimeSensitive

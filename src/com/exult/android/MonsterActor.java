@@ -53,6 +53,9 @@ public class MonsterActor extends NpcActor {
 	public boolean moveAside(Actor forActor, int dir) {
 		return false;	// Monsters don't move aside.
 	}
+	public static HashSet<MonsterActor> getAll() {
+		return inWorld;
+	}
 	/*
 	 *	Render.
 	 */
