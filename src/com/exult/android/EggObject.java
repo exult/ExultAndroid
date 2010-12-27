@@ -402,7 +402,6 @@ public class EggObject extends IregGameObject {
 	 */
 
 	public void writeIreg(OutputStream out) throws IOException {
-		
 		int sz = data3 > 0 ? 14 : 12;
 		int ind = writeCommonIreg(sz, writeBuf);
 		int tword = type&0xf;// Set up 'type' word.
@@ -426,7 +425,7 @@ public class EggObject extends IregGameObject {
 		}
 		out.write(writeBuf, 0, ind);
 		String str1 = getStr1();
-		if (str1 != null && str1.charAt(0) != 0)	// This will be usecode fun. name.
+		if (str1 != null && str1.length() != 0)	// This will be usecode fun. name.
 			GameMap.writeString(out, str1);
 						// Write scheduled usecode.
 		/* +++++++++FINISH

@@ -53,7 +53,15 @@ public class GameWindow extends GameSingletons {
 	public boolean paintEggs = true;//++++TRUE for testing.
 	public int blits;		// For frame-counting.
 	public boolean skipFirstScene = true;	// ++++TESTING.
-	
+	public String busyMessage;		// True when doing something we need to wait for.
+	public void setBusyMessage(String s) {
+		busyMessage = s;
+		setAllDirty();
+		if (s != null)
+			tqueue.pause(TimeQueue.ticks);
+		else
+			tqueue.resume(TimeQueue.ticks);
+	}
 	static public GameWindow instanceOf() {
 		return instance;
 	}
@@ -819,7 +827,16 @@ public class GameWindow extends GameSingletons {
 			Conversation conv = GameSingletons.conv;
 			if (conv != null)
 				conv.paint();		// Conversation.
-			
+			if (busyMessage != null) {
+				int text_height = fonts.getTextHeight(0);
+				int text_width = fonts.getTextWidth(0, busyMessage);
+				/* +++++++FINISH
+				win->fill_translucent8(0, width, height, 0, 0, 
+								shape_man->get_xform(8));
+				*/
+				fonts.paintText(0, busyMessage, getWidth()/2-text_width/2, 
+										getHeight()/2-text_height);
+			}
 			/*
 					// Complete repaint?
 			if (!gx && !gy && gw == get_width() && gh == get_height() && mainActor)
@@ -1216,42 +1233,51 @@ public class GameWindow extends GameSingletons {
 	 *	Save game by writing out to the 'gamedat' directory.  Call before saveGamedat().
 	 */
 	public void write() throws IOException {
-		// Lets just show a nice message on screen first
-		int width = getWidth();
-		int centre_x  = width/2;
-		int height = getHeight();
-		int centre_y = height/2;
-		int text_height = fonts.getTextHeight(0);
-		int text_width = fonts.getTextWidth(0, "Saving Game");
-		/* +++++++FINISH
-		win->fill_translucent8(0, width, height, 0, 0, 
-						shape_man->get_xform(8));
-		*/
-		fonts.paintText(0, "Saving Game", centre_x-text_width/2, 
-								centre_y-text_height);
-		// ++++++++ show(true);
-		int mapcnt = maps.size();
-		for (int i = 0; i < mapcnt; ++i)
-			maps.elementAt(i).writeIreg();	// Write ireg files.
-		writeNpcs();			// Write out npc.dat.
-		/*+++++++++FINISH
-		usecode.write();		// Usecode.dat (party, global flags).
-		//+++++ Notebook_gump::write();		// Write out journal.
-		writeGwin();			// Write our data.
-		write_saveinfo();
-		*/
+		setBusyMessage("Saving Game");
+		Thread t = new Thread() {
+			public void run() {
+				int mapcnt = maps.size();
+				try {
+					for (int i = 0; i < mapcnt; ++i)
+						maps.elementAt(i).writeIreg();	// Write ireg files.
+					writeNpcs();			// Write out npc.dat.
+					/*+++++++++FINISH
+					usecode.write();		// Usecode.dat (party, global flags).
+					//+++++ Notebook_gump::write();		// Write out journal.
+					writeGwin();			// Write our data.
+					write_saveinfo();
+					 */
+				} catch (IOException e) {
+					ExultActivity.fatal("Error saving: " + e.getMessage());
+				}
+				setBusyMessage(null);
+			}
+		};
+		t.start();
 	}
 	/*
 	 * The whole 'save'.
 	 */
-	public void write(int num, String savename) {
-		
-		try {
-			write();
-			saveGamedat(num, savename);
-		} catch (IOException e) {
-			ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
+	static class SaveThread extends Thread {
+		private int num;
+		private String savename;
+		public SaveThread(int n, String s) {
+			num = n; savename = s;
 		}
+		public void run() {
+			try {
+				gwin.write();
+				gwin.saveGamedat(num, savename);
+			} catch (IOException e) {
+				ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
+			}
+			gwin.setBusyMessage(null);
+		}
+	}	
+	public void write(int num, String savename) {
+		setBusyMessage("Saving Game");
+		Thread t = new SaveThread(num, savename);
+		t.start();
 	}
 	private void writeNpcs() throws IOException {	
 		int num_npcs = npcs.size();

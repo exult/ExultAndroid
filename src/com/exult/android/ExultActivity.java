@@ -199,6 +199,8 @@ public class ExultActivity extends Activity {
     	}
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
+    			if (gwin.busyMessage != null)
+    				return false;
     			synchronized (gwin.getTqueue()) {
     			float sx = event.getX(), sy = event.getY();
     			int x = (int)gwin.getWin().screenToGameX(sx), 
@@ -282,7 +284,8 @@ public class ExultActivity extends Activity {
     	};
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
-    			if (UsecodeMachine.running > 0 || clickPoint != null)
+    			if (UsecodeMachine.running > 0 || clickPoint != null || 
+    										gwin.busyMessage != null)
     				return false;
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
 		        	if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ||
