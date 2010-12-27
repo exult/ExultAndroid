@@ -89,6 +89,22 @@ public class ObjectList {
 			return ret;
 		}
 	}
+	public static class ObjectIteratorBackwards extends ObjectIteratorBase {
+		public void reset() {
+			cur = first; stop = null; }
+		public ObjectIteratorBackwards(ObjectList l) {
+			super(l);
+			cur = first = l.getFirst();
+			stop = null;
+		}
+		public GameObject next() {
+			if (cur == stop)
+				return null;
+			cur = cur.prev;
+			stop = first;
+			return cur;
+		}
+	}
 	public static class NonflatObjectIterator extends ObjectIterator {
 		private GameObject nonflats;
 		public void reset()

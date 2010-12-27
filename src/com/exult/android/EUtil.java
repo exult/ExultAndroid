@@ -82,6 +82,10 @@ public class EUtil {
 			return -1;
 		}
 	}
+	public static final void Write2(OutputStream out, int v) throws IOException {
+		out.write(v&0xff);
+		out.write((v>>8)&0xff);
+	}
 	// Read integer from a text file.
 	public static final int ReadInt(DataInputStream in) {
 		return ReadInt(in, 0);

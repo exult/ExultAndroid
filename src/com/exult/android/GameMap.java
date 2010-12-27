@@ -3,6 +3,7 @@ import java.util.Vector;
 import java.util.Arrays;
 import java.io.RandomAccessFile;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 
 public class GameMap extends GameSingletons {
@@ -595,6 +596,55 @@ public class GameMap extends GameSingletons {
 	public static ChunkTerrain getTerrain(int tnum) {
 		ChunkTerrain ter = (ChunkTerrain) chunkTerrains.elementAt(tnum);
 		return ter != null ? ter : readTerrain(tnum);
+	}
+	/*
+	 * Write modified 'u7ireg' files.
+	 */
+	public void writeIreg() throws IOException {
+		// Write each superchunk to Iregxx.
+		for (int schunk = 0; schunk < EConst.c_num_schunks*EConst.c_num_schunks; schunk++) {
+						// Only write what we've read.
+			/* +++++++++FINISH
+			if (schunk_cache[schunk] && schunk_cache_sizes[schunk] >= 0) {
+				// It's loaded in a memory buffer
+				char fname[128];		// Set up name.
+				ofstream ireg_stream;
+				U7open(ireg_stream, get_schunk_file_name(U7IREG, schunk, fname));
+				ireg_stream.write(schunk_cache[schunk], schunk_cache_sizes[schunk]);
+			}
+			else */ if (schunkRead[schunk]) {
+				// It's active
+				writeIregObjects(schunk);
+			}
+		}
+	}
+	/*
+	 *	Write out one of the "u7ireg" files.
+	 *
+	 *	Output:	0 if error, which is reported.
+	 */
+	private void writeIregObjects(int schunk) throws IOException {
+		String fname = getSchunkFileName(EFile.U7IREG, schunk);
+		OutputStream ireg = EUtil.U7create(fname);
+		writeIregObjects(schunk, ireg);
+		ireg.close();
+	}
+	private void writeIregObjects(int schunk, OutputStream ireg) throws IOException {
+		int scy = 16*(schunk/12);	// Get abs. chunk coords.
+		int scx = 16*(schunk%12);
+						// Go through chunks.
+		for (int cy = 0; cy < 16; cy++) {
+			for (int cx = 0; cx < 16; cx++) {
+				MapChunk chunk = getChunk(scx + cx, scy + cy);
+				GameObject obj;
+						// Restore original order (sort of).
+				ObjectList.ObjectIteratorBackwards iter = 
+							new ObjectList.ObjectIteratorBackwards(chunk.getObjects());
+				while ((obj = iter.next()) != null)
+					obj.writeIreg(ireg);
+				EUtil.Write2(ireg, 0);// End with 2 0's.
+			}
+		}
 	}
 	public int getNumChunkTerrains()
 		{ return chunkTerrains.size(); }
