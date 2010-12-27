@@ -907,6 +907,7 @@ public class GameWindow extends GameSingletons {
 	}
 	//	Prepare for game.
 	public void setupGame() {
+		System.out.println("setupGame: at start");
 		// FOR NOW:  Unpack INITGAME if not already done.
 		if (EUtil.U7exists(EFile.IDENTITY) == null)
 			initGamedat(true);
@@ -921,6 +922,7 @@ public class GameWindow extends GameSingletons {
 		} catch (IOException e) {
 			System.out.println("FAILED to read NPCs!");
 		}
+		System.out.println("setupGame: finished initActors");
 		// CYCLE_RED_PLASMA();
 		/* ++++++++++FINISH 
 		Notebook_gump::initialize();		// Read in journal.
@@ -968,9 +970,11 @@ public class GameWindow extends GameSingletons {
 		*/
 	//+++++The below wasn't prev. done by ::read(), so maybe it should be
 	//+++++controlled by a 'first-time' flag.
+		System.out.println("setupGame: about to activate eggs");
 						// Want to activate first egg.
 		MapChunk olist = mainActor.getChunk();
 		int tx = mainActor.getTileX(), ty = mainActor.getTileY(), tz = mainActor.getLift();
+		System.out.printf("setupGame: Avatar is at %1$d, %2$d, %3$d\n", tx, ty, tz);
 		// Do them immediately.
 		olist.activateEggs(mainActor, tx, ty, tz, -1,-1,true);
 		// Force entire repaint.
@@ -985,6 +989,7 @@ public class GameWindow extends GameSingletons {
 		clock.set_palette();
 		pal.fade(6, 1, -1);		// Fade back in.
 		*/
+		System.out.println("setupGame: done");
 	}
 	public void readNpcs() throws IOException {
 		npcs = new Vector<Actor>(1);			// Create main actor.
@@ -1313,6 +1318,7 @@ public class GameWindow extends GameSingletons {
 		ZipInputStream zin;
 		try {
 			in = EUtil.U7openStream(fname);
+			in.skip(saveNameSize);
 			zin = new ZipInputStream(in);
 			String nm = EUtil.getSystemPath(fname);
 			System.out.println("restoreGamedatZip: opening " + nm);
@@ -1333,19 +1339,26 @@ public class GameWindow extends GameSingletons {
 				//++++++++++++
 				int len = (int)ze.getSize();
 				System.out.println("Unzipping " + fnm + " of length " + len);
+				if (len == -1)			// Means 'unknown'.
+					len = 0x1000;
 				if (buf == null || buf.length < len)
 					buf = new byte[len];
-				zin.read(buf, 0, len);
-				OutputStream out = EUtil.U7create(fname);
-				out.write(buf);	// Then write it out.
+				OutputStream out = EUtil.U7create(fnm);
+				while (zin.available() > 0) {
+					int rcnt = zin.read(buf, 0, len);
+					System.out.println("Read " + rcnt + " bytes for " + fnm);
+					out.write(buf, 0, rcnt);	// Then write it out.
+				}
+				System.out.println("Entry " + fnm + ", done");
 				out.close();
 				zin.closeEntry();
 			} 
 			// CYCLE_RED_PLASMA();
 	        
 	        zin.close();
+	        System.out.println("restoreGamedatZip completed");
 	    } catch (IOException e) {
-	    	ExultActivity.fatal(String.format("Error writing '%1$s': %2$s", 
+	    	ExultActivity.fatal(String.format("Error restoring '%1$s': %2$s", 
 	    							EUtil.getSystemPath(fname), e.getMessage()));
 			return false;
 		}
@@ -1376,7 +1389,7 @@ public class GameWindow extends GameSingletons {
 		EFile.GSCRNSHOT,	EFile.GSAVEINFO,	// MUST BE FIRST!!
 		EFile.IDENTITY,			// MUST BE #2
 		EFile.GEXULTVER, 	EFile.GNEWGAMEVER,
-		EFile.NPC_DAT,	/* ++++ EFile.MONSNPCS,
+		EFile.NPC_DAT,	EFile.MONSNPCS,
 		EFile.USEVARS,	EFile.USEDAT,
 		EFile.FLAGINIT,	EFile.GWINDAT,
 		EFile.GSCHEDULE /* ,	EFile.NOTEBOOKXML */
@@ -1409,7 +1422,7 @@ public class GameWindow extends GameSingletons {
 											throws IOException {
 		int sz;
 		InputStream in;
-		System.out.println("Saving to zip: " + fname);
+		
 		try {
 			in = EUtil.U7openStream(fname);
 			sz = in.available();
@@ -1421,6 +1434,7 @@ public class GameWindow extends GameSingletons {
 			// ++++++++return false;
 			return true;
 		}
+		System.out.println("Saving to zip: " + fname + ", sz = " + sz);
 		ZipEntry entry = new ZipEntry(fname);
 		zout.putNextEntry(entry); // Store entry
 		zout.write(buf, 0, sz);

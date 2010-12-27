@@ -316,7 +316,7 @@ public class ExultActivity extends Activity {
 		        				gwin.restoreGamedat(1);	//++++++++++TESTING.
 		        				gwin.read();
 		        			} catch (IOException e) {
-		        				fatal("Failed to restore Game 0");
+		        				fatal("Failed to restore Game 1");
 		        			}
 		        		}
 		        		return true;
