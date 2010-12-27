@@ -321,13 +321,8 @@ public class ExultActivity extends Activity {
 		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_S:
-		        		if (event.isAltPressed()) {
-		        			try {
-		        				gwin.saveGamedat(1, "Test save to zip");	//++++++++++TESTING.
-		        			} catch (IOException e) {
-		        				fatal("Failed to save Game 1");
-		        			}
-		        		}
+		        		if (event.isAltPressed()) 
+		        			gwin.write(1, "Test save to zip");	//++++++++++TESTING.
 		        		return true;
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {

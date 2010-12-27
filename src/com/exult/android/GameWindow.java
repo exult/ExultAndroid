@@ -1212,6 +1212,46 @@ public class GameWindow extends GameSingletons {
 		} catch (IOException e) { }
 	}
 	/*
+	 *	Save game by writing out to the 'gamedat' directory.  Call before saveGamedat().
+	 */
+	public void write() {
+		// Lets just show a nice message on screen first
+		int width = getWidth();
+		int centre_x  = width/2;
+		int height = getHeight();
+		int centre_y = height/2;
+		int text_height = fonts.getTextHeight(0);
+		int text_width = fonts.getTextWidth(0, "Saving Game");
+		/* +++++++FINISH
+		win->fill_translucent8(0, width, height, 0, 0, 
+						shape_man->get_xform(8));
+		*/
+		fonts.paintText(0, "Saving Game", centre_x-text_width/2, 
+								centre_y-text_height);
+		// ++++++++ show(true);
+		/*+++++++++FINISH
+		int mapcnt = maps.size();
+		for (int i = 0; i < mapcnt; ++i)
+			maps.elementAt(i).writeIreg();	// Write ireg files.
+		writeNpcs();			// Write out npc.dat.
+		usecode.write();		// Usecode.dat (party, global flags).
+		//+++++ Notebook_gump::write();		// Write out journal.
+		writeGwin();			// Write our data.
+		write_saveinfo();
+		*/
+	}
+	/*
+	 * The whole 'save'.
+	 */
+	public void write(int num, String savename) {
+		write();
+		try {
+			saveGamedat(num, savename);
+		} catch (IOException e) {
+			ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
+		}
+	}
+	/*
 	 *	Write out the gamedat directory from a saved game.
 	 *
 	 *	Output: Aborts if error.
