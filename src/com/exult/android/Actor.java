@@ -1541,9 +1541,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		*/
 		int cx = locx >> 4;		// Get chunk indices within schunk.
 		int cy = locy >> 4;
+		
 							// Get tile #'s.
 		int tilex = locx & 0xf;
 		int tiley = locy & 0xf;
+		if (num == 0)//+++++++DEBUG
+			System.out.printf("Reading Avatar, locx = %1$d, cx = %2$d, tilex = %3$d",
+					locx, cx, tilex);
 		setShapePos(tilex, tiley);
 		MapChunk olist = npcmap.getChunk(scx + cx, scy + cy);
 		setInvalid();			// Not in world yet.

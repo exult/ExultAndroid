@@ -1338,18 +1338,18 @@ public class GameWindow extends GameSingletons {
 				//+++++FINISH: multimap stuff here.
 				//++++++++++++
 				int len = (int)ze.getSize();
-				System.out.println("Unzipping " + fnm + " of length " + len);
+				// System.out.println("Unzipping " + fnm + " of length " + len);
 				if (len == -1)			// Means 'unknown'.
 					len = 0x1000;
 				if (buf == null || buf.length < len)
 					buf = new byte[len];
 				OutputStream out = EUtil.U7create(fnm);
-				while (zin.available() > 0) {
-					int rcnt = zin.read(buf, 0, len);
-					System.out.println("Read " + rcnt + " bytes for " + fnm);
+				int rcnt;
+				while ((rcnt = zin.read(buf, 0, len)) > 0) {
+					// System.out.println("Read " + rcnt + " bytes for " + fnm);
 					out.write(buf, 0, rcnt);	// Then write it out.
 				}
-				System.out.println("Entry " + fnm + ", done");
+				//System.out.println("Entry " + fnm + ", done");
 				out.close();
 				zin.closeEntry();
 			} 
