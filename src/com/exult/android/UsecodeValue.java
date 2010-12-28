@@ -2,6 +2,7 @@ package com.exult.android;
 
 import java.util.Vector;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 
 public abstract class UsecodeValue {
@@ -123,6 +124,9 @@ public abstract class UsecodeValue {
 			return null;
 		}
 	}
+	public void save(OutputStream out) throws IOException {
+		throw new IOException("UsecodeValue.save: unsupported type");
+	}
 	/*
 	 * All these subclasses are intended to be immutable.
 	 */
@@ -142,6 +146,10 @@ public abstract class UsecodeValue {
 		}
 		public String toString() {
 			return Integer.toHexString(intval);
+		}	
+		public void save(OutputStream out) throws IOException {
+			out.write(int_type);
+			EUtil.Write4(out, intval);
 		}
 		public UsecodeValue plus(UsecodeValue v2) {
 			if (v2 instanceof StringValue) {
@@ -184,6 +192,11 @@ public abstract class UsecodeValue {
 		}
 		public String toString() {
 			return '"' + str + '"';
+		}
+		public void save(OutputStream out) throws IOException {
+			out.write(string_type);
+			EUtil.Write2(out, str.length());
+			out.write(str.getBytes());
 		}
 		public final UsecodeValue plus(UsecodeValue v2) {
 			if (v2 instanceof IntValue) {
@@ -244,6 +257,14 @@ public abstract class UsecodeValue {
 			}
 			s.append(']');
 			return s.toString();
+		}
+		public void save(OutputStream out) throws IOException {
+			out.write(array_type);
+			int len = elems.length;
+			EUtil.Write2(out, len);
+			for (int i = 0; i < len; ++i) {
+				elems[i].save(out);
+			}
 		}
 		public boolean isFalse() {
 			return elems.length == 0;
@@ -353,6 +374,10 @@ public abstract class UsecodeValue {
 		}
 		public String toString() {
 			return obj != null ? obj.toString() : "null";
+		}
+		public void save(OutputStream out) throws IOException {
+			out.write(pointer_type);
+			EUtil.Write4(out, 0);
 		}
 		public GameObject getObjectValue() {
 			return obj;

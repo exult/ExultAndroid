@@ -1,10 +1,12 @@
 package com.exult.android;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.Iterator;
 import java.util.concurrent.Semaphore;
 import java.lang.InterruptedException;
 import android.graphics.Point;
@@ -1628,12 +1630,14 @@ public class UsecodeMachine extends GameSingletons {
 		saved_pos.ty = (short)EUtil.Read2(in);
 		saved_pos.tz = (short)EUtil.Read2(in);
 		saved_map = EUtil.Read2(in);
-		}
+	}
 	/*
 	 *	Read in static variables from USEVARS.
 	 */
 	private void read_usevars(InputStream in) throws IOException {
 		int cnt = EUtil.Read4(in);		// Global statics.
+		if (statics == null)
+			statics = new Vector<UsecodeValue>(cnt);
 		statics.setSize(cnt);
 		int i;
 		for (i = 0; i < cnt; i++)
@@ -1676,7 +1680,79 @@ public class UsecodeMachine extends GameSingletons {
 			}
 		}
 	}
-	
+	/*
+	 *	Write out global data to 'gamedat/usecode.dat'.
+	 *	(and 'gamedat/keyring.dat')
+	 */
+
+	public void write() throws IOException {
+						// Assume new games will have keyring.
+		/* ++++++++++FINISH
+		if (!game.isBG())
+			keyring.write();	// write keyring data
+		*/
+		OutputStream out = EUtil.U7create(EFile.FLAGINIT);	// Write global flags.
+		out.write(gflags);
+		out.close();
+		out = EUtil.U7create(EFile.USEDAT);
+		EUtil.Write2(out, partyman.getCount());	// Write party.
+		int i;	// Blame MSVC
+		for (i = 0; i < PartyManager.EXULT_PARTY_MAX; i++)
+			EUtil.Write2(out, partyman.getMember(i));
+						// Timers.
+		EUtil.Write4(out, 0xffffffff);
+		for (TreeMap.Entry<Integer,Integer> entry : timers.entrySet()) {
+			  Integer key = entry.getKey();
+			  Integer value = entry.getValue();
+			  if (value != 0) {	// Don't write unused timers.
+				  EUtil.Write2(out, key);
+				  EUtil.Write4(out, value);
+			  }
+		}
+		EUtil.Write2(out, 0xffff);
+		EUtil.Write2(out, saved_pos == null ? -1 : saved_pos.tx);	// Write saved pos.
+		EUtil.Write2(out, saved_pos == null ? -1 : saved_pos.ty);
+		EUtil.Write2(out, saved_pos == null ? -1 : saved_pos.tz);
+		EUtil.Write2(out, saved_map);		// Write saved map.
+		out.close();
+		out = EUtil.U7create(EFile.USEVARS);		// Static variables. 1st, globals.
+		int cnt = statics != null ? statics.size() : 0;
+		EUtil.Write4(out, cnt);	// # globals.
+		for (i = 0; i < cnt; ++i)
+			statics.elementAt(i).save(out);
+						// Now do the local statics.
+		/* +++++++++FINISH
+		int num_slots = funs.size();
+		for (i = 0; i < num_slots; i++) {
+			Vector<UsecodeFunction> slot = funs.elementAt(i);
+			cnt = slot.size();
+			for (int j = 0; j < cnt; ++j) {
+				UsecodeFunction fun = slot.elementAt(j);
+				if (fun == null || fun.statics.isEmpty())
+					continue;
+				UsecodeSymbol *fsym = symtbl ? (*symtbl)[fun->id] : 0;
+				if (fsym)
+					{
+					const char *nm = fsym.getName();
+					EUtil.Write4(out, 0xfffffffe);
+					nfile->write2(strlen(nm));
+					nfile->write(const_cast<char *>(nm), strlen(nm));
+					}
+				else
+					EUtil.Write4(out, fun->id);
+				EUtil.Write4(out, fun->statics.size());
+				for (it = fun->statics.begin();
+						it != fun->statics.end(); ++it)
+					{
+					if (!(*it).save(nfile))
+						throw file_exception("Could not write static usecode value");
+					}
+				}
+			}
+		*/
+		EUtil.Write4(out, 0xffffffff);	// End with -1.
+		out.close();
+	}
 	/*
 	 * One Usecode function.
 	 */

@@ -33,6 +33,7 @@ public class GameWindow extends GameSingletons {
 	private MainActor mainActor;
 	private Actor cameraActor;		// What to center view on.
 	private Vector<Actor> npcs;
+	private int numNpcs1;			// Number of type1 NPC's.
 	private GameObject movingBarge;
 	// Rendering
 	private int scrolltx, scrollty;		// Top-left tile of screen.
@@ -44,7 +45,8 @@ public class GameWindow extends GameSingletons {
 	//	Game state values.
 	private boolean combat;			// True if in combat.
 	private int skipAboveActor;		// Level above actor to skip rendering.
-	private int numNpcs1;			// Number of type1 NPC's.
+	private boolean ambientLight;	// Permanent version of special_light.
+	
 	/*
 	 *	Public flags and gameplay options:
 	 */
@@ -53,6 +55,7 @@ public class GameWindow extends GameSingletons {
 	public boolean paintEggs = true;//++++TRUE for testing.
 	public int blits;		// For frame-counting.
 	public boolean skipFirstScene = true;	// ++++TESTING.
+	public boolean armageddon;
 	public String busyMessage;		// True when doing something we need to wait for.
 	public void setBusyMessage(String s) {
 		busyMessage = s;
@@ -254,15 +257,16 @@ public class GameWindow extends GameSingletons {
 			moving_barge = 0;
 			set_moving_barge(b);
 			}
+		*/
 						// Set where to skip rendering.
-		int cx = camera_actor.get_cx(), cy = camera_actor.get_cy();	
-		Map_chunk *nlist = map.get_chunk(cx, cy);
-		nlist.setup_cache();					 
-		int tx = camera_actor.get_tx(), ty = camera_actor.get_ty();
-		set_above_mainActor(nlist.is_roof (tx, ty,
-							camera_actor.get_lift()));
-		set_in_dungeon(nlist.has_dungeon()?nlist.is_dungeon(tx, ty):0);
-		set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
+		int cx = cameraActor.getCx(), cy = cameraActor.getCy();	
+		MapChunk nlist = map.getChunk(cx, cy);
+		int tx = cameraActor.getTx(), ty = cameraActor.getTy();
+		setAboveMainActor(nlist.isRoof (tx, ty,
+							cameraActor.getLift()));
+		/*+++++++FINISH
+		set_in_dungeon(nlist.hasDungeon()?nlist.isDungeon(tx, ty):0);
+		set_ice_dungeon(nlist.isIceDungeon(tx, ty));
 		*/
 	}
 	public final void centerView(Tile t) {
@@ -831,8 +835,8 @@ public class GameWindow extends GameSingletons {
 				int text_height = fonts.getTextHeight(0);
 				int text_width = fonts.getTextWidth(0, busyMessage);
 				/* +++++++FINISH
-				win->fill_translucent8(0, width, height, 0, 0, 
-								shape_man->get_xform(8));
+				win.fill_translucent8(0, width, height, 0, 0, 
+								shape_man.get_xform(8));
 				*/
 				fonts.paintText(0, busyMessage, getWidth()/2-text_width/2, 
 										getHeight()/2-text_height);
@@ -892,11 +896,9 @@ public class GameWindow extends GameSingletons {
 	 */
 	public void initActors() throws IOException {
 		if (mainActor != null) {		// Already done?
-			/* FINISH++++++++
-			Game::clear_avname();
-			Game::clear_avsex();
-			Game::clear_avskin();
-			*/
+			game.clearAvName();
+			game.clearAvSex();
+			game.clearAvSkin();
 			return;
 		}
 		readNpcs();			// Read in all U7 NPC's.
@@ -909,11 +911,10 @@ public class GameWindow extends GameSingletons {
 		if (Game::get_avsex() == 0 || Game::get_avsex() == 1 || Game::get_avname()
 				|| (Game::get_avskin() >= 0 && Game::get_avskin() <= 2))
 			changed = true;
-
-		Game::clear_avname();
-		Game::clear_avsex();
-		Game::clear_avskin();
 		*/
+		game.clearAvName();
+		game.clearAvSex();
+		game.clearAvSkin();
 		// Update gamedat if there was a change
 		if (changed) {
 			//++++++++++FINISH schedule_npcs(6,7,false);
@@ -1203,7 +1204,7 @@ public class GameWindow extends GameSingletons {
 	/*
 	 *	Read data for the game.
 	 *	 */
-	private void readGwin() {
+	public void readGwin() {
 		/* +++++++++++FINISH
 		if (!clock.in_queue())		// Be sure clock is running.
 			tqueue.add(Game::get_ticks(), clock, 
@@ -1261,10 +1262,10 @@ public class GameWindow extends GameSingletons {
 			for (int i = 0; i < mapcnt; ++i)
 				maps.elementAt(i).writeIreg();	// Write ireg files.
 			writeNpcs();			// Write out npc.dat.
-			/*+++++++++FINISH
 			usecode.write();		// Usecode.dat (party, global flags).
 			//+++++ Notebook_gump::write();		// Write out journal.
 			writeGwin();			// Write our data.
+			/*+++++++++
 			write_saveinfo();
 			 */
 		} catch (IOException e) {
@@ -1296,6 +1297,33 @@ public class GameWindow extends GameSingletons {
 		Thread t = new SaveThread(num, savename);
 		t.start();
 	}
+	private void writeGwin() throws IOException {
+		OutputStream gout = EUtil.U7create(EFile.GWINDAT);
+					// Start with scroll coords (in tiles).
+		EUtil.Write2(gout, getScrolltx());
+		EUtil.Write2(gout, getScrollty());
+					// Write clock.
+		//+++TESTING:
+		EUtil.Write2(gout, 0);EUtil.Write2(gout, 0);EUtil.Write2(gout, 0);
+		EUtil.Write4(gout, 0);
+		/* +++++++++++FINISH
+		EUtil.Write2(gout, clock.getDay());
+		EUtil.Write2(gout, clock.getHour());
+		EUtil.Write2(gout, clock.getMinute());
+		EUtil.Write4(gout, specialLight);	// Write spell expiration minute.
+		MyMidiPlayer *player = Audio::get_ptr().get_midi();
+		if (player) {
+			EUtil.Write4(gout, static_cast<uint32>(player.get_current_track()));
+			EUtil.Write4(gout, static_cast<uint32>(player.is_repeating()));
+		} else */ {
+			EUtil.Write4(gout, -1);
+			EUtil.Write4(gout, 0);
+		}
+		gout.write(armageddon ? 1 : 0);
+		gout.write(ambientLight ? 1 : 0);
+		gout.flush();
+	}
+
 	private void writeNpcs() throws IOException {	
 		int num_npcs = npcs.size();
 		OutputStream out = EUtil.U7create(EFile.NPC_DAT);
@@ -1543,7 +1571,7 @@ public class GameWindow extends GameSingletons {
 		try {
 			in = EUtil.U7openStream(fname);
 			sz = in.available();
-			System.out.println("Saving to zip: " + fname + ", sz = " + sz);
+			//System.out.println("Saving to zip: " + fname + ", sz = " + sz);
 			if (buf == null || buf.length < sz)
 				buf = new byte[sz];
 			in.read(buf, 0, sz);

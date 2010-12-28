@@ -183,6 +183,7 @@ public class ExultActivity extends Activity {
     		gwin = new GameWindow(320, 200);	// Standard U7 dims.
     		gwin.getWin().setToScale(width, height);
     		gwin.initFiles(false);
+    		gwin.readGwin();
     		gwin.setupGame();
     		gwin.setAllDirty();
     	}

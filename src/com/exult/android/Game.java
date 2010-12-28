@@ -4,6 +4,9 @@ import java.util.HashMap;
 public abstract class Game extends GameSingletons {
 	protected int gameType;
 	private boolean newGame;
+	private String avName;
+	private int avSex = -1;
+	private int avSkin = -1;
 	private HashMap<String,Integer> shapes;
 	public Game() {
 		shapes = new HashMap<String,Integer>();
@@ -14,6 +17,19 @@ public abstract class Game extends GameSingletons {
 	}
 	public void setNewGame() {
 		newGame = true;
+	}
+	public void setAvName(String nm) {
+		avName = nm;
+	}
+	public void clearAvName() {
+		avName = null;
+		newGame = false;
+	}
+	public void clearAvSex() {
+		avSex = -1;
+	}
+	public void clearAvSkin() {
+		avSkin = -1;
 	}
 	public void addShape(String nm, int shapenum) {
 		shapes.put(nm, shapenum);
