@@ -22,6 +22,12 @@ public abstract class Gump extends ShapeID {
 		setPos();
 		gumpman.addGump(this);
 	}
+	public Gump(int shnum, ShapeFiles file) {
+		super(shnum, 0, file);
+		elems = new Vector<GumpWidget>();
+		setPos();
+		gumpman.addGump(this);
+	}
 	public void close() {
 		gumpman.closeGump(this);
 	}
@@ -191,6 +197,10 @@ public abstract class Gump extends ShapeID {
 			container = cont;
 			initialize(shnum);
 		}
+		public Container(int shnum, ShapeFiles file) {
+			super(shnum, file);
+			initialize(shnum);
+		}
 		protected final void setObjectArea(int x, int y, int w, int h, 
 									int checkx, int checky) {
 			objectArea.set(x, y, w, h);
@@ -330,5 +340,31 @@ public abstract class Gump extends ShapeID {
 								paintBox.y + obj.getTy());
 			}
 		}
+	}
+	public static abstract class Modal extends Gump.Container {
+		protected boolean done;				// true when user clicks checkmark.
+		protected GumpWidget.Button pushed;	// Button currently being pushed.
+		
+		public Modal(int initx, int inity, int shnum) {
+			super(null, initx, inity, shnum);
+		}
+		// Create centered.
+		public Modal(int shnum, ShapeFiles file) {
+			super(shnum, file);
+		}
+		public final boolean isDone() {
+			return done;
+		}
+		// Handle events:
+		public abstract boolean mouseDown(int mx, int my, int button);
+		public abstract boolean mouseUp(int mx, int my, int button);
+		public void mouseDrag(int mx, int my)
+			{  }
+		public void keyDown(int chr) // Key pressed
+			{  }
+		public void textInput(int chr, int unicode) // Character typed (unicode)
+			{ }
+		public final boolean isModal()
+			{ return true; }
 	}
 }

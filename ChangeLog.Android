@@ -4,3 +4,6 @@
 12-19-2010
 	Fixed bug in GumpManager that caused bad rendering and crashes.
 	Show mouse 'flash'.
+12-25-2010
+	Opening scene seems to work.
+

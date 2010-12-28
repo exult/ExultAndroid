@@ -231,4 +231,33 @@ public class EFile {
 	public final static int	EXULT_SI_FLX_BLENDS_DAT = 7;
 	public final static int	EXULT_SI_FLX_CONTAINER_DAT = 8;
 	
+	// exult.flx sections:
+	public final static int	EXULT_FLX_QUOTES_TXT = 		0;
+	public final static int	EXULT_FLX_CREDITS_TXT = 		1;
+	public final static int	EXULT_FLX_EXULT_LOGO_SHP =		2;
+	public final static int	EXULT_FLX_EXULT0_PAL =		3;
+	public final static int	EXULT_FLX_MEDITOWN_MID =		4;
+	public final static int	EXULT_FLX_FONT_SHP =		5;
+	public final static int	EXULT_FLX_FONTON_SHP =		6;
+	public final static int	EXULT_FLX_NAVFONT_SHP =		7;
+	public final static int	EXULT_FLX_NAVFONTON_SHP =		8;
+	public final static int	EXULT_FLX_POINTERS_SHP =		9;
+	public final static int	EXULT_FLX_EXTRAS_SHP =		10;
+	public final static int	EXULT_FLX_SAVEGUMP_SHP =		11;
+	public final static int	EXULT_FLX_SAV_DOWNDOWN_SHP =		12;
+	public final static int	EXULT_FLX_SAV_DOWN_SHP =		13;
+	public final static int	EXULT_FLX_SAV_UP_SHP =		14;
+	public final static int	EXULT_FLX_SAV_UPUP_SHP =		15;
+	public final static int	EXULT_FLX_SAV_SLIDER_SHP =		16;
+	public final static int	EXULT_FLX_SAV_SELECTED_SHP =		17;
+	public final static int	EXULT_FLX_GAMEPLAYOPTIONS_SHP =		18;
+	public final static int	EXULT_FLX_GAMEMENU_SHP =		19;
+	public final static int	EXULT_FLX_AUDIOOPTIONS_SHP =		20;
+	public final static int	EXULT_FLX_VIDEOOPTIONS_SHP =		21;
+	public final static int	EXULT_FLX_HP_BAR_SHP =		22;
+	public final static int	EXULT_FLX_SFX_ICON_SHP =		23;
+	public final static int	EXULT_FLX_NOTEBOOK_SHP =		24;
+	public final static int	EXULT_FLX_STATS_EXTRA_SHP =		25;
+	public final static int	EXULT_FLX_MTGM_MID =		26;
+
 }

@@ -9,6 +9,11 @@ public class GumpWidget extends ShapeID {
 		parent = par;
 		x = px; y = py;
 	}
+	public GumpWidget(Gump par, int shnum, int px, int py, ShapeFiles file) {
+		super(shnum, 0, file);
+		parent = par;
+		x = px; y = py;
+	}
 	public boolean onWidget(int mx, int my) {
 		mx -= parent.getX() + x;	// Get point rel. to gump.
 		my -= parent.getY() + y;
@@ -34,6 +39,9 @@ public class GumpWidget extends ShapeID {
 
 		public Button(Gump par, int shnum, int px, int py) {
 			super(par, shnum, px, py);
+		}
+		public Button(Gump par, int shnum, int px, int py, ShapeFiles file) {
+			super(par, shnum, px, py, file);
 		}
 		public Button onButton(int mx, int my) {
 			if (onWidget(mx, my))
@@ -209,5 +217,32 @@ public class GumpWidget extends ShapeID {
 			return true;
 		}
 	};
+	public static abstract class TextButton extends Button {
+		protected String text;
+		protected int		text_x;
+		protected int		text_y;
+		protected int		width;
+		protected int		height;
 
+		protected void init() {
+			//+++++++++++FINISH
+		}
+		public TextButton(Gump p, String str, int x, int y, int w, int h) {
+			super(p, 0, x, y, null);
+			init();
+		}
+		public void paint() {
+			//++++++++++
+		}
+
+		public boolean onWidget(int mx, int my) {
+			//+++++++++FINISH
+			return false;
+		}
+		/* ++++++++++
+		virtual int on_button(int mx, int my)
+		{ return on_widget (mx, my); }
+		*/
+		
+	};
 }
