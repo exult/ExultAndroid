@@ -1,4 +1,5 @@
 package com.exult.android;
+import java.io.IOException;
 
 public final class NewFileGump extends Gump.Modal {
 	private static final int MAX_SAVEGAME_NAME_LEN = 0x50;
@@ -55,7 +56,7 @@ public final class NewFileGump extends Gump.Modal {
 
 	byte	back[];
 
-	SaveInfo	games;		// The list of savegames
+	SaveInfo	games[];		// The list of savegames
 	int		num_games;	// Number of save games
 	int		first_free;	// The number of the first free savegame
 
@@ -120,19 +121,72 @@ public final class NewFileGump extends Gump.Modal {
 		LoadSaveGameDetails();
 	}
 	public void load() {			// 'Load' was clicked.
-		//+++++++++++++++
+		// Shouldn't ever happen.
+		if (selected == -2 || selected == -3)
+			return;	
+		// Aborts if unsuccessful.
+		if (selected != -1) 
+			gwin.read(games[selected].num);
+		else // Read Gamedat
+			gwin.read();
+
+		// Set Done
+		done = true;
+		restored = true;
+		
+		// Reset Selection
+		selected = -3;
+		buttons[0] = null;
+		buttons[1] = null;
+		buttons[2] = null;
 	}
 	public void save() {			// 'Save' was clicked.
-		//+++++++++++++++++
+		// Shouldn't ever happen.
+		if (newname.length() == 0 || selected == -3)
+			return;	
+		// Already a game in this slot? If so ask to delete
+		/* ++++++++++FINISH
+		if (selected != -2) if (!Yesno_gump::ask("Okay to write over existing saved game?"))
+			return;
+		*/
+		
+		int num = selected >= 0 ? games[selected].num 
+				: (selected == -2 ? first_free : -1);
+		if (num >= 0)	// Write to gamedat, then to savegame file.
+			gwin.write(num, newname);
+		else try {
+			gwin.write();
+		} catch (IOException e) {
+			System.out.println("Error during quick save");
+		}
+		System.out.println("Saved game #" + selected + " successfully.");
+
+		// Reset everything
+		selected = -3;
+		buttons[0] = null;
+		buttons[1] = null;
+		buttons[2] = null;
+
+		FreeSaveGameDetails();
+		LoadSaveGameDetails();
+		paint();
+		gwin.setPainted();
 	}
 	public void delete_file() {		// 'Delete' was clicked.
 		//+++++++++++++++++++
 	}
 	public void scroll_line(int dir) {	// Scroll Line Button Pressed
-		//+++++++++++++++
+		list_position += dir;
+
+		if (list_position > num_games-fieldcount)
+			list_position = num_games-fieldcount;
+		if (list_position < -2)
+			list_position = -2;
+		paint();
+		gwin.setPainted();
 	}
 	public void scroll_page(int dir) {	// Scroll Page Button Pressed.
-		//++++++++++++++++++++++++++++++++++++
+		scroll_line(dir * fieldcount);
 	}
 	public boolean restoredGame()		// 1 if user restored.
 		{ return restored; }
