@@ -11,6 +11,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
 import java.util.Random;
+import java.util.Vector;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class EUtil {
 	private static TreeMap pathMap;
@@ -253,6 +256,28 @@ public class EUtil {
 		String fname = getSystemPath(nm);
 		File f = new File(fname);
 		return f.mkdir();
+	}
+	//	Find files matching mask which is a REGEX pattern.
+	public static void U7ListFiles(String mask, Vector<String> filelist) {
+		mask = getSystemPath(mask);
+		char sep = '/';
+		int split = mask.lastIndexOf(sep);
+		String dir, nameMask;
+		if (split == -1) {
+			dir = "."; nameMask = mask;
+		} else {
+			dir = mask.substring(0, split); nameMask = mask.substring(split + 1);
+		}
+		File folder = new File(dir);
+	    File[] listOfFiles = folder.listFiles();
+	    Pattern pattern = Pattern.compile(nameMask);
+	    for (int i = 0; i < listOfFiles.length; i++) {
+	    	if (listOfFiles[i].isFile()) {
+	    		String fname = listOfFiles[i].getName();
+	    		if (pattern.matcher(fname).matches())
+	    			filelist.add(dir+sep+fname);
+	    	}
+	    }
 	}
 	public static OutputStream U7create(String nm) throws IOException {
 		String fname = getSystemPath(nm);

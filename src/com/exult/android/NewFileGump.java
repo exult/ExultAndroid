@@ -1,4 +1,5 @@
 package com.exult.android;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.Calendar;
@@ -156,16 +157,16 @@ public final class NewFileGump extends Gump.Modal {
 		String mask = String.format(EFile.SAVENAME2, game.isBG() ? "bg" : "si");
 
 		Vector<String> filenames = new Vector<String>();
-		/* ++++++++FINISH
-		U7ListFiles (mask, filenames);
-		*/
+		EUtil.U7ListFiles(mask, filenames);
 		num_games = filenames.size();
 		
 		games = new SaveInfo[num_games];
 
 		// Setup basic details
 		for (i = 0; i<num_games; i++) {
+			games[i] = new SaveInfo();
 			games[i].filename = filenames.elementAt(i);
+			System.out.println("FILE: " + games[i].filename);
 			games[i].SetSeqNumber();
 		}
 
@@ -179,8 +180,9 @@ public final class NewFileGump extends Gump.Modal {
 		first_free = -1;
 		/* ++++++++++FINISH
 		for (i = 0; i<num_games; i++) {
-			games[i].readable = gwin.getSaveinfo(games[i].num, games[i].savename, games[i].screenshot,
-				games[i].details, games[i].party);
+			games[i].readable = gwin.getSaveinfo(games[i].num, games[i].savename, 
+			games[i].screenshot,
+			games[i].details, games[i].party);
 
 			if (first_free == -1 && i != games[i].num) first_free = i;
 		}
@@ -249,7 +251,7 @@ public final class NewFileGump extends Gump.Modal {
 	}
 	public void save() {			// 'Save' was clicked.
 		// Shouldn't ever happen.
-		if (newname.length() == 0 || selected == -3)
+		if (newname == null || newname.length() == 0 || selected == -3)
 			return;	
 		// Already a game in this slot? If so ask to delete
 		/* ++++++++++FINISH
@@ -422,6 +424,8 @@ public final class NewFileGump extends Gump.Modal {
 			text = games[actual_game].savename;
 		else
 			text = newname;
+		if (text == null)
+			text = "";
 		fonts.paintText (2, text, 
 			x + fieldx + textx,
 			y + fieldy + texty + line*(fieldh + fieldgap));
@@ -604,7 +608,7 @@ public final class NewFileGump extends Gump.Modal {
 		//+++++++++
 	}
 	
-	static class SaveGameDetails {
+	public static class SaveGameDetails {
 		// Time that the game was saved (needed????)
 		byte	real_minute;	// 1
 		byte	real_hour;	// 2
@@ -625,10 +629,11 @@ public final class NewFileGump extends Gump.Modal {
 		byte	real_second;	// 15
 
 		//Incase we want to add more later
-		byte		reserved0;	// 16
+		byte	reserved0;	// 16
 		byte	reserved1[] = new byte[48];	// 64
+		public static final int skip = 49;
 	};
-	static class SaveGameParty
+	public static class SaveGameParty
 	{
 		byte		name[] = new byte[18];	// 18
 		short		shape;		// 20
@@ -654,8 +659,9 @@ public final class NewFileGump extends Gump.Modal {
 		int		reserved3;	// 56
 		int		reserved4;	// 60
 		int		reserved5;	// 64
+		public static final int skip = 5*4;
 	};
-	static class SaveInfo {
+	public static final class SaveInfo {
 		int			num;
 		String 	filename;
 		String	savename;
@@ -667,14 +673,72 @@ public final class NewFileGump extends Gump.Modal {
 		static int		CompareGames(const void *a, const void *b);
 		int			CompareThis(const SaveInfo *other) const;
 		*/
+		public void setSavename(String s) {
+			savename = s;
+		}
+		public void readSaveInfo(InputStream in) throws IOException {
+			int i;
+			details = new SaveGameDetails();
+
+			// This order must match struct SaveGame_Details
+			// Time that the game was saved
+			details.real_minute = (byte)in.read();
+			details.real_hour = (byte)in.read();
+			details.real_day = (byte)in.read();
+			details.real_month = (byte)in.read();
+			details.real_year = (short)EUtil.Read2(in);
+			
+
+			// The Game Time that the save was done at
+			details.game_minute = (byte)in.read();
+			details.game_hour = (byte)in.read();
+			details.game_day = (short)EUtil.Read2(in);
+
+			details.save_count = (short)EUtil.Read2(in);
+			details.party_size = (byte)in.read();
+
+			details.unused = (byte)in.read();	// Unused
+
+			details.real_second = (byte)in.read();	// 15
+
+			// Packing for the rest of the structure
+			in.skip(SaveGameDetails.skip);
+
+			party = new SaveGameParty[details.party_size];
+			for (i=0; i<8 && i<details.party_size ; i++) {
+				party[i] = new SaveGameParty();
+				in.read(party[i].name);
+				party[i].shape = (short)EUtil.Read2(in);
+
+				party[i].exp = EUtil.Read4(in);
+				party[i].flags = EUtil.Read4(in);
+				party[i].flags2 = EUtil.Read4(in);
+
+				party[i].food = (byte)in.read();
+				party[i].str = (byte)in.read();
+				party[i].combat = (byte)in.read();
+				party[i].dext = (byte)in.read();
+				party[i].intel = (byte)in.read();
+				party[i].magic = (byte)in.read();
+				party[i].mana = (byte)in.read();
+				party[i].training = (byte)in.read();
+
+				party[i].health = (short)EUtil.Read2(in);
+				/*+++++ party[i].shape_file =*/ EUtil.Read2(in);
+
+				// Packing for the rest of the structure
+				in.skip(SaveGameParty.skip);
+			}
+		}
 		void SetSeqNumber() {
 			int i;
 
 			for (i = filename.length() - 1; !Character.isDigit(filename.charAt(i)); i--)
 				;
+			int end = i + 1;
 			for (; Character.isDigit(filename.charAt(i)); i--)
 				;
-			num = Integer.parseInt(filename.substring(i+1));
+			num = Integer.parseInt(filename.substring(i+1, end));
 		}
 		SaveInfo() {
 			readable = true;

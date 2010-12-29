@@ -134,7 +134,7 @@ public class EFile {
 	public final static String MIDITMPFILE     = "u7midi";
 	public final static String MIDISFXFILE     = "u7sfx";
 	public final static String SAVENAME	= "<SAVEGAME>/exult%1$02d%2$s.sav";
-	public final static String SAVENAME2	= "<SAVEGAME>/exult*%1$s.sav";
+	public final static String SAVENAME2	= "<SAVEGAME>/exult.*%1$s.sav"; // Regexp.
 	public final static String INTROSND	= "<STATIC>/introsnd.dat";
 	public final static String PATCH_INTROSND	= "<PATCH>/introsnd.dat";
 	public final static String PATCH_ARMOR	= "<PATCH>/armor.dat";
