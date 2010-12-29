@@ -1,6 +1,7 @@
 package com.exult.android;
 import java.io.IOException;
 import java.util.Vector;
+import java.util.Calendar;
 
 public final class NewFileGump extends Gump.Modal {
 	private static final int MAX_SAVEGAME_NAME_LEN = 0x50;
@@ -9,9 +10,9 @@ public final class NewFileGump extends Gump.Modal {
 	static final String deletetext = "DELETE";
 	static final String canceltext = "CANCEL";
 	GumpWidget.Button buttons[] = new GumpWidget.Button[8];	// 2 sets of 4 buttons
-	static final int btn_cols[] = 	// x-coord of each button.
+	static final int btn_rows[] = 	// x-coord of each button.
 		{186, 2, 15, 158, 171};
-	static final int btn_rows[] =	// y-coord of each button.
+	static final int btn_cols[] =	// y-coord of each button.
 	 	{2, 46, 88, 150, 209};
 	// Text field info
 	static final short fieldx = 2;	// Start Y of each field
@@ -38,18 +39,6 @@ public final class NewFileGump extends Gump.Modal {
 	static final short infoy = 67;	// Y Offset for info
 	static final short infow = 92;	// Width of info box
 	static final short infoh = 79;	// Height of info box
-	static final String infostring = 	// Text format for info
-		"Avatar: %1$s\n" +
-		"Exp: %2$i  Hp: %3$i\n" +
-		"Str: %4$i  Dxt: %5$i\n" +
-		"Int: %6$i  Trn: %7$i\n" +
-		"\n" +
-		"Game Day: %8$i\n" +
-		"Game Time: %9$02i:%10$02i\n" +
-		"\n" +
-		"Save Count: %11$i\n" +
-		"Date: %12$i%13$s %s %14$04i\n" +
-		"Time: %15$02i:%16$02i";
 	static final String months[] = {	// Names of the months
 		"Jan",
 		"Feb",
@@ -120,16 +109,15 @@ public final class NewFileGump extends Gump.Modal {
 		cur_details.game_hour = gclock.get_hour();
 		cur_details.game_minute = gclock.get_minute();
 		
-		time_t t = time(0);
-		struct tm *timeinfo = localtime (&t);	
-
-		cur_details.real_day = timeinfo.tm_mday;
-		cur_details.real_hour = timeinfo.tm_hour;
-		cur_details.real_minute = timeinfo.tm_min;
-		cur_details.real_month = timeinfo.tm_mon+1;
-		cur_details.real_year = timeinfo.tm_year + 1900;
-		cur_details.real_second = timeinfo.tm_sec;
 		*/
+		Calendar timeinfo = Calendar.getInstance();
+
+		cur_details.real_day = (byte)timeinfo.get(Calendar.DAY_OF_MONTH);
+		cur_details.real_hour = (byte)timeinfo.get(Calendar.HOUR);
+		cur_details.real_minute = (byte)timeinfo.get(Calendar.MINUTE);
+		cur_details.real_month = (byte)(timeinfo.get(Calendar.MONTH)+1);
+		cur_details.real_year = (short)timeinfo.get(Calendar.YEAR);
+		cur_details.real_second = (byte)timeinfo.get(Calendar.SECOND);
 		// Current Party
 		cur_party = new SaveGameParty[cur_details.party_size];
 		for (i=0; i<cur_details.party_size ; i++) {
@@ -138,7 +126,7 @@ public final class NewFileGump extends Gump.Modal {
 				npc = gwin.getMainActor();
 			else
 				npc = gwin.getNpc(partyman.getMember(i-1));
-
+			cur_party[i] = new SaveGameParty();
 			String namestr = npc.getNpcName();
 			int j, namelen = Math.min(namestr.length(), cur_party[i].name.length);
 			for (j = 0; j < namelen; ++j)
@@ -146,7 +134,7 @@ public final class NewFileGump extends Gump.Modal {
 			for ( ; j < namelen; ++j)
 				cur_party[i].name[j] = (byte)0;
 			cur_party[i].shape = (short) npc.getShapeNum();
-			//+++++++++ cur_party[i].shape_file = npc.getShapefile();
+			cur_party[i].shape_file = npc.getShapeFile();
 
 			cur_party[i].dext = (byte)npc.getProperty(Actor.dexterity);
 			cur_party[i].str = (byte)npc.getProperty(Actor.strength);
@@ -156,7 +144,7 @@ public final class NewFileGump extends Gump.Modal {
 			cur_party[i].mana = (byte)npc.getProperty(Actor.mana);
 			cur_party[i].magic = (byte)npc.getProperty(Actor.magic);
 			cur_party[i].training = (byte)npc.getProperty(Actor.training);
-			cur_party[i].exp = (byte)npc.getProperty(Actor.exp);
+			cur_party[i].exp = npc.getProperty(Actor.exp);
 			cur_party[i].food = (byte)npc.getProperty(Actor.food_level);
 			cur_party[i].flags = npc.getFlags();
 			cur_party[i].flags2 = npc.getFlags2();
@@ -215,11 +203,11 @@ public final class NewFileGump extends Gump.Modal {
 		games = null;
 	}
 	public NewFileGump() {
-		super(EFile.EXULT_FLX_SAVEGUMP_SHP, ShapeFiles.EXULT_FLX);	
+		super(gwin.getWidth()/2-160, gwin.getHeight()/2-100,
+							EFile.EXULT_FLX_SAVEGUMP_SHP, ShapeFiles.EXULT_FLX);	
 		list_position = -2; 
 		selected = -3;
 		slide_start = -1;
-		setObjectArea(0,0,320,200, -22, 190);
 		// +++++++MAYBE NOT HERE tqueue.pause(TimeQueue.ticks);
 		back = new byte[gwin.getWidth() * gwin.getHeight()];
 		gwin.getWin().get(back, gwin.getWidth(), gwin.getHeight(), 0, 0);
@@ -364,15 +352,23 @@ public final class NewFileGump extends Gump.Modal {
 				suffix = "nd";
 			else if ((details.real_day%10) == 3 && details.real_day != 13)
 				suffix = "rd";
-			String info = String.format(infostring, 
-				party[0].name,
-				party[0].exp, party[0].health,
-				party[0].str, party[0].dext,
-				party[0].intel, party[0].training,
-				details.game_day, details.game_hour, details.game_minute,
-				details.save_count,
-				details.real_day, suffix, months[details.real_month-1], details.real_year,
+			String info0 = String.format("Avatar: %1$s\n", party[0].name);
+			String info1 = String.format("Exp: %1$d  Hp: %2$d\n", 
+					party[0].exp&0xff, party[0].health);
+			String info2 = String.format("Str: %1$d  Dxt: %2$d\n", 
+					party[0].str, party[0].dext);
+			String info3 = String.format("Int: %1$d  Trn: %2$d\n\n",
+				party[0].intel, party[0].training);
+			String info4 = String.format("Game Day: %1$d\n" +
+					"Game Time: %2$02d:%3$02d\n\n",
+				details.game_day, details.game_hour, details.game_minute);
+			String info5 = String.format("Save Count: %1$d\n",
+				details.save_count);
+			String info6 = String.format("Date: %1$d%2$s %3$s %4$04d\n",
+				details.real_day, suffix, months[details.real_month-1], details.real_year);
+			String info7 = String.format("Time: %1$02d:%2$02d",
 				details.real_hour, details.real_minute);
+			String info = info0 + info1 + info2 + info3 + info4 + info5 + info6 + info7;
 			if (filename != null) {
 				info += "\nFile: ";
 				int offset = filename.length();			

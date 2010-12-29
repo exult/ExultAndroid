@@ -9,8 +9,8 @@ public abstract class Gump extends ShapeID {
 	protected void addElem(GumpWidget w) {
 		elems.add(w);
 	}
-	public Gump(int initx, int inity, int shnum) {
-		super(shnum, 0, ShapeFiles.GUMPS_VGA);
+	public Gump(int initx, int inity, int shnum, ShapeFiles file) {
+		super(shnum, 0, file);
 		elems = new Vector<GumpWidget>();
 		x = initx; y = inity;
 		gumpman.addGump(this);
@@ -182,12 +182,18 @@ public abstract class Gump extends ShapeID {
 		}
 		// For initializing ActorGumps.  Does NOT call initialize().
 		protected Container(Actor a, int initx, int inity, int shnum) {
-			super(initx, inity, shnum);
+			super(initx, inity, shnum, ShapeFiles.GUMPS_VGA);
 			container = a;
 		}
 		public Container(ContainerGameObject cont, int initx, int inity, 
 								int shnum) {
-			super(initx, inity, shnum);
+			super(initx, inity, shnum, ShapeFiles.GUMPS_VGA);
+			container = cont;
+			initialize(shnum);
+		}
+		public Container(ContainerGameObject cont, int initx, int inity, 
+								int shnum, ShapeFiles file) {
+			super(initx, inity, shnum, file);
 			container = cont;
 			initialize(shnum);
 		}
@@ -341,12 +347,12 @@ public abstract class Gump extends ShapeID {
 			}
 		}
 	}
-	public static abstract class Modal extends Gump.Container {
+	public static abstract class Modal extends Gump {
 		protected boolean done;				// true when user clicks checkmark.
 		protected GumpWidget.Button pushed;	// Button currently being pushed.
 		
-		public Modal(int initx, int inity, int shnum) {
-			super(null, initx, inity, shnum);
+		public Modal(int initx, int inity, int shnum, ShapeFiles file) {
+			super(initx, inity, shnum, file);
 		}
 		// Create centered.
 		public Modal(int shnum, ShapeFiles file) {
