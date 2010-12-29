@@ -37,21 +37,31 @@ public final class NewFileGump extends Gump.Modal {
 	static final short infoy = 67;	// Y Offset for info
 	static final short infow = 92;	// Width of info box
 	static final short infoh = 79;	// Height of info box
-	/* +++++++++
 	static final String infostring = 	// Text format for info
-		"Avatar: %s\n"
-		"Exp: %i  Hp: %i\n"
-		"Str: %i  Dxt: %i\n"
-		"Int: %i  Trn: %i\n"
-		"\n"
-		"Game Day: %i\n"
-		"Game Time: %02i:%02i\n"
-		"\n"
-		"Save Count: %i\n"
-		"Date: %i%s %s %04i\n"
-		"Time: %02i:%02i";
-	*/
-	static final String months[] = new String[12];	// Names of the months
+		"Avatar: %1$s\n" +
+		"Exp: %2$i  Hp: %3$i\n" +
+		"Str: %4$i  Dxt: %5$i\n" +
+		"Int: %6$i  Trn: %7$i\n" +
+		"\n" +
+		"Game Day: %8$i\n" +
+		"Game Time: %9$02i:%10$02i\n" +
+		"\n" +
+		"Save Count: %11$i\n" +
+		"Date: %12$i%13$s %s %14$04i\n" +
+		"Time: %15$02i:%16$02i";
+	static final String months[] = {	// Names of the months
+		"Jan",
+		"Feb",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"Aug",
+		"Sept",
+		"Oct",
+		"Nov",
+		"Dec"};
 	boolean restored;		// Set to 1 if we restored a game.
 
 	byte	back[];
@@ -62,16 +72,16 @@ public final class NewFileGump extends Gump.Modal {
 
 	VgaFile.ShapeFile cur_shot;		// Screenshot for current game
 	SaveGameDetails cur_details;	// Details of current game
-	SaveGameParty cur_party;	// Party of current game
+	SaveGameParty cur_party[];	// Party of current game
 
 	// Gamedat is being used as a 'quicksave'
 	VgaFile.ShapeFile gd_shot;		// Screenshot in Gamedat
 	SaveGameDetails gd_details;	// Details in Gamedat
-	SaveGameParty gd_party;	// Parts in Gamedat
+	SaveGameParty gd_party[];	// Parts in Gamedat
 
 	VgaFile.ShapeFile screenshot;		// The picture to be drawn
 	SaveGameDetails details;	// The game details to show
-	SaveGameParty party;		// The party to show
+	SaveGameParty party[];		// The party to show
 	boolean is_readable;		// Is the save game readable
 	String filename;		// Filename of the savegame, if exists
 
@@ -92,16 +102,13 @@ public final class NewFileGump extends Gump.Modal {
 	void	FreeSaveGameDetails() {	// Frees all the savegame details
 		//++++++++++
 	}
-	void	PaintSaveName (int line) {
-		//++++++++++++++++
-	}
 	public NewFileGump() {
 		super(EFile.EXULT_FLX_SAVEGUMP_SHP, ShapeFiles.EXULT_FLX);	
 		list_position = -2; 
 		selected = -3;
 		slide_start = -1;
 		setObjectArea(0,0,320,200, -22, 190);
-		tqueue.pause(TimeQueue.ticks);
+		// +++++++MAYBE NOT HERE tqueue.pause(TimeQueue.ticks);
 		back = new byte[gwin.getWidth() * gwin.getHeight()];
 		gwin.getWin().get(back, gwin.getWidth(), gwin.getHeight(), 0, 0);
 
@@ -192,21 +199,296 @@ public final class NewFileGump extends Gump.Modal {
 		{ return restored; }
 					// Paint it and its contents.
 	public void paint() {
-		//++++++++
+		if (games == null)
+			return;			// No list, so skip out.
+		super.paint();
+		ImageBuf win = gwin.getWin();
+		// Paint text objects.
+		int i;
+		for (i = 0; i < fieldcount; i++)
+			PaintSaveName (i);
+		// Paint Buttons
+		for (i = 0; i < 8; i++) 
+			if (buttons[i] != null)
+				buttons[i].paint();
+		// Paint scroller
+		// First thing, work out number of positions that the scroller can be in
+		int num_pos = (2+num_games)-fieldcount;
+		if (num_pos < 1) num_pos = 1;
+		// Now work out the position
+		int pos = ((scrollh-sliderh)*(list_position+2))/num_pos;
+		ShapeFrame slider_shape = ShapeFiles.EXULT_FLX.getShape(
+						EFile.EXULT_FLX_SAV_SLIDER_SHP, 0);
+		slider_shape.paint(win, x+scrollx , y+scrolly+pos);
+		// Now paint the savegame details
+		if (screenshot != null) 
+			screenshot.getFrame(0).paint(win, x + 222, y + 2);
+		// Need to ensure that the avatar's shape actually exists
+		/* +++++++++++FINISH
+		if (party != null  && !sman.have_si_shapes() &&
+			Shapeinfo_lookup::IsSkinImported(party[0].shape)) {
+			// Female if odd, male if even
+			if (party[0].shape %2) 
+				party[0].shape = Shapeinfo_lookup::GetFemaleAvShape();
+			else 
+				party[0].shape = Shapeinfo_lookup::GetMaleAvShape();
+		}
+		*/
+		if (details != null && party != null) {
+			for (i=0; i<4 && i<details.party_size; i++) {
+				ShapeFrame shape = party[i].shape_file.getShape(party[i].shape, 16);
+				shape.paint(win, x + 249 + i*23, y + 169);
+			}
+			for (i=4; i<8 && i<details.party_size; i++) {
+				ShapeFrame shape = party[i].shape_file.getShape(party[i].shape, 16);
+				shape.paint(win, x + 249 + (i-4)*23, y + 198);
+			}
+			//++++++++char	info[320];
+			String suffix = "th";
+
+			if ((details.real_day%10) == 1 && details.real_day != 11)
+				suffix = "st";
+			else if ((details.real_day%10) == 2 && details.real_day != 12)
+				suffix = "nd";
+			else if ((details.real_day%10) == 3 && details.real_day != 13)
+				suffix = "rd";
+			String info = String.format(infostring, 
+				party[0].name,
+				party[0].exp, party[0].health,
+				party[0].str, party[0].dext,
+				party[0].intel, party[0].training,
+				details.game_day, details.game_hour, details.game_minute,
+				details.save_count,
+				details.real_day, suffix, months[details.real_month-1], details.real_year,
+				details.real_hour, details.real_minute);
+			if (filename != null) {
+				info += "\nFile: ";
+				int offset = filename.length();			
+				while (offset-- > 0) {
+					if (filename.charAt(offset) == '/' || filename.charAt(offset) == '\\') {
+						offset++;
+						break;
+					}
+				}
+				info += filename.substring(offset);
+			}
+			fonts.paintTextBox (win, 4, info, x+infox, y+infoy, infow, infoh,
+					0, false, false);
+		} else {
+			if (filename != null) {
+				String info = "File: ";
+				int offset = filename.length();
+				while (offset-- > 0) {
+					if (filename.charAt(offset) == '/' || filename.charAt(offset) == '\\') {
+						offset++;
+						break;
+					}
+				}
+				info += filename.substring(offset);
+				fonts.paintTextBox(win, 4, info, x+infox, y+infoy, infow, infoh,
+						0, false, false);
+			}
+			if (!is_readable) {
+				fonts.paintText(2, "Unreadable", x+infox+
+						(infow-fonts.getTextWidth(2, "Unreadable"))/2, y+infoy+(infoh-18)/2);
+				fonts.paintText(2, "Savegame", x+infox+
+						(infow-fonts.getTextWidth(2, "Savegame"))/2, y+infoy+(infoh)/2);
+			} else {
+				fonts.paintText(4, "No Info", x+infox+
+						(infow-fonts.getTextWidth(4, "No Info"))/2, y+infoy+
+						(infoh-fonts.getTextHeight(4))/2);
+			}
+		}
+		gwin.setPainted();
+	}
+	private void PaintSaveName (int line) {
+		int	actual_game = line+list_position;
+		if (actual_game < -2 || actual_game >= num_games) 
+			return;
+		String text;
+		if (actual_game == -1)
+			text = "Quick Save";
+		else if (actual_game == -2 && selected != -2)
+			text = "Empty Slot";
+		else if (actual_game != selected || buttons[0] != null)
+			text = games[actual_game].savename;
+		else
+			text = newname;
+		fonts.paintText (2, text, 
+			x + fieldx + textx,
+			y + fieldy + texty + line*(fieldh + fieldgap));
+		// Being Edited? If so paint cursor
+		if (selected == actual_game && cursor != -1)
+			gwin.getWin().fill8((byte)0, 1, fonts.getTextHeight(2),
+				x + fieldx + textx + fonts.getTextWidth(2, text, cursor),
+					y + fieldy + texty + line*(fieldh + fieldgap));
+
+		// If selected, show selected icon
+		if (selected == actual_game) {
+			ShapeFrame icon = ShapeFiles.EXULT_FLX.getShape(
+					EFile.EXULT_FLX_SAV_SELECTED_SHP, 0);
+			icon.paint(gwin.getWin(), x+fieldx+iconx,
+						y+fieldy+icony+line*(fieldh+fieldgap));
+		}
 	}
 	public void close()
 		{ done = true; }
 					// Handle events:
-	public boolean mouseDown(int mx, int my, int button) {
-		//+++++++++
+	public boolean mouseDown(int mx, int my, boolean button) {
+		if (!button)
+			return false;
+
+		slide_start = -1;
+		pushed = super.onButton(mx, my);
+					// Try buttons at bottom.
+		if (pushed == null) { 
+			for (int i = 0; i < buttons.length; i++)
+				if (buttons[i] != null && buttons[i].onButton(mx, my) != null) {
+				pushed = buttons[i];
+				break;
+			}
+		}
+		if (pushed != null) {			// On a button?
+			if (!pushed.push(button)) 
+				pushed = null;
+			return true;
+		}
+		int gx = mx - x;
+		int gy = my - y;
+		// Check for scroller
+		if (gx >= scrollx && gx < scrollx+sliderw && gy >= scrolly && gy < scrolly+scrollh) {
+			int num_pos = (2+num_games)-fieldcount;
+			if (num_pos < 1) 
+				num_pos = 1;
+			// Now work out the position
+			int pos = ((scrollh-sliderh)*(list_position+2))/num_pos;
+			// Pressed above it
+			if (gy < pos+scrolly) {
+				scroll_page(-1);
+				paint();
+				return true;
+			}
+			// Pressed below it
+			else if (gy >= pos+scrolly+sliderh) {
+				scroll_page(1);
+				paint();
+				return true;
+			} else { // Pressed on it
+				slide_start = gy;
+				return true;
+			}
+		}
+		// Now check for text fields
+		if (gx < fieldx || gx >= fieldx+fieldw)
+			return true;
+
+		int	hit = -1;
+		int	i;
+		for (i = 0; i < fieldcount; i++) {
+			int fy = fieldy + i*(fieldh + fieldgap);
+			if (gy >= fy && gy < fy+fieldh) {
+				hit = i;
+				break;
+			}
+		}
+		if (hit == -1) 
+			return true;
+		if (hit+list_position >= num_games || hit+list_position < -2 || 
+				selected == hit+list_position) 
+			return true;
+		selected = hit+list_position;
+		boolean want_load = true;
+		boolean want_delete = true;
+		boolean want_save = true;
+		if (selected == -2) {
+			want_load = false;
+			want_delete = false;
+			want_save = false;
+			screenshot = cur_shot;
+			details = cur_details;
+			party = cur_party;
+			newname = "";
+			cursor = 0;
+			is_readable = true;
+			filename = null;
+		} else if (selected == -1) {
+			want_delete = false;
+			screenshot = gd_shot;
+			details = gd_details;
+			party = gd_party;
+			newname = "Quick Save";
+			cursor = -1; // No cursor
+			is_readable = true;
+			filename = null;
+		} else {
+			screenshot = games[selected].screenshot;
+			details = games[selected].details;
+			party = games[selected].party;
+			newname = games[selected].savename;
+			cursor = newname.length();
+			is_readable = want_load = games[selected].readable;
+			filename = games[selected].filename;
+		}
+		if (buttons[0] == null && want_load)
+			buttons[0] = new NewfileTextButton(this, loadtext, 
+												btn_cols[1], btn_rows[0], 39);
+		else if (buttons[0] != null && !want_load) {
+			buttons[0] = null;
+		}
+
+		if (buttons[1] == null && want_save)
+			buttons[1] = new NewfileTextButton(this, savetext,
+												btn_cols[0], btn_rows[0], 40);
+		else if (buttons[1] != null && !want_save) {
+			buttons[1] = null;
+		}
+
+		if (buttons[2] == null && want_delete)
+			buttons[2] = new NewfileTextButton(this, deletetext,
+											btn_cols[2], btn_rows[0], 59);
+		else if (buttons[2] != null && !want_delete) {
+			buttons[2] = null;
+		}
+		paint();			// Repaint.
+		gwin.setPainted();
 		return true;
 	}
-	public boolean mouseUp(int mx, int my, int button) {
-		//+++++++++
+	public boolean mouseUp(int mx, int my, boolean button) {
+		if (!button) 
+			return false;
+		slide_start = -1;
+		if (pushed != null) {			// Pushing a button?
+			pushed.unpush(button);
+			if (pushed.onButton(mx, my) != null)
+				pushed.activate(button);
+			pushed = null;
+		}
 		return true;
 	}
 	public void mouseDrag(int mx, int my) {
-		//+++++++++
+		// If not sliding don't do anything
+		if (slide_start == -1) 
+			return;
+		int gx = mx - x;
+		int gy = my - y;
+		// First if the position is too far away from the slider 
+		// We'll put it back to the start
+		int sy = gy - scrolly;
+		if (gx < scrollx-20 || gx > scrollx+sliderw+20)
+			sy = slide_start - scrolly;
+		if (sy < sliderh/2) sy = sliderh/2;
+		if (sy > scrollh-sliderh/2) sy = scrollh-sliderh/2;
+		sy -= sliderh/2;
+		// Now work out the number of positions
+		int num_pos = (2+num_games)-fieldcount;
+		// Can't scroll if there is less than 1 pos
+		if (num_pos < 1) return;
+		// Now work out the closest position to here position
+		int new_pos = ((sy*num_pos*2)/(scrollh-sliderh)+1)/2-2;
+		if (new_pos != list_position) {
+			list_position = new_pos;
+			paint();
+		}
 	}
 	public void textInput(int chr, int unicode) { // Character typed.
 		//+++++++++
@@ -254,7 +536,7 @@ public final class NewFileGump extends Gump.Modal {
 		byte	training;	// 40
 		short		health;		// 42
 
-		short		shape_file;	// 44
+		ShapeFiles	shape_file;	// 44
 
 		//Incase we want to add more later
 		int		reserved1;	// 48
@@ -269,8 +551,8 @@ public final class NewFileGump extends Gump.Modal {
 		String	savename;
 		boolean			readable;
 		SaveGameDetails	details;
-		SaveGameParty	party;
-		ShapeFiles		screenshot;
+		SaveGameParty	party[];
+		VgaFile.ShapeFile		screenshot;
 		/* +++++++++++
 		static int		CompareGames(const void *a, const void *b);
 		int			CompareThis(const SaveInfo *other) const;

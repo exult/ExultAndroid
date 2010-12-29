@@ -356,8 +356,8 @@ public abstract class Gump extends ShapeID {
 			return done;
 		}
 		// Handle events:
-		public abstract boolean mouseDown(int mx, int my, int button);
-		public abstract boolean mouseUp(int mx, int my, int button);
+		public abstract boolean mouseDown(int mx, int my, boolean button);
+		public abstract boolean mouseUp(int mx, int my, boolean button);
 		public void mouseDrag(int mx, int my)
 			{  }
 		public void keyDown(int chr) // Key pressed

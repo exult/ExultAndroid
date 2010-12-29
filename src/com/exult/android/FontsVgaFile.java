@@ -47,6 +47,8 @@ public class FontsVgaFile extends GameSingletons {
 			{ return fonts[fontnum].paintText(win, text, xoff, yoff); }
 	public int getTextWidth(int fontnum, String text)
 		{ return fonts[fontnum].getTextWidth(text); }
+	public int getTextWidth(int fontnum, String text, int textlen)
+		{ return fonts[fontnum].getTextWidth(text, 0, textlen); }
 	public int getTextHeight(int fontnum)
 		{ return fonts[fontnum].getTextHeight(); }
 	
