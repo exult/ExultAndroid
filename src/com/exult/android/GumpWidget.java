@@ -96,7 +96,7 @@ public class GumpWidget extends ShapeID {
 			if (!button) 
 				return false;
 			/* ++++++FINISH
-			Audio::get_ptr()->play_sound_effect(Audio::game_sfx(74));
+			Audio::get_ptr().play_sound_effect(Audio::game_sfx(74));
 			*/
 			parent.close();
 			return true;
@@ -134,7 +134,7 @@ public class GumpWidget extends ShapeID {
 				return false;
 			/* ++++++FINISH
 			Gamemenu_gump *menu = new Gamemenu_gump();
-			gumpman->do_modal_gump(menu, Mouse::hand);
+			gumpman.do_modal_gump(menu, Mouse::hand);
 			*/
 			return true;
 		}
@@ -184,10 +184,10 @@ public class GumpWidget extends ShapeID {
 				return true;
 			// On?  Got to turn off others.
 			Actor *party[9];		// Get entire party, including Avatar.
-			int cnt = gwin->get_party(party, 1);
+			int cnt = gwin.get_party(party, 1);
 			for (int i = 0; i < cnt; i++) {
-				if (party[i] != actor && party[i]->is_combat_protected())
-					party[i]->set_combat_protected(false);
+				if (party[i] != actor && party[i].is_combat_protected())
+					party[i].set_combat_protected(false);
 			// +++++Should also update gumps.
 			}
 			*/
@@ -218,6 +218,20 @@ public class GumpWidget extends ShapeID {
 		}
 	};
 	public static abstract class TextButton extends Button {
+		// Palette Indices
+		private static final byte 
+			TB_OUTER_BORDER = (byte) 133,
+			TB_OUTER_BORDER_CORNER = (byte)		142,
+			TB_OUTER_BORDER_PUSHED_TOP = (byte)	144,
+			TB_OUTER_BORDER_PUSHED_LEFT = (byte)	140,
+			TB_INNER_BORDER_HIGHLIGHT = (byte)	138,
+			TB_INNER_BORDER_LOWLIGHT = (byte)	142,
+			TB_INNER_BORDER_CORNER = (byte)		141,
+			TB_INNER_BORDER_TR_HIGH = (byte)		137,
+			TB_INNER_BORDER_TR_CORNER = (byte)	138,
+			TB_INNER_BORDER_BL_CORNER = (byte)	144,
+			TB_BACKGROUND = (byte)			140,
+			TB_RT_HIGHLIGHT = (byte)			139;
 		protected String text;
 		protected int		text_x;
 		protected int		text_y;
@@ -225,24 +239,109 @@ public class GumpWidget extends ShapeID {
 		protected int		height;
 
 		protected void init() {
-			//+++++++++++FINISH
+			// Must be at least 11 units high
+			if (height < 11) 
+				height = 11;
+			// Text y is based on gump height of 11
+			text_y = 2 + (height - 11)/2;
+			// We will get the text width
+			int text_width = fonts.getTextWidth(2, text); // SB+++++ "SMALL_BLACK_FONT"
+			if (width < text_width + 4) 
+				width = text_width + 4;
+			// We want to find the starting point for the text (horizontal)
+			text_x = (width - text_width) >> 1;
 		}
 		public TextButton(Gump p, String str, int x, int y, int w, int h) {
 			super(p, 0, x, y, null);
+			text = str;
 			init();
 		}
 		public void paint() {
-			//++++++++++
+			ImageBuf iwin = gwin.getWin();
+
+			int offset = 0;
+			int px = x;
+			int py = y;
+
+			if (parent != null) {
+				px += parent.getX();
+				py += parent.getY();
+			}
+
+			// The the push dependant edges
+			if (isPushed()) {
+				// Top left corner
+				iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px, py);
+				// Bottom left corner
+				iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px, py+height-1);
+				// Top right corner
+				iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px+width-1, py);
+				// Top edge
+				iwin.fill8(TB_OUTER_BORDER_PUSHED_TOP, width-2, 1, px+1, py);
+				// Left edge
+				iwin.fill8(TB_OUTER_BORDER_PUSHED_TOP, 1, height-2, px, py+1);
+
+				offset = 1;
+			} else {
+				// Bottom right corner
+				iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px+width-1, py+height-1);
+				// Bottom left corner
+				iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px, py+height-1);
+				// Top right corner
+				iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px+width-1, py+height-1);
+				// Bottom edge
+				iwin.fill8(TB_OUTER_BORDER, width-2, 1, px+1, py+height-1);
+				// Right edge
+				iwin.fill8(TB_OUTER_BORDER, 1, height-2, px+width-1, py+1);
+			}
+			// 'Outer' Top and Left Edges
+			// Top left corner
+			iwin.fill8(TB_OUTER_BORDER_CORNER, 1, 1, px+offset, py+offset);
+			// Top edge
+			iwin.fill8(TB_OUTER_BORDER, width-2, 1, px+1+offset, py+offset);
+			// Left edge
+			iwin.fill8(TB_OUTER_BORDER, 1, height-2, px+offset, py+1+offset);
+		
+			// 'Inner' Edges
+			// Top left corner
+			iwin.fill8(TB_INNER_BORDER_CORNER, 1, 1, px+offset+1, py+offset+1);
+			// Top Right corner
+			iwin.fill8(TB_INNER_BORDER_TR_CORNER, 1, 1, px+width+offset-2, py+offset+1);
+			// Top Right Highlight 1
+			iwin.fill8(TB_INNER_BORDER_TR_HIGH, 1, 1, px+width+offset-3, py+offset+1);
+			// Top Right Highlight 1
+			iwin.fill8(TB_INNER_BORDER_TR_HIGH, 1, 1, px+width+offset-2, py+offset+2);
+			// Bottom left corner
+			iwin.fill8(TB_INNER_BORDER_BL_CORNER, 1, 1, px+offset+1, py+height+offset-2);
+
+			// Top edge
+			iwin.fill8(TB_INNER_BORDER_HIGHLIGHT, width-5, 1, px+2+offset, py+offset+1);
+			// Left edge
+			iwin.fill8(TB_INNER_BORDER_LOWLIGHT, 1, height-4, px+offset+1, py+2+offset);
+			// Right edge
+			iwin.fill8(TB_INNER_BORDER_HIGHLIGHT, 1, height-5, px+width+offset-2, py+3+offset);
+			// Bottom edge
+			iwin.fill8(TB_INNER_BORDER_LOWLIGHT, width-4, 1, px+2+offset, py+height+offset-2);
+
+			// Background Fill 
+			iwin.fill8(TB_BACKGROUND, width-4, height-4, px+2+offset, py+2+offset);
+			// Top Right Highligh on Background 
+			iwin.fill8(TB_RT_HIGHLIGHT, 1, 1, px+width+offset-3, py+offset+2);
+
+			fonts.paintText(2, text, px+text_x+offset, py+text_y+offset);// SB+++++ "SMALL_BLACK_FONT"
 		}
 
 		public boolean onWidget(int mx, int my) {
-			//+++++++++FINISH
-			return false;
+			int px = x;
+			int py = y;
+
+			if (parent != null){
+				px += parent.getX();
+				py += parent.getY();
+			}
+			if (mx < px || mx >= px + width) return false;
+			if (my < py || my >= py + height) return false;
+			return true;
 		}
-		/* ++++++++++
-		virtual int on_button(int mx, int my)
-		{ return on_widget (mx, my); }
-		*/
-		
 	};
 }
