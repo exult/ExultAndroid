@@ -234,9 +234,6 @@ public final class NewFileGump extends Gump.Modal {
 			gwin.read(games[selected].num);
 		else // Read Gamedat
 			gwin.read();
-
-		// Set Done
-		done = true;
 		restored = true;
 		
 		// Reset Selection
@@ -244,6 +241,7 @@ public final class NewFileGump extends Gump.Modal {
 		buttons[0] = null;
 		buttons[1] = null;
 		buttons[2] = null;
+		close();
 	}
 	public void save() {			// 'Save' was clicked.
 		// Shouldn't ever happen.

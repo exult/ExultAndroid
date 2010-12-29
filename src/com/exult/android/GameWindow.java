@@ -1655,9 +1655,10 @@ public class GameWindow extends GameSingletons {
 				String fnm = ze.getName();
 				if (fnm.equals(screenshotName)) {
 					++found;
-					int sz = (int)ze.getSize();
+					int ind = 0, rcnt, sz = (int)ze.getSize();
 					byte buf[] = new byte[sz];
-					zin.read(buf);
+					while (ind < sz && (rcnt = zin.read(buf, ind, sz - ind)) > 0)
+						ind += rcnt;
 					info.screenshot = new VgaFile.ShapeFile(buf);
 				} else if (fnm.equals(saveinfoName)) {
 					++found;
@@ -1671,6 +1672,6 @@ public class GameWindow extends GameSingletons {
 			ExultActivity.fileFatal(fname);
 			return false;
 		}
-		return false;
+		return true;
 	}
 }
