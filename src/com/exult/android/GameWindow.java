@@ -12,6 +12,9 @@ import java.io.IOException;
 import android.graphics.Point;
 
 import android.graphics.Canvas;
+import java.util.Calendar;
+
+import com.exult.android.NewFileGump.SaveGameParty;
 
 public class GameWindow extends GameSingletons {
 	private static GameWindow instance;
@@ -665,7 +668,7 @@ public class GameWindow extends GameSingletons {
 				{
 				char buf[128];
 				sprintf(buf, "%s (%d)", objname, 
-						npc.get_property(Actor::health));
+						npc.getProperty(Actor.health));
 				objname = &buf[0];
 				}
 			*/
@@ -1058,14 +1061,14 @@ public class GameWindow extends GameSingletons {
 				ShapeID sid(shnum, 0);
 				if (!okay || sid.get_num_frames() < 16)
 					break;	// Watch for corrupted file.
-				Monster_actor *act = Monster_actor::create(shnum);
+				Monster_actor *act = Monster_Actor.create(shnum);
 				act.read(&nfile, -1, false, fix_unused);
 				act.restore_schedule();
 				CYCLE_RED_PLASMA();
 			}
 		}
 		catch(exult_exception &) {
-			Monster_actor::give_up();
+			Monster_Actor.give_up();
 		}
 		if (moving_barge)		// Gather all NPC's on barge.
 		{
@@ -1265,9 +1268,7 @@ public class GameWindow extends GameSingletons {
 			usecode.write();		// Usecode.dat (party, global flags).
 			//+++++ Notebook_gump::write();		// Write out journal.
 			writeGwin();			// Write our data.
-			/*+++++++++
-			write_saveinfo();
-			 */
+			writeSaveInfo();
 		} catch (IOException e) {
 			ExultActivity.fatal("Error saving: " + e.getMessage());
 		}
@@ -1503,8 +1504,10 @@ public class GameWindow extends GameSingletons {
 	        zin.close();
 	        System.out.println("restoreGamedatZip completed");
 	    } catch (IOException e) {
-	    	ExultActivity.fatal(String.format("Error restoring '%1$s': %2$s", 
-	    							EUtil.getSystemPath(fname), e.getMessage()));
+	    	String err = String.format("Error restoring '%1$s': %2$s", 
+					EUtil.getSystemPath(fname), e.getMessage());
+	    	System.out.println(err);
+	    	ExultActivity.fatal(err);
 			return false;
 		}
 	    return true;
@@ -1581,7 +1584,7 @@ public class GameWindow extends GameSingletons {
 			return true;
 		}
 		
-		ZipEntry entry = new ZipEntry(fname);
+		ZipEntry entry = new ZipEntry(EUtil.baseName(fname));
 		zout.putNextEntry(entry); // Store entry
 		zout.write(buf, 0, sz);
 		in.close();
@@ -1673,5 +1676,106 @@ public class GameWindow extends GameSingletons {
 			return false;
 		}
 		return true;
+	}
+	private void writeSaveInfo() throws IOException {
+		int save_count = 1;
+
+		try {
+			InputStream in = EUtil.U7openStream(EFile.GSAVEINFO); 
+			in.skip(10);	// Skip 10 bytes.
+			save_count += EUtil.Read2(in);
+			in.close();
+		} catch (IOException e) { }
+		int party_size = partyman.getCount()+1;
+
+		Calendar timeinfo = Calendar.getInstance();
+		OutputStream out = EUtil.U7create(EFile.GSAVEINFO);
+
+		// This order must match struct SaveGame_Details
+
+		// Time that the game was saved
+		out.write(timeinfo.get(Calendar.MINUTE));
+		out.write(timeinfo.get(Calendar.HOUR));
+		out.write(timeinfo.get(Calendar.DAY_OF_MONTH));
+		out.write(timeinfo.get(Calendar.MONTH) + 1);
+		EUtil.Write2(out, timeinfo.get(Calendar.YEAR));
+
+		// The Game Time that the save was done at
+		/* +++++++++FINISH
+		out.write(clock.get_minute());
+		out.write(clock.get_hour());
+		EUtil.Write2(out, clock.get_day());
+		*/
+		out.write(0); out.write(0); EUtil.Write2(out, 0); //+++++++TESTING.
+		
+		EUtil.Write2(out, save_count);
+		out.write(party_size);
+
+		out.write(0);			// Unused
+
+		out.write(timeinfo.get(Calendar.SECOND));	// 15
+
+		// Packing for the rest of the structure
+		for (int j = NewFileGump.SaveGameDetails.skip; j > 0; --j)
+			out.write(0);
+
+		for (int i = 0; i<party_size ; i++) {
+			Actor npc;
+			if (i == 0)
+				npc = mainActor;
+			else
+				npc = getNpc(partyman.getMember(i-1));
+
+			// Write out 18 bytes of name.
+			byte namestr[] = npc.getNpcName().getBytes();
+			int namelen = Math.min(namestr.length, 18);
+			out.write(namestr, 0, namelen);
+			for ( ; namelen < 18; ++namelen)
+				out.write(0);
+			EUtil.Write2(out, npc.getShapeNum());
+
+			EUtil.Write4(out, npc.getProperty(Actor.exp));
+			EUtil.Write4(out, npc.getFlags());
+			EUtil.Write4(out, npc.getFlags2());
+
+			out.write(npc.getProperty(Actor.food_level));
+			out.write(npc.getProperty(Actor.strength));
+			out.write(npc.getProperty(Actor.combat));
+			out.write(npc.getProperty(Actor.dexterity));
+			out.write(npc.getProperty(Actor.intelligence));
+			out.write(npc.getProperty(Actor.magic));
+			out.write(npc.getProperty(Actor.mana));
+			out.write(npc.getProperty(Actor.training));
+
+			EUtil.Write2(out, npc.getProperty(Actor.health));
+			EUtil.Write2(out, /* +++++npc.get_shapefile()*/  0);
+
+			// Packing for the rest of the structure
+			for (int j = SaveGameParty.skip; j > 0; --j)
+				out.write(0);
+		}
+
+		out.close();
+		/* +++++++++++FINISH
+		// Save Shape
+		ShapeFile map = createMiniScreenshot();
+		U7open(out_stream, GSCRNSHOT);		// Open file; throws an exception - Don't care
+		map.save(&out);
+		out_stream.close();
+		delete map;
+
+		// Current Exult version
+
+		out = EUtil.U7create(EFile.GEXULTVER);
+		getVersionInfo(out);
+		out.close();
+		*/
+		// Exult version that started this game
+		if (EUtil.U7exists(EFile.GNEWGAMEVER) == null) {
+			out = EUtil.U7create(EFile.GNEWGAMEVER);
+			String unk = new String("Unknown\n");
+			out.write(unk.getBytes());
+			out.close();
+		}
 	}
 }
