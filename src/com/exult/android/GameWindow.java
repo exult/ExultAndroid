@@ -1624,4 +1624,53 @@ public class GameWindow extends GameSingletons {
 		}
 		zout.close();
 	}
+	public boolean getSaveInfo(int num, NewFileGump.SaveInfo info) {
+		String fname = String.format(EFile.SAVENAME, num, game.isBG() ? "bg" : "si");
+		if (!EUtil.isFlex(fname)) {
+			return getSaveInfoZip(fname, info);
+		}
+		//++++++++FOR NOW, we don't support non-zipped.
+		return false;
+	}
+	public boolean getSaveInfoZip(String fname, NewFileGump.SaveInfo info) {
+		//++++++++
+		InputStream in;
+		ZipInputStream zin;
+		ZipEntry ze = null;
+		try {
+			in = EUtil.U7openStream(fname);
+			byte namebuf[] = new byte[saveNameSize];
+			in.read(namebuf);
+			int i;
+			for (i = 0; i < saveNameSize; ++i)
+				if (namebuf[i] == 0)
+					break;
+			info.savename = new String(namebuf, 0, i);
+			zin = new ZipInputStream(in);
+			System.out.println("getSaveInfoZip: name is " + info.savename);
+			String screenshotName = EUtil.baseName(EFile.GSCRNSHOT);
+			String saveinfoName = EUtil.baseName(EFile.GSAVEINFO);
+			int found = 0;
+			while (found < 2 && (ze = zin.getNextEntry()) != null) {
+				String fnm = ze.getName();
+				if (fnm.equals(screenshotName)) {
+					++found;
+					int sz = (int)ze.getSize();
+					byte buf[] = new byte[sz];
+					zin.read(buf);
+					info.screenshot = new VgaFile.ShapeFile(buf);
+				} else if (fnm.equals(saveinfoName)) {
+					++found;
+					info.readSaveInfo(zin);
+				}
+				zin.closeEntry();
+			}
+			zin.close();
+		} catch (IOException e) {
+			System.out.println("Zip exception: " + e.getMessage());
+			ExultActivity.fileFatal(fname);
+			return false;
+		}
+		return false;
+	}
 }

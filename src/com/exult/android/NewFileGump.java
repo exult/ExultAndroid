@@ -178,15 +178,11 @@ public final class NewFileGump extends Gump.Modal {
 		*/
 		// Reand and cache all details
 		first_free = -1;
-		/* ++++++++++FINISH
 		for (i = 0; i<num_games; i++) {
-			games[i].readable = gwin.getSaveinfo(games[i].num, games[i].savename, 
-			games[i].screenshot,
-			games[i].details, games[i].party);
-
-			if (first_free == -1 && i != games[i].num) first_free = i;
+			games[i].readable = gwin.getSaveInfo(games[i].num, games[i]); 
+			if (first_free == -1 && i != games[i].num) 
+				first_free = i;
 		}
-		*/
 		if (first_free == -1) 
 			first_free = num_games;
 		// Now sort it again, with all the details so it can be done by date
@@ -687,7 +683,6 @@ public final class NewFileGump extends Gump.Modal {
 			details.real_day = (byte)in.read();
 			details.real_month = (byte)in.read();
 			details.real_year = (short)EUtil.Read2(in);
-			
 
 			// The Game Time that the save was done at
 			details.game_minute = (byte)in.read();
@@ -724,7 +719,8 @@ public final class NewFileGump extends Gump.Modal {
 				party[i].training = (byte)in.read();
 
 				party[i].health = (short)EUtil.Read2(in);
-				/*+++++ party[i].shape_file =*/ EUtil.Read2(in);
+				// FOR NOW:
+				party[i].shape_file = ShapeFiles.SHAPES_VGA;  EUtil.Read2(in);
 
 				// Packing for the rest of the structure
 				in.skip(SaveGameParty.skip);

@@ -257,6 +257,10 @@ public class EUtil {
 		File f = new File(fname);
 		return f.mkdir();
 	}
+	public static String baseName(String fname) {
+		int split = fname.lastIndexOf('/');
+		return split == -1 ? fname : fname.substring(split + 1);
+	}
 	//	Find files matching mask which is a REGEX pattern.
 	public static void U7ListFiles(String mask, Vector<String> filelist) {
 		mask = getSystemPath(mask);
