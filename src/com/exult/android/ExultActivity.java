@@ -206,11 +206,16 @@ public class ExultActivity extends Activity {
     			float sx = event.getX(), sy = event.getY();
     			int x = (int)gwin.getWin().screenToGameX(sx), 
     				y = (int)gwin.getWin().screenToGameY(sy);
+    			Gump.Modal modal = GameSingletons.gumpman.getModal();
     			// int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
     				GameSingletons.mouse.setLocation(x, y);
     				if (clickPoint == null && UsecodeMachine.running <= 0) {
+    					if (modal != null) {
+    						modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
+    						return true;
+    					}
     					dragging = DraggingInfo.startDragging(x, y);
     					dragged = false;
     					if (dragging && DraggingInfo.getObject() ==
@@ -231,10 +236,15 @@ public class ExultActivity extends Activity {
     				avatarMotion = null;
     				movingAvatar = false;
     				if (clickPoint != null) {
+    					
     					if (leftDownX - 1 <= x && x <= leftDownX + 1 &&
     						leftDownY - 1 <= y && y <= leftDownY + 1) {
     						clickPoint.set(x, y);
     					}
+    					return true;
+    				}
+    				if (modal != null) {
+    					modal.mouseUp(x, y, 1);	// FOR NOW, button = 1.
     					return true;
     				}
     				if (dragging) {
@@ -267,6 +277,10 @@ public class ExultActivity extends Activity {
     				GameSingletons.mouse.move(x, y);
     				Mouse.mouseUpdate = true;
     				if (avatarMotion != null && clickPoint == null) {
+    					if (modal != null) {
+    						modal.mouseDrag(x, y);
+    						return true;
+    					}
     					GameSingletons.mouse.setSpeedCursor(avatarStartX,
     							avatarStartY);
     					movingAvatar = true;

@@ -274,7 +274,7 @@ public final class NewFileGump extends Gump.Modal {
 
 		FreeSaveGameDetails();
 		LoadSaveGameDetails();
-		paint();
+		paintThis();
 		gwin.setPainted();
 	}
 	public void delete_file() {		// 'Delete' was clicked.
@@ -287,7 +287,7 @@ public final class NewFileGump extends Gump.Modal {
 			list_position = num_games-fieldcount;
 		if (list_position < -2)
 			list_position = -2;
-		paint();
+		paintThis();
 		gwin.setPainted();
 	}
 	public void scroll_page(int dir) {	// Scroll Page Button Pressed.
@@ -443,9 +443,14 @@ public final class NewFileGump extends Gump.Modal {
 		super.close();
 		// ++++ NEEDED? done = true; 
 	}
+	private void paintThis() {
+		synchronized(gwin.getWin()) {
+			paint();
+		}
+	}
 					// Handle events:
-	public boolean mouseDown(int mx, int my, boolean button) {
-		if (!button)
+	public boolean mouseDown(int mx, int my, int button) {
+		if (button == 0)
 			return false;
 
 		slide_start = -1;
@@ -454,12 +459,13 @@ public final class NewFileGump extends Gump.Modal {
 		if (pushed == null) { 
 			for (int i = 0; i < buttons.length; i++)
 				if (buttons[i] != null && buttons[i].onButton(mx, my) != null) {
-				pushed = buttons[i];
-				break;
+					System.out.println("Pushed button " + i);
+					pushed = buttons[i];
+					break;
 			}
 		}
 		if (pushed != null) {			// On a button?
-			if (!pushed.push(button)) 
+			if (!pushed.push(true)) 
 				pushed = null;
 			return true;
 		}
@@ -475,13 +481,13 @@ public final class NewFileGump extends Gump.Modal {
 			// Pressed above it
 			if (gy < pos+scrolly) {
 				scroll_page(-1);
-				paint();
+				paintThis();
 				return true;
 			}
 			// Pressed below it
 			else if (gy >= pos+scrolly+sliderh) {
 				scroll_page(1);
-				paint();
+				paintThis();
 				return true;
 			} else { // Pressed on it
 				slide_start = gy;
@@ -559,18 +565,18 @@ public final class NewFileGump extends Gump.Modal {
 		else if (buttons[2] != null && !want_delete) {
 			buttons[2] = null;
 		}
-		paint();			// Repaint.
+		paintThis();			// Repaint.
 		gwin.setPainted();
 		return true;
 	}
-	public boolean mouseUp(int mx, int my, boolean button) {
-		if (!button) 
+	public boolean mouseUp(int mx, int my, int button) {
+		if (button == 0) 
 			return false;
 		slide_start = -1;
 		if (pushed != null) {			// Pushing a button?
-			pushed.unpush(button);
+			pushed.unpush(true);
 			if (pushed.onButton(mx, my) != null)
-				pushed.activate(button);
+				pushed.activate(true);
 			pushed = null;
 		}
 		return true;
@@ -597,7 +603,7 @@ public final class NewFileGump extends Gump.Modal {
 		int new_pos = ((sy*num_pos*2)/(scrollh-sliderh)+1)/2-2;
 		if (new_pos != list_position) {
 			list_position = new_pos;
-			paint();
+			paintThis();
 		}
 	}
 	public void textInput(int chr, int unicode) { // Character typed.
@@ -749,6 +755,7 @@ public final class NewFileGump extends Gump.Modal {
 			if (!button) 
 				return false;
 			int shapenum = getShapeNum();
+			System.out.println("NewFileButton.activate: shape " + shapenum);
 			if (shapenum == EFile.EXULT_FLX_SAV_DOWNDOWN_SHP)
 				((NewFileGump) parent).scroll_page(1);
 			else if (shapenum == EFile.EXULT_FLX_SAV_DOWN_SHP)

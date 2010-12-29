@@ -13,6 +13,9 @@ public final class GumpManager extends GameSingletons {
 	public GumpManager() {
 		openGumps = new LinkedList<Gump>();
 	}
+	public Gump.Modal getModal() {
+		return modal;
+	}
 	/*
 	 *	Showing gumps.
 	 */
@@ -210,6 +213,7 @@ public final class GumpManager extends GameSingletons {
 			if (!dontPauseGame || g.isModal()) 
 				tqueue.resume(TimeQueue.ticks);
 			if (g == modal) {
+				gwin.setAllDirty();
 				if (!openGumps.isEmpty() && openGumps.getLast().isModal())
 					modal = (Gump.Modal) openGumps.getLast();
 				else
