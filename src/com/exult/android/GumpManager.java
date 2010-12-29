@@ -5,6 +5,7 @@ import java.util.ListIterator;
 public final class GumpManager extends GameSingletons {	
 	private static int gumpCount = 0;			// For staggering them.
 	private LinkedList<Gump> openGumps;
+	private Gump.Modal modal;				// Set to modal gump that has focus.
 	private Gump kbdFocus = null;
 	private int nonPersistentCount;
 	private boolean dontPauseGame;	// NEVER SET THIS MANUALLY! YOU MUST 
@@ -113,7 +114,9 @@ public final class GumpManager extends GameSingletons {
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 			// And pause the game, if we want it
 			nonPersistentCount++;
-			if (!dontPauseGame) 
+			if (g.isModal())
+				modal = (Gump.Modal)g;
+			if (!dontPauseGame || g.isModal()) 
 				tqueue.pause(TimeQueue.ticks);
 		}
 	}
@@ -204,8 +207,14 @@ public final class GumpManager extends GameSingletons {
 				// Gets messed up upon 'load'.
 			if (nonPersistentCount > 0)
 				nonPersistentCount--;
-			if (!dontPauseGame) 
+			if (!dontPauseGame || g.isModal()) 
 				tqueue.resume(TimeQueue.ticks);
+			if (g == modal) {
+				if (!openGumps.isEmpty() && openGumps.getLast().isModal())
+					modal = (Gump.Modal) openGumps.getLast();
+				else
+					modal = null;
+			}
 		}
 	}
 	/*

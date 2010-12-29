@@ -905,7 +905,7 @@ public class GameWindow extends GameSingletons {
 
 		// Was a name, sex or skincolor set in Game
 		// this bascially detects 
-		boolean changed = false;
+		boolean changed = game.isNewGame();
 
 		/* ++++++++FINISH
 		if (Game::get_avsex() == 0 || Game::get_avsex() == 1 || Game::get_avname()

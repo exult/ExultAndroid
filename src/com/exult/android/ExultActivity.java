@@ -322,6 +322,9 @@ public class ExultActivity extends Activity {
 		        	case KeyEvent.KEYCODE_S:
 		        		if (event.isAltPressed()) 
 		        			gwin.write(1, "Test save to zip");	//++++++++++TESTING.
+		        		else if (!event.isShiftPressed()) {
+		        			new NewFileGump();
+		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {

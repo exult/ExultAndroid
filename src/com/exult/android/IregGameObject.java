@@ -17,6 +17,12 @@ public class IregGameObject extends GameObject {
 	public final void setFlags(int f) {
 		flags = f;
 	}
+	public final int getFlags() {
+		return flags;
+	}
+	public final int getFlags2() {
+		return flags2;
+	}
 	public boolean getFlag(int flag) {
 		if (flag >= 0 && flag < 32)
 			return (flags & (1 << flag)) != 0;

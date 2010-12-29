@@ -1201,7 +1201,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		// what the uses are. 'fix_first' is used fix issues in the originals
 		// files that cause problems for the extra info we save.
 		boolean fix_first = game.isNewGame();
-							
+		if (num == 0) System.out.println("isNewGame = " + fix_first);		
 		init();				// Clear rest of stuff.
 		int locx = out.read()&0xff;	// Get chunk/tile coords.
 		int locy = out.read()&0xff;
@@ -1544,8 +1544,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int tilex = locx & 0xf;
 		int tiley = locy & 0xf;
 		// if (num == 0)//+++++++DEBUG
-			 System.out.printf("Reading %1$s, locx = %2$d, cx = %3$d, tilex = %4$d\n",
-					getName(), locx, cx, tilex);
+			 //System.out.printf("Reading %1$s, locx = %2$d, cx = %3$d, tilex = %4$d\n",
+			//		getName(), locx, cx, tilex);
 		setShapePos(tilex, tiley);
 		MapChunk olist = npcmap.getChunk(scx + cx, scy + cy);
 		setInvalid();			// Not in world yet.

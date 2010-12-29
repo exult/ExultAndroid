@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.io.IOException;
+import java.util.Vector;
 
 public final class NewFileGump extends Gump.Modal {
 	private static final int MAX_SAVEGAME_NAME_LEN = 0x50;
@@ -97,10 +98,121 @@ public final class NewFileGump extends Gump.Modal {
 	int	AddCharacter(char c);
 	*/
 	void	LoadSaveGameDetails() {	// Loads (and sorts) all the savegame details
-		//+++++++++++FINISH
+		int		i;
+		// Gamedat Details
+		/* +++++++++FINISH
+		gwin.getSaveinfo(gd_shot, gd_details, gd_party);
+		*/
+		// Current screenshot
+		// +++++++++FINISH cur_shot = gwin.createMiniScreenshot();
+
+		// Current Details
+		cur_details = new SaveGameDetails();
+		gwin.getWin().put(back, gwin.getWidth(), gwin.getHeight(), 0, 0);
+
+		if (gd_details != null) 
+			cur_details.save_count = gd_details.save_count;
+		else cur_details.save_count = 0;
+
+		cur_details.party_size = (byte)(partyman.getCount()+1);
+		/* ++++++++++FINISH
+		cur_details.game_day = (short) (gclock.get_total_hours() / 24);
+		cur_details.game_hour = gclock.get_hour();
+		cur_details.game_minute = gclock.get_minute();
+		
+		time_t t = time(0);
+		struct tm *timeinfo = localtime (&t);	
+
+		cur_details.real_day = timeinfo.tm_mday;
+		cur_details.real_hour = timeinfo.tm_hour;
+		cur_details.real_minute = timeinfo.tm_min;
+		cur_details.real_month = timeinfo.tm_mon+1;
+		cur_details.real_year = timeinfo.tm_year + 1900;
+		cur_details.real_second = timeinfo.tm_sec;
+		*/
+		// Current Party
+		cur_party = new SaveGameParty[cur_details.party_size];
+		for (i=0; i<cur_details.party_size ; i++) {
+			Actor npc;
+			if (i == 0)
+				npc = gwin.getMainActor();
+			else
+				npc = gwin.getNpc(partyman.getMember(i-1));
+
+			String namestr = npc.getNpcName();
+			int j, namelen = Math.min(namestr.length(), cur_party[i].name.length);
+			for (j = 0; j < namelen; ++j)
+				cur_party[i].name[j] = (byte)namestr.charAt(j);
+			for ( ; j < namelen; ++j)
+				cur_party[i].name[j] = (byte)0;
+			cur_party[i].shape = (short) npc.getShapeNum();
+			//+++++++++ cur_party[i].shape_file = npc.getShapefile();
+
+			cur_party[i].dext = (byte)npc.getProperty(Actor.dexterity);
+			cur_party[i].str = (byte)npc.getProperty(Actor.strength);
+			cur_party[i].intel = (byte)npc.getProperty(Actor.intelligence);
+			cur_party[i].health = (byte)npc.getProperty(Actor.health);
+			cur_party[i].combat = (byte)npc.getProperty(Actor.combat);
+			cur_party[i].mana = (byte)npc.getProperty(Actor.mana);
+			cur_party[i].magic = (byte)npc.getProperty(Actor.magic);
+			cur_party[i].training = (byte)npc.getProperty(Actor.training);
+			cur_party[i].exp = (byte)npc.getProperty(Actor.exp);
+			cur_party[i].food = (byte)npc.getProperty(Actor.food_level);
+			cur_party[i].flags = npc.getFlags();
+			cur_party[i].flags2 = npc.getFlags2();
+		}
+		party = cur_party;
+		screenshot = cur_shot;
+		details = cur_details;
+		// Now read save game details
+		String mask = String.format(EFile.SAVENAME2, game.isBG() ? "bg" : "si");
+
+		Vector<String> filenames = new Vector<String>();
+		/* ++++++++FINISH
+		U7ListFiles (mask, filenames);
+		*/
+		num_games = filenames.size();
+		
+		games = new SaveInfo[num_games];
+
+		// Setup basic details
+		for (i = 0; i<num_games; i++) {
+			games[i].filename = filenames.elementAt(i);
+			games[i].SetSeqNumber();
+		}
+
+		// First sort thet games so the will be sorted by number
+		// This is so I can work out the first free game
+		/* ++++++++FINISH
+		if (num_games)
+			qsort(games, num_games, sizeof(SaveInfo), SaveInfo::CompareGames);
+		*/
+		// Reand and cache all details
+		first_free = -1;
+		/* ++++++++++FINISH
+		for (i = 0; i<num_games; i++) {
+			games[i].readable = gwin.getSaveinfo(games[i].num, games[i].savename, games[i].screenshot,
+				games[i].details, games[i].party);
+
+			if (first_free == -1 && i != games[i].num) first_free = i;
+		}
+		*/
+		if (first_free == -1) 
+			first_free = num_games;
+		// Now sort it again, with all the details so it can be done by date
+		/* ++++++++FINISH
+		if (num_games) qsort(games, num_games, sizeof(SaveInfo), SaveInfo::CompareGames);
+		*/
 	}
 	void	FreeSaveGameDetails() {	// Frees all the savegame details
-		//++++++++++
+		cur_shot = null;
+		cur_details = null;
+		cur_party = null;
+		gd_shot = null;
+		gd_details = null;
+		gd_party = null;
+		filename = null;
+		games = null;
 	}
 	public NewFileGump() {
 		super(EFile.EXULT_FLX_SAVEGUMP_SHP, ShapeFiles.EXULT_FLX);	
@@ -331,8 +443,10 @@ public final class NewFileGump extends Gump.Modal {
 						y+fieldy+icony+line*(fieldh+fieldgap));
 		}
 	}
-	public void close()
-		{ done = true; }
+	public void close() {
+		super.close();
+		// ++++ NEEDED? done = true; 
+	}
 					// Handle events:
 	public boolean mouseDown(int mx, int my, boolean button) {
 		if (!button)

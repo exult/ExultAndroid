@@ -364,7 +364,7 @@ public abstract class Gump extends ShapeID {
 			{  }
 		public void textInput(int chr, int unicode) // Character typed (unicode)
 			{ }
-		public final boolean isModal()
+		public boolean isModal()
 			{ return true; }
 	}
 }
