@@ -1479,7 +1479,7 @@ public class GameWindow extends GameSingletons {
 		System.out.println("About to read zip entries");
 		try {
 			while ((ze = zin.getNextEntry()) != null) {
-				String fnm = ze.getName();
+				String fnm = EFile.GAMEDAT + ze.getName();
 				
 				//+++++FINISH: multimap stuff here.
 				//++++++++++++
