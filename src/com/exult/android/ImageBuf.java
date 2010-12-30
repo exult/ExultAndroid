@@ -512,39 +512,42 @@ public class ImageBuf {
 	/*
 	 * Create a mini-screenshot at 1/3 size using nearest-average-colour.
 	 */
-	public byte[] miniScreenshot() {
+	public byte[] miniScreenshot(boolean fast) {
 		byte buf[] = new byte[96*60];
 		final int w = 3*96, h = 3*60;
 		int pitch = width;
 
 		for (int y = 0; y < h; y += 3) {
 			for (int x = 0; x < w; x += 3) {
-				//calculate average colour
-				int r = 0, g = 0, b = 0;
-				for (int i = 0; i < 3; i++)
-					for (int j = 0; j < 3; j++) {
-						int pix = pixels[pitch * (j + y + (height - h) / 2) +
+				if (fast) {
+					//calculate average colour
+					int r = 0, g = 0, b = 0;
+					for (int i = 0; i < 3; i++)
+						for (int j = 0; j < 3; j++) {
+							int pix = pixels[pitch * (j + y + (height - h) / 2) +
 						                          i + x + (width  - w) / 2 ];
-						pix &= 0xff;
-						r += (pal[pix]>>16)&0xff;
-						g += (pal[pix]>>8)&0xff;
-						b += pal[pix]&0xff;
+							pix &= 0xff;
+							r += (pal[pix]>>16)&0xff;
+							g += (pal[pix]>>8)&0xff;
+							b += pal[pix]&0xff;
+						}
+					r = r/9; g = g/9; b = b/9;
+					//find nearest-colour in non-rotating palette
+					int bestdist = Integer.MAX_VALUE, bestindex = -1;
+					for (int i = 0; i < 224; i++) {
+						int rval = (pal[i]>>16)&0xff, 
+							gval = (pal[i]>>8)&0xff, bval = pal[i]&0xff;
+						int dist = (rval - r)*(rval - r) +
+									(gval - g)*(gval - g) +
+									(bval - b)*(bval - b);
+						if (dist < bestdist) {
+							bestdist = dist;
+							bestindex = i;
+						}
 					}
-				r = r/9; g = g/9; b = b/9;
-
-				//find nearest-colour in non-rotating palette
-				int bestdist = Integer.MAX_VALUE, bestindex = -1;
-				for (int i = 0; i < 224; i++) {
-					int rval = (pal[i]>>16)&0xff, gval = (pal[i]>>8)&0xff, bval = pal[i]&0xff;
-					int dist = (rval - r)*(rval - r) +
-					           (gval - g)*(gval - g) +
-					           (bval - b)*(bval - b);
-					if (dist < bestdist) {
-						bestdist = dist;
-						bestindex = i;
-					}
-				}
-				buf[y*w/9 + x/3] = (byte)bestindex;
+					buf[y*w/9 + x/3] = (byte)bestindex;
+				} else
+					buf[y*w/9 + x/3] = pixels[y*width + x];
 			}
 		}			
 		return buf;

@@ -92,7 +92,7 @@ public final class NewFileGump extends Gump.Modal {
 		gwin.getSaveinfo(gd_shot, gd_details, gd_party);
 		*/
 		// Current screenshot
-		cur_shot = gwin.createMiniScreenshot();
+		cur_shot = gwin.createMiniScreenshot(false);	// Quick but low quality.
 
 		// Current Details
 		cur_details = new SaveGameDetails();
@@ -271,7 +271,7 @@ public final class NewFileGump extends Gump.Modal {
 
 		FreeSaveGameDetails();
 		LoadSaveGameDetails();
-		paintThis();	// +++++We really want to paint everything so message gets shown.
+		paintThis();
 		gwin.setPainted();
 	}
 	public void delete_file() {		// 'Delete' was clicked.

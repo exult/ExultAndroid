@@ -1762,7 +1762,7 @@ public class GameWindow extends GameSingletons {
 
 		out.close();
 		// Save Shape
-		VgaFile.ShapeFile map = createMiniScreenshot();
+		VgaFile.ShapeFile map = createMiniScreenshot(true);	// High quality but slow.
 		out = EUtil.U7create(EFile.GSCRNSHOT);
 		map.save(out);
 		out.close();
@@ -1784,7 +1784,7 @@ public class GameWindow extends GameSingletons {
 	/*
 	 * Create mini-screenshot for savegames.
 	 */
-	public VgaFile.ShapeFile createMiniScreenshot() {
+	public VgaFile.ShapeFile createMiniScreenshot(boolean fast) {
 		VgaFile.ShapeFile sh = null;
 		ShapeFrame fr = null;
 		byte img[] = null;
@@ -1792,7 +1792,7 @@ public class GameWindow extends GameSingletons {
 		synchronized(win) {
 			setAllDirty();
 			render.paintMap(0, 0, getWidth(), getHeight());
-			img = win.miniScreenshot();
+			img = win.miniScreenshot(fast);
 			if (img != null) {
 				fr = new ShapeFrame();
 				fr.createRle(img, 0, 0, 96, 60);
