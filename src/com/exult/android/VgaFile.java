@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Vector;
 
@@ -137,10 +138,13 @@ public class VgaFile {
 				System.out.println("ERROR loading " + nm);
 			}
 		}
+		public ShapeFile(ShapeFrame fr) {
+			super(fr);
+		}
 		/*
 		ShapeFile(const char *nm);
-		Shape_file(Shape_frame *fr): Shape(fr) {}
-		Shape_file(DataSource* shape_source);
+		
+		Shape_file(DataSource* out);
 		*/
 		public void load(String nm) throws IOException {
 			RandomAccessFile src = EUtil.U7open(nm, true);
@@ -149,6 +153,33 @@ public class VgaFile {
 		public void load(RandomAccessFile src) throws IOException { 
 			super.load(src);
 		}
+		private int getSize() {
+			int size = 4;
+			for (int i=0; i<numFrames; i++)
+				size += frames[i].getSize() + 4 + 8;
+			return size;
+		}
+		//	This only works on RLE shapes.
+		public void save(OutputStream out) throws IOException {
+			int offsets[] = new int[numFrames];
+			int size;
+			offsets[0] = 4 + numFrames * 4;
+			int i;	// Blame MSVC
+			for (i=1; i<numFrames; i++)
+				offsets[i] = offsets[i-1] + frames[i-1].getSize() + 8;
+			System.out.println("numFrames = " + numFrames);
+			size = offsets[numFrames-1] + frames[numFrames-1].getSize() + 8;
+			EUtil.Write4(out, size);
+			for (i=0; i<numFrames; i++)
+				EUtil.Write4(out, offsets[i]);
+			for (i=0; i<numFrames; i++) {
+				EUtil.Write2(out, frames[i].getXRight());
+				EUtil.Write2(out, frames[i].getXLeft());
+				EUtil.Write2(out, frames[i].getYAbove());
+				EUtil.Write2(out, frames[i].getYBelow());
+				System.out.println("frames[i] size = " + frames[i].getSize());
+				out.write((frames[i].getData()), 0, frames[i].getSize());
+			}
+		}
 	}
-
 }

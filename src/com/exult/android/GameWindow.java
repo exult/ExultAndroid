@@ -1658,8 +1658,10 @@ public class GameWindow extends GameSingletons {
 				String fnm = ze.getName();
 				if (fnm.equals(screenshotName)) {
 					++found;
-					int ind = 0, rcnt, sz = (int)ze.getSize();
+					int ind = 0, rcnt, sz = EUtil.Read4(zin);
 					byte buf[] = new byte[sz];
+					EUtil.Write4(buf, 0, sz);
+					ind += 4;
 					while (ind < sz && (rcnt = zin.read(buf, ind, sz - ind)) > 0)
 						ind += rcnt;
 					info.screenshot = new VgaFile.ShapeFile(buf);
@@ -1756,16 +1758,14 @@ public class GameWindow extends GameSingletons {
 		}
 
 		out.close();
-		/* +++++++++++FINISH
 		// Save Shape
-		ShapeFile map = createMiniScreenshot();
-		U7open(out_stream, GSCRNSHOT);		// Open file; throws an exception - Don't care
-		map.save(&out);
-		out_stream.close();
-		delete map;
+		VgaFile.ShapeFile map = createMiniScreenshot();
+		out = EUtil.U7create(EFile.GSCRNSHOT);
+		map.save(out);
+		out.close();
 
 		// Current Exult version
-
+		/* ++++++++++++FINISH
 		out = EUtil.U7create(EFile.GEXULTVER);
 		getVersionInfo(out);
 		out.close();
@@ -1777,5 +1777,27 @@ public class GameWindow extends GameSingletons {
 			out.write(unk.getBytes());
 			out.close();
 		}
+	}
+	/*
+	 * Create mini-screenshot for savegames.
+	 */
+	public VgaFile.ShapeFile createMiniScreenshot() {
+		VgaFile.ShapeFile sh = null;
+		ShapeFrame fr = null;
+		byte img[] = null;
+		
+		synchronized(win) {
+			setAllDirty();
+			render.paintMap(0, 0, getWidth(), getHeight());
+			img = win.miniScreenshot();
+			if (img != null) {
+				fr = new ShapeFrame();
+				fr.createRle(img, 0, 0, 96, 60);
+				sh = new VgaFile.ShapeFile(fr);
+			}
+			setAllDirty();
+			paint();
+		}
+		return sh;
 	}
 }

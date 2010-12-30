@@ -16,6 +16,9 @@ public class ShapeFrame {
 	public byte[] getData() {
 		return data;
 	}
+	public int getSize() {
+		return datalen;
+	}
 	/*
 	 *	Create a new frame by reflecting across a line running NW to SE.
 	 *
@@ -238,8 +241,7 @@ public class ShapeFrame {
 	public static byte[] encodeRle(
 		byte pixels[],			// 8-bit uncompressed data.
 		int w, int h,			// Width, height.
-		int xoff, int yoff,		// Origin (xleft, yabove).
-		int datalen				// Length of RLE data returned.
+		int xoff, int yoff		// Origin (xleft, yabove).
 		)
 		{
 						// Create an oversized buffer.
@@ -299,9 +301,9 @@ public class ShapeFrame {
 			}
 		}
 		out = EUtil.Write2(buf, out, 0);			// End with 0 length.
-		datalen = out;		// Create buffer of correct size.
-		byte data[] = new byte[datalen];
-		EUtil.Memcpy(data, 0, buf, 0, datalen);
+		int len = out;		// Create buffer of correct size.
+		byte data[] = new byte[len];
+		EUtil.Memcpy(data, 0, buf, 0, len);
 		return data;
 		}
 	/*
@@ -315,7 +317,15 @@ public class ShapeFrame {
 		byte pixels[],			// 8-bit uncompressed data.
 		int w, int h			// Width, height.
 		) {
-		data = encodeRle(pixels, w, h, xleft, yabove, datalen);
+		data = encodeRle(pixels, w, h, xleft, yabove);
+		datalen = data.length;
+	}
+	public void createRle(byte pixels[], int xl, int ya, int w, int h) {
+		xleft = (short)xl; yabove = (short)ya; 
+		xright = (short)(xleft + w - 1); ybelow = (short)(yabove + h - 1);
+		data = encodeRle(pixels, w, h, xleft, yabove);
+		datalen = data.length;
+		rle = true;
 	}
 	public final int getWidth()		// Get dimensions.
 		{ return xleft + xright + 1; 

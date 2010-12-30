@@ -87,14 +87,14 @@ public final class NewFileGump extends Gump.Modal {
 	int	MoveCursor(int count);
 	int	AddCharacter(char c);
 	*/
-	void	LoadSaveGameDetails() {	// Loads (and sorts) all the savegame details
+	void LoadSaveGameDetails() {	// Loads (and sorts) all the savegame details
 		int		i;
 		// Gamedat Details
 		/* +++++++++FINISH
 		gwin.getSaveinfo(gd_shot, gd_details, gd_party);
 		*/
 		// Current screenshot
-		// +++++++++FINISH cur_shot = gwin.createMiniScreenshot();
+		cur_shot = gwin.createMiniScreenshot();
 
 		// Current Details
 		cur_details = new SaveGameDetails();
@@ -129,6 +129,7 @@ public final class NewFileGump extends Gump.Modal {
 				npc = gwin.getNpc(partyman.getMember(i-1));
 			cur_party[i] = new SaveGameParty();
 			String namestr = npc.getNpcName();
+			cur_party[i].namestr = namestr;
 			int j, namelen = Math.min(namestr.length(), cur_party[i].name.length);
 			for (j = 0; j < namelen; ++j)
 				cur_party[i].name[j] = (byte)namestr.charAt(j);
@@ -348,7 +349,7 @@ public final class NewFileGump extends Gump.Modal {
 				suffix = "nd";
 			else if ((details.real_day%10) == 3 && details.real_day != 13)
 				suffix = "rd";
-			String info0 = String.format("Avatar: %1$s\n", party[0].name);
+			String info0 = String.format("Avatar: %1$s\n", party[0].namestr);
 			String info1 = String.format("Exp: %1$d  Hp: %2$d\n", 
 					party[0].exp&0xff, party[0].health);
 			String info2 = String.format("Str: %1$d  Dxt: %2$d\n", 
@@ -635,6 +636,8 @@ public final class NewFileGump extends Gump.Modal {
 	};
 	public static class SaveGameParty
 	{
+		String namestr;	// Not part of the file record.
+		
 		byte		name[] = new byte[18];	// 18
 		short		shape;		// 20
 		int	exp;		// 24
@@ -707,6 +710,11 @@ public final class NewFileGump extends Gump.Modal {
 			for (i=0; i<8 && i<details.party_size ; i++) {
 				party[i] = new SaveGameParty();
 				in.read(party[i].name);
+				int j;
+				for (j = 0; j < party[i].name.length; j++)
+					if (party[i].name[j] == 0)
+						break;
+				party[i].namestr = new String(party[i].name, 0, j);
 				party[i].shape = (short)EUtil.Read2(in);
 
 				party[i].exp = EUtil.Read4(in);

@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 public class Shape {
-	private WeakReference raw;			// Entire shape from file.
-	private ShapeFrame frames[];		// List of ->'s to frames.
-	private int numFrames;				// # of frames (not counting reflects).
+	private WeakReference<byte[]> raw;			// Entire shape from file.
+	protected ShapeFrame frames[];		// List of ->'s to frames.
+	protected int numFrames;				// # of frames (not counting reflects).
 	private boolean fromPatch;
 	/*
 	 *	Resize list upwards.
@@ -78,9 +78,9 @@ public class Shape {
 		int nframes;
 		try {
 			byte data[];
-			if (raw == null || (data = (byte[])raw.get()) == null) {
+			if (raw == null || (data = raw.get()) == null) {
 				data = new byte[shapelen];
-				raw = new WeakReference(data);
+				raw = new WeakReference<byte[]>(data);
 				shpfile.seek(shapeoff);
 				shpfile.read(data);
 			}
@@ -174,7 +174,12 @@ public class Shape {
 		fromPatch = false;
 		createFramesList(n);
 	}
-	
+	public Shape(ShapeFrame fr) {
+		fromPatch = false;
+		numFrames = 1;
+		frames = new ShapeFrame[1];
+		frames[0] = fr;
+	}
 	public int getNumFrames() {
 	 	return numFrames; 
 	}
