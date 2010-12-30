@@ -834,16 +834,7 @@ public class GameWindow extends GameSingletons {
 			Conversation conv = GameSingletons.conv;
 			if (conv != null)
 				conv.paint();		// Conversation.
-			if (busyMessage != null) {
-				int text_height = fonts.getTextHeight(0);
-				int text_width = fonts.getTextWidth(0, busyMessage);
-				/* +++++++FINISH
-				win.fill_translucent8(0, width, height, 0, 0, 
-								shape_man.get_xform(8));
-				*/
-				fonts.paintText(0, busyMessage, getWidth()/2-text_width/2, 
-										getHeight()/2-text_height);
-			}
+			paintBusy();			// 'busyMessage'.
 			/*
 					// Complete repaint?
 			if (!gx && !gy && gw == get_width() && gh == get_height() && mainActor)
@@ -869,6 +860,18 @@ public class GameWindow extends GameSingletons {
 	}	
 	public void paint(Rectangle r)
 		{ paint(r.x, r.y, r.w, r.h); }
+	public void paintBusy() {
+		if (busyMessage != null) {
+			int text_height = fonts.getTextHeight(0);
+			int text_width = fonts.getTextWidth(0, busyMessage);
+			/* +++++++FINISH
+			win.fill_translucent8(0, width, height, 0, 0, 
+							shape_man.get_xform(8));
+			*/
+			fonts.paintText(0, busyMessage, getWidth()/2-text_width/2, 
+									getHeight()/2-text_height);
+		}
+	}
 	// Clip 'r' to window.
 	public void clipToWin(Rectangle r) {
 		paintBox.set(0, 0, win.getWidth(), win.getHeight());

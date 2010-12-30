@@ -1,8 +1,11 @@
 package com.exult.android;
+import android.view.KeyEvent;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.Calendar;
+import java.util.Comparator;
 
 public final class NewFileGump extends Gump.Modal {
 	private static final int MAX_SAVEGAME_NAME_LEN = 0x50;
@@ -81,12 +84,7 @@ public final class NewFileGump extends Gump.Modal {
 	int	cursor;			// The position of the cursor
 	int	slide_start;		// Pixel (v) where a slide started
 	String newname;			// The new name for the game
-	/* ++++++++++++
-	int	BackspacePressed();
-	int	DeletePressed();
-	int	MoveCursor(int count);
-	int	AddCharacter(char c);
-	*/
+	
 	void LoadSaveGameDetails() {	// Loads (and sorts) all the savegame details
 		int		i;
 		// Gamedat Details
@@ -173,10 +171,9 @@ public final class NewFileGump extends Gump.Modal {
 
 		// First sort thet games so the will be sorted by number
 		// This is so I can work out the first free game
-		/* ++++++++FINISH
-		if (num_games)
-			qsort(games, num_games, sizeof(SaveInfo), SaveInfo::CompareGames);
-		*/
+		SaveInfo.comparator cmp = new SaveInfo.comparator();
+		if (num_games > 0)
+			Arrays.sort(games, cmp);
 		// Reand and cache all details
 		first_free = -1;
 		for (i = 0; i<num_games; i++) {
@@ -184,12 +181,13 @@ public final class NewFileGump extends Gump.Modal {
 			if (first_free == -1 && i != games[i].num) 
 				first_free = i;
 		}
+		System.out.println("firstFree = " + first_free);
 		if (first_free == -1) 
 			first_free = num_games;
+		System.out.println("NOW firstFree = " + first_free);
 		// Now sort it again, with all the details so it can be done by date
-		/* ++++++++FINISH
-		if (num_games) qsort(games, num_games, sizeof(SaveInfo), SaveInfo::CompareGames);
-		*/
+		if (num_games > 0) 
+			Arrays.sort(games, cmp);
 	}
 	void	FreeSaveGameDetails() {	// Frees all the savegame details
 		cur_shot = null;
@@ -273,7 +271,7 @@ public final class NewFileGump extends Gump.Modal {
 
 		FreeSaveGameDetails();
 		LoadSaveGameDetails();
-		paintThis();
+		paintThis();	// +++++We really want to paint everything so message gets shown.
 		gwin.setPainted();
 	}
 	public void delete_file() {		// 'Delete' was clicked.
@@ -445,6 +443,7 @@ public final class NewFileGump extends Gump.Modal {
 	private void paintThis() {
 		synchronized(gwin.getWin()) {
 			paint();
+			gwin.paintBusy();	// ie, "Saving Game".
 		}
 	}
 					// Handle events:
@@ -606,9 +605,133 @@ public final class NewFileGump extends Gump.Modal {
 		}
 	}
 	public void textInput(int chr, int unicode) { // Character typed.
-		//+++++++++
+		boolean update_details = false;
+		boolean repaint = false;
+
+		// Are we selected on some text?
+		if (selected == -3)
+			return;
+		switch (chr) {
+		case KeyEvent.KEYCODE_ENTER:		// If only 'Save', do it.
+			if (buttons[0] == null && buttons[1] != null) {
+				if (buttons[1].push(true)) {
+					/*gwin.show(true);
+					buttons[1].unpush(true);
+					gwin.show(true); */
+					buttons[1].activate(true);
+				}
+			}
+			update_details = true;
+			break;
+		// case KeyEvent.KEYCODE_BACK:  // Seems like DEL is really BS.
+		case KeyEvent.KEYCODE_DEL:
+			if (BackspacePressed()) {	
+				// Can't restore/delete now.
+				buttons[0] = buttons[2] = null;
+
+				// If no chars cant save either
+				if (newname == null || newname.length() == 0) {	
+					buttons[1] = null;
+				}
+				update_details = true;
+			}
+			break;
+		/* Seems like DEL is really BS
+		case KeyEvent.KEYCODE_DEL:
+			if (DeletePressed()) {	
+				// Can't restore/delete now.
+				buttons[0] = buttons[2] = null;
+
+				// If no chars cant save either
+				if (newname == null || newname.length() == 0) {	
+					buttons[1] = null;
+				}
+				update_details = true;
+			}
+			break;
+		*/
+		case KeyEvent.KEYCODE_DPAD_LEFT:
+			repaint = MoveCursor(-1);
+			break;
+		case KeyEvent.KEYCODE_DPAD_RIGHT:
+			repaint = MoveCursor(1);
+			break;
+		case KeyEvent.KEYCODE_HOME:
+			repaint = MoveCursor(-MAX_SAVEGAME_NAME_LEN);
+			break;
+		default:
+			if ((unicode & 0xFF80) == 0 )
+				chr = unicode & 0x7F;
+			else
+				chr = 0;
+			if (chr < ' ')
+				return;			// Ignore other special chars.
+			if (chr < 128) {	// Want 'isascii', really.
+				if (AddCharacter((char)chr)) {
+					// Added first character?  Need 'Save' button.
+					if (newname != null && newname.length() > 0 && buttons[1] == null) {
+						buttons[1] = new NewfileTextButton(this, savetext,
+															btn_cols[0], 
+															btn_rows[0], 40);
+						buttons[1].paint();
+					}
+					// Remove Load and Delete Button
+					if (buttons[0] != null || buttons[2] != null) {
+						buttons[0] = buttons[2] = null;
+					}
+					update_details = true;
+				}
+			}
+			break;
+		}
+
+		// This sets the game details to the cur set
+		if (update_details)
+		{
+			screenshot = cur_shot;
+			details = cur_details;
+			party = cur_party;
+			repaint = true;
+		}
+		if (repaint) {
+			paintThis();
+			gwin.setPainted();
+		}
 	}
-	
+	private boolean	BackspacePressed() {
+		if (cursor == -1 || cursor == 0) 
+			return false;
+		cursor--;
+		return DeletePressed();
+	}
+	boolean	DeletePressed() {
+		int len = newname.length();
+		if (cursor == -1 || cursor == len) 
+			return false;
+		newname = newname.substring(0, cursor) + newname.substring(cursor + 1, len);
+		return true;
+	}
+	boolean	MoveCursor(int count) {
+		if (cursor == -1) 
+			return false;
+		cursor += count;
+		if (cursor < 0) cursor = 0;
+		if (cursor > newname.length()) 
+			cursor = newname.length();
+		return true;
+	}
+	boolean	AddCharacter(char c) {
+		if (cursor == -1 || cursor == MAX_SAVEGAME_NAME_LEN-1) 
+			return false;
+		String text = newname.substring(0, cursor) + c + 
+					newname.substring(cursor, newname.length());
+		//Now check the width of the text
+		if (fonts.getTextWidth(2, text) >= textw)
+			return false;
+		cursor++;
+		newname = text;
+		return true;
+	}
 	public static class SaveGameDetails {
 		// Time that the game was saved (needed????)
 		byte	real_minute;	// 1
@@ -672,12 +795,47 @@ public final class NewFileGump extends Gump.Modal {
 		SaveGameDetails	details;
 		SaveGameParty	party[];
 		VgaFile.ShapeFile		screenshot;
-		/* +++++++++++
-		static int		CompareGames(const void *a, const void *b);
-		int			CompareThis(const SaveInfo *other) const;
-		*/
-		public void setSavename(String s) {
-			savename = s;
+
+		static class comparator implements Comparator<SaveInfo> {
+			public int compare(SaveInfo o1, SaveInfo o2) {
+				// Check by time first, if possible
+				if (o1.details != null && o2.details != null) {
+					if (o1.details.real_year < o2.details.real_year)
+						return 1;
+					if (o1.details.real_year > o2.details.real_year)
+						return -1;
+
+					if (o1.details.real_month < o2.details.real_month)
+						return 1;
+					if (o1.details.real_month > o2.details.real_month)
+						return -1;
+
+					if (o1.details.real_day < o2.details.real_day)
+						return 1;
+					if (o1.details.real_day > o2.details.real_day)
+						return -1;
+
+					if (o1.details.real_hour < o2.details.real_hour)
+						return 1;
+					if (o1.details.real_hour > o2.details.real_hour)
+						return -1;
+
+					if (o1.details.real_minute < o2.details.real_minute)
+						return 1;
+					if (o1.details.real_minute > o2.details.real_minute)
+						return -1;
+
+					if (o1.details.real_second < o2.details.real_second)
+						return 1;
+					if (o1.details.real_second > o2.details.real_second)
+						return -1;
+				} else if (o1.details != null)	// If the o2 doesn't have time we are first
+					return -1;
+				else if (o2.details != null)	// If we don't have time we are last
+					return 1;
+				
+				return o1.num - o2.num;
+			}
 		}
 		public void readSaveInfo(InputStream in) throws IOException {
 			int i;

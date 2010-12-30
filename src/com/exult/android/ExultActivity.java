@@ -302,7 +302,12 @@ public class ExultActivity extends Activity {
     			if (UsecodeMachine.running > 0 || clickPoint != null || 
     										gwin.busyMessage != null)
     				return false;
+    			Gump.Modal modal = GameSingletons.gumpman.getModal();
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+		        	if (modal != null) {
+		        		modal.textInput(keyCode, event.getUnicodeChar());
+		        		return true;
+		        	}
 		        	if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ||
 		        		keyCode == KeyEvent.KEYCODE_SHIFT_RIGHT)
 		        		return false;		// Weed these out for performance.
