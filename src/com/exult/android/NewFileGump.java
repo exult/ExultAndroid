@@ -6,8 +6,10 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.Calendar;
 import java.util.Comparator;
+import java.util.Observer;
+import java.util.Observable;
 
-public final class NewFileGump extends Gump.Modal {
+public final class NewFileGump extends Gump.Modal implements Observer {
 	private static final int MAX_SAVEGAME_NAME_LEN = 0x50;
 	static final String loadtext = "LOAD";
 	static final String savetext = "SAVE";
@@ -255,7 +257,7 @@ public final class NewFileGump extends Gump.Modal {
 		int num = selected >= 0 ? games[selected].num 
 				: (selected == -2 ? first_free : -1);
 		if (num >= 0)	// Write to gamedat, then to savegame file.
-			gwin.write(num, newname);
+			gwin.write(num, newname, this);
 		else try {
 			gwin.write();
 		} catch (IOException e) {
@@ -268,11 +270,18 @@ public final class NewFileGump extends Gump.Modal {
 		buttons[0] = null;
 		buttons[1] = null;
 		buttons[2] = null;
-
+		/*
 		FreeSaveGameDetails();
 		LoadSaveGameDetails();
 		paintThis();
-		gwin.setPainted();
+		*/
+		gwin.setAllDirty();
+	}
+	//	This is as a client for GameWindow.write(), called in 'save' above.
+	public void update(Observable o, Object arg) {
+		FreeSaveGameDetails();		// 'write' is done, so update now.
+		LoadSaveGameDetails();
+		gwin.setAllDirty();
 	}
 	public void delete_file() {		// 'Delete' was clicked.
 		//+++++++++++++++++++

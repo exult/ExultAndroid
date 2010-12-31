@@ -1,7 +1,7 @@
 package com.exult.android;
 import java.util.Vector;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Observable;
+import java.util.Observer;
 import java.io.RandomAccessFile;
 import java.io.OutputStream;
 import java.io.InputStream;
@@ -1279,16 +1279,24 @@ public class GameWindow extends GameSingletons {
 	/*
 	 * The whole 'save'.
 	 */
-	static class SaveThread extends Thread {
+	static class SaveThread extends Observable implements Runnable {
 		private int num;
 		private String savename;
-		public SaveThread(int n, String s) {
+		public SaveThread(int n, String s, Observer client) {
 			num = n; savename = s;
+			if (client != null)
+				addObserver(client);
+		}
+		public void start() {
+			Thread t = new Thread(this);
+			t.start();
 		}
 		public void run() {
 			try {
 				gwin.write();
 				gwin.saveGamedat(num, savename);
+				setChanged();
+				notifyObservers();
 			} catch (IOException e) {
 				ExultActivity.fatal(String.format("Failed saving: %1$s", e.getMessage()));
 			}
@@ -1296,10 +1304,13 @@ public class GameWindow extends GameSingletons {
 			gwin.setBusyMessage(null);
 		}
 	}	
-	public void write(int num, String savename) {
+	public void write(int num, String savename, Observer client) {
 		setBusyMessage("Saving Game");
-		Thread t = new SaveThread(num, savename);
+		SaveThread t = new SaveThread(num, savename, client);
 		t.start();
+	}
+	public void write(int num, String savename) {
+		write(num, savename, null);
 	}
 	private void writeGwin() throws IOException {
 		OutputStream gout = EUtil.U7create(EFile.GWINDAT);
