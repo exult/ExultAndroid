@@ -358,6 +358,9 @@ public abstract class Gump extends ShapeID {
 		public Modal(int shnum, ShapeFiles file) {
 			super(shnum, file);
 		}
+		public Modal(int shnum) {
+			super(shnum);
+		}
 		public final boolean isDone() {
 			return done;
 		}

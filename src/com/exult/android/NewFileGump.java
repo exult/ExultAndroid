@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.Observer;
 import java.util.Observable;
 
-public final class NewFileGump extends Gump.Modal implements Observer {
+public final class NewFileGump extends Gump.Modal {
 	private static final int MAX_SAVEGAME_NAME_LEN = 0x50;
 	static final String loadtext = "LOAD";
 	static final String savetext = "SAVE";
@@ -244,70 +244,66 @@ public final class NewFileGump extends Gump.Modal implements Observer {
 		buttons[2] = null;
 		close();
 	}
-	public void save() {			// 'Save' was clicked.
+	// Reset everything
+	private void reset() {
+		selected = -3;
+		buttons[0] = null;
+		buttons[1] = null;
+		buttons[2] = null;
+		FreeSaveGameDetails();
+		LoadSaveGameDetails();
+		gwin.setAllDirty();
+	}
+	public void save(boolean dontAsk) {			// 'Save' was clicked.
 		// Shouldn't ever happen.
 		if (newname == null || newname.length() == 0 || selected == -3)
 			return;	
 		// Already a game in this slot? If so ask to delete
-		/* ++++++++++FINISH
-		if (selected != -2) if (!Yesno_gump::ask("Okay to write over existing saved game?"))
+		if (selected != -2 && !dontAsk) { 
+			Observer o = new Observer() {
+				public void update(Observable o, Object arg) {
+					if (((YesNoGump)arg).getAnswer())
+						save(true);
+				}
+			};
+			YesNoGump.ask(o,
+					"Okay to write over existing saved game?");
 			return;
-		*/
-		
+		}
 		int num = selected >= 0 ? games[selected].num 
 				: (selected == -2 ? first_free : -1);
-		if (num >= 0)	// Write to gamedat, then to savegame file.
-			gwin.write(num, newname, this);
-		else try {
-			gwin.write();
+		if (num >= 0) {	// Write to gamedat, then to savegame file.
+			Observer o = new Observer() {
+				public void update(Observable o, Object arg) {
+					reset();	// Write done, so update list.
+					System.out.println("Saved game #" + selected + " successfully.");
+				}
+			};
+			gwin.write(num, newname, o);
+		} else try {
+			gwin.write();	// Quick save.
+			reset();
 		} catch (IOException e) {
 			System.out.println("Error during quick save");
 		}
-		System.out.println("Saved game #" + selected + " successfully.");
-
-		// Reset everything
-		selected = -3;
-		buttons[0] = null;
-		buttons[1] = null;
-		buttons[2] = null;
-		/*
-		FreeSaveGameDetails();
-		LoadSaveGameDetails();
-		paintThis();
-		*/
-		gwin.setAllDirty();
 	}
-	//	This is as a client for GameWindow.write(), called in 'save' above.
-	public void update(Observable o, Object arg) {
-		FreeSaveGameDetails();		// 'write' is done, so update now.
-		LoadSaveGameDetails();
-		gwin.setAllDirty();
-	}
-	public void delete_file() {		// 'Delete' was clicked.
+	public void deleteFile() {		// 'Delete' was clicked.
 		// Shouldn't ever happen.
 		if (selected == -1 || selected == -2 || selected == -3)
 			return;	
-		/* ++++++++++FINISH
-		// Ask to delete
-		if (!Yesno_gump::ask("Okay to delete saved game?"))
-			return;
-		*/
-		EUtil.U7remove(games[selected].filename);
-		filename = null;
-		is_readable = false;
-		System.out.println("Deleted Save game #" + selected + " (" +
-				games[selected].filename + ") successfully.");
-
-		// Reset everything
-		selected = -3;
-
-		buttons[0] = null;
-		buttons[1] = null;
-		buttons[2] = null;
-
-		FreeSaveGameDetails();
-		LoadSaveGameDetails();
-		gwin.setAllDirty();
+		Observer o = new Observer() {
+			public void update(Observable o, Object arg) {
+				if (!((YesNoGump)arg).getAnswer())
+					return;
+				EUtil.U7remove(games[selected].filename);
+				filename = null;
+				is_readable = false;
+				System.out.println("Deleted Save game #" + selected + " (" +
+							games[selected].filename + ") successfully.");
+				reset();
+			}
+		};
+		YesNoGump.ask(o, "Okay to delete saved game?");
 	}
 	public void scroll_line(int dir) {	// Scroll Line Button Pressed
 		list_position += dir;
@@ -973,9 +969,9 @@ public final class NewFileGump extends Gump.Modal implements Observer {
 			if (text == loadtext)
 				((NewFileGump) parent).load();
 			else if (text == savetext)
-				((NewFileGump) parent).save();
+				((NewFileGump) parent).save(false);
 			else if (text == deletetext)
-				((NewFileGump) parent).delete_file();
+				((NewFileGump) parent).deleteFile();
 			else if (text == canceltext)
 				parent.close();
 			return true;

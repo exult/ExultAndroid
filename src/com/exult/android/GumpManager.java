@@ -122,6 +122,7 @@ public final class GumpManager extends GameSingletons {
 			if (!dontPauseGame || g.isModal()) 
 				tqueue.pause(TimeQueue.ticks);
 		}
+		gwin.setAllDirty();
 	}
 	public void addGump(ContainerGameObject obj, int shapenum, 
 								boolean actorgump) {
