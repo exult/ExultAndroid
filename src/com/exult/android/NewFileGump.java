@@ -207,7 +207,7 @@ public final class NewFileGump extends Gump.Modal implements Observer {
 		list_position = -2; 
 		selected = -3;
 		slide_start = -1;
-		// +++++++MAYBE NOT HERE tqueue.pause(TimeQueue.ticks);
+		// MAYBE NOT HERE tqueue.pause(TimeQueue.ticks);
 		back = new byte[gwin.getWidth() * gwin.getHeight()];
 		gwin.getWin().get(back, gwin.getWidth(), gwin.getHeight(), 0, 0);
 
@@ -284,7 +284,30 @@ public final class NewFileGump extends Gump.Modal implements Observer {
 		gwin.setAllDirty();
 	}
 	public void delete_file() {		// 'Delete' was clicked.
-		//+++++++++++++++++++
+		// Shouldn't ever happen.
+		if (selected == -1 || selected == -2 || selected == -3)
+			return;	
+		/* ++++++++++FINISH
+		// Ask to delete
+		if (!Yesno_gump::ask("Okay to delete saved game?"))
+			return;
+		*/
+		EUtil.U7remove(games[selected].filename);
+		filename = null;
+		is_readable = false;
+		System.out.println("Deleted Save game #" + selected + " (" +
+				games[selected].filename + ") successfully.");
+
+		// Reset everything
+		selected = -3;
+
+		buttons[0] = null;
+		buttons[1] = null;
+		buttons[2] = null;
+
+		FreeSaveGameDetails();
+		LoadSaveGameDetails();
+		gwin.setAllDirty();
 	}
 	public void scroll_line(int dir) {	// Scroll Line Button Pressed
 		list_position += dir;
