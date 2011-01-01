@@ -33,6 +33,8 @@ public final class Audio extends GameSingletons {
 		return currentTrack;
 	}
 	public void startMusic(int num, boolean repeat, String flex) {
+		if (debug)
+			System.out.println("Audio:  startMusic " + num + ", repeat = " + repeat);
 		// -1 and 255 are stop tracks
 		if (num == -1 || num == 255) {
 			stop();
@@ -48,7 +50,7 @@ public final class Audio extends GameSingletons {
 		// Work around Usecode bug where track 0 is played at Intro Earthquake
 		if (num == 0 && flex == EFile.MAINMUS && game.isBG())
 			return;	
-		
+		stop();
 		if (oggPlay(flex, num, repeat))
 			currentTrack = num;
 	}
