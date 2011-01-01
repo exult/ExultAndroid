@@ -57,7 +57,7 @@ public class GameWindow extends GameSingletons {
 							//   means 'terrain-editing' mode.
 	public boolean paintEggs = true;//++++TRUE for testing.
 	public int blits;		// For frame-counting.
-	public boolean skipFirstScene = true;	// ++++TESTING.
+	public boolean skipFirstScene;
 	public boolean armageddon;
 	public String busyMessage;		// True when doing something we need to wait for.
 	public void setBusyMessage(String s) {

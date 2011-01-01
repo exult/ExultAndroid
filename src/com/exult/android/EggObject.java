@@ -489,7 +489,7 @@ public class EggObject extends IregGameObject {
 			continuous = (((d1>>8)&1) != 0);
 		}
 		public void hatchNow(GameObject obj, boolean must) {
-			// ++++++++++FINISH Audio::get_ptr().start_music(score, continuous);
+			audio.startMusic(score, continuous);
 		}
 	}
 	public static class SoundsfxEgg extends JukeboxEgg {

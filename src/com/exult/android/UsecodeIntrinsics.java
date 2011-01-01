@@ -748,39 +748,79 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return UsecodeValue.getNullObj();
 		else
 			return new UsecodeValue.ObjectValue(vec.firstElement());
-	}
-	int oval  = p0.getIntValue();
-	if (oval == -359) {		// Find on map (?)
-		Vector<GameObject> vec = new Vector<GameObject>();
-		Rectangle scr = new Rectangle();
-		gwin.getWinTileRect(scr);
-		Tile t = new Tile(scr.x + scr.w/2, scr.y + scr.h/2, 0);
-		gmap.findNearby(vec, t, shnum, scr.h/2, 0, qual, frnum);
-		return vec.isEmpty() ? UsecodeValue.getNullObj()
+		}
+		int oval  = p0.getIntValue();
+		if (oval == -359) {		// Find on map (?)
+			Vector<GameObject> vec = new Vector<GameObject>();
+			Rectangle scr = new Rectangle();
+			gwin.getWinTileRect(scr);
+			Tile t = new Tile(scr.x + scr.w/2, scr.y + scr.h/2, 0);
+			gmap.findNearby(vec, t, shnum, scr.h/2, 0, qual, frnum);
+			return vec.isEmpty() ? UsecodeValue.getNullObj()
 				   : new UsecodeValue.ObjectValue(vec.firstElement());
-	}
-	/* +++++++++FINISH
-	if (oval != -357) {		// Not the whole party? Find inside owner.
-		GameObject obj = getItem(p0);
-		if (obj == null)
-			return UsecodeValue.getNullObj();
-		GameObject f = obj.findItem(shnum, qual, frnum);
-		return new UsecodeValue.ObjectValue(f);
-	}
-	*/
-					// Look through whole party.
-	int cnt = partyman.getCount();
-	for (int i = 0; i < cnt; i++) {
-		GameObject obj = gwin.getNpc(partyman.getMember(i));
-		if (obj != null) {
-			/* ++++++++FINISH
+		}
+		/* +++++++++FINISH
+		if (oval != -357) {		// Not the whole party? Find inside owner.
+			GameObject obj = getItem(p0);
+			if (obj == null)
+				return UsecodeValue.getNullObj();
 			GameObject f = obj.findItem(shnum, qual, frnum);
-			if (f != null)
-				return new UsecodeValue.ObjectValue(f);
+			return new UsecodeValue.ObjectValue(f);
+		}
+		 */
+					// Look through whole party.
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = gwin.getNpc(partyman.getMember(i));
+			if (obj != null) {
+				/* ++++++++FINISH
+				GameObject f = obj.findItem(shnum, qual, frnum);
+				if (f != null)
+					return new UsecodeValue.ObjectValue(f);
+				 */
+			}
+		}
+		return UsecodeValue.getNullObj();
+	}
+	private final UsecodeValue getMusicTrack() {
+		// Returns the song currently playing. In the original BG, this
+		// returned a word: the high byte was the current song and the
+		// low byte could be the current song (most cases) or, in some
+		// cases, the song that was playing before and would be continued
+		// after the current song ends. For example, if you played song 12
+		// and then song 13, this function would return 0xD0C; after
+		// playing song 13, BG would resume playing song 12 because it is
+		// longer than song 13.
+		// In SI, it simply returns the current playing song.
+		// In Exult, we do it the SI way.
+		return new UsecodeValue.IntValue(audio.getCurrentTrack());		
+	}
+	private final void playMusic(UsecodeValue p0, UsecodeValue p1) {
+		// Play music(songnum, item).
+		// ??Show notes by item?
+		int track = p0.getIntValue()&0xff;
+		if (track == 0xff)		// I think this is right:
+			audio.cancelStreams();	// Stop playing.
+		else {
+			audio.startMusic(track, ((p0.getIntValue()>>8)&0x01) != 0);
+
+			// If a number but not an NPC, get out (for e.g.,
+			// SI function 0x1D1).
+			if (p1 instanceof UsecodeValue.IntValue &&
+				(p1.getIntValue() >= 0 ||
+					(p1.getIntValue() != -356 &&
+					p1.getIntValue() < -gwin.getNumNpcs())))
+				return;
+
+			// Show notes.
+			GameObject obj = getItem(p1);
+			/* +++++++FINISH
+			if (obj != null && !obj.isPosInvalid())
+				gwin.get_effects().add_effect(
+					new Sprites_effect(24, obj, 0, 0, -2, -2));
+			}
 			*/
 		}
-	}
-	return UsecodeValue.getNullObj();
 	}
 	private final UsecodeValue npcNearby(UsecodeValue p0) {
 		// NPC nearby? (item).
@@ -1437,7 +1477,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return countObjects(parms[0], parms[1], parms[2], parms[3]);
 		case 0x29:
 			return findObject(parms[0], parms[1], parms[2], parms[3]);
-		//++++++++
+		//+++++++++++
+		case 0x2d:
+			return getMusicTrack();
+		case 0x2e:
+			playMusic(parms[0], parms[1]); break;
 		case 0x2f:
 			return npcNearby(parms[0]);
 		case 0x30:

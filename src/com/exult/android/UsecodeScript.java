@@ -461,9 +461,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				UsecodeValue val = code.getElem(++i);
 				int song = val.getIntValue();
 				// Verified.
-				/* +++++++++++++++++
-				Audio::get_ptr().start_music(song&0xff, (song >> 8) != 0);
-				*/
+				audio.startMusic(song&0xff, (song >> 8) != 0);
 				break;
 				}
 			case usecode:	// Call?

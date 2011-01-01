@@ -14,6 +14,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import java.util.LinkedList;
 
 public class ExultActivity extends Activity {
 	public long GameTime;
@@ -23,6 +24,7 @@ public class ExultActivity extends Activity {
 	public ImageBuf ibuf;
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	private static ExultActivity instance;
+	private static LinkedList<String> alertMessages = new LinkedList<String>();
 	
     /** Called when the activity is first created. */
     @Override
@@ -40,7 +42,12 @@ public class ExultActivity extends Activity {
     public void onDestroy() {
     	// stop tracing
         //Debug.stopMethodTracing();
+    	if (GameSingletons.audio != null)
+    		GameSingletons.audio.stop();
     	super.onDestroy();
+    }
+    public static void setToast(String s) {
+    	alertMessages.add(s);
     }
     public static void getClick(Point p) {
     	Point save = clickPoint;	// Don't expect this to happen.
@@ -54,6 +61,20 @@ public class ExultActivity extends Activity {
     		}
     	}
     	clickPoint = save;
+    }
+    public static void alert(String msg) {
+    	/*++++++++++DOESN't WORK!!!
+    	AlertDialog alertDialog = new AlertDialog.Builder(instance).create();
+    	alertDialog.setTitle("Exult Fatal");
+    	alertDialog.setMessage(msg);
+    	alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+    	   public void onClick(DialogInterface dialog, int which) {
+    	      dialog.dismiss();
+    	   }
+    	});
+    	alertDialog.setIcon(R.drawable.icon);
+    	alertDialog.show();
+    	*/
     }
     public static void fileFatal(String nm) {
     	fatal("Error reading '" + EUtil.getSystemPath(nm) + "'");
@@ -122,6 +143,10 @@ public class ExultActivity extends Activity {
     	}
     	@Override
     	protected void onDraw(Canvas canvas){
+    		if (!alertMessages.isEmpty()) {
+    			String msg = alertMessages.remove();
+    			alert(msg);
+    		}
     		if (GameTime > nextTickTime) {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
@@ -162,9 +187,10 @@ public class ExultActivity extends Activity {
     		} else
     			gwin.getWin().blit(canvas);
     	}
-    	public MySurfaceView(Context context){
-    		super(context);
+    	public MySurfaceView(Context ctx){
+    		super(ctx);
     		init();
+    		
     	}
     	private void init(){
     		getHolder().addCallback(this);

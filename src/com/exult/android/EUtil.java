@@ -205,6 +205,7 @@ public class EUtil {
 		String base = "/sdcard/Games/exult";
 		String bgbase = base + "/blackgate";	// FOR NOW.
 		addSystemPath("<DATA>", base);
+		addSystemPath("<MUSIC>", base + "/MUSIC");
 		addSystemPath("<PATCH>", bgbase + "/PATCH");
 		addSystemPath("<STATIC>", bgbase + "/STATIC");
 		addSystemPath("<GAMEDAT>", bgbase + "/GAMEDAT");

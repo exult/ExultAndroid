@@ -1,40 +1,59 @@
 package com.exult.android;
+import java.util.LinkedList;
 import android.media.MediaPlayer;
 import java.io.IOException;
+import android.media.MediaPlayer.OnErrorListener;
+import android.media.MediaPlayer.OnCompletionListener;
 
 public final class Audio extends GameSingletons {
 	public boolean debug = true;
-	private MediaPlayer player;
+	private LinkedList<MediaPlayer> players = new LinkedList<MediaPlayer>();
 	private int currentTrack = -1;
+	private errorListener err = new errorListener();
+	private completionListener completion = new completionListener();
+	private void release(MediaPlayer player) {
+		player.release();
+		players.remove(player);
+	}
+	public static Audio instanceOf() {
+		return audio;
+	}
+	// Stop all tracks.
 	public void stop() {
-		if (player != null)
-			player.stop();
+		while (!players.isEmpty()) {
+			MediaPlayer player = players.remove();
+			player.release();
+		}
+		currentTrack = -1;
+	}
+	public void cancelStreams() {
+		stop();
+	}
+	public int getCurrentTrack() {
+		return currentTrack;
 	}
 	public void startMusic(int num, boolean repeat, String flex) {
-		if (player == null)
-			player = new MediaPlayer();
 		// -1 and 255 are stop tracks
 		if (num == -1 || num == 255) {
 			stop();
 			return;
 		}
 		// Already playing it??
-		if(currentTrack == num) {
+		if (currentTrack == num) {
 			// OGG is playing?
+			MediaPlayer player = players.getLast();
 			if (player.isPlaying())
 				return;
 		}
 		// Work around Usecode bug where track 0 is played at Intro Earthquake
 		if (num == 0 && flex == EFile.MAINMUS && game.isBG())
 			return;	
-		stop();
-		currentTrack = num;
-		if (!oggPlay(flex, num, repeat)) {
-			stop();
-		}
+		
+		if (oggPlay(flex, num, repeat))
+			currentTrack = num;
 	}
-	public void	startMusic(int num, boolean continuous) {
-		startMusic(num, continuous, EFile.MAINMUS);
+	public void	startMusic(int num, boolean repeat) {
+		startMusic(num, repeat, EFile.MAINMUS);
 	}
 	private boolean oggPlay(String filename, int num, boolean repeat) {
 		String ogg_name = "";
@@ -96,16 +115,40 @@ public final class Audio extends GameSingletons {
 		else {
 			ogg_name = EUtil.getSystemPath(basepath + ogg_name);	
 		}
+		MediaPlayer player = null;
 		if (debug)
-			System.out.println("OGG audio: Music track " + ogg_name);
+			System.out.println("Audio: Music track " + ogg_name);
 		try {
+			player = new MediaPlayer();
+			players.addLast(player);
+			player.setOnErrorListener(err);
+			player.setOnCompletionListener(completion);
 			player.setDataSource(ogg_name);
+			player.prepare();
+			player.setLooping(repeat);
+			player.start();
 		} catch (IOException e) {
-			System.out.println("Failed to play track: " + ogg_name);
+			System.out.println("Audio: Failed to play track: " + ogg_name);
+			ExultActivity.setToast("Failed to play track: " + ogg_name);
+			if (player != null) {
+				release(player);
+			}
 			return false;
 		}
-		player.start();
 		return  true;
+	}
+	private static class errorListener implements android.media.MediaPlayer.OnErrorListener {
+		public boolean onError(MediaPlayer mp, int what, int extra) {
+			System.out.println("Audio: Error callback, what = " + what + 
+					  ", extra = " + extra);
+			return true;
+		}
+	}
+	private static class completionListener implements android.media.MediaPlayer.OnCompletionListener {
+		public void onCompletion(MediaPlayer mp) {
+			System.out.println("Audio: Track has completed.");
+			Audio.instanceOf().release(mp);
+		}
 	}
 	private static final String bgconvmusic[] = {
 		"09bg.ogg", 	// 0
