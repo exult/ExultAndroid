@@ -13,6 +13,7 @@ import android.graphics.Canvas;
 import android.content.Context;
 import android.graphics.Point;
 import android.app.AlertDialog;
+import android.widget.Toast;
 import android.content.DialogInterface;
 import java.util.LinkedList;
 
@@ -24,7 +25,6 @@ public class ExultActivity extends Activity {
 	public ImageBuf ibuf;
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	private static ExultActivity instance;
-	private static LinkedList<String> alertMessages = new LinkedList<String>();
 	
     /** Called when the activity is first created. */
     @Override
@@ -46,8 +46,31 @@ public class ExultActivity extends Activity {
     		GameSingletons.audio.stop();
     	super.onDestroy();
     }
-    public static void setToast(String s) {
-    	alertMessages.add(s);
+    static class MessageDisplayer implements Runnable {
+    	String msg;
+    	boolean toast;
+    	MessageDisplayer(String m, boolean t) {
+    		msg = m; toast = t;
+    	}
+    	public void run() {
+    		if (toast) {
+    			Toast.makeText(instance, msg, Toast.LENGTH_SHORT).show();
+    		} else {
+    			AlertDialog alertDialog = new AlertDialog.Builder(instance).create();
+    			alertDialog.setTitle("Exult");
+    			alertDialog.setMessage(msg);
+    			alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+    				public void onClick(DialogInterface dialog, int which) {
+    					dialog.dismiss();
+    				}
+    			});
+        	alertDialog.setIcon(R.drawable.icon);
+        	alertDialog.show();
+        	}
+    	}
+    }
+    public static void showToast(String s) {
+    	instance.runOnUiThread(new MessageDisplayer(s, true));
     }
     public static void getClick(Point p) {
     	Point save = clickPoint;	// Don't expect this to happen.
@@ -143,10 +166,6 @@ public class ExultActivity extends Activity {
     	}
     	@Override
     	protected void onDraw(Canvas canvas){
-    		if (!alertMessages.isEmpty()) {
-    			String msg = alertMessages.remove();
-    			alert(msg);
-    		}
     		if (GameTime > nextTickTime) {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
@@ -361,7 +380,7 @@ public class ExultActivity extends Activity {
 		        			return false;
 		        		
 		        	case KeyEvent.KEYCODE_C:	//++++++++TESTING
-		        		new EffectsManager.CloudsEffect(6000, 0, null, 6);
+		        		new EffectsManager.CloudsEffect(20, 0, null, 6);
 		        		return true;
 		        	case KeyEvent.KEYCODE_R:
 		        		if (event.isAltPressed()) {

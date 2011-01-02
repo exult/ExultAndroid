@@ -131,7 +131,7 @@ public final class Audio extends GameSingletons {
 			player.start();
 		} catch (IOException e) {
 			System.out.println("Audio: Failed to play track: " + ogg_name);
-			ExultActivity.setToast("Failed to play track: " + ogg_name);
+			ExultActivity.showToast("Failed to play track: " + ogg_name);
 			if (player != null) {
 				release(player);
 			}
@@ -141,8 +141,10 @@ public final class Audio extends GameSingletons {
 	}
 	private static class errorListener implements android.media.MediaPlayer.OnErrorListener {
 		public boolean onError(MediaPlayer mp, int what, int extra) {
-			System.out.println("Audio: Error callback, what = " + what + 
-					  ", extra = " + extra);
+			String msg = "Audio: Error callback, what = " + what + 
+					  ", extra = " + extra;
+			System.out.println(msg);
+			ExultActivity.showToast(msg);
 			return true;
 		}
 	}
