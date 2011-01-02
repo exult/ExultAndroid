@@ -359,6 +359,10 @@ public class ExultActivity extends Activity {
 		        			return true;
 		        		} else
 		        			return false;
+		        		
+		        	case KeyEvent.KEYCODE_C:	//++++++++TESTING
+		        		new EffectsManager.CloudsEffect(6000, 0, null, 6);
+		        		return true;
 		        	case KeyEvent.KEYCODE_R:
 		        		if (event.isAltPressed()) {
 		        			gwin.read(1);	// +++++++TESTING

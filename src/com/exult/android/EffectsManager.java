@@ -34,6 +34,38 @@ public final class EffectsManager extends GameSingletons {
 		while (texts != null)
 			removeTextEffect(texts);
 	}
+	//	Get # of last weather added.
+	public int getWeather() {
+		for (SpecialEffect effect = effects; effect != null; effect = effect.next)
+			if (effect.isWeather()) {
+				WeatherEffect weather = (WeatherEffect) effect;
+				if (weather.getNum() >= 0)
+					return weather.getNum();
+			}
+		return 0;
+	}
+	/*
+	 *	Remove weather effects.
+	 *	@param	dist	Only remove those from eggs at least this far away.
+	 */
+	void removeWeatherEffects(int dist) {
+		Actor mainActor = gwin.getMainActor();
+		Tile apos = new Tile();
+		if (mainActor != null)
+			mainActor.getTile(apos);
+		else
+			apos.set(-1, -1, -1);
+		SpecialEffect each = effects;
+		while (each != null) {
+			SpecialEffect next = each.next;
+						// See if we're far enough away.
+			if (each.isWeather() && (dist == 0 ||
+			    ((WeatherEffect) each).outOfRange(apos, dist)))
+				removeEffect(each);
+			each = next;
+		}
+		gwin.setAllDirty();
+	}
 	/*
 	 *  Add text over a given item.
 	 */
@@ -95,7 +127,7 @@ public final class EffectsManager extends GameSingletons {
 
 	public void paint() {
 		for (SpecialEffect effect = effects; effect != null; effect = effect.next)
-		effect.paint();
+			effect.paint();
 	}
 	public void paintText() {
 	for (TextEffect txt = texts; txt != null; txt = txt.next)
@@ -162,8 +194,8 @@ public final class EffectsManager extends GameSingletons {
 		private int i;				// Current index.
 		private int dx, dy;
 		public Earthquake(int l) {
-		len = l;
-		eman.addEffect(this);
+			len = l;
+			eman.addEffect(this);
 		}
 						// Execute when due.
 		public void handleEvent(int ctime, Object udata) {
@@ -197,6 +229,178 @@ public final class EffectsManager extends GameSingletons {
 			}
 		}
 	}
+	/*
+	 *	Weather.
+	 */
+	public static abstract class WeatherEffect extends SpecialEffect {
+		protected int stopTime;		// Time in ticks to stop.
+		int num;			// Weather ID (0-6), or -1.
+		Tile eggloc;		// Location of egg that started this.
+		public WeatherEffect(int duration, int delay, GameObject egg, int n) {
+			num = n;
+			if (egg != null)
+				egg.getTile(eggloc = new Tile());
+			stopTime = TimeQueue.ticks + delay + duration*25; // +++GameClock.ticks_per_minute;
+			eman.addEffect(this);
+			// Start immediately.
+			tqueue.add(TimeQueue.ticks + delay, this, null);
+		}
+						// Avatar out of range?
+		boolean outOfRange(Tile avpos, int dist) {
+			if (eggloc == null)
+				return false;
+			else
+				return eggloc.distance(avpos) >= dist;
+		}
+		public boolean isWeather()
+			{ return true; }
+		int getNum() 
+			{ return num; }
+	}
+	//	A single cloud.
+	private static class Cloud extends GameSingletons {
+		ShapeID cloud;
+		Rectangle area = new Rectangle();
+		int wx, wy;			// Position within world.
+		int deltax, deltay;		// How to move.
+		int count;			// Counts down to 0.
+		int maxCount;
+		int startTime;	// When to start.
+		static int randcnt;		// For generating random times.
+		static final int CLOUD = 2;	// Shape #.
+		// Return y<<16 + x.
+		int setStartPos(ShapeFrame shape, int w, int h) {
+			int x, y;
+			if (deltax == 0) {			// Special cases first.
+				x = EUtil.rand()%w;
+				y = deltay > 0 ? -shape.getYBelow() : 
+							h + shape.getYAbove();
+			} else if (deltay == 0) {
+				y = EUtil.rand()%h;
+				x = deltax > 0 ? -shape.getXRight() : w + shape.getXLeft();
+			} else {
+				int halfp = w + h;		// 1/2 perimeter.
+				int r = EUtil.rand()%halfp;		// Start on one of two sides.
+				if (r > h) {			// Start on top/bottom.
+					x = r - h;
+					y = deltay > 0 ? -shape.getYBelow() : 
+							h + shape.getYAbove();
+				} else {
+					y = r;				// On left or right side.
+					if (deltax > 0)			// Going right?
+						x = -shape.getXRight();
+					else				// Going left?
+						x = w + shape.getXLeft();
+				}
+			}
+			return (y<<16)|x;
+		}
+		Cloud(int dx, int dy) {
+			cloud = new ShapeID(CLOUD, 0, ShapeFiles.SPRITES_VGA);
+			deltax = dx; deltay = dy;
+			count = -1;
+			int adx = deltax > 0 ? deltax : -deltax;
+			int ady = deltay > 0 ? deltay : -deltay;
+			if (adx < ady)
+				maxCount = 2*gwin.getHeight()/ady;
+			else
+				maxCount = 2*gwin.getWidth()/adx;
+			startTime = 0;
+		}
+					// Move to next position & paint.
+		void next(int curtime, int w, int h) {
+			if (curtime < startTime)
+				return;			// Not yet.
+							// Get top-left world pos.
+			int scrollx = gwin.getScrolltx()*EConst.c_tilesize;
+			int scrolly = gwin.getScrollty()*EConst.c_tilesize;
+			ShapeFrame shape = cloud.getShape();
+			gwin.clipToWin(gwin.getShapeRect(area,
+					shape, wx - scrollx, wy - scrolly));
+			area.enlarge(EConst.c_tilesize/2);
+			gwin.addDirty(area);
+			if (count <= 0) {			// Time to restart?
+							// Set start time randomly.
+				randcnt = (randcnt + 1)%4;
+				startTime = TimeQueue.ticks + 2*randcnt + EUtil.rand()%3;
+				count = maxCount;
+				cloud.setFrame(EUtil.rand()%cloud.getNumFrames());
+				int pos = setStartPos(shape, w, h);	// Get screen pos.
+				int x = pos & 0xffff, y = (pos>>16) & 0xffff; 
+				wx = x + scrollx;
+				wy = y + scrolly;
+			} else {
+				wx += deltax;
+				wy += deltay;
+				count--;
+			}
+			gwin.clipToWin(gwin.getShapeRect(area,
+					shape, wx - scrollx, wy - scrolly));
+			area.enlarge(EConst.c_tilesize/2);
+			gwin.addDirty(area);
+		}
+		void paint() {
+			if (count > 0)			// Might not have been started.
+				cloud.paintShape(
+					(int)(wx - gwin.getScrolltx()*EConst.c_tilesize), 
+					(int)(wy - gwin.getScrollty()*EConst.c_tilesize));
+		}
+	}
+	//  Clouds floating by.
+	public static class CloudsEffect extends WeatherEffect {	
+		Cloud clouds[];	
+		boolean overcast;
+		public CloudsEffect(int duration, int delay, GameObject egg, int n) {
+			super(duration, delay, egg, n);
+			overcast = (n != 6);
+			/* ++++++++FINISH
+			if (overcast)
+				gclock.set_overcast(true);
+			else
+				gclock.set_overcast(false);
+			*/
+			int num_clouds = 2 + EUtil.rand()%5;	// Pick #.
+			if (overcast)
+				num_clouds += EUtil.rand()%2;
+			clouds = new Cloud[num_clouds];
+							// Figure wind direction.
+			int dx = EUtil.rand()%5 - 2;
+			int dy = EUtil.rand()%5 - 2;
+			if (dx == 0 && dy == 0) {
+				dx = 1 + EUtil.rand()%2;
+				dy = 1 - EUtil.rand()%3;
+			}
+			for (int i = 0; i < num_clouds; i++) {		// Modify speed of some.
+				int deltax = dx, deltay = dy;
+				if (EUtil.rand()%2 == 0) {
+					deltax += deltax/2;
+					deltay += deltay/2;
+				}
+				clouds[i] = new Cloud(deltax, deltay);
+			}
+			System.out.println("Clouds: num = " + num_clouds + ", len (mins.) = " + duration);
+		}
+		// Execute when due.
+		public void handleEvent(int ctime, Object udata) {
+			int delay = 1;
+			if (ctime >= stopTime) {			// Time to stop.
+				eman.removeEffect(this);
+				gwin.setAllDirty();
+				return;
+			}
+			int w = gwin.getWidth(), h = gwin.getHeight();
+			for (int i = 0; i < clouds.length; i++)
+				clouds[i].next(ctime, w, h);
+			tqueue.add(ctime + delay, this, udata);
+		}
+		// Render.
+		public void paint() {
+			if (!gwin.isMainActorInside())
+				for (int i = 0; i < clouds.length; i++)
+					clouds[i].paint();
+		}
+	}
+	
 	/*
 	 *	A text object is a message that stays on the screen for just a couple
 	 *	of seconds.  These are all kept in a single list, and managed by

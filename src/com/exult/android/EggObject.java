@@ -268,7 +268,7 @@ public class EggObject extends IregGameObject {
 		*/
 		int cri = getCriteria();
 		int deltaz = tz - getLift();
-		System.out.println("Checking criteria " + cri + ", deltaz = " + deltaz);
+		//System.out.println("Checking criteria " + cri + ", deltaz = " + deltaz);
 		switch (cri) {
 		case cached_in:			// Anywhere in square.
 			// This seems to be true for SI in general. It has the side effect
@@ -294,7 +294,6 @@ public class EggObject extends IregGameObject {
 				return false;
 			// fall through
 		case party_near:		// Avatar or party member.
-			System.out.println("Party_near");
 			if (!obj.getFlag(GameObject.in_party) && obj != gwin.getMainActor())
 				return false;
 			System.out.println("Party near: Area = " + area);
@@ -362,9 +361,42 @@ public class EggObject extends IregGameObject {
 	public static void setWeather(int weather) {
 		setWeather(weather, 15, null);
 	}
-	public static void setWeather(int weather, int len,
-			GameObject egg) {
-		//+++++++++FINISH
+	public static void setWeather(int weather, int len, GameObject egg) {
+		//+++++++++FINISHif (!len)			// Means continuous.
+		len = 6000;		// Confirmed from originals.
+		int cur = eman.getWeather();
+		// Experimenting.
+		if (weather != 4 && (weather == 3 || cur != weather))
+			eman.removeWeatherEffects(0);
+
+		switch (weather)
+			{
+		case 0:		// Back to normal.
+			eman.removeWeatherEffects(0);
+			break;
+		/* +++++++++FINISH
+		case 1:		// Snow.
+			eman.add_effect(new Snowstorm_effect(len, 0, egg));
+			break;
+		case 2:		// Storm.
+			eman.add_effect(new Storm_effect(len, 0, egg));
+			break;
+		case 3:		// (On Ambrosia).
+			eman.remove_weather_effects();
+			eman.add_effect(new Sparkle_effect(len, 0, egg));
+			break;
+		case 4:		// Fog.
+			// ++++ Disabling this.
+			//eman.add_effect(new Fog_effect(len, 0, egg));
+			break;
+		*/
+		case 5:		// Overcast.
+		case 6:		// Clouds.
+			new EffectsManager.CloudsEffect(len, 0, egg, weather);
+			break;
+		default:
+			break;
+			}
 	}
 		// Move to new abs. location.
 	public void move(int newtx, int newty, int newlift, int newmap) {
@@ -736,7 +768,7 @@ public class EggObject extends IregGameObject {
 				len = 120;	// How about a couple game hours?
 		}
 		public void hatchNow(GameObject obj, boolean must) {
-			// +++++++FINISH setWeather(weather, len, this);
+			setWeather(weather, len, this);
 		}
 	};
 
