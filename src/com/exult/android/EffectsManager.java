@@ -160,6 +160,7 @@ public final class EffectsManager extends GameSingletons {
 		private static boolean soundOnce;
 		private int len;			// From Usecode intrinsic.
 		private int i;				// Current index.
+		private int dx, dy;
 		public Earthquake(int l) {
 		len = l;
 		eman.addEffect(this);
@@ -172,32 +173,22 @@ public final class EffectsManager extends GameSingletons {
 		  		//++++++FINISH Audio::get_ptr().play_sound_effect(Audio::game_sfx(60));
 			}
 			ImageBuf win = gwin.getWin();
-			int w = win.getWidth(), h = win.getHeight();
-			int sx = 0, sy = 0;
-			int dx = EUtil.rand()%9 - 4;
-			int dy = EUtil.rand()%9 - 4;
-			System.out.printf("Earthquake: dx = %1$d, dy = %2$d\n", dx, dy);
-			if (dx > 0)
-				w -= dx;
-			else {
-				w += dx;
-				sx -= dx;
+			if (dx != 0) {
+				gwin.shiftViewHoriz(dx < 0);
 				dx = 0;
+			} else {
+				dx = EUtil.rand()%9 - 4;
+				if (dx != 0)
+					gwin.shiftViewHoriz(dx > 0);
 			}
-			if (dy > 0)
-				h -= dy;
-			else {
-				h += dy;
-				sy -= dy;
+			if (dy != 0) {
+				gwin.shiftViewVertical(dy < 0);
 				dy = 0;
+			} else {
+				dy = EUtil.rand()%9 - 4;
+				if (dy != 0)
+					gwin.shiftViewVertical(dy > 0);
 			}
-			gwin.paint();
-			gwin.clearDirty();
-			win.copy(sx, sy, w, h, dx, dy);
-			gwin.setPainted();
-			// gwin.show(true);
-							// Shake back.
-			win.copy(dx, dy, w, h, sx, sy);
 			if (++i < len)			// More to do?  Put back in queue.
 				tqueue.add(ctime + 1, this, udata);
 			else {
