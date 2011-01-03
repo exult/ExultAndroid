@@ -49,8 +49,9 @@ public class ExultActivity extends Activity {
     static class MessageDisplayer implements Runnable {
     	String msg;
     	boolean toast;
-    	MessageDisplayer(String m, boolean t) {
-    		msg = m; toast = t;
+    	boolean fatal;
+    	MessageDisplayer(String m, boolean t, boolean f) {
+    		msg = m; toast = t; fatal = f;
     	}
     	public void run() {
     		if (toast) {
@@ -62,6 +63,8 @@ public class ExultActivity extends Activity {
     			alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
     				public void onClick(DialogInterface dialog, int which) {
     					dialog.dismiss();
+    					if (fatal)
+    						instance.finish();
     				}
     			});
     			alertDialog.setIcon(R.drawable.icon);
@@ -70,7 +73,16 @@ public class ExultActivity extends Activity {
     	}
     }
     public static void showToast(String s) {
-    	instance.runOnUiThread(new MessageDisplayer(s, true));
+    	instance.runOnUiThread(new MessageDisplayer(s, true, false));
+    }
+    public static void alert(String msg) {
+    	instance.runOnUiThread(new MessageDisplayer(msg, false, false));
+    }
+    public static void fileFatal(String nm) {
+    	fatal("Error reading '" + EUtil.getSystemPath(nm) + "'");
+    }
+    public static void fatal(String msg) {
+    	instance.runOnUiThread(new MessageDisplayer(msg, false, true));
     }
     public static void getClick(Point p) {
     	Point save = clickPoint;	// Don't expect this to happen.
@@ -84,25 +96,6 @@ public class ExultActivity extends Activity {
     		}
     	}
     	clickPoint = save;
-    }
-    public static void alert(String msg) {
-    	instance.runOnUiThread(new MessageDisplayer(msg, false));
-    }
-    public static void fileFatal(String nm) {
-    	fatal("Error reading '" + EUtil.getSystemPath(nm) + "'");
-    }
-    public static void fatal(String msg) {
-    	AlertDialog alertDialog = new AlertDialog.Builder(instance).create();
-    	alertDialog.setTitle("Exult Fatal");
-    	alertDialog.setMessage(msg);
-    	alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
-    	   public void onClick(DialogInterface dialog, int which) {
-    	      // here you can add functions
-    		   instance.finish();
-    	   }
-    	});
-    	alertDialog.setIcon(R.drawable.icon);
-    	alertDialog.show();
     }
     /*
      * Subclasses.
