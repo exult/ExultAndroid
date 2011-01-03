@@ -558,12 +558,9 @@ public class EggObject extends IregGameObject {
 		byte mframe;
 		byte sched, align, cnt;
 		void createMonster(MonsterInfo inf) {
-			/*++++++++
-			Tile_coord dest = Map_chunk::find_spot(
-					get_tile(), 5, mshape, 0, 1);
-			*/
-			Tile dest = new Tile(); getTile(dest);// +++++TESTING
-			if (dest.tx != -1) {
+			Tile dest = new Tile();
+			getTile(dest);
+			if (MapChunk.findSpot(dest,5, mshape, 0, 1)) {
 				MonsterActor monster = 
 				    MonsterActor.create((int)mshape, dest, sched, align);
 				monster.changeFrame(mframe);

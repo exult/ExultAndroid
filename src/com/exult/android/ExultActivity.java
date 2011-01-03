@@ -54,7 +54,7 @@ public class ExultActivity extends Activity {
     	}
     	public void run() {
     		if (toast) {
-    			Toast.makeText(instance, msg, Toast.LENGTH_SHORT).show();
+    			Toast.makeText(instance, msg, Toast.LENGTH_LONG).show();
     		} else {
     			AlertDialog alertDialog = new AlertDialog.Builder(instance).create();
     			alertDialog.setTitle("Exult");
@@ -64,8 +64,8 @@ public class ExultActivity extends Activity {
     					dialog.dismiss();
     				}
     			});
-        	alertDialog.setIcon(R.drawable.icon);
-        	alertDialog.show();
+    			alertDialog.setIcon(R.drawable.icon);
+    			alertDialog.show();
         	}
     	}
     }
@@ -86,18 +86,7 @@ public class ExultActivity extends Activity {
     	clickPoint = save;
     }
     public static void alert(String msg) {
-    	/*++++++++++DOESN't WORK!!!
-    	AlertDialog alertDialog = new AlertDialog.Builder(instance).create();
-    	alertDialog.setTitle("Exult Fatal");
-    	alertDialog.setMessage(msg);
-    	alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
-    	   public void onClick(DialogInterface dialog, int which) {
-    	      dialog.dismiss();
-    	   }
-    	});
-    	alertDialog.setIcon(R.drawable.icon);
-    	alertDialog.show();
-    	*/
+    	instance.runOnUiThread(new MessageDisplayer(msg, false));
     }
     public static void fileFatal(String nm) {
     	fatal("Error reading '" + EUtil.getSystemPath(nm) + "'");

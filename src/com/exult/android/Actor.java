@@ -398,16 +398,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (scheduleType == Schedule.sleep)
 				setScheduleType(Schedule.stand);
 			else if ((getFrameNum()&0xf) == Actor.sleep_frame) {
-				/* +++++++++FINISH
-						// Find spot to stand.
-				Tile pos = get_tile();
+				Tile pos;		// Find spot to stand.
+				getTile(pos = new Tile());
 				pos.tz -= pos.tz%5;	// Want floor level.
-				pos = Map_chunk::find_spot(pos, 6, getShapeNum(),
-					Actor.standing, 0);
-				if (pos.tx >= 0)
+				if (MapChunk.findSpot(pos, 6, getShapeNum(), Actor.standing, 0))
 					move(pos);
 				changeFrame(Actor.standing);
-				*/
 			}
 			UsecodeScript.terminate(this);
 		}

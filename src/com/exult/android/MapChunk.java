@@ -35,6 +35,7 @@ public final class MapChunk extends GameSingletons {
 	private static Rectangle footRect = new Rectangle(),	// Temp.
 							 tilesRect = new Rectangle(),
 							 eggRect = new Rectangle();
+	private static Tile spotPos = new Tile();	// Temp.
 	// Temp. storage for 'blocked' flags for a single tile.
 	private static int tflags[] = new int[256/8];
 	private static int tflagsMaxz;
@@ -820,7 +821,134 @@ public final class MapChunk extends GameSingletons {
 		loc.tz = (short)new_lift;
 		return true;
 	}
-	
+	public static boolean areaAvailable(				
+			int xtiles, int ytiles, int ztiles,	// Object dims:
+			Tile loc,		// Location we want.  Tz is updated.
+			int move_flags, int max_drop) {
+		return areaAvailable(xtiles, ytiles, ztiles, loc, move_flags, max_drop, -1);
+	}
+	/*
+	 *	Find a free area for an object of a given shape, looking outwards.
+	 *
+	 *	Output:	Pos is set to tile if successful.
+	 */
+	public static final int 	// For findSpot:
+		anywhere = 0,
+		inside = 1,
+		outside = 2;
+	public static boolean findSpot(Tile pos,  int dist,
+			int shapenum, int framenum, int max_drop,int dir,
+			int where) {
+		ShapeInfo info = ShapeID.getInfo(shapenum);
+		int xs = info.get3dXtiles(framenum);
+		int ys = info.get3dYtiles(framenum);
+		int zs = info.get3dHeight();
+						// The 'MOVE_FLY' flag really means
+						//   we can look upwards by max_drop.
+		final int mflags = EConst.MOVE_WALK|EConst.MOVE_FLY;
+						// Start with original position.
+		spotPos.set(pos.tx - xs + 1, pos.ty - ys + 1, pos.tz);
+		if (MapChunk.areaAvailable(xs, ys, zs, spotPos, mflags, max_drop)) {
+			pos.tz = spotPos.tz;
+			return true;
+		}
+		if (dir < 0)
+			dir = EUtil.rand()%8;		// Choose dir. randomly.
+		dir = (dir + 1)%8;		// Make NW the 0 point.
+		for (int d = 1; d <= dist; d++)	// Look outwards.
+			{
+			int square_cnt = 8*d	;// # tiles in square's perim.
+						// Get square (starting in NW).
+			Tile square[] = getSquare(pos, d);
+			int index = dir*d;	// Get index of preferred spot.
+						// Get start of preferred range.
+			index = (index - d/2 + square_cnt)%square_cnt;
+			for (int cnt = square_cnt; cnt > 0; cnt--, index++) {
+				Tile p = square[index%square_cnt];
+				spotPos.set(p.tx - xs + 1, p.ty - ys + 1, p.tz);
+				if (MapChunk.areaAvailable(xs, ys, zs, spotPos, mflags, max_drop) &&
+				    (where == anywhere || 
+					  checkSpot(where, p.tx, p.ty, spotPos.tz))) {
+						// Use tile before deleting.
+					pos.set(p.tx, p.ty, spotPos.tz);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	public static boolean findSpot(Tile pos,  int dist,
+			int shapenum, int framenum, int max_drop) {
+		return findSpot(pos, dist, shapenum, framenum, 0, -1, anywhere);
+	}
+	/*
+	 *	Find a free area for an object (usually an NPC) that we want to
+	 *	approach a given position.
+	 *
+	 *	Output:	Pos is set to tile if successful.
+	 */
+	public static boolean findSpot
+		(
+		Tile pos,			// Starting point.
+		int dist,			// Distance to look outwards.  (0 means
+							//   only check 'pos'.
+		GameObject obj,		// Object that we want to move.
+		int max_drop,		// Allow to drop by this much.
+		int where			// Inside/outside.
+		) {
+		int t2x = obj.getTileX(), t2y = obj.getTileY();
+						// Get direction from pos. to object.
+		int dir = (int) EUtil.getDirection(pos.ty - t2y, t2x - pos.tx);
+		return findSpot(pos, dist, obj.getShapeNum(), obj.getFrameNum(),
+				max_drop, dir, where);
+	}
+	/*
+	 *	Get the list of tiles in a square perimeter around a given tile.
+	 *
+	 *	Output:	List (8*dist) of tiles, starting in Northwest corner and going
+	 *		   clockwise.  List is on heap.
+	 */
+	private static Tile[] getSquare
+		(
+		Tile pos,			// Center of square.
+		int dist			// Distance to perimeter (>0)
+		) {
+		Tile square[] = new Tile[8*dist];
+						// Upper left corner:
+		square[0] = new Tile(EConst.DECR_TILE(pos.tx, dist), 
+							 EConst.DECR_TILE(pos.ty, dist), pos.tz);
+		int i;				// Start with top row.
+		int len = 2*dist + 1;
+		int out = 1;
+		for (i = 1; i < len; i++, out++)
+			square[out] = new Tile(EConst.INCR_TILE(square[out - 1].tx),
+				square[out - 1].ty, pos.tz);
+						// Down right side.
+		for (i = 1; i < len; i++, out++)
+			square[out] = new Tile(square[out - 1].tx,
+					EConst.INCR_TILE(square[out - 1].ty), pos.tz);
+						// Bottom, going back to left.
+		for (i = 1; i < len; i++, out++)
+			square[out] = new Tile(EConst.DECR_TILE(square[out - 1].tx),
+				square[out - 1].ty, pos.tz);
+						// Left side, going up.
+		for (i = 1; i < len - 1; i++, out++)
+			square[out] = new Tile(square[out - 1].tx,
+					EConst.DECR_TILE(square[out - 1].ty), pos.tz);
+		return square;
+	}
+	/*
+	 *	Check a spot against the 'where' paramater to findSpot.
+	 *	Output:	true if it passes.
+	 */
+	private static boolean checkSpot(int where, int tx, int ty, int tz) {
+		int cx = tx/EConst.c_tiles_per_chunk, cy = ty/EConst.c_tiles_per_chunk;
+		MapChunk chunk = gmap.getChunk(cx, cy);
+		return (where == inside) == 
+					(chunk.isRoof(tx % EConst.c_tiles_per_chunk, 
+						ty % EConst.c_tiles_per_chunk, tz) < 31);
+	}
+
 	/*
 	 *  Finds if there is a 'roof' above lift in tile (tx, ty)
 	 *  of the chunk. Point is taken 4 above lift

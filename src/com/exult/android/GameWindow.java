@@ -494,16 +494,13 @@ public class GameWindow extends GameSingletons {
 		for (i = 0; i < cnt; i++) {
 			int party_member=party_man.getMember(i);
 			Actor person = getNpc(party_member);
-			if (person != null && !person.isDead() /* +++++FINISH && 
-			    person.getScheduleType() != Schedule::wait */) {
+			if (person != null && !person.isDead() && 
+			    person.getScheduleType() != Schedule.wait ) {
 				person.setAction(null);
-				/* +++++++++++++FINISH
-				t1 = Map_chunk::find_spot(t, 8,
-					person.get_shapenum(), person.get_framenum(),
-										1);
-				if (t1.tx != -1)
-					person.move(t1, newMap);
-				*/
+				t1.set(t.tx, t.ty, t.tz);
+				if (MapChunk.findSpot(t1, 8,
+					person.getShapeNum(), person.getFrameNum(), 1))
+					person.move(t1.tx, t1.ty, t1.tz, newMap);
 			}
 		}
 		mainActor.getFollowers();
