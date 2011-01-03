@@ -35,7 +35,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 							// Pure kludge for SI wells:
 			/* ++++++++++FINISH
 			if (objval.getArraySize() == 2 && 
-					Game::get_game_type() == SERPENT_ISLE &&
+					Game.get_game_type() == SERPENT_ISLE &&
 					obj != null && obj.getShapeNum() == 470 && 
 					obj.getLift() == 0) {
 							// We want the TOP of the well.
@@ -65,7 +65,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Delay = .20 sec.?
 						// Special problem with inf. loop:
 		/* +++++STILL NEEDED?
-		if (Game::get_game_type() == BLACK_GATE &&
+		if (Game.get_game_type() == BLACK_GATE &&
 		    event == UsecodeMachine.internal_exec && 
 		    p1.getArrayAize() == 3 &&
 		    parms1.getElem(2).getIntValue() == 0x6f7)
@@ -88,10 +88,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return shape;
 		// Checks for Petra flag.
 		/*++++++++++++
-		shape = Shapeinfo_lookup::GetFaceReplacement(shape);
+		shape = Shapeinfo_lookup.GetFaceReplacement(shape);
 
 		Actor iact;
-		if (Game::get_game_type() == SERPENT_ISLE)
+		if (Game.get_game_type() == SERPENT_ISLE)
 				{			// Special case: Nightmare Smith.
 							//   (But don't mess up Guardian.)
 				if (shape == 296 && this.frame.caller_item &&
@@ -105,10 +105,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (shape == 0)
 				{
 				Actor *ava = gwin.getMainActor();
-				bool sishapes = Shape_manager::get_instance().have_si_shapes();
-				Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(
-						ava.get_skin_color(), npc ? (npc.get_type_flag(Actor::tf_sex)!=0)
-							: (ava.get_type_flag(Actor::tf_sex)!=0), sishapes);
+				bool sishapes = Shape_manager.get_instance().have_si_shapes();
+				Skin_data *skin = Shapeinfo_lookup.GetSkinInfoSafe(
+						ava.get_skin_color(), npc ? (npc.get_type_flag(Actor.tf_sex)!=0)
+							: (ava.get_type_flag(Actor.tf_sex)!=0), sishapes);
 				if (gwin.getMainActor().get_flag(GameObject.tattooed))
 					{
 					shape = skin.alter_face_shape;
@@ -132,7 +132,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (shape < 0)
 			return;
 	
-		if (true /* +++++ Game::get_game_type() == BLACK_GATE*/ && npc != null) {
+		if (true /* +++++ Game.get_game_type() == BLACK_GATE*/ && npc != null) {
 			// Only do this if the NPC is the caller item.
 			if (npc.getNpcNum() != -1) 
 				npc.setFlag (GameObject.met);
@@ -455,7 +455,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						//   a bug in the Fawn Trial.)
 						//+++++Should be a better way to check.
 		/* +++++++++FINISH
-		if (Game::get_game_type() == SERPENT_ISLE &&
+		if (Game.get_game_type() == SERPENT_ISLE &&
 		    npc.get_action() && npc.get_action().as_usecode_path())
 						// Give a 'fake' schedule.
 			sched = Schedule.walk_to_schedule;
@@ -474,10 +474,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			/* ++++++++++FINISH
 						// Taking Avatar out of combat?
 			if (npc == gwin.getMainActor() && gwin.in_combat() &&
-			    newsched != Schedule::combat)
+			    newsched != Schedule.combat)
 						// End combat mode (for L.Field).
 				{
-				Audio::get_ptr().stop_music();
+				Audio.get_ptr().stop_music();
 				gwin.toggle_combat();
 				}
 			*/
@@ -581,11 +581,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 						// (Wait sched. added for FOV.)
 			// don't add equipment (Erethian's transform sequence)
 			/* +++++FINISH
-			Monster_actor *monster = Monster_actor::create(shapenum,
-				Tile_coord(-1, -1, -1), Schedule::wait, 
-						(int) Actor::neutral, true, equip);
+			Monster_actor *monster = Monster_actor.create(shapenum,
+				Tile_coord(-1, -1, -1), Schedule.wait, 
+						(int) Actor.neutral, true, equip);
 						// FORCE it to be neutral (dec04,01).
-			monster.set_alignment((int) Actor::neutral);
+			monster.set_alignment((int) Actor.neutral);
 			gwin.addDirty(monster);
 			gwin.add_nearby_npc(monster);
 			gwin.show();
@@ -617,7 +617,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = getItem(p0);
 		// Don't do it for same object if already there.
 		/*
-		for (vector<Game_object*>::const_iterator it = last_created.begin();
+		for (vector<Game_object*>.const_iterator it = last_created.begin();
 					it != last_created.end(); ++it)
 			if (*it == obj)
 				return UsecodeValue(0);
@@ -699,7 +699,17 @@ public class UsecodeIntrinsics extends GameSingletons {
 	/*
 	 *	Count objects of a given shape in a container, or in the whole party.
 	 */
-
+	private final int countPartyObjects(int shapenum, int framenum, int qual) {
+		int total = 0;
+		// Look through whole party.
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = gwin.getNpc(partyman.getMember(i));
+			if (obj != null)
+				total += obj.countObjects(shapenum, qual, framenum);
+		}
+		return total;
+	}
 	private final UsecodeValue countObjects(
 		UsecodeValue objval,		// The container, or -357 for party.
 		UsecodeValue shapeval,	// Object shape to count (c_any_shapenum=any).
@@ -721,14 +731,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 				new UsecodeValue.IntValue(
 						obj.countObjects(shapenum, qualnum, framenum)));
 		}
-		int total = 0;
-						// Look through whole party.
-		int cnt = partyman.getCount();
-		for (int i = 0; i < cnt; i++) {
-			GameObject obj = gwin.getNpc(partyman.getMember(i));
-			if (obj != null)
-				total += obj.countObjects(shapenum, qualnum, framenum);
-		}
+		int total = countPartyObjects(shapenum, framenum, qualnum);
 		return new UsecodeValue.IntValue(total);
 	}
 	final private UsecodeValue findObject(UsecodeValue p0, UsecodeValue p1, 
@@ -781,6 +784,97 @@ public class UsecodeIntrinsics extends GameSingletons {
 			}
 		}
 		return UsecodeValue.getNullObj();
+	}
+	public final UsecodeValue getContainerItems(UsecodeValue p0, UsecodeValue p1,
+					UsecodeValue p2, UsecodeValue p3) {
+		// Get cont. items(container, shape, qual, frame).
+		// recursively find items in container
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return UsecodeValue.getNullObj();
+		int shapenum = p1.getIntValue();
+		int framenum = p3.getIntValue();
+		int qual = p2.getIntValue();
+		foundVec.clear();		// Gets list.
+		obj.getObjects(foundVec, shapenum, qual, framenum);
+		return UsecodeValue.ArrayValue.createObjectsList(foundVec);
+	}
+	public final UsecodeValue removePartyItems(UsecodeValue p0, UsecodeValue p1,
+			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4) {
+		// Remove items(quantity, item, ??quality?? (-359), frame(-359), T/F).
+		int quantity = p0.needIntValue();
+		int shapenum = p1.getIntValue();
+		int framenum = p3.getIntValue();
+		int quality = p2.getIntValue();
+		int avail = countPartyObjects(shapenum, framenum, quality);
+				// Verified. Originally SI-only, allowing for BG too.
+		if (quantity == EConst.c_any_quantity)
+			quantity = avail;
+		else if (avail < quantity)
+			return UsecodeValue.getZero();
+						// Look through whole party.
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt && quantity > 0; i++) {
+			GameObject obj = gwin.getNpc(partyman.getMember(i));
+			if (obj != null)
+				quantity = obj.removeQuantity(quantity, shapenum,
+								quality, framenum);
+			}
+		return (quantity == 0) ? UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
+	public final UsecodeValue addPartyItems(UsecodeValue p0, UsecodeValue p1,
+			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4) {
+		// Add items(num, item, ??quality?? (-359), frame (or -359), T/F).
+		// Returns array of NPC's (->'s) who got the items.
+		int quantity = p0.getIntValue();
+			// ++++++First see if there's room.
+		int shapenum = p1.getIntValue();
+		int framenum = p3.getIntValue();
+		int quality = p2.getIntValue();
+					// Look through whole party.
+		int cnt = partyman.getCount();
+		foundVec.clear();
+		for (int i = 0; i < cnt && quantity > 0; i++)
+			{
+			GameObject obj = gwin.getNpc(partyman.getMember(i));
+			if (obj == null)
+					continue;
+			int prev = quantity;
+			quantity = obj.addQuantity(quantity, shapenum, quality, framenum, false);
+			if (quantity < prev)	// Added to this NPC.
+					foundVec.add(obj);
+			}
+		if (game.isBG())			// Black gate?  Just return result.
+			return UsecodeValue.ArrayValue.createObjectsList(foundVec);
+		int todo = quantity;		// SI:  Put remaining on the ground.
+		if (framenum == EConst.c_any_framenum)
+			framenum = 0;
+		/* ++++++++++FINISH
+		while (todo > 0) {
+			Tile_coord pos = Map_chunk.find_spot(
+						gwin.get_main_actor().get_tile(), 3,
+								shapenum, framenum, 2);
+			if (pos.tx == -1)	// Hope this rarely happens.
+					break;
+			ShapeInfo info = ShapeID.get_info(shapenum);
+			// Create and place.
+			GameObject newobj = gmap.create_ireg_object(
+								info, shapenum, framenum, 0, 0, 0);
+			if (quality != c_any_qual)
+					newobj.set_quality(quality); // set quality
+					newobj.set_flag(Obj_flags.okay_to_take);
+					newobj.move(pos);
+					todo--;
+					if (todo > 0)		// Create quantity if possible.
+							todo = newobj.modify_quantity(todo);
+							}
+			// SI?  Append # left on ground.
+		Usecode_value ground(quantity - todo);
+		result.concat(ground);
+		return result;
+		
+		}*/
+		return UsecodeValue.getZero();// ++++++To crash until above is finished.
 	}
 	private final UsecodeValue getMusicTrack() {
 		// Returns the song currently playing. In the original BG, this
@@ -861,7 +955,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			sign.addText(i, str);
 		}
 		Point p = new Point();			// Paint it, and wait for click.
-		//Get_click(x, y, Mouse::hand, 0, false, sign);
+		//Get_click(x, y, Mouse.hand, 0, false, sign);
 		ExultActivity.getClick(p);
 		gumpman.closeGump(sign);
 		gwin.setAllDirty();
@@ -899,7 +993,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			obj.getTile(t);
 		} else {
 			// +++++++++++Allow dragging while here:
-			//if (!Get_click(x, y, Mouse::greenselect, 0, true))
+			//if (!Get_click(x, y, Mouse.greenselect, 0, true))
 				//return Usecode_value(0);
 			Point p = new Point();
 			ExultActivity.getClick(p);
@@ -977,7 +1071,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		/* +++++++FINISH 
 		if (foundVec.size() > 1)		// Sort right-left, near-far to fix
 						//   SI/SS cask bug.
-			std::sort(vec.begin(), vec.end(), Object_reverse_sorter());
+			std.sort(vec.begin(), vec.end(), Object_reverse_sorter());
 		*/
 		UsecodeValue nearby = UsecodeValue.ArrayValue.createObjectsList(foundVec);
 		return (nearby);
@@ -1031,8 +1125,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (oldalign != val)	// Changed?  Force search for new opp.
 				npc.setTarget(0);
 						// For fixing List Field fleeing:
-			if (npc.get_attack_mode() == Actor::flee)
-				npc.set_attack_mode(Actor::nearest);
+			if (npc.get_attack_mode() == Actor.flee)
+				npc.set_attack_mode(Actor.nearest);
 			*/
 		}
 	}
@@ -1064,7 +1158,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 					gwin.setMap(map);
 				gwin.centerView(tile.tx, tile.ty);
 				/* +++++++++++
-				Map_chunk::try_all_eggs(ava, tile.tx, 
+				MapChunk.try_all_eggs(ava, tile.tx, 
 					tile.ty, tile.tz, oldX, oldY);
 				*/
 			// Close?  Add to 'nearby' list.
@@ -1112,12 +1206,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (shnum < 0)
 			return UsecodeValue.getZero();
 		/* ++++++FINISH
-		Weapon_info *winf = ShapeID::getInfo(shnum).get_weapon_info();
+		Weapon_info *winf = ShapeID.getInfo(shnum).get_weapon_info();
 		if (!winf)
 			return Usecode_value(0);
 
 		Usecode_value& tval = parms[1];
-		GameObject to = get_item(tval.getElem0());
+		GameObject to = getItem(tval.getElem0());
 		int nelems;
 		if (to)
 			{
@@ -1221,7 +1315,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		mouse.flashShape(shape);
 	}
 	private final UsecodeValue getItemFrameRot(UsecodeValue p0) {
-		// Same as get_item_frame, but (guessing!) include rotated bit.
+		// Same as getItem_frame, but (guessing!) include rotated bit.
 		GameObject obj = getItem(p0);
 		return obj == null ? UsecodeValue.getZero() :
 			new UsecodeValue.IntValue(obj.getFrameNum());
@@ -1251,7 +1345,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 					return Usecode_value(0);
 				}
 						// Force 'gather()' for turtle.
-			if (Game::get_game_type() == SERPENT_ISLE)
+			if (Game.get_game_type() == SERPENT_ISLE)
 				barge.done();
 			return Usecode_value(1);
 			} 
@@ -1308,14 +1402,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 			Actor npc = obj.asActor();
 			MonsterInfo inf = obj.getInfo().getMonsterInfo();
 			return Usecode_value((inf != 0 && inf.power_safe()) ||
-					(npc && npc.check_gear_powers(Frame_flags::power_safe)));
+					(npc && npc.check_gear_powers(Frame_flags.power_safe)));
 			}
 		else if (fnum == (int) GameObject.cant_die)
 			{
 			Actor npc = obj.asActor();
 			MonsterInfo inf = obj.getInfo().getMonsterInfo();
 			return Usecode_value((inf != 0 && inf.death_safe()) ||
-					(npc && npc.check_gear_powers(Frame_flags::death_safe)));
+					(npc && npc.check_gear_powers(Frame_flags.death_safe)));
 			}
 						// +++++0x18 is used in testing for
 						//   blocked gangplank. What is it?????
@@ -1477,7 +1571,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return countObjects(parms[0], parms[1], parms[2], parms[3]);
 		case 0x29:
 			return findObject(parms[0], parms[1], parms[2], parms[3]);
-		//+++++++++++
+		case 0x2a:
+			return getContainerItems(parms[0], parms[1], parms[2], parms[3]);
+		case 0x2b:
+			return removePartyItems(parms[0], parms[1], parms[2], parms[3], parms[4]);
+		case 0x2c:
+			return addPartyItems(parms[0], parms[1], parms[2], parms[3], parms[4]);
 		case 0x2d:
 			return getMusicTrack();
 		case 0x2e:
