@@ -1375,7 +1375,43 @@ public class UsecodeIntrinsics extends GameSingletons {
 		removeItem(getItem(p0));
 		ucmachine.setModifiedMap();
 	}
-	
+	private final static void closeGump(UsecodeValue p0) {
+		/* if (!gwin.isDragging())	// NOT while dragging stuff. */
+		{
+		GameObject obj = getItem(p0);
+		Gump gump = gumpman.findGump(obj, EConst.c_any_shapenum);
+		if (gump != null) {
+			gumpman.closeGump(gump);
+			gwin.setAllDirty();
+		}
+		}
+	}
+	private final UsecodeValue isNotBlocked(UsecodeValue p0, UsecodeValue p1,
+			UsecodeValue p2) {
+		// Is_not_blocked(tile, shape, frame (or -359).
+						// Parm. 0 should be tile coords.
+		UsecodeValue pval = p0;
+		if (pval.getArraySize() < 3)
+			return UsecodeValue.getZero();
+		Tile tile = new Tile(pval.getElem(0).getIntValue(),
+				pval.getElem(1).getIntValue(),
+				pval.getElem(2).getIntValue());
+		int shapenum = p1.getIntValue();
+		int framenum = p2.getIntValue();
+						// Find out about given shape.
+		ShapeInfo info = ShapeID.getInfo(shapenum);
+		Tile loc = tempTile;
+		loc.set(tile.tx - info.get3dXtiles(framenum) + 1,
+				tile.ty - info.get3dYtiles(framenum) + 1, tile.tz); 
+		boolean blocked = !MapChunk.areaAvailable(
+				info.get3dXtiles(framenum), info.get3dYtiles(framenum), 
+				info.get3dHeight(), loc, EConst.MOVE_ALL_TERRAIN, 1, -1);
+						// Okay?
+		if (!blocked && loc.tz == tile.tz)
+			return UsecodeValue.getOne();
+		else
+			return UsecodeValue.getZero();
+	}
 	private final static UsecodeValue getItemFlag(UsecodeValue p0, UsecodeValue p1) {
 		// Get npc flag(item, flag#).
 		GameObject obj = getItem(p0);
@@ -1591,7 +1627,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			displayRunes(parms[0], parms[1]); break;
 		case 0x33:
 			return clickOnItem(event);
-			//++++++++++++++++++++++
+			//++++++++++++++++++++++0x34: error_message
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
 		case 0x36:
@@ -1650,12 +1686,31 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x6f:
 			removeItem(parms[0]); break;
 		//++++++++++++++
+		case 0x7e:
+			/* if (!gwin.isDragging()) */ gumpman.closeAllGumps(false); break;
+		case 0x7f:
+			if (!conv.isNpcTextPending())
+				itemSay(parms[0], parms[1]); break;
+		case 0x80:
+			closeGump(parms[0]); break;
+		case 0x81:
+			return gumpman.showingGumps(true) ? UsecodeValue.getZero()
+					: UsecodeValue.getOne();
+		//++++++++++++++
+		case 0x85:
+			return isNotBlocked(parms[0], parms[1], parms[2]);
+		//+++++++++++
+		case 0x87:
+			return findDirection(parms[0], parms[1]);
 		case 0x88:
 			return getItemFlag(parms[0], parms[1]);
 		case 0x89:
 			setItemFlag(parms[0], parms[1]); break;
 		case 0x8a:
 			clearItemFlag(parms[0], parms[1]); break;
+		//+++++++++++++
+		case 0x8d:
+			return getPartyList();	// get_party_list2.  Seems the same.
 		//+++++++++++++++
 		default:
 			System.out.printf("*** UNHANDLED intrinsic # %1$02x\n", id);
