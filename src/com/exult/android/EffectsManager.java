@@ -202,7 +202,7 @@ public final class EffectsManager extends GameSingletons {
 			if (!soundOnce) {
 				soundOnce = true;;
 				// Play earthquake SFX once
-		  		//++++++FINISH Audio::get_ptr().play_sound_effect(Audio::game_sfx(60));
+		  		audio.playSfx(Audio.gameSfx(60));
 			}
 			ImageBuf win = gwin.getWin();
 			if (dx != 0) {

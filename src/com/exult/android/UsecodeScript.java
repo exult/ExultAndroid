@@ -507,10 +507,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			case sfx:		// Play sound effect!
 				{
 				UsecodeValue val = code.getElem(++i);
-				/*++++++++++++
-				Audio::get_ptr().play_sound_effect(
-								val.getIntValue(), obj);
-				*/
+				audio.playSfx(val.getIntValue() /* +++++ FINISH?, obj */);
 				break;
 				}
 			case face_dir:		// Parm. is dir. (0-7).  0=north.

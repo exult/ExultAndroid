@@ -95,9 +95,7 @@ public class GumpWidget extends ShapeID {
 		public boolean activate(boolean button) {
 			if (!button) 
 				return false;
-			/* ++++++FINISH
-			Audio::get_ptr().play_sound_effect(Audio::game_sfx(74));
-			*/
+			audio.playSfx(Audio.gameSfx(74));
 			parent.close();
 			return true;
 		}

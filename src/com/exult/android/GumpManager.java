@@ -191,10 +191,8 @@ public final class GumpManager extends GameSingletons {
 			new_gump = new Gump.Container(obj, x, y, shapenum);
 		if (++gumpCount == 8)
 			gumpCount = 0;
-		/* ++++++++++FINISH
-		int sfx = Audio.game_sfx(14);
-		Audio.get_ptr().play_sound_effect(sfx);	// The weird noise.
-		*/
+		int sfx = Audio.gameSfx(14);
+		audio.playSfx(sfx);	// The weird noise.
 		gwin.setAllDirty();			// Show everything.
 	}
 	public void closeGump(Gump g) {

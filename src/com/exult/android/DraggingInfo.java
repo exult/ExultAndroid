@@ -187,9 +187,7 @@ public final class DraggingInfo extends GameSingletons {
 		if (x < 0 || y < 0 || x >= gwin.getWidth() || y >= gwin.getHeight()) {
 			
 			mouse.flashShape(Mouse.redx);
-			/*
-			Audio::get_ptr().play_sound_effect(Audio::game_sfx(76));
-			*/
+			audio.playSfx(Audio.gameSfx(76));
 			return false;
 		}
 		int max_lift = /* +++++++ cheat.inHackMover() ? 255 : */
@@ -219,10 +217,7 @@ public final class DraggingInfo extends GameSingletons {
 			else {		// Too high.
 				
 				mouse.flashShape(Mouse.redx);
-				/*+++++++++
-				Audio::get_ptr().play_sound_effect(
-								Audio::game_sfx(76));
-				*/
+				audio.playSfx(Audio.gameSfx(76));
 				return false;
 			}
 		}
@@ -235,9 +230,7 @@ public final class DraggingInfo extends GameSingletons {
 		if (dropped <= 0) {
 			
 			mouse.flashShape(Mouse.blocked);
-			/* +++++++++++
-			Audio::get_ptr().play_sound_effect(Audio::game_sfx(76));
-			*/
+			audio.playSfx(Audio.gameSfx(76));
 			System.out.println("Could not find spot to drop " + 
 					to_drop.getShapeNum());
 			return false;
@@ -301,10 +294,7 @@ public final class DraggingInfo extends GameSingletons {
 					return false;
 				button.push(true);
 						// Pushed button, so make noise.
-				/*++++++++++
-				Audio::get_ptr().play_sound_effect(
-						Audio::game_sfx(73));
-				*/
+				audio.playSfx(Audio.gameSfx(73));
 				gwin.setPainted();
 			} else if (gump.isDraggable()) {	// Dragging whole gump.
 				paint = new Point(gump.getX(), gump.getY());
@@ -405,7 +395,7 @@ public final class DraggingInfo extends GameSingletons {
 				  : dropOnMap(x, y, to_drop)))
 			return false;
 						// Make a 'dropped' sound.
-		// ++++++ Audio::get_ptr().play_sound_effect(Audio::game_sfx(74));
+		audio.playSfx(Audio.gameSfx(74));
 		/* ++++++++FINISH
 		if (gump == null)			// Do eggs where it came from.
 			gmap.getChunk(oldcx, oldcy).activateEggs(obj,
