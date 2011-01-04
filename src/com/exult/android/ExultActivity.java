@@ -23,6 +23,7 @@ public class ExultActivity extends Activity {
 	public static int stdDelay = 200;	// Frame delay in msecs.
 	public GameWindow gwin;
 	public ImageBuf ibuf;
+	private Point movePoint = new Point();	// A temp.
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	private static ExultActivity instance;
 	
@@ -245,13 +246,19 @@ public class ExultActivity extends Activity {
     					}
     					dragging = DraggingInfo.startDragging(x, y);
     					dragged = false;
-    					if (dragging && DraggingInfo.getObject() ==
-    											gwin.getMainActor()) {
+    					GameObject obj = dragging?DraggingInfo.getObject():null;
+    					if (obj == gwin.getMainActor()) {
     						DraggingInfo.abort();
     						dragging = false;
     						System.out.println("Starting motion");
         					avatarMotion = MotionEvent.obtain(event);
         					avatarStartX = x; avatarStartY = y;
+    					} else if (!dragging || (obj != null && !obj.isDragable())) {
+    						DraggingInfo.abort();
+    						dragging = false;
+    						avatarMotion = MotionEvent.obtain(event);
+    						gwin.getShapeLocation(movePoint, gwin.getMainActor());
+    						avatarStartX = movePoint.x; avatarStartY = movePoint.y;
     					}
     				}
     				leftDownX = x; leftDownY = y;
