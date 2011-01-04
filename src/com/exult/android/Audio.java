@@ -59,10 +59,11 @@ public final class Audio extends GameSingletons {
 		boolean failed = false;
 		if (data != null) 
 			try {
-				nm = EUtil.getSystemPath("<DATA>/tempsfx" + num + ".wav");
+				nm = EUtil.getSystemPath("<DATA>/tempsfx.wav");
 				OutputStream out = EUtil.U7create(nm);
 				out.write(data);
 				out.close();
+				if (debug) System.out.println("Audio: playing SFX #" + num);
 				playFile(nm, false);
 			} catch (IOException e) {
 				System.out.println("Audio: Failed to play track: " + nm);
