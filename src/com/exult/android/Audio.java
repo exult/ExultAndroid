@@ -2,6 +2,7 @@ package com.exult.android;
 import java.util.LinkedList;
 import android.media.MediaPlayer;
 import java.io.IOException;
+import java.io.OutputStream;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnCompletionListener;
 
@@ -11,12 +12,59 @@ public final class Audio extends GameSingletons {
 	private int currentTrack = -1;
 	private errorListener err = new errorListener();
 	private completionListener completion = new completionListener();
+	private FlexFile sfxFile;
 	private void release(MediaPlayer player) {
 		player.release();
 		players.remove(player);
 	}
 	public static Audio instanceOf() {
 		return audio;
+	}
+	public Audio() {
+		initSfx();
+	}
+	private static String canSfx(String nm) {
+		String fname = EUtil.U7exists("<DATA>/" + nm);
+		return fname;
+	}
+	//	Return SFX file name.
+	private static String haveSfx() {
+		String fname = null;
+		if (game.isBG()) {
+			fname = canSfx(EFile.SFX_ROLAND_BG);
+			if (fname == null)
+				fname = canSfx(EFile.SFX_BLASTER_BG);
+		} else if (game.isSI()) {
+			fname = canSfx(EFile.SFX_ROLAND_SI);
+			if (fname == null)
+				fname = canSfx(EFile.SFX_BLASTER_SI);
+		}
+		return fname;
+	}
+	private void initSfx() {
+		String fname = haveSfx();
+		if (fname != null)
+			sfxFile = new FlexFile(fname, fname);
+		else {
+			System.out.println("Audio: sound effects file not found.");
+		}
+	}
+	public void playSfx(int num) {
+		if (sfxFile == null)
+			return;
+		byte data[] = sfxFile.retrieve(num);
+		String nm = null;
+		boolean failed = false;
+		if (data != null) 
+			try {
+				nm = "<DATA>/tempsfx" + num + ".wav";
+				OutputStream out = EUtil.U7create(nm);
+				out.write(data);
+				out.close();
+				playFile(nm, false);
+			} catch (IOException e) {
+				System.out.println("Audio: Failed to play track: " + nm);
+			}
 	}
 	// Stop all tracks.
 	public void stop() {
@@ -117,21 +165,24 @@ public final class Audio extends GameSingletons {
 		else {
 			ogg_name = EUtil.getSystemPath(basepath + ogg_name);	
 		}
+		return playFile(ogg_name, repeat);
+	}
+	private boolean playFile(String fname, boolean repeat) {
 		MediaPlayer player = null;
 		if (debug)
-			System.out.println("Audio: Music track " + ogg_name);
+			System.out.println("Audio: Music track " + fname);
 		try {
 			player = new MediaPlayer();
 			players.addLast(player);
 			player.setOnErrorListener(err);
 			player.setOnCompletionListener(completion);
-			player.setDataSource(ogg_name);
+			player.setDataSource(fname);
 			player.prepare();
 			player.setLooping(repeat);
 			player.start();
 		} catch (IOException e) {
-			System.out.println("Audio: Failed to play track: " + ogg_name);
-			ExultActivity.showToast("Failed to play track: " + ogg_name);
+			System.out.println("Audio: Failed to play track: " + fname);
+			ExultActivity.showToast("Failed to play track: " + fname);
 			if (player != null) {
 				release(player);
 			}

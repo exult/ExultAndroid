@@ -265,6 +265,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return new UsecodeValue.ObjectValue(closest);
 	}
+	private final void playSoundEffect(UsecodeValue p0) {
+		int sfxnum = p0.getIntValue();
+		audio.playSfx(sfxnum);
+	}
 	private final UsecodeValue dieRoll(UsecodeValue p0, UsecodeValue p1) {
 		// Rand. # within range.
 		int low = p0.getIntValue();
@@ -1554,7 +1558,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			setItemShape(parms[0], parms[1]); break;
 		case 0x0e:
 			return findNearest(parms[0], parms[1], parms[2]);
-		//+++++++++++
+		case 0x0f:
+			playSoundEffect(parms[0]); break;
 		case 0x10:
 			return dieRoll(parms[0], parms[1]);
 		case 0x11:
