@@ -663,7 +663,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 				tz = sz >= 3 ? arr.getElem(2).getIntValue() : 0;
 			obj.move(tx, ty, tz, sz < 4 ? -1 :
 				  arr.getElem(3).getIntValue());
-			if (/* ++++++ FINISH GAME_BG */ true) {
+			if (game.isBG()) {
 				return UsecodeValue.getOne();
 			} else {
 				return new UsecodeValue.ObjectValue(obj);
@@ -1416,6 +1416,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 		else
 			return UsecodeValue.getZero();
 	}
+	private final void playSoundEffect2(UsecodeValue p0, UsecodeValue p1) {
+		// Play music(songnum, item).
+		GameObject obj = getItem(p1);
+		int sfxnum = p0.getIntValue();
+		// +++++FINISH new Object_sfx(obj, parms[0].get_int_value());
+		audio.playSfx(sfxnum);	// +++++FOR NOW
+	}
 	private final static UsecodeValue getItemFlag(UsecodeValue p0, UsecodeValue p1) {
 		// Get npc flag(item, flag#).
 		GameObject obj = getItem(p0);
@@ -1704,7 +1711,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 		//++++++++++++++
 		case 0x85:
 			return isNotBlocked(parms[0], parms[1], parms[2]);
-		//+++++++++++
+		case 0x86:
+			playSoundEffect2(parms[0], parms[1]); break;
 		case 0x87:
 			return findDirection(parms[0], parms[1]);
 		case 0x88:

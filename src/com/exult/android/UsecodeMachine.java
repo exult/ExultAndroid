@@ -1549,7 +1549,11 @@ public class UsecodeMachine extends GameSingletons {
 			}
 			System.out.println(")");
 		}
-		UsecodeValue ret = intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
+		UsecodeValue ret;
+		// Don't want screen-painting while we're moving things.
+		synchronized(gwin.getWin()) {
+			ret = intrinsics.execute(intrinsic, event, num_parms, intrinsicParms);
+		}
 		if (debug)
 			System.out.printf("...returned %1$s\n", ret);
 		return ret;
