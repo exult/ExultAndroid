@@ -2,6 +2,7 @@ package com.exult.android;
 import java.util.Vector;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public final class MapChunk extends GameSingletons {
 	private GameMap map;				// Map we're a part of.
@@ -63,6 +64,9 @@ public final class MapChunk extends GameSingletons {
 	}
 	public final ObjectList.NonflatObjectIterator getNonflatObjectIterator() {
 		return objects.getNonflatIterator(firstNonflat);
+	}
+	public final ChunkTerrain getTerrain() {
+		return terrain;
 	}
 	public final void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {
@@ -348,6 +352,15 @@ public final class MapChunk extends GameSingletons {
 	}
 	public ImageBuf getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;
+	}
+	public GameObject findDoor(Tile tile) {
+		Iterator<GameObject> iter = doors.iterator();
+		while (iter.hasNext()) {
+			GameObject obj = iter.next();
+			if (obj.blocks(tile))
+				return obj;
+		}
+		return null;
 	}
 	/*
 	 *	Set (actually, increment count) for a given tile.
