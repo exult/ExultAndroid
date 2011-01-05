@@ -1,11 +1,12 @@
 package com.exult.android;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Comparator;
 
 public class AStarPathFinder extends PathFinder {
 	private PriorityQueue<SearchNode> open;	// Nodes to be done, by priority.
-	private HashSet<SearchNode> lookup;		// For finding each tile's node.
+	private HashMap<Tile,SearchNode> lookup;		// For finding each tile's node.
+	private Tile ntile = new Tile();		// For going through neighbors.
 	private Tile path[];					// The resulting path.
 	private int dir;						// -1 or 1
 	private int stop;						// Index in path to stop at.
@@ -13,23 +14,50 @@ public class AStarPathFinder extends PathFinder {
 	private static NodeComparator cmp = new NodeComparator();
 	public AStarPathFinder() {
 		open = new PriorityQueue<SearchNode>(300, cmp);
-		lookup = new HashSet<SearchNode>(300);
+		lookup = new HashMap<Tile,SearchNode>(300);
 	}
-	public boolean NewPath(Tile s, Tile d) {
-		return false; //++++++++++++
+	public boolean NewPath(Tile s, Tile d, Client client) {	
+		/* Not using these for now.
+		src = s;			// Store start, destination.
+		dest = d;
+		*/
+		path = null;		// Clear out old path, if there.
+		nextIndex = 0;
+		dir = 1;
+		stop = 0;
+		if (!findPath(s, d, client))
+			return false;
+		stop = path.length;
+		return true;
 	}
 	public boolean getNextStep(Tile n) {
-		return false;//+++++++++
+		if (nextIndex == stop) {
+			// done = true;
+			return false;
+		}
+		n.set(path[nextIndex].tx, path[nextIndex].ty, path[nextIndex].tz);
+		nextIndex += dir;
+		//done = (nextIndex == stop);
+		return true;
 	}
 	public int getNumSteps() {
-		return 0;//++++++++++++
+		return (stop - nextIndex)*dir;
 	}
 	public boolean isDone() {
-		return true;//++++++++++++++++
+		return nextIndex == stop;
+	}
+	public boolean setBackwards() {
+		dir = -1;
+		stop = -1;
+		nextIndex = path.length - 1;
+		return true;
 	}
 	private void add(SearchNode nd) {
 		open.offer(nd);
-		lookup.add(nd);
+		lookup.put(nd.tile, nd);
+	}
+	private SearchNode find(Tile t) {
+		return lookup.get(t);
 	}
 	private boolean findPath(Tile start, Tile goal, PathFinder.Client client) {
 		int maxCost = client.estimateCost(start, goal);
@@ -45,12 +73,41 @@ public class AStarPathFinder extends PathFinder {
 				path = node.createPath();
 				return true;
 			}
-			//++++++++++FINISH
+			// Go through neighbors.
+			for (int dir = 0; dir < 8; ++dir) {
+				curtile.getNeighbor(ntile, dir);
+				// Get cost to next tile.
+				int stepCost = client.getStepCost(curtile, ntile);
+						// Blocked?
+				if (stepCost == -1)
+					continue;
+						// Get cost from start to ntile.
+				int newCost = node.startCost + stepCost;
+						// See if next tile already seen.
+				SearchNode next = find(ntile);
+						// Already there, and cheaper?
+				if (next != null && next.startCost <= newCost)
+					continue;
+				int newGoalCost = client.estimateCost(ntile, goal);
+						// Skip nodes too far away.
+				if (newCost + newGoalCost >= maxCost)
+					continue;
+				if (next == null) {	// Create if necessary.
+					next = new SearchNode(ntile, newCost,
+							newGoalCost, node);
+					add(next);
+				} else {	// It's going to move.
+					open.remove(next);
+					next.set(newCost, newGoalCost, node);
+					open.offer(next);
+				}
+			}
 		}
-			
 		return false;	// Failed if here.
 	}
-	
+	/*
+	 * Local classes.
+	 */
 	static class NodeComparator implements Comparator<SearchNode> {
 		public int compare(SearchNode n1, SearchNode n2) {
 			Tile t1 = n1.tile, t2 = n2.tile;
@@ -70,12 +127,14 @@ public class AStarPathFinder extends PathFinder {
 		int totalCost;		// Sum of the two above.
 		boolean open;		// In priority queue.
 		SearchNode parent;		// Prev. in path.
+		SearchNode() {
+		}
 		SearchNode(Tile t, int scost, int gcost, SearchNode p) {
 			tile = t;
 			startCost = scost; goalCost = gcost;
 			totalCost = scost + gcost;
 		}
-		void set(short scost, short gcost, SearchNode p) {
+		void set(int scost, int gcost, SearchNode p) {
 			startCost = scost;
 			goalCost = gcost;
 			totalCost = gcost + scost;

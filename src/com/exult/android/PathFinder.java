@@ -11,11 +11,17 @@ public abstract class PathFinder {
 		return d.set(dest);
 	}
 	*/
-	abstract public boolean NewPath(Tile s, Tile d);
+	abstract public boolean NewPath(Tile s, Tile d, Client c);
 	abstract public boolean getNextStep(Tile n);
 	abstract public int getNumSteps();
 	abstract public boolean isDone();
+	boolean setBackwards() {
+		return false;	// Default: Can't do it.
+	}
 	
+	public boolean NewPath(Tile s, Tile d) {
+		return NewPath(s, d, null);
+	}
 	/*
 	 *	This class provides A* cost methods.
 	 */

@@ -8,4 +8,13 @@
 	Opening scene seems to work.
 12-30-2010
 	Save/restore seems to work.  Press 's' to bring up screen.
+12-31-2010
+	Music works with ogg files placed in /sdcard/Games/exult/music
+1-3-2011
+	Digital SFX supported with, for example, sqsfxbg.flx, in the 
+		/sdcard/Games/exult directory.
+	Avatar moves when you drag with the mouse on any area that isn't 
+	       draggable.
+	Fixed a crash when double-clicking doors.
+
 

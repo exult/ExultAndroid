@@ -23,6 +23,10 @@ public class Tile {
 		Tile t2 = (Tile)o2;
 		return t2.tx == tx && t2.ty == ty && t2.tz == tz;
 	}
+	@Override
+	public int hashCode() {
+		return ((tz << 24) + (ty << 12) + tx);
+	}
 	public static boolean gte(int t1, int t2) {	// Ret t1 >= t2 with wrapping.
 		int diff = t1 - t2;
 		return diff >= 0 ? (diff < EConst.c_num_tiles/2) :
