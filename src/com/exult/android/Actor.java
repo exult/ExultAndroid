@@ -1134,6 +1134,34 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void walkToTile(Tile dest, int speed, int delay) {
 		walkToTile(dest, speed, delay, 3);
 	}
+	/*
+	 *	Find a path towards a given tile.
+	 *	Output:	0 if failed.
+	 */
+	public boolean walkPathToTile
+		(
+		Tile src,			// Our location, or an off-screen
+						//   location to try path from.
+		Tile dest,		// Destination.
+		int speed,			// Time between frames (msecs).
+		int delay,			// Delay before starting (msecs) (only
+						//   if not already moving).
+		int dist,			// Distance to get within dest.
+		int maxblk			// Max. # retries if blocked.
+		) {
+		setAction(new ActorAction.PathWalkingActorAction(new AStarPathFinder(), maxblk));
+		setAction(action.walkToTile(this, src, dest, dist));
+		if (action != null) {			// Successful at setting path?
+			start(speed, delay);
+			return true;
+		}
+		frameTime = 0;			// Not moving.
+		return false;
+		}
+	public boolean walkPathToTile(Tile dest, int speed, int delay, int dist) {
+		getTile(walkSrc);
+		return walkPathToTile(walkSrc, dest, speed, delay, dist, 3);
+	}
 	public void switchedChunks(MapChunk oldchunk, MapChunk newchunk) {
 	}
 	protected void movef(MapChunk oldChunk, MapChunk newChunk, int newSx, int newSy,

@@ -204,6 +204,33 @@ public abstract class GameObject extends ShapeID {
 		}
 		return null;
 	}
+	public boolean isClosedDoor() {
+		ShapeInfo info = getInfo();
+		if (!info.isDoor())
+			return false;
+					// Get door's footprint.
+		int frame = getFrameNum();
+		int xtiles = info.get3dXtiles(frame), ytiles = info.get3dYtiles(frame);
+					// Get its location.
+		int doorx = getTileX(), doory = getTileY();
+		int beforex, beforey, afterx, aftery;	// Want tiles to both sides.
+		if (xtiles > ytiles) {		// Horizontal footprint?
+			beforex = doorx - xtiles; beforey = doory;
+			afterx = doorx + 1; aftery = doory;
+		} else {				// Vertical footprint.
+			beforex = doorx; beforey = doory - ytiles;
+			afterx = doorx; aftery = doory + 1;
+		}
+					// Should be blocked before/after.
+		return (gmap.isTileOccupied(beforex, beforey, getLift()) &&
+				gmap.isTileOccupied(afterx, aftery, getLift()));
+	}
+	public static GameObject findDoor(Tile tile) {
+		tile.fixme();
+		MapChunk chunk = gmap.getChunk(tile.tx/EConst.c_tiles_per_chunk,
+							    tile.ty/EConst.c_tiles_per_chunk);
+		return chunk.findDoor(tile);
+	}
 	// Does this object block a given tile?
 	public final boolean blocks(Tile tile) {
 		int tx = getTileX(), ty = getTileY(), tz = getLift();

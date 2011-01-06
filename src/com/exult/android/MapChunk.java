@@ -840,6 +840,11 @@ public final class MapChunk extends GameSingletons {
 			int move_flags, int max_drop) {
 		return areaAvailable(xtiles, ytiles, ztiles, loc, move_flags, max_drop, -1);
 	}
+	public boolean isTileOccupied(int tx, int ty, int tz) {
+		short b8[] = tz/8 < blocked.size() ? blocked.elementAt(tz/8) : null;
+		return (b8 != null && (b8[ty*EConst.c_tiles_per_chunk + tx] & 
+				(3 << (2*(tz%8)))) != 0);
+	}
 	/*
 	 *	Find a free area for an object of a given shape, looking outwards.
 	 *

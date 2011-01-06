@@ -766,5 +766,12 @@ public class GameMap extends GameSingletons {
 				}
 		return true;			// Passed all tests.
 	}
-
+	public boolean isTileOccupied(int tx, int ty, int tz) {
+		MapChunk chunk = getChunk(
+			tx/EConst.c_tiles_per_chunk, ty/EConst.c_tiles_per_chunk);
+		if (chunk == null)			// Outside the world?
+			return false;		// Then it's not blocked.
+		return chunk.isTileOccupied(tx%EConst.c_tiles_per_chunk,
+				ty%EConst.c_tiles_per_chunk, tz);
+	}
 }

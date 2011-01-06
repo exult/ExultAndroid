@@ -123,25 +123,21 @@ abstract public class ActorAction extends GameSingletons {
 				return 0;
 			reached_end = false;
 		actor.setStepIndex(frames.prevIndex(stepIndex));	// We didn't take the step.
-		/*
 						// Blocked by a door?
 		if (actor.distance(stepTile) <= 2 &&
 			(actor.getInfo().getShapeClass() == ShapeInfo.human ||
 				actor.getEffectiveProp(Actor.intelligence) > 7))
 					// +++++Check for intelligence; guessing how to do it.
 			{
-			GameObject door = Game_object::find_door(stepTile);
-			if (door != 0 && door->is_closed_door() &&
+			GameObject door = GameObject.findDoor(stepTile);
+			if (door != null && door.isClosedDoor() &&
 						// Make sure it's not locked!
-			    door->get_framenum()%4 < 2)
-
+					door.getFrameNum()%4 < 2) {
 						// Try to open it.
-				{
-				if (open_door(actor, door))
+				if (openDoor(actor, door))
 					return speed;
 				}
 			}
-			*/
 			if (max_blocked == 0 ||		// No retries allowed?
 				actor.isDormant())	// Or actor off-screen?
 				return 0;
@@ -149,9 +145,6 @@ abstract public class ActorAction extends GameSingletons {
 			blocked_tile = stepTile;
 			blocked_frame = (byte)frames.get(stepIndex);
 			return (1 + EUtil.rand()%4);	// Wait 1 to 4 ticks.
-		}
-		int openDoor(Actor actor, GameObject door) {
-			return 0;
 		}
 		public void stop(Actor actor) { // Stop moving.
 			// Don't set slimes.
@@ -215,6 +208,13 @@ abstract public class ActorAction extends GameSingletons {
 							// Reset direction (but not index).
 			original_dir = EUtil.getDirection4(src.ty - dest.ty, dest.tx - src.tx);
 			return this;
+		}
+		/*
+		 *	Open door that's blocking the NPC, and set action to walk past and
+		 *	close it.
+		 */
+		public boolean openDoor(Actor actor, GameObject door) {
+			return false;//+++++++++++FINISH
 		}
 		/* ++++++
 						// Get destination, or ret. 0.
