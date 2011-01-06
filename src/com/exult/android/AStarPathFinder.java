@@ -25,6 +25,8 @@ public class AStarPathFinder extends PathFinder {
 		nextIndex = 0;
 		dir = 1;
 		stop = 0;
+		open.clear();
+		lookup.clear();
 		if (!findPath(s, d, client))
 			return false;
 		stop = path.length;

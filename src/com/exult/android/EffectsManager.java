@@ -240,7 +240,7 @@ public final class EffectsManager extends GameSingletons {
 			num = n;
 			if (egg != null)
 				egg.getTile(eggloc = new Tile());
-			stopTime = TimeQueue.ticks + delay + duration*25; // +++GameClock.ticks_per_minute;
+			stopTime = TimeQueue.ticks + delay + duration*GameClock.ticksPerMinute;
 			eman.addEffect(this);
 			// Start immediately.
 			tqueue.add(TimeQueue.ticks + delay, this, null);
