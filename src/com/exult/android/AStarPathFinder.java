@@ -71,12 +71,13 @@ public class AStarPathFinder extends PathFinder {
 		SearchNode node;		// Try 'best' node each iteration.
 		while ((node = open.poll()) != null) {
 			Tile curtile = node.tile;
-			System.out.printf("AStar: curtile is %1$d, %2$d, goal is %3$d, %4$d\n", 
-					curtile.tx, curtile.ty, goal.tx, goal.ty);
-			System.out.println("Curtile totalCost = " + node.totalCost);
+			//System.out.printf("AStar: curtile is %1$d, %2$d, goal is %3$d, %4$d\n", 
+			//		curtile.tx, curtile.ty, goal.tx, goal.ty);
+			//System.out.println("Curtile totalCost = " + node.totalCost);
 			if (client.atGoal(curtile, goal)) {
 						// Success.
 				path = node.createPath();
+				System.out.printf("AStar: SUCCESS.  Path.length = %1$d\n", path.length);
 				return true;
 			}
 			// Go through neighbors.
@@ -86,8 +87,8 @@ public class AStarPathFinder extends PathFinder {
 				
 				// Get cost to next tile.
 				int stepCost = client.getStepCost(curtile, ntile);
-				System.out.printf("AStar: neighbor is %1$d, %2$d, stepCost = %3$d\n", 
-					ntile.tx, ntile.ty, stepCost);
+				//System.out.printf("AStar: neighbor is %1$d, %2$d, stepCost = %3$d\n", 
+				//	ntile.tx, ntile.ty, stepCost);
 						// Blocked?
 				if (stepCost == -1)
 					continue;
@@ -95,10 +96,14 @@ public class AStarPathFinder extends PathFinder {
 				int newCost = node.startCost + stepCost;
 						// See if next tile already seen.
 				SearchNode next = find(ntile);
+				//if (next != null)
+				//	System.out.printf("next.startCost = %1$d, newCost = %2$d", 
+				//			next.startCost, newCost);
 						// Already there, and cheaper?
 				if (next != null && next.startCost <= newCost)
 					continue;
 				int newGoalCost = client.estimateCost(ntile, goal);
+				// System.out.println("newGoalCost = " + newGoalCost);
 						// Skip nodes too far away.
 				if (newCost + newGoalCost >= maxCost)
 					continue;
@@ -143,9 +148,10 @@ public class AStarPathFinder extends PathFinder {
 		SearchNode() {
 		}
 		SearchNode(Tile t, int scost, int gcost, SearchNode p) {
-			tile = t;
+			tile = new Tile(t.tx, t.ty, t.tz);
 			startCost = scost; goalCost = gcost;
 			totalCost = scost + gcost;
+			parent = p;
 		}
 		void set(int scost, int gcost, SearchNode p) {
 			startCost = scost;

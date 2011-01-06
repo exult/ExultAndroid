@@ -78,6 +78,10 @@ public abstract class PathFinder {
 			/* ++++++++FINISH
 			Actor.getTileInfo(0, gwin, olist, tx, ty, water, poison);
 			*/
+			/*
+			System.out.printf("getStepCost: from %1$d,%2$d,%3$d to %4$d,%5$d,%6$d\n", 
+					from.tx, from.ty, from.tz, to.tx, to.ty, to.tz);
+			*/
 			int old_lift = to.tz;		// Might climb/descend.
 			if (!npc.areaAvailable(to, from, moveFlags)) {	// Blocked, but check for a door.
 				return -1; /* FINISH++++++++++++++
