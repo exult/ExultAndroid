@@ -201,8 +201,8 @@ abstract public class ActorAction extends GameSingletons {
 				}
 			else */
 				{
-				// ++++++Actor_pathfinder_client cost(npc, dist);
-				if (!path.NewPath(src, dest /* , &cost*/))
+				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, dist);
+				if (!path.NewPath(src, dest, cost))
 					return null;
 				}
 							// Reset direction (but not index).

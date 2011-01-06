@@ -11,8 +11,9 @@ public class AStarPathFinder extends PathFinder {
 	private int dir;						// -1 or 1
 	private int stop;						// Index in path to stop at.
 	private int nextIndex;					// Index of next tile in 'path' to return.
-	private static NodeComparator cmp = new NodeComparator();
+	private static NodeComparator cmp;
 	public AStarPathFinder() {
+		cmp = new NodeComparator();
 		open = new PriorityQueue<SearchNode>(300, cmp);
 		lookup = new HashMap<Tile,SearchNode>(300);
 	}
@@ -70,6 +71,9 @@ public class AStarPathFinder extends PathFinder {
 		SearchNode node;		// Try 'best' node each iteration.
 		while ((node = open.poll()) != null) {
 			Tile curtile = node.tile;
+			System.out.printf("AStar: curtile is %1$d, %2$d, goal is %3$d, %4$d\n", 
+					curtile.tx, curtile.ty, goal.tx, goal.ty);
+			System.out.println("Curtile totalCost = " + node.totalCost);
 			if (client.atGoal(curtile, goal)) {
 						// Success.
 				path = node.createPath();
@@ -77,9 +81,13 @@ public class AStarPathFinder extends PathFinder {
 			}
 			// Go through neighbors.
 			for (int dir = 0; dir < 8; ++dir) {
+				
 				curtile.getNeighbor(ntile, dir);
+				
 				// Get cost to next tile.
 				int stepCost = client.getStepCost(curtile, ntile);
+				System.out.printf("AStar: neighbor is %1$d, %2$d, stepCost = %3$d\n", 
+					ntile.tx, ntile.ty, stepCost);
 						// Blocked?
 				if (stepCost == -1)
 					continue;
@@ -112,6 +120,7 @@ public class AStarPathFinder extends PathFinder {
 	 */
 	static class NodeComparator implements Comparator<SearchNode> {
 		public int compare(SearchNode n1, SearchNode n2) {
+			/* ++++++++THINK I was confused.
 			Tile t1 = n1.tile, t2 = n2.tile;
 			if (t1.tx < t2.tx) return -1;
 			else if (t1.tx > t2.tx) return 1;
@@ -120,6 +129,8 @@ public class AStarPathFinder extends PathFinder {
 			else if (t1.tz < t2.tz) return -1;
 			else if (t1.tz > t2.tz) return 1;
 			else return 0;
+			*/
+			return n1.totalCost - n2.totalCost;
 		}
 	}
 	static class SearchNode {

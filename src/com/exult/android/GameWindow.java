@@ -373,6 +373,26 @@ public class GameWindow extends GameSingletons {
 		clipToWin(dirty);
 	}
 	/*
+	 * 	Start walking using pathfinder.
+	 */
+	public void startActorAlongPath(int winx, int winy, int speed) {
+		if (mainActor.getFlag(GameObject.asleep) ||
+		    mainActor.getFlag(GameObject.paralyzed) ||
+		    mainActor.getScheduleType() == Schedule.sleep ||
+		    movingBarge != null)		// For now, don't do barges.
+			return;			// Zzzzz....
+							// Animation in progress?
+			int lift = mainActor.getLift();
+			int liftpixels = 4*lift;	// Figure abs. tile.
+			Tile dest = tempTile;
+			dest.set(getScrolltx() + (winx + liftpixels)/EConst.c_tilesize,
+					 getScrollty() + (winy + liftpixels)/EConst.c_tilesize, lift);
+			if (!mainActor.walkPathToTile(dest, speed, 0, 0))
+				System.out.println("Couldn't find path for Avatar.");
+			else
+				mainActor.getFollowers();
+			}
+	/*
 	 * Start stepping towards given point.
 	 */
 	private void startActorSteps
@@ -504,7 +524,7 @@ public class GameWindow extends GameSingletons {
 		mainActor.getFollowers();
 		/* +++++++++++
 		if (!skip_eggs)			// Check all eggs around new spot.
-			Map_chunk::try_all_eggs(main_actor, t.tx, t.ty, t.tz,
+			Map_chunk::try_all_eggs(mainActor, t.tx, t.ty, t.tz,
 						oldpos.tx, oldpos.ty);
 		*/
 		/* +++++NEEDED? generate mousemotion event
@@ -555,7 +575,7 @@ public class GameWindow extends GameSingletons {
 			int sched = mainActor.get_schedule_type();
 			if (sched != Schedule::follow_avatar &&
 					sched != Schedule::combat &&
-					!mainActor.get_flag(Obj_flags::asleep))
+					!mainActor.get_flag(GameObject.asleep))
 				mainActor.set_schedule_type(Schedule::follow_avatar);
 			*/
 			startActorSteps(fromx, fromy, tox, toy, speed);
@@ -720,9 +740,11 @@ public class GameWindow extends GameSingletons {
 				return;
 				}
 			*/
-			}
-		if (obj == null /*+++++TESTING || !avatar_can_act */)
+		}
+		if (obj == null /*+++++TESTING || !avatar_can_act */) {
+			startActorAlongPath(x, y, 1);	// Experiment.
 			return;			// Nothing found or avatar disabled.
+		}
 		System.out.println("Double-clicked on shape " + obj.getShapeNum() +
 				":  " + obj.getName());
 		/* +++++++++++
