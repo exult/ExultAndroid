@@ -105,12 +105,10 @@ public final class NewFileGump extends Gump.Modal {
 		else cur_details.save_count = 0;
 
 		cur_details.party_size = (byte)(partyman.getCount()+1);
-		/* ++++++++++FINISH
-		cur_details.game_day = (short) (gclock.get_total_hours() / 24);
-		cur_details.game_hour = gclock.get_hour();
-		cur_details.game_minute = gclock.get_minute();
+		cur_details.game_day = (short) (clock.getTotalHours() / 24);
+		cur_details.game_hour = (byte)clock.getHour();
+		cur_details.game_minute = (byte)clock.getMinute();
 		
-		*/
 		Calendar timeinfo = Calendar.getInstance();
 
 		cur_details.real_day = (byte)timeinfo.get(Calendar.DAY_OF_MONTH);

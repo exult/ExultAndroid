@@ -49,7 +49,7 @@ public class GameWindow extends GameSingletons {
 	private boolean combat;			// True if in combat.
 	private int skipAboveActor;		// Level above actor to skip rendering.
 	private boolean ambientLight;	// Permanent version of special_light.
-	
+	private int specialLight;		// Game minute when light spell ends.
 	/*
 	 *	Public flags and gameplay options:
 	 */
@@ -486,10 +486,8 @@ public class GameWindow extends GameSingletons {
 		// Fixes a rare crash when moving between maps and teleporting:
 		newMap = mainActor.getMapNum();
 		centerView(t);			// Bring pos. into view, and insure all
-		/*+++++++++++
 		clock.reset();			// Reset and re-display palette.
-		clock.set_palette();
-		*/
+		clock.setPalette();
 		Tile t1 = new Tile();
 		for (i = 0; i < cnt; i++) {
 			int party_member=party_man.getMember(i);
@@ -841,17 +839,19 @@ public class GameWindow extends GameSingletons {
 			int carried_light = 0;
 			for (int i = 0; !carried_light && i < cnt; i++)
 				carried_light = party[i].has_light_source();
+			*/
 					// Also check light spell.
-			if (special_light && clock.get_total_minutes() >special_light)
-				{		// Just expired.
-				special_light = 0;
-				clock.set_palette();
-				}
+			if (specialLight != 0 && clock.getTotalMinutes() > specialLight) {
+						// Just expired.
+				specialLight = 0;
+				clock.setPalette();
+			}
+			/* +++++++++FINISH
 					// Set palette for lights.
-			clock.set_light_source(carried_light + (light_sources > 0),
+			clock.setLightSource(carried_light + (light_sources > 0),
 								in_dungeon);
 			}
-		*/
+			 */
 		win.clearClip();
 		} // End 'synchronized'.
 	}	
@@ -926,6 +926,7 @@ public class GameWindow extends GameSingletons {
 	}
 	public void initFiles(boolean cycle) {
 		ShapeID.loadStatic();
+		tqueue.add(TimeQueue.ticks, clock, this);	// Start clock.
 	}
 	//	Prepare for game.
 	public void setupGame() {
@@ -935,8 +936,6 @@ public class GameWindow extends GameSingletons {
 			initGamedat(true);
 		getMap(0).init();
 		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
-		// Init. current 'tick'.
-		// Game::set_ticks(SDL_GetTicks());
 		try {
 			initActors();		// Set up actors if not already done.
 								// This also sets up initial 
@@ -1005,12 +1004,11 @@ public class GameWindow extends GameSingletons {
 		gumpman.closeAllGumps(true);		// Kill gumps.
 		/*+++++++++FINISH
 		Face_stats::load_config(config);
-
+		*/
 		// Set palette for time-of-day.
 		clock.reset();
-		clock.set_palette();
-		pal.fade(6, 1, -1);		// Fade back in.
-		*/
+		clock.setPalette();
+		//+++++FINISH pal.fade(6, 1, -1);		// Fade back in.
 		System.out.println("setupGame: done");
 	}
 	public void readNpcs() throws IOException {
@@ -1208,11 +1206,8 @@ public class GameWindow extends GameSingletons {
 	 *	Read data for the game.
 	 *	 */
 	public void readGwin() {
-		/* +++++++++++FINISH
-		if (!clock.in_queue())		// Be sure clock is running.
-			tqueue.add(Game::get_ticks(), clock, 
-						reinterpret_cast<long>(this));
-		*/
+		if (!clock.inQueue())		// Be sure clock is running.
+			tqueue.add(TimeQueue.ticks, clock, this);
 		InputStream gin = null;
 		try {
 			gin = EUtil.U7openStream(EFile.GWINDAT);	// Gamewin.dat.
@@ -1222,28 +1217,28 @@ public class GameWindow extends GameSingletons {
 						// Start with scroll coords (in tiles).
 		scrolltx = EUtil.Read2(gin);
 		scrollty = EUtil.Read2(gin);
-		/* ++++++++++FINISH
 						// Read clock.
 		clock.reset();
-		clock.set_day(gin.read2());
-		clock.set_hour(gin.read2());
-		clock.set_minute(gin.read2());
-		special_light = gin.read4();
+		clock.setDay(EUtil.Read2(gin));
+		clock.setHour(EUtil.Read2(gin));
+		clock.setMinute(EUtil.Read2(gin));
+		specialLight = EUtil.Read4(gin);
 		armageddon = false;		// Old saves may not have this yet.
-		
+		/* ++++++++++FINISH
 		if (gin.available() == 0) {
-			special_light = 0;
+			specialLight = 0;
 			return;//++++++CLOSE
 		}
-		int track_num = gin.read4();
-		int repeat = gin.read4();
+		int track_num = EUtil.Read4(gin);
+		int repeat = EUtil.Read4(gin);
+		
 		if (!gin_stream.good())
 		{
-			Audio::get_ptr().stop_music();
+			audio.stop();
 			return;//++++++++++CLOSE
 		}
 
-		Audio::get_ptr().start_music(track_num, repeat != false);
+		audio.startMusic(track_num, repeat != false);
 		armageddon = gin.read1() == 1 ? true : false;
 		if (!gin_stream.good())
 			armageddon = false;
@@ -1315,14 +1310,11 @@ public class GameWindow extends GameSingletons {
 		EUtil.Write2(gout, getScrolltx());
 		EUtil.Write2(gout, getScrollty());
 					// Write clock.
-		//+++TESTING:
-		EUtil.Write2(gout, 0);EUtil.Write2(gout, 0);EUtil.Write2(gout, 0);
-		EUtil.Write4(gout, 0);
-		/* +++++++++++FINISH
 		EUtil.Write2(gout, clock.getDay());
 		EUtil.Write2(gout, clock.getHour());
 		EUtil.Write2(gout, clock.getMinute());
 		EUtil.Write4(gout, specialLight);	// Write spell expiration minute.
+		/*++++++++++FINISH
 		MyMidiPlayer *player = Audio::get_ptr().get_midi();
 		if (player) {
 			EUtil.Write4(gout, static_cast<uint32>(player.get_current_track()));
@@ -1714,13 +1706,9 @@ public class GameWindow extends GameSingletons {
 		EUtil.Write2(out, timeinfo.get(Calendar.YEAR));
 
 		// The Game Time that the save was done at
-		/* +++++++++FINISH
-		out.write(clock.get_minute());
-		out.write(clock.get_hour());
-		EUtil.Write2(out, clock.get_day());
-		*/
-		out.write(0); out.write(0); EUtil.Write2(out, 0); //+++++++TESTING.
-		
+		out.write(clock.getMinute());
+		out.write(clock.getHour());
+		EUtil.Write2(out, clock.getDay());		
 		EUtil.Write2(out, save_count);
 		out.write(party_size);
 

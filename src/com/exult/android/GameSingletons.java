@@ -17,6 +17,7 @@ public class GameSingletons {
 	public static Mouse mouse;
 	public static Cheat cheat;
 	public static Audio audio;
+	public static GameClock clock;
 	public static void init(GameWindow gw) {
 		gwin = gw;
 		win = gwin.getWin();
@@ -31,5 +32,6 @@ public class GameSingletons {
 		mouse = new Mouse();
 		cheat = new Cheat();
 		audio = new Audio();
+		clock = new GameClock();
 	}
 }

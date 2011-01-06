@@ -11,12 +11,18 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	private boolean oldInvisible;		// If invisibility was on last time.
 	private int dungeon;		// Last set 'in_dungeon' value.
 	private int overcast;			// >0 if day is overcast (e.g., from a storm).
-	private boolean was_overcast;
+	private boolean wasOvercast;
 	private int fog;			// >0 if there is fog.
-	private boolean was_foggy;
+	private boolean wasFoggy;
+	private int timeQueueCount;
 	//+++++private Palette_transition *transition;	// For smooth palette transitions.
-	private int time_rate;
+	private int timeRate;
 	
+	public GameClock() {
+		hour = 6;
+		dungeon = 255;
+		timeRate = 1;
+	}
 	public int getHour()
 		{ return hour; }
 	public void setHour(int h)
@@ -46,7 +52,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	}
 	public void reset() {
 		overcast = fog = 0;
-		was_overcast = was_foggy = false;
+		wasOvercast = wasFoggy = false;
 		oldSpecialLight = false;
 		oldInfravision = false;
 		oldInvisible = false;
@@ -77,6 +83,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	
 	@Override
 	public void addedToQueue() {
+		++timeQueueCount;
 	}
 	@Override
 	public boolean alwaysHandle() {
@@ -85,11 +92,49 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	@Override
 	public void handleEvent(int ctime, Object udata) {
 		// TODO Auto-generated method stub
+		int minOld = minute;
+		int hourOld = hour;
+					// Time stopped?  Don't advance.
+		if (!gwin.isTimeStopped()) {
+			minute += timeRate;
+			// ++++ TESTING
+			// if (Game::get_game_type() == SERPENT_ISLE)
+				//+++++FINISH Check_freezing();
+		}
+		while (minute >= 60) {	// advance to the correct hour (and day)
+			minute -= 60;
+			if (++hour >= 24) {
+				hour -= 24;
+				day++;
+			}
+			/* +++++++FINISH
+			gwin.mendNpcs();	// Restore HP's each hour.
+			checkHunger();		// Use food, and print complaints.
+			gwin.scheduleNpcs(hour);
+			*/
+		}
+		/* ++++++++FINISH
+		if (transition && !transition.set_step(hour, minute))
+			{
+			delete transition;
+			transition = 0;
+			set_time_palette();
+			}
+		else */ if (hour != hourOld)
+			setPalette();
 
+		if ((hour != hourOld) || (minute/15 != minOld/15))
+			System.out.println("Clock updated to " + hour + ':' + minute);
+		ctime += ticksPerMinute;
+		tqueue.add(ctime, this, udata);
 	}
 
 	@Override
 	public void removedFromQueue() {
+		--timeQueueCount;
+	}
+	public boolean inQueue() {
+		return timeQueueCount > 0;
 	}
 
 }
