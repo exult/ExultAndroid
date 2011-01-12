@@ -30,10 +30,42 @@ abstract public class ActorAction extends GameSingletons {
 	public void stop(Actor actor) {
 	}
 	public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist) {
-		return null;
+		// Do it the dumb way.
+		ZombiePathFinder path = new ZombiePathFinder();
+		getParty = false;
+						// Set up new path.
+		if (path.NewPath(src, dest, null))
+			return (new PathWalking(path));
+		else
+			return null;
 	}
 	public int getSpeed() {
 		return 0;
+	}
+	/*
+	 *	Set up an action to get an actor to a location (via pathfinding), and
+	 *	then execute another action when he gets there.
+	 */
+	public static ActorAction createActionSequence(Actor actor, 
+			Tile dest, ActorAction when_there, boolean from_off_screen) {
+		ActorAction act = when_there;
+		Tile actloc = new Tile();
+		actor.getTile(actloc);
+		if (from_off_screen)
+			actloc.tx = actloc.ty = -1;
+		if (!dest.equals(actloc)) {		// Get to destination.
+			ActorAction w = new PathWalking(new AStarPathFinder());
+			ActorAction w2 = w.walkToTile(actor, actloc, dest, 0);
+			if (w2 == null)		// Failed?  Teleport.
+				w2 = new Move(dest);
+						// And teleport if blocked walking.
+			ActorAction tel = new Move(dest);
+						// Walk there, then do whatever.
+			Sequence seq;
+			act = seq = new Sequence(w2, tel, act, null);
+			seq.setSpeed(0);	// No delay between actions.
+			}
+		return act;
 	}
 	/*
 	 *	Follow a path.
@@ -58,6 +90,10 @@ abstract public class ActorAction extends GameSingletons {
 			path = p;
 			max_blocked = (byte) maxblk;
 		}
+		public PathWalking(PathFinder p) {
+			path = p;
+			max_blocked = 3;
+		}
 						// Handle time event.
 		public int handleEvent(Actor actor) {
 			if (subseq != null)	{		// Going through a door?
@@ -71,12 +107,12 @@ abstract public class ActorAction extends GameSingletons {
 			}
 			/* +++++++++++++
 			if (blocked != 0) {
-				if (actor->step(blocked_tile, blocked_frame))
+				if (actor.step(blocked_tile, blocked_frame))
 					{		// Successful?
 					if (deleted) return 0;
 					blocked = 0;
 						// He was stopped, so restore speed.
-					actor->set_frame_time(speed);
+					actor.set_frame_time(speed);
 					return speed;
 			}
 						// Wait up to 1.6 secs.
@@ -213,7 +249,54 @@ abstract public class ActorAction extends GameSingletons {
 		 *	close it.
 		 */
 		public boolean openDoor(Actor actor, GameObject door) {
-			return false;//+++++++++++FINISH
+			int curTx = actor.getTileX(), curTy = actor.getTileY(),
+				curTz = actor.getLift();
+			// Get door's footprint in tiles.
+			Rectangle foot = new Rectangle();
+			door.getFootprint(foot);
+						// Open it, but kludge quality to
+						//   avoid unwanted usecode.
+			int savequal = door.getQuality();
+			door.setQuality(0);
+			door.activate();
+			door.setQuality(savequal);
+			Tile past = new Tile();	// Tile on other side of door.	
+			past.tz = (short)curTz;
+			int dir;			// Get dir to face door afterwards.
+			if (foot.w > foot.h) {		// Horizontal?
+				past.tx = (short)(foot.x + foot.w/2);
+				if (curTy <= foot.y) {	// N. of door?
+					past.ty = (short)(foot.y + foot.h);
+					dir = 0;
+				} else {			// S. of door?
+					past.ty = (short)(foot.y - 1);
+					dir = 4;
+				}
+			} else {				// Vertical.
+				past.ty = (short)(foot.y + foot.h/2);
+				if (curTx <= foot.x) {	// W. of door?
+					past.tx = (short)(foot.x + foot.w);
+					dir = 6;
+				} else {			// E. of door?
+					past.tx = (short)(foot.x - 1);
+					dir = 2;
+				}
+			}
+			if (MapChunk.findSpot(past, 1, actor, 1, MapChunk.anywhere)) {
+								// Succeeded.  Walk past and close it.
+				byte frames[] = new byte[2];
+				frames[0] = (byte)actor.getDirFramenum(dir, Actor.standing);
+				frames[1] = (byte)actor.getDirFramenum(dir, 3);
+				byte standframe = frames[0];
+				setSubseq(createActionSequence(actor, past,
+						new Sequence(
+								new Frames(frames, 2),
+								new Activate(door),
+								new Frames(frames, 1),
+								null), false));
+				return true;
+			}
+			return false;
 		}
 		/* ++++++
 						// Get destination, or ret. 0.
@@ -230,6 +313,29 @@ abstract public class ActorAction extends GameSingletons {
 		public ActorAction kill() {
 			deleted = true;
 			return this;
+		}
+	}
+	/*
+	 *	Just move (i.e. teleport) to a desired location.
+	 */
+	public static class Move extends ActorAction {
+		Tile dest;		// Where to go.
+		public Move(Tile d) {
+			dest = d;
+		}
+						// Handle time event.
+		public int handleEvent(Actor actor) {
+			if (dest.tx < 0)
+				return 0;
+			if (actor.getTileX() == dest.tx && actor.getTileY() == dest.ty &&
+							actor.getLift() == dest.tz)
+				return 0;
+			actor.move(dest);		// Zip right there.
+			if (actor == gwin.getMainActor())
+							// Teleported Avatar?
+				gwin.centerView(dest);
+			dest.tx = -1;			// Set to stop.
+			return (1);			// Wait 1 tick.
 		}
 	}
 	/*
@@ -255,11 +361,17 @@ abstract public class ActorAction extends GameSingletons {
 		int index;			// Index for next.
 		int speed;			// Frame delay in 1/1000 secs.
 		GameObject obj;		// Object to animate
-		public Frames(byte f[], int spd, GameObject o) {
+		public Frames(byte f[], int c, int spd, GameObject o) {
 			frames = f;
-			cnt = f.length;
+			cnt = c;
 			speed = spd;
 			obj = o;
+		}
+		public Frames(byte f[], int c) {
+			frames = f;
+			cnt = c;
+			speed = 1;
+			obj = null;
 		}
 						// Handle time event.
 		public int handleEvent(Actor actor) {
