@@ -1200,8 +1200,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			int new_lift = nlist.spotAvailable(ztiles, 
 					t.tx%EConst.c_tiles_per_chunk, t.ty%EConst.c_tiles_per_chunk, t.tz,
 					move_flags | getTypeFlags(), 1, -1);
-			t.tz = (short)new_lift;
-			return new_lift >= 0;
+			if (new_lift >= 0) {
+				t.tz = (short)new_lift;
+				return true;
+			} else
+				return false;
 			}
 		if (f == null) {
 			f = new Tile();

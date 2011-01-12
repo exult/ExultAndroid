@@ -87,6 +87,7 @@ public abstract class PathFinder {
 				GameObject block = GameObject.findDoor(to);
 				if (block == null)
 					return -1;
+				System.out.println("Found door");
 				if (!block.isClosedDoor() ||
 						// Can't get past locked doors.
 						block.getFrameNum()%4 >= 2)

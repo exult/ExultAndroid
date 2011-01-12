@@ -354,6 +354,8 @@ public final class MapChunk extends GameSingletons {
 		return terrain != null ? terrain.getRenderedFlats() : null;
 	}
 	public GameObject findDoor(Tile tile) {
+		if (doors == null)
+			return null;
 		Iterator<GameObject> iter = doors.iterator();
 		while (iter.hasNext()) {
 			GameObject obj = iter.next();
