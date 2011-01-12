@@ -3,7 +3,7 @@ package com.exult.android;
 /*
  * 3D tile coordinate.
  */
-public class Tile {
+public final class Tile {
 	private final int neighbors[] = 
 		{0,-1, 1,-1, 1,0, 1,1, 0,1, -1,1, -1,0, -1,-1 };
 	public short tx, ty, tz;
@@ -52,16 +52,18 @@ public class Tile {
 					// Take larger abs. value.
 		return (delta > dz ? delta : dz);
 	}
-	public int distance2d(Tile t2)	// For pathfinder.
-		{			// Handle wrapping round the world.
-		int dy = (t2.ty - ty + EConst.c_num_tiles)%EConst.c_num_tiles;
-		int dx = (t2.tx - tx + EConst.c_num_tiles)%EConst.c_num_tiles;
+	public int distance2d(int t2x, int t2y) {
+		int dy = (t2y - ty + EConst.c_num_tiles)%EConst.c_num_tiles;
+		int dx = (t2x - tx + EConst.c_num_tiles)%EConst.c_num_tiles;
 		if (dy >= EConst.c_num_tiles/2)// World-wrapping.
 			dy = EConst.c_num_tiles - dy;
 		if (dx >= EConst.c_num_tiles/2)
 			dx = EConst.c_num_tiles - dx;
 					// Take larger abs. value.
 		return (dy > dx ? dy : dx);
+	}
+	public int distance2d(Tile t2) {	// For pathfinder.
+		return distance2d(t2.tx, t2.ty);
 	}				// Get neighbor in given dir (0-7) & set 't' to it.
 	public void getNeighbor(Tile t, int dir) {
 		t.set(

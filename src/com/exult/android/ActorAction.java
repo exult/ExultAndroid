@@ -158,53 +158,49 @@ abstract public class ActorAction extends GameSingletons {
 		public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist) {
 			blocked = 0;			// Clear 'blocked' count.
 			reached_end = false;		// Starting new path.
-			/* ++++++++FINISH
-			get_party = false;
+			getParty = false;
 			from_offscreen = false;
 						//+++++Should dist be used below??:
 							// Set up new path.
 							// Don't care about 1 coord.?
-			if (dest.tx == -1 || dest.ty == -1)
-				{
+			if (dest.tx == -1 || dest.ty == -1) {
 				if (dest.tx == dest.ty)	// Completely off-screen?
 					{
-					Offscreen_pathfinder_client cost(npc);
-					if (!path->NewPath(src, dest, &cost))
-						return (0);
-					}
-				else
-					{
-					Onecoord_pathfinder_client cost(npc);
-					if (!path->NewPath(src, dest, &cost))
-						return (0);
-					}
+					PathFinder.OffScreenClient cost =
+									new PathFinder.OffScreenClient(npc);
+					if (!path.NewPath(src, dest, cost))
+						return null;
+				} else {
+					PathFinder.OneCoordClient cost =
+								new PathFinder.OneCoordClient(npc);
+					if (!path.NewPath(src, dest, cost))
+						return null;
 				}
-							// How about from source?
-			else if (src.tx == -1 || src.ty == -1)
-				{			// Figure path in opposite dir.
-				if (src.tx == src.ty)	// Both -1?
-					{		// Aim from NPC's current pos.
-					Offscreen_pathfinder_client cost(npc, npc->get_tile());
-					if (!path->NewPath(dest, src, &cost))
-						return (0);
-					}
-				else
-					{
-					Onecoord_pathfinder_client cost(npc);
-					if (!path->NewPath(dest, src, &cost))
-						return (0);
-					}
+			} else if (src.tx == -1 || src.ty == -1) {	// How about from source?
+							// Figure path in opposite dir.
+				if (src.tx == src.ty) {	// Both -1?
+							// Aim from NPC's current pos.
+					Tile t = new Tile();
+					npc.getTile(t);
+					PathFinder.OffScreenClient cost =
+							new PathFinder.OffScreenClient(npc, t);
+					if (!path.NewPath(dest, src, cost))
+						return null;
+				} else {
+					PathFinder.OneCoordClient cost = 
+										new PathFinder.OneCoordClient(npc);
+					if (!path.NewPath(dest, src, cost))
+						return null;
+				}
 				from_offscreen = true;
 							// Set to go backwards.
-				if (!path->set_backwards())
-					return (0);
-				}
-			else */
-				{
+				if (!path.setBackwards())
+					return null;
+			} else {
 				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, dist);
 				if (!path.NewPath(src, dest, cost))
 					return null;
-				}
+			}
 							// Reset direction (but not index).
 			original_dir = EUtil.getDirection4(src.ty - dest.ty, dest.tx - src.tx);
 			return this;
