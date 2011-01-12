@@ -27,8 +27,11 @@ abstract public class ActorAction extends GameSingletons {
 	}
 	// Handle time event.
 	abstract public int handleEvent(Actor actor);
-	abstract public void stop(Actor actor);
-	abstract public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist);
+	public void stop(Actor actor) {
+	}
+	public ActorAction walkToTile(Actor npc, Tile src, Tile dest, int dist) {
+		return null;
+	}
 	public int getSpeed() {
 		return 0;
 	}
@@ -229,5 +232,88 @@ abstract public class ActorAction extends GameSingletons {
 			return this;
 		}
 	}
-
+	/*
+	 * 	Activate an object.
+	 */
+	public static class ActivateActorAction extends ActorAction {
+		private GameObject obj;
+		public ActivateActorAction(GameObject o) {
+			obj = o;
+		}
+		public int handleEvent(Actor actor) {
+			obj.activate();
+			return 0;
+		}
+	}
+	/*
+	 *	Go through a series of frames.
+	 */
+	public static class FramesActorAction extends ActorAction {
+		byte frames[];		// List to go through (a -1 means to
+							//   leave frame alone.)
+		int cnt;			// Size of list.
+		int index;			// Index for next.
+		int speed;			// Frame delay in 1/1000 secs.
+		GameObject obj;		// Object to animate
+		public FramesActorAction(byte f[], int spd, GameObject o) {
+			frames = f;
+			cnt = f.length;
+			speed = spd;
+			obj = o;
+		}
+						// Handle time event.
+		public int handleEvent(Actor actor) {
+			if (index == cnt)
+				return (0);		// Done.
+			int frnum = frames[index++];	// Get frame.
+			if (frnum >= 0) {
+				if (obj != null)
+					obj.changeFrame(frnum);
+				else
+					actor.changeFrame(frnum);
+			}
+			return (speed);
+		}
+		public int getIndex()
+			{ return index; }
+		public int getSpeed()
+			{ return speed; }
+	}
+	/*
+	 *	Do a sequence of actions.
+	 */
+	public static class SequenceActorAction extends ActorAction {
+		ActorAction actions[];		// List of actions, ending with null.
+		int index;			// Index into list.
+		int speed;			// Frame delay in 1/1000 secs. between actions.
+		public SequenceActorAction(ActorAction act[], int spd) {
+			actions = act;
+			index = 0; speed = spd;
+		}
+						// Create with up to 4.
+		public SequenceActorAction(ActorAction a0, ActorAction a1,
+					ActorAction a2, ActorAction a3) {
+			actions = new ActorAction[4];
+			actions[0] = a0; actions[1] = a1; actions[2] = a2; actions[3] = a3;
+		}
+		public int getSpeed()
+			{ return speed; }
+		void setSpeed(int spd)
+			{ speed = spd; }
+						// Handle time event.
+		public int handleEvent(Actor actor) {
+			if (index >= actions.length || actions[index] == null)		// Done?
+				return (0);
+							// Do current action.
+			// +++++STILL NEEDED  boolean deleted;
+			int delay = actions[index].handleEvent(actor);
+			if (delay == 0) {
+				index++;		// That one's done now.
+				if (speed == 0)		// Immediately?  Run with next.
+					return handleEvent(actor);
+				delay = speed;
+			}
+			return (delay);
+		}
+	}
 }
