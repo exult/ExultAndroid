@@ -38,7 +38,7 @@ abstract public class ActorAction extends GameSingletons {
 	/*
 	 *	Follow a path.
 	 */
-	public static class PathWalkingActorAction extends ActorAction {
+	public static class PathWalking extends ActorAction {
 		protected boolean reached_end;		// Reached end of path.
 		protected PathFinder path;		// Allocated pathfinder.
 		protected boolean deleted;			// True if the action has been killed.
@@ -54,7 +54,7 @@ abstract public class ActorAction extends GameSingletons {
 		private void setSubseq(ActorAction sub) {
 			subseq = sub;
 		}
-		public PathWalkingActorAction(PathFinder p, int maxblk) {
+		public PathWalking(PathFinder p, int maxblk) {
 			path = p;
 			max_blocked = (byte) maxblk;
 		}
@@ -235,9 +235,9 @@ abstract public class ActorAction extends GameSingletons {
 	/*
 	 * 	Activate an object.
 	 */
-	public static class ActivateActorAction extends ActorAction {
+	public static class Activate extends ActorAction {
 		private GameObject obj;
-		public ActivateActorAction(GameObject o) {
+		public Activate(GameObject o) {
 			obj = o;
 		}
 		public int handleEvent(Actor actor) {
@@ -248,14 +248,14 @@ abstract public class ActorAction extends GameSingletons {
 	/*
 	 *	Go through a series of frames.
 	 */
-	public static class FramesActorAction extends ActorAction {
+	public static class Frames extends ActorAction {
 		byte frames[];		// List to go through (a -1 means to
 							//   leave frame alone.)
 		int cnt;			// Size of list.
 		int index;			// Index for next.
 		int speed;			// Frame delay in 1/1000 secs.
 		GameObject obj;		// Object to animate
-		public FramesActorAction(byte f[], int spd, GameObject o) {
+		public Frames(byte f[], int spd, GameObject o) {
 			frames = f;
 			cnt = f.length;
 			speed = spd;
@@ -282,16 +282,16 @@ abstract public class ActorAction extends GameSingletons {
 	/*
 	 *	Do a sequence of actions.
 	 */
-	public static class SequenceActorAction extends ActorAction {
+	public static class Sequence extends ActorAction {
 		ActorAction actions[];		// List of actions, ending with null.
 		int index;			// Index into list.
 		int speed;			// Frame delay in 1/1000 secs. between actions.
-		public SequenceActorAction(ActorAction act[], int spd) {
+		public Sequence(ActorAction act[], int spd) {
 			actions = act;
 			index = 0; speed = spd;
 		}
 						// Create with up to 4.
-		public SequenceActorAction(ActorAction a0, ActorAction a1,
+		public Sequence(ActorAction a0, ActorAction a1,
 					ActorAction a2, ActorAction a3) {
 			actions = new ActorAction[4];
 			actions[0] = a0; actions[1] = a1; actions[2] = a2; actions[3] = a3;

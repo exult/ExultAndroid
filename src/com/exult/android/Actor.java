@@ -1123,7 +1123,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (zombiePath == null)
 			zombiePath = new ZombiePathFinder();
 		if (action == null)
-			action = new ActorAction.PathWalkingActorAction(zombiePath, maxblk);
+			action = new ActorAction.PathWalking(zombiePath, maxblk);
 		getTile(walkSrc);
 		setAction(action.walkToTile(this, walkSrc, dest, 0));
 		if (action != null)			// Successful at setting path?
@@ -1149,7 +1149,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int dist,			// Distance to get within dest.
 		int maxblk			// Max. # retries if blocked.
 		) {
-		setAction(new ActorAction.PathWalkingActorAction(new AStarPathFinder(), maxblk));
+		setAction(new ActorAction.PathWalking(new AStarPathFinder(), maxblk));
 		setAction(action.walkToTile(this, src, dest, dist));
 		if (action != null) {			// Successful at setting path?
 			start(speed, delay);
