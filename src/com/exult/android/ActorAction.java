@@ -107,11 +107,11 @@ abstract public class ActorAction extends GameSingletons {
 			subseq = sub;
 		}
 		public PathWalking(PathFinder p, int maxblk) {
-			path = p;
+			path = p != null ? p : new AStarPathFinder();
 			max_blocked = (byte) maxblk;
 		}
 		public PathWalking(PathFinder p) {
-			path = p;
+			path = p != null ? p : new AStarPathFinder();
 			max_blocked = 3;
 		}
 						// Handle time event.
