@@ -1560,10 +1560,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int scx = 16*(schunk%12);
 		if (has_contents)		// Inventory?  Read.
 			npcmap.readIregObjects(out, scx, scy, this, 0);
-		/* +++++++FINISH
 		if (read_sched_usecode)		// Read in scheduled usecode.
-			npcmap.read_special_ireg(out, this);
-		*/
+			npcmap.readSpecialIreg(out, this);
 		int cx = locx >> 4;		// Get chunk indices within schunk.
 		int cy = locy >> 4;
 		

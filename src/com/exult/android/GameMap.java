@@ -3,6 +3,7 @@ import java.util.Vector;
 import java.util.Arrays;
 import java.io.RandomAccessFile;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
@@ -32,6 +33,9 @@ public class GameMap extends GameSingletons {
 	public static int IREG_ENDMARK = 2;		// Just an 'end' mark.
 	public static int IREG_ATTS	= 3;		// Attribute/value pairs.
 	public static int IREG_STRING = 4;		// A string; ie, function name.
+	private boolean isValidSpecialIreg(int kind) {
+		return kind == IREG_UCSCRIPT || kind == IREG_ATTS || kind == IREG_STRING;
+	}
 	
 	private static ChunkTerrain readTerrain(int chunkNum) {
 		int ntiles = EConst.c_tiles_per_chunk*EConst.c_tiles_per_chunk;
@@ -297,7 +301,52 @@ public class GameMap extends GameSingletons {
 		/* ++++++FINISH
 		olist.setup_dungeon_levels();	// Should have all dungeon pieces now.
 		*/
+	}
+	/*
+	 *	Read in a 'special' IREG entry (one starting with 255).
+	 */
+	private void readOneSpecialIreg(InputStream ireg, GameObject obj, int type)  
+											throws IOException{
+		int len = EUtil.Read2(ireg);		// Length of rest.
+		byte buf[] = new byte[len];
+		ireg.read(buf);
+		if (type == IREG_UCSCRIPT) {	// Usecode script
+			UsecodeScript scr = UsecodeScript.restore(obj, 
+					new ByteArrayInputStream(buf));
+			if (scr != null) {
+				scr.start(scr.getDelay());
+			}
+		} else if (type == IREG_ATTS) {	// Attribute/value pairs?
+			//+++++++++++FINISH obj.readAttributes(buf, len);
+		} else if (type == IREG_STRING) {	// IE, Usecode egg function name?
+			if (obj.isEgg())
+				((EggObject)(obj)).setStr1(new String(buf));
+		} else
+			System.out.println("Unknown special IREG entry: " + type);
+	}
+	/*
+	 *	Read in a 'special' IREG entry (one starting with 255).
+	 */
+	public void readSpecialIreg
+		(
+		InputStream ireg,
+		GameObject obj		// Last object read.
+		) throws IOException {
+		int entlen;
+		ireg.mark(4000);
+		while ((entlen = ireg.read()) == IREG_SPECIAL && ireg.available() > 0) {
+			int type = ireg.read();
+			if (!isValidSpecialIreg(type)) {
+				break;
+			}
+			if (type == IREG_ENDMARK) { // End of list.
+				return;
+			}
+			readOneSpecialIreg(ireg, obj, type);
+			ireg.mark(4000);
 		}
+		ireg.reset();
+	}
 	/*
 	 *	Read a list of ireg objects.  They are either placed in the desired
 	 *	game chunk, or added to their container.
@@ -327,14 +376,10 @@ public class GameMap extends GameSingletons {
 			} else if (entlen == 2) {	// Detect the 2 byte index id 
 				index_id = EUtil.Read2(ireg);
 				continue;
-			/*
-			} else if (entlen == IREG_SPECIAL)
-				{
-				Read_special_ireg(ireg, last_obj);
+			} else if (entlen == IREG_SPECIAL) {
+				readSpecialIreg(ireg, last_obj);
 				continue;
-				}
-			*/
-			} else if (entlen == IREG_EXTENDED) {
+			}  else if (entlen == IREG_EXTENDED) {
 				extended = true;
 				entlen = ireg.read();
 			}

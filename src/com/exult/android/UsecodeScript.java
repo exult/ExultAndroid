@@ -2,6 +2,8 @@ package com.exult.android;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Vector;
+import java.io.InputStream;
+import java.io.IOException;
 
 public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	public static boolean debug = false;
@@ -86,11 +88,24 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			}
 		}
 	}
-	public boolean isActivated() {
+	//	Create for a 'restore'.
+	private UsecodeScript(GameObject item, UsecodeValue cd, int findex, 
+													int nhalt, int del) {
+		obj = item;
+		code = cd;
+		frame_index = findex;
+		delay = del;
+		no_halt = (nhalt != 0);
+		cnt = code.getArraySize();
+	}
+	public final boolean isActivated() {
 		return i > 0;
 	}
-	public boolean isNoHalt() {
+	public final boolean isNoHalt() {
 		return no_halt;
+	}
+	public final int getDelay() {
+		return delay;
 	}
 	/*
 	 *	Enter into the time-queue and our own chain.  Terminate existing
@@ -608,17 +623,17 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			obj.step(tile, frame, true);
 			}
 		/* ++++++++++
-		else if ((barge = obj->as_barge()) != 0)
+		else if ((barge = obj.as_barge()) != 0)
 			{
 			for (int i = 0; i < 4; i++)
 				{
-				Tile_coord t = obj->get_tile();
+				Tile_coord t = obj.get_tile();
 				if (dir != -1)
 					t = t.get_neighbor(dir);
 				t.tz += dz/4 + (!i ? dz % 4 : 0);
 				if (t.tz < 0)
 					t.tz = 0;
-				obj->step(t, 0, true);
+				obj.step(t, 0, true);
 				}
 			}
 		*/
@@ -664,4 +679,27 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		 */
 		scripts.remove(this);	// All done.
 	}
+	/*
+	 *	Restore (serialize).
+	 *
+	 *	Output:	.entry, which is also stored in our global chain, but is NOT
+	 *		added to the time queue yet.
+	 */
+	public static UsecodeScript restore(GameObject item, InputStream in) 
+											throws IOException {
+		int cnt = EUtil.Read2(in);		// Get # instructions.
+		int curindex = EUtil.Read2(in);	// Where it is.
+		UsecodeValue code = UsecodeValue.restoreArray(in, cnt);
+		if (in.available() < 8) {	// Enough room left?
+			return null;
+		}
+		int frame_index = EUtil.Read2(in);
+		int no_halt = EUtil.Read2(in);
+		int delay = EUtil.Read4(in);
+		UsecodeScript scr =
+			new UsecodeScript(item, code, frame_index, no_halt, delay);
+		scr.i = curindex;		// Set index.
+		return scr;
+		}
+
 }

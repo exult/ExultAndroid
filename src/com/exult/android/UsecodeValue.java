@@ -80,6 +80,16 @@ public abstract class UsecodeValue {
 		class_sym_type = 4,	// ->Usecode_class_symbol
 		class_obj_type = 5	// An 'array_type' for a class obj.
 		;
+	public static UsecodeValue restoreArray(InputStream in, int cnt)
+										throws IOException {
+		UsecodeValue elems[] = new UsecodeValue[cnt];
+		for (int i=0; i < cnt; i++) {
+			elems[i] = restore(in);
+			if (elems[i] == null)
+				return null;
+		}
+		return new ArrayValue(elems);
+	}
 	public static UsecodeValue restore(InputStream in) throws IOException {
 		int type = in.read();
 		switch (type) {
@@ -111,14 +121,8 @@ public abstract class UsecodeValue {
 		case array_type:
 		case class_obj_type:
 			{
-			int len = EUtil.Read2(in);
-			UsecodeValue elems[] = new UsecodeValue[len];
-			for (int i=0; i < len; i++) {
-				elems[i] = restore(in);
-				if (elems[i] == null)
-					return null;
-			}
-			return new ArrayValue(elems);
+			int cnt = EUtil.Read2(in);
+			return restoreArray(in, cnt);
 			}
 		default:
 			return null;

@@ -1673,7 +1673,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 				return createNewObject(parms[0]);
 			}
 		case 0x25:
-			return setLastCreated(parms[0]);
+			synchronized(gwin.getWin()) {
+				return setLastCreated(parms[0]);
+			}
 		case 0x26:
 			synchronized(gwin.getWin()) {
 				return updateLastCreated(parms[0]);
@@ -1708,7 +1710,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
 		case 0x36:
-			return giveLastCreated(parms[0]);
+			synchronized(gwin.getWin()) {
+				return giveLastCreated(parms[0]);
+			}
 		case 0x37:
 			return isDead(parms[0]);
 		//++++++++++++++
@@ -1724,8 +1728,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 				moveObject(parms[0], parms[1], parms[2]);
 			}
 			break;
-		case 0x3f:
-			removeNpc(parms[0]); break;
+		case 0x3f:			
+			synchronized(gwin.getWin()) {
+				removeNpc(parms[0]);
+			}
+			break;
 		case 0x40:
 			if (!conv.isNpcTextPending())
 				itemSay(parms[0], parms[1]);
@@ -1740,8 +1747,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x55:
 			bookMode(parms[0]); break;
 		//++++++++++++
-		case 0x59:
-			earthquake(parms[0]); break;
+		case 0x59:			
+			synchronized(gwin.getWin()) {
+				earthquake(parms[0]);
+			}
+			break;
 		case 0x5a:
 			return isPCFemale();
 		//++++++++++++
