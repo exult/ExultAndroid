@@ -377,7 +377,7 @@ public abstract class UsecodeValue {
 			return 0;
 		}
 		public String toString() {
-			return obj != null ? obj.toString() : "null";
+			return obj != null ? obj.toString() : "nullObject";
 		}
 		public void save(OutputStream out) throws IOException {
 			out.write(pointer_type);

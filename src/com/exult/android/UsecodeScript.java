@@ -3,6 +3,7 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Vector;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class UsecodeScript extends GameSingletons implements TimeSensitive {
@@ -678,6 +679,27 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			act.end_casting_mode(delay);
 		 */
 		scripts.remove(this);	// All done.
+	}
+	/*
+	 *	Save (serialize).
+	 *
+	 *	Output:	Length written, or -1 if error.
+	 */
+	public int save(ByteArrayOutputStream out) throws IOException {
+						// Get delay to when due.
+		int when = tqueue.findDelay(this, TimeQueue.ticks);
+		if (when < 0)
+			throw new IOException("Can't find UsecodeScript delay");
+		EUtil.Write2(out, cnt);		// # of values we'll store.
+		EUtil.Write2(out, i);			// Current spot.
+		for (int j = 0; j < cnt; j++) {
+			UsecodeValue val = code.getElem(j);
+			val.save(out);
+		}
+		EUtil.Write2(out, frame_index);
+		EUtil.Write2(out, no_halt ? 1 : 0);
+		EUtil.Write4(out, when);
+		return out.size();
 	}
 	/*
 	 *	Restore (serialize).

@@ -467,6 +467,8 @@ public class UsecodeMachine extends GameSingletons {
 					offset = (short) frame.Read2();
 					if (offset < 0 || offset >= num_locals) {
 						// LOCAL_VAR_ERROR(offset);
+						System.out.println("PUSH: bad offset " + offset +
+									", num_locals = " + num_locals);
 						pushi(0);
 					} else {
 						push(frame.locals[offset]);
@@ -572,7 +574,6 @@ public class UsecodeMachine extends GameSingletons {
 				{
 					show_pending_text();
 					UsecodeValue r = pop();
-
 					return_from_function(r);
 					frame_changed = true;
 					break;

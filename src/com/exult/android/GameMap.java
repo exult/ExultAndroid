@@ -5,6 +5,7 @@ import java.io.RandomAccessFile;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class GameMap extends GameSingletons {
@@ -641,6 +642,34 @@ public class GameMap extends GameSingletons {
 	public static ChunkTerrain getTerrain(int tnum) {
 		ChunkTerrain ter = (ChunkTerrain) chunkTerrains.elementAt(tnum);
 		return ter != null ? ter : readTerrain(tnum);
+	}
+	/*
+	 *	Write out scheduled usecode for an object.
+	 */
+
+	public void writeScheduled
+		(
+		ByteArrayOutputStream ireg,
+		GameObject obj,
+		boolean writeMark			// Write an IREG_ENDMARK if true.
+		) throws IOException {
+		for (UsecodeScript scr = UsecodeScript.find(obj, null); scr != null;
+						scr = UsecodeScript.find(obj, scr)) {
+			ByteArrayOutputStream outbuf = new ByteArrayOutputStream(128);
+			int len = scr.save(outbuf);
+			if (len < 0)
+				System.out.println("Error saving Usecode script");
+			else if (len > 0) {
+				ireg.write(IREG_SPECIAL);
+				ireg.write(IREG_UCSCRIPT);
+				EUtil.Write2(ireg, len);	// Store length.
+				ireg.write(outbuf.toByteArray());
+			}
+		}
+		if (writeMark) {
+			ireg.write(IREG_SPECIAL);
+			ireg.write(IREG_ENDMARK);
+		}
 	}
 	/*
 	 *	Write string entry and/or return length of what's written.

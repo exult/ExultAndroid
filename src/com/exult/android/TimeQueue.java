@@ -130,6 +130,26 @@ public class TimeQueue {
 		}
 		return false;			// Not found.
 	}
+	/*
+	 *	Find when an entry is due.
+	 *
+	 *	Output:	delay in msecs. when due, or -1 if not in queue.
+	 */
+	public int findDelay(TimeSensitive obj, int ctime) {
+		if (entries.isEmpty())
+			return -1;
+		ListIterator<QueueEntry> it = entries.listIterator();
+		while (it.hasNext()) {
+			QueueEntry ent = it.next();
+			if (ent.handler==obj) {
+				if (pauseTime != 0)	// Watch for case when paused.
+					ctime = pauseTime;
+				int delay = ent.time - ctime;
+				return delay >= 0 ? delay : 0;
+			}
+		}
+		return -1;
+	}
 	public static class QueueEntry {
 		TimeSensitive handler;
 		Object udata;		// Data to pass to handler.
