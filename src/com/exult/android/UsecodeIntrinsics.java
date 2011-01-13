@@ -16,7 +16,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static GameObject interceptItem;
 	private static Tile interceptTile;
 	private static GameObject sailor;	// Current barge captain.
-	
+	private Actor pathNpc;		// Last NPC in path_run_usecode()
+
 	private static final Actor asActor(GameObject obj) {
 		return obj == null ? null : obj.asActor();
 	}
@@ -829,7 +830,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	public final UsecodeValue addPartyItems(UsecodeValue p0, UsecodeValue p1,
 			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4) {
 		// Add items(num, item, ??quality?? (-359), frame (or -359), T/F).
-		// Returns array of NPC's (->'s) who got the items.
+		// Returns array of NPC's (.'s) who got the items.
 		int quantity = p0.getIntValue();
 			// ++++++First see if there's room.
 		int shapenum = p1.getIntValue();
@@ -1379,6 +1380,60 @@ public class UsecodeIntrinsics extends GameSingletons {
 		removeItem(getItem(p0));
 		ucmachine.setModifiedMap();
 	}
+	private final UsecodeValue pathRunUsecode(Actor npc, UsecodeValue locval,
+			UsecodeValue useval, UsecodeValue itemval, UsecodeValue eventval,
+			boolean find_free, boolean always, boolean companions) {
+		if (npc == null)
+			return UsecodeValue.getZero();
+		pathNpc = npc;	int usefun = useval.getElem0().getIntValue();
+		GameObject obj = getItem(itemval);
+		int sz = locval.getArraySize();
+		if (npc == null || sz < 2) {
+			System.out.println("Path_run_usecode: bad inputs");
+			return UsecodeValue.getZero();
+		}
+		int srcx = npc.getTileX(), srcy = npc.getTileY();
+		Tile dest = new Tile(locval.getElem(0).getIntValue(),
+				locval.getElem(1).getIntValue(),
+				sz == 3 ? locval.getElem(2).getIntValue() : 0);
+		if (dest.tz < 0)		// ++++Don't understand this.
+			dest.tz = 0;
+		/* ++++++++FINISH
+		if (find_free) {// Now works with SI lightning platform
+						// Allow rise of 3 (for SI lightning).
+			if (!MapChunk.findSpot(dest, 3, npc, 3))
+						// No?  Try at source level.
+				d = Map_chunk::find_spot(
+					Tile_coord(dest.tx, dest.ty, src.tz), 3, npc,
+										0);
+			if (d.tx != -1)		// Found it?
+				dest = d;
+			if (usefun == 0x60a &&	// ++++Added 7/21/01 to fix Iron
+			    src.distance(dest) <= 1)
+				return 1;	// Maiden loop in SI.  Kludge+++++++
+		}
+		*/
+		if (obj == null) {			// Just skip the usecode part.
+			boolean res = npc.walkPathToTile(dest, 1, 0, 0);
+			if (res && companions && npc.getAction() != null)
+				npc.getAction().setGetParty(true);
+			return res ? UsecodeValue.getOne() : UsecodeValue.getZero();
+			}
+						// Walk there and execute.
+		ActorAction.IfElsePath action = 
+			new ActorAction.IfElsePath(npc, dest,
+					new ActorAction.Usecode(usefun, obj, 
+							eventval.getIntValue()), null);
+		if (companions)
+			action.setGetParty(true);
+		if (always)			// Set failure to same thing.
+			action.setFailure(
+					new ActorAction.Usecode(usefun, obj, 
+							eventval.getIntValue()));
+		npc.setAction(action);	// Get into time queue.
+		npc.start(1, 0);
+		return !action.doneAndFailed() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
 	private final static void closeGump(UsecodeValue p0) {
 		/* if (!gwin.isDragging())	// NOT while dragging stuff. */
 		{
@@ -1420,7 +1475,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Play music(songnum, item).
 		GameObject obj = getItem(p1);
 		int sfxnum = p0.getIntValue();
-		// +++++FINISH new Object_sfx(obj, parms[0].get_int_value());
+		// +++++FINISH new Object_sfx(obj, parms[0].getIntValue());
 		audio.playSfx(sfxnum);	// +++++FOR NOW
 	}
 	private final static UsecodeValue getItemFlag(UsecodeValue p0, UsecodeValue p1) {
@@ -1698,6 +1753,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x6f:
 			removeItem(parms[0]); break;
 		//++++++++++++++
+		case 0x7d:
+			return pathRunUsecode(gwin.getMainActor(), parms[0], parms[1], parms[2],
+					parms[3], false, false, false);
 		case 0x7e:
 			/* if (!gwin.isDragging()) */ gumpman.closeAllGumps(false); break;
 		case 0x7f:

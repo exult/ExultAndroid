@@ -25,7 +25,6 @@ public class UsecodeMachine extends GameSingletons {
 	private TreeMap<Integer, Integer> timers = new TreeMap<Integer,Integer>();
 	private GameObject caller_item;
 	private TextGump book;		// Book/scroll being displayed.
-	private Actor path_npc;		// Last NPC in path_run_usecode()
 	private boolean found_answer;		// Did we already handle the conv. option?
 	private Tile saved_pos;		// For a couple SI intrinsics.
 	private int saved_map;

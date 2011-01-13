@@ -42,6 +42,26 @@ abstract public class ActorAction extends GameSingletons {
 	public int getSpeed() {
 		return 0;
 	}
+	public IfElsePath hasUsecodePath() {
+		return null; 
+	}
+	/*
+	 *	Call a usecode function.
+	 */
+	public static class Usecode extends ActorAction {
+		int fun;			// Fun. #.
+		GameObject item;		// Call it on this item.	
+		int eventid;
+		public Usecode(int f, GameObject i, int ev) {
+			fun = f; item = i; eventid = ev;
+		}
+						// Handle time event.
+		public int handleEvent(Actor actor) {
+			ucmachine.callUsecode(fun, item, eventid);
+			gwin.setAllDirty();		// Clean up screen.
+			return 0;			// That's all.
+		}
+	}
 	/*
 	 *	Set up an action to get an actor to a location (via pathfinding), and
 	 *	then execute another action when he gets there.
@@ -315,6 +335,70 @@ abstract public class ActorAction extends GameSingletons {
 			return this;
 		}
 	}
+	/*
+	 *	Follow a path and execute one action if successful, another if
+	 *	failed.
+	 */
+	public static class IfElsePath extends PathWalking {
+		boolean succeeded, failed, done;
+		ActorAction success, failure;
+		public IfElsePath(Actor actor, Tile dest, ActorAction s, ActorAction f) {
+			super(null, 6);
+			success = s; failure = f;
+			Tile t = new Tile();
+			actor.getTile(t);
+			if (walkToTile(actor, t, dest, 0) == null) {
+				done = failed = true;
+			}
+		}
+		public void setFailure(ActorAction f) {
+			failure = f;
+			done = false;
+		}
+		boolean doneAndFailed()		// Happens if no path found in ctor.
+			{ return done && failed; }
+						// Handle time event.
+		public int handleEvent(Actor actor) {
+			if (done)
+				return 0;		// Shouldn't really get here.
+			//boolean del;
+			int delay;
+			if (succeeded) {			// Doing the success action?
+				if ((delay = success.handleEvent(actor)) == 0)
+					done = true;
+				return delay;
+			} else if (failed) {
+				if ((delay = failure.handleEvent(actor)) == 0)
+					done = true;
+				return delay;
+			}
+			delay = super.handleEvent(actor);
+			if (delay != 0)
+				return delay;
+			if (deleted)
+				return 0;
+			if (!reached_end) {			// Didn't get there.
+				if (failure != null) {
+					failed = true;
+					delay = failure.handleEvent(actor);
+					/*++++++++STILL NEED this?
+					if (del)	// Are we gone?
+						return 0;
+					*/
+				}
+			} else {				// Success.
+				if (success != null) {
+					succeeded = true;
+					delay = success.handleEvent(actor);
+				}
+			}
+			if (delay == 0)
+				done = true;		// All done now.
+			return delay;
+		}
+		public IfElsePath hasUsecodePath()
+			{ return this; }
+		}
 	/*
 	 *	Just move (i.e. teleport) to a desired location.
 	 */
