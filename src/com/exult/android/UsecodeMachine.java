@@ -471,7 +471,10 @@ public class UsecodeMachine extends GameSingletons {
 									", num_locals = " + num_locals);
 						pushi(0);
 					} else {
-						push(frame.locals[offset]);
+						UsecodeValue val = frame.locals[offset];
+						if (val == null)
+							val = UsecodeValue.getZero();
+						push(val);
 					}
 					break;
 				case 0x22:		// CMPEQ.
