@@ -171,6 +171,7 @@ public class ExultActivity extends Activity {
                 	gwin.showItems(showItemsX, showItemsY);
                 	showItemsX = showItemsY = -1000;
                 }
+                
                 if (gwin.isDirty()) {
                 	gwin.paintDirty();
                 }

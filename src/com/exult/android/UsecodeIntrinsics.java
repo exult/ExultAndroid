@@ -218,11 +218,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (light_changed)	// Maybe we should repaint all.
 				gwin.paint();	// Repaint finds all lights.
 			else {
-				/* +++++++++FINISH
-				Gump *gump = gumpman.find_gump(item);
-				if (gump)
+				Gump gump = gumpman.findGump(item);
+				if (gump != null)
 					gump.paint();
-				*/
 			}
 			return;
 		}
@@ -1617,7 +1615,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return selectFromMenu2();
 		//++++++++++
 		case 0x0d:
-			setItemShape(parms[0], parms[1]); break;
+			synchronized(gwin.getWin()) {
+				setItemShape(parms[0], parms[1]);
+			}
+			break;
 		case 0x0e:
 			return findNearest(parms[0], parms[1], parms[2]);
 		case 0x0f:
@@ -1628,8 +1629,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getItemShape(parms[0]);
 		case 0x12:
 			return getItemFrame(parms[0]);
-		case 0x13:
-			setItemFrame(parms[0], parms[1]); break;
+		case 0x13:			
+			synchronized(gwin.getWin()) {
+				setItemFrame(parms[0], parms[1]); 
+			}
+			break;
 		case 0x14:
 			return getItemQuality(parms[0]);
 		case 0x15:
@@ -1637,7 +1641,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x16:
 			return getItemQuantity(parms[0]);
 		case 0x17:
-			return setItemQuantity(parms[0], parms[1]);
+			synchronized(gwin.getWin()) {
+				return setItemQuantity(parms[0], parms[1]);
+			}
 		case 0x18:
 			return getObjectPosition(parms[0]);
 		case 0x19:
@@ -1663,11 +1669,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x23:
 			return getPartyList();
 		case 0x24:
-			return createNewObject(parms[0]);
+			synchronized(gwin.getWin()) {
+				return createNewObject(parms[0]);
+			}
 		case 0x25:
 			return setLastCreated(parms[0]);
 		case 0x26:
-			return updateLastCreated(parms[0]);
+			synchronized(gwin.getWin()) {
+				return updateLastCreated(parms[0]);
+			}
 		case 0x27:
 			return getNpcName(parms[0]);
 		case 0x28:
@@ -1710,7 +1720,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x3d:
 			setAlignment(parms[0], parms[1]); break;
 		case 0x3e:
-			moveObject(parms[0], parms[1], parms[2]); break;
+			synchronized(gwin.getWin()) {
+				moveObject(parms[0], parms[1], parms[2]);
+			}
+			break;
 		case 0x3f:
 			removeNpc(parms[0]); break;
 		case 0x40:
@@ -1745,7 +1758,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x6b:
 			return getItemFrameRot(parms[0]);
 		case 0x6c:
-			setItemFrameRot(parms[0], parms[1]); break;
+			synchronized(gwin.getWin()) {
+				setItemFrameRot(parms[0], parms[1]); 
+			}
+			break;
 		case 0x6d:
 			return onBarge();
 		case 0x6e:
