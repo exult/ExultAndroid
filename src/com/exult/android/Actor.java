@@ -10,7 +10,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected boolean usecodeAssigned;		// Usecode # explicitly assigned.
 	protected String usecodeName;		// Name of usecode fun explicitly assigned.
 	protected boolean unused;			// If npc_num > 0, this NPC is unused in the game.
-	protected short npcNum;			// # in Game_window::npcs list, or -1.
+	protected short npcNum;			// # in Game_window.npcs list, or -1.
 	protected short faceNum;			// Which shape for conversations.
 	protected short partyId;			// Index in party, or -1.
 	protected int properties[] = new int[12];		// Properties set/used in 'usecode'.
@@ -111,9 +111,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected byte scheduleType;	// Schedule type (scheduleType).	
 	// Location (x,y) of Shedule
 	protected int scheduleLocTx, scheduleLocTy, scheduleLocTz;
-	protected byte next_schedule;	// Used so correct schedule type 
+	protected byte nextSchedule;	// Used so correct schedule type 
 									//   will be saved
-	// protected Schedule *schedule;		// Current schedule.
+	protected Schedule schedule;		// Current schedule.
 	protected boolean dormant;			// I.e., off-screen.
 	protected boolean hit;			// Just hit in combat.
 	protected boolean combatProtected;		// 'Halo' on paperdoll screen.
@@ -157,7 +157,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		target_tile_tx = target_tile_ty = -1;
 		attackWeapon = -1;
 		attackMode = nearest;
-		//+++++scheduleType = loiter;
+		scheduleType = Schedule.loiter;
 		dormant = true;
 		skinColor = -1;
 		weaponRect = new Rectangle(0,0,0,0);
@@ -298,7 +298,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		/* ++++++++FINISH
 		case GameObject.asleep:
 			if (minf.sleepSafe() || minf.powerSafe() ||
-					(gear_powers&(Frame_flags::power_safe|Frame_flags::sleep_safe)))
+					(gear_powers&(Frame_flags.power_safe|Frame_flags.sleep_safe)))
 				return;		// Don't do anything.
 						// Avoid waking Penumbra.
 			if (scheduleType == Schedule.sleep && Bg_dont_wake(gwin, this))
@@ -309,7 +309,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			lay_down(false);	// Lie down.
 			break;
 		case GameObject.poisoned:
-			if (minf.poison_safe() || (gear_powers&Frame_flags::poison_safe))
+			if (minf.poison_safe() || (gear_powers&Frame_flags.poison_safe))
 					return;		// Don't do anything.
 			need_timers().start_poison();
 			break;
@@ -321,20 +321,20 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			break;
 		case GameObject.cursed:
 			if (minf.curse_safe() || minf.power_safe() ||
-				(gear_powers&(Frame_flags::power_safe|Frame_flags::curse_safe)))
+				(gear_powers&(Frame_flags.power_safe|Frame_flags.curse_safe)))
 				return;		// Don't do anything.
 			need_timers().start_curse();
 			break;
 		case GameObject.charmed:
 			if (minf.charm_safe() || minf.power_safe() ||
-					(gear_powers&(Frame_flags::power_safe|Frame_flags::charm_safe)))
+					(gear_powers&(Frame_flags.power_safe|Frame_flags.charm_safe)))
 				return;		// Don't do anything.
 			need_timers().start_charm();
 			set_target(0);		// Need new opponent if in combat.
 			break;
 		case GameObject.paralyzed:
 			if (minf.paralysis_safe() || minf.power_safe() ||
-					(gear_powers&(Frame_flags::power_safe|Frame_flags::paralysis_safe)))
+					(gear_powers&(Frame_flags.power_safe|Frame_flags.paralysis_safe)))
 				return;		// Don't do anything.
 			fall_down();
 			need_timers().start_paralyze();
@@ -361,12 +361,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			int sn;
 			int female = getTypeFlag(tf_sex)?1:0;
-			Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(this);
+			Skin_data *skin = Shapeinfo_lookup.GetSkinInfoSafe(this);
 	
 			if (!skin ||	// Should never happen, but hey...
 				(!sman.have_si_shapes() &&
-					Shapeinfo_lookup::IsSkinImported(skin.naked_shape)))
-				sn = Shapeinfo_lookup::GetBaseAvInfo(female != 0).shape_num;
+					Shapeinfo_lookup.IsSkinImported(skin.naked_shape)))
+				sn = Shapeinfo_lookup.GetBaseAvInfo(female != 0).shape_num;
 			else
 				sn = skin.naked_shape;
 			set_polymorph(sn);
@@ -479,9 +479,153 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final int getScheduleType() {
 		return scheduleType;
 	}
-	public final void setScheduleType(int s) {
-		//+++++++++++FINISH
-		scheduleType = (byte)s;
+	public final void setScheduleType(int newScheduleType, Schedule newSched) {
+		stop();
+		if (schedule != null)
+			schedule.ending(newScheduleType);
+		setAction(null);
+		int oldSchedule = scheduleType;
+		schedule = newSched;
+		if (schedule == null) {
+			switch (newScheduleType) {
+			/* +++++++++++++++
+			case Schedule.combat:
+				schedule = new Combat_schedule(this, old_schedule);
+				break;
+			case Schedule.horiz_pace:
+				ready_best_weapon();
+				schedule = Pace_schedule.create_horiz(this);
+				break;
+			case Schedule.vert_pace:
+				ready_best_weapon();
+				schedule = Pace_schedule.create_vert(this);
+				break;
+			case Schedule.talk:
+				schedule = new Talk_schedule(this);
+				break;
+			case Schedule.dance:
+				unready_weapon();
+				schedule = new Dance_schedule(this);
+				break;
+			case Schedule.farm:	// Use a scythe.
+				schedule = new Tool_schedule(this, 618);
+				break;
+			case Schedule.tend_shop:// For now.
+				unready_weapon();
+				schedule = new Loiter_schedule(this, 3);
+				break;
+			case Schedule.miner:	// Use a pick.
+				schedule = new Miner_schedule(this);
+				break;
+			case Schedule.hound:
+				ready_best_weapon();
+				schedule = new Hound_schedule(this);
+				break;
+			*/
+			case Schedule.loiter:
+			case Schedule.graze:	// For now.
+				schedule = new Schedule.Loiter(this);
+				break;
+			case Schedule.wander:
+				schedule = new Schedule.Wander(this);
+				break;
+			/*++++++++++++++
+			case Schedule.blacksmith:
+				schedule = new Forge_schedule(this);
+				break;
+			case Schedule.sleep:
+				unready_weapon();
+				schedule = new Sleep_schedule(this);
+				break;
+			*/
+			case Schedule.wait:
+				schedule = new Schedule.Wait(this);
+				break;
+			/*++++++++++++++++
+			case Schedule.eat:		// For now.
+			case Schedule.sit:
+				unready_weapon();
+				schedule = new Sit_schedule(this);
+				break;
+			case Schedule.bake:
+				schedule = new Bake_schedule(this);
+				break;
+			case Schedule.sew:
+				schedule = new Sew_schedule(this);
+				break;
+			
+			case Schedule.shy:
+				//+++++++FINISH unready_weapon();
+				schedule = new Shy_schedule(this);
+				break;
+			*/
+			/*++++++++++++++++
+			case Schedule.lab:
+				schedule = new Lab_schedule(this);
+				break;
+			case Schedule.thief:
+				unready_weapon();
+				schedule = new Thief_schedule(this);
+				break;
+			case Schedule.waiter:
+				unready_weapon();
+				schedule = new Waiter_schedule(this);
+				break;
+			case Schedule.kid_games:
+				unready_weapon();
+				schedule = new Kid_games_schedule(this);
+				break;
+			case Schedule.eat_at_inn:
+				unready_weapon();
+				schedule = new Eat_at_inn_schedule(this);
+				break;
+			case Schedule.duel:
+				schedule = new Duel_schedule(this);
+				break;
+			case Schedule.preach:
+				ready_best_weapon();	// Fellowship staff.
+				schedule = new Preach_schedule(this);
+				break;
+			case Schedule.patrol:
+				ready_best_weapon();
+				schedule = new Patrol_schedule(this);
+				break;
+			case Schedule.desk_work:
+				unready_weapon();
+				schedule = new Desk_schedule(this);
+				break;
+			case Schedule.follow_avatar:
+				schedule = new Follow_avatar_schedule(this);
+				break;
+			*/
+			case Schedule.walk_to_schedule:
+				System.out.println(
+					"Attempted to set a \"walk to schedule\" activity for NPC " +
+								getNpcNum());
+				break;
+			default:
+				/*+++++++++FINISH
+				if (new_schedule_type >= 
+						Schedule.first_scripted_schedule)
+					schedule = new Scripted_schedule(this,
+								new_schedule_type);
+				*/
+				break;
+			}
+		}
+		scheduleType = (byte)newScheduleType;
+		// Reset next schedule.
+		scheduleLocTx = scheduleLocTy = scheduleLocTz = 0;
+		nextSchedule = (byte)255;
+		if (!gmap.isChunkRead(getCx(), getCy()))
+			dormant = true;		// Chunk hasn't been read in yet.
+		else if (schedule != null) {		// Try to start it.
+			dormant = false;
+			schedule.nowWhat();
+		}
+	}
+	public final void setScheduleType(int newScheduleType) {
+		setScheduleType(newScheduleType, null);
 	}
 	public final ActorAction getAction() {
 		return action;
@@ -719,23 +863,23 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			/* +++++++++FINISH
 			paint_weapon();
 			if (hit)		// Want a momentary red outline.
-				ShapeID::paint_outline(xoff, yoff, HIT_PIXEL);
+				ShapeID.paint_outline(xoff, yoff, HIT_PIXEL);
 			else if (flags & ((1L<<GameObject.protection) | 
 			    (1L << GameObject.poisoned) | (1 << GameObject.cursed) |
 			    	(1 << GameObject.charmed) | (1 << GameObject.paralyzed)))
 				{
 				if (flags & (1L << GameObject.poisoned))
-					ShapeID::paint_outline(xoff,yoff,POISON_PIXEL);
+					ShapeID.paint_outline(xoff,yoff,POISON_PIXEL);
 				else if (flags & (1L << GameObject.cursed))
-					ShapeID::paint_outline(xoff,yoff,CURSED_PIXEL);
+					ShapeID.paint_outline(xoff,yoff,CURSED_PIXEL);
 				else if (flags & (1L << GameObject.charmed))
-					ShapeID::paint_outline(xoff, yoff,
+					ShapeID.paint_outline(xoff, yoff,
 									CHARMED_PIXEL);
 				else if (flags & (1L << GameObject.paralyzed))
-					ShapeID::paint_outline(xoff, yoff,
+					ShapeID.paint_outline(xoff, yoff,
 									PARALYZE_PIXEL);
 				else
-					ShapeID::paint_outline(xoff, yoff,
+					ShapeID.paint_outline(xoff, yoff,
 									PROTECT_PIXEL);
 				}
 			*/
@@ -1041,15 +1185,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			int gump = getInfo().getGumpShape();
 			/* +++++++FINISH
 			if (gump < 0)
-				gump = ShapeID::get_info(get_sexed_coloured_shape()).get_gump_shape();
+				gump = ShapeID.get_info(get_sexed_coloured_shape()).get_gump_shape();
 			if (gump < 0)
-				gump = ShapeID::get_info(get_shape_real()).get_gump_shape();
+				gump = ShapeID.get_info(get_shape_real()).get_gump_shape();
 			
 			if (gump < 0) {
 				int shape = getTypeFlag(Actor.tf_sex) ?
-					Shapeinfo_lookup::GetFemaleAvShape() :
-					Shapeinfo_lookup::GetMaleAvShape();
-				gump = ShapeID::get_info(shape).get_gump_shape();
+					Shapeinfo_lookup.GetFemaleAvShape() :
+					Shapeinfo_lookup.GetMaleAvShape();
+				gump = ShapeID.get_info(shape).get_gump_shape();
 			}
 			*/
 			if (gump < 0)
@@ -1074,7 +1218,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			/* +++++++++FINISH
 			int ind = findReadied(obj);
 			if (ind >= 0)
-				callReadiedUsecode(ind,obj,Usecode_machine::readied);
+				callReadiedUsecode(ind,obj,Usecode_machine.readied);
 			*/
 			return res;
 		} else
@@ -1324,8 +1468,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (num == 0) {
 				if (!extended_skin) {	// We will do it later for extended skins.
 					/*+++++++++++
-					if (Game::get_avskin() >= 0)
-						setSkinColor (Game::get_avskin());
+					if (Game.get_avskin() >= 0)
+						setSkinColor (Game.get_avskin());
 					else */
 						setSkinColor (((strength_val >> 6)-1) & 0x3);
 				}
@@ -1336,8 +1480,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (num == 0) {
 				if (!extended_skin) {	// We will do it later for extended skins.
 				/* ++++++FINISH
-					if (Game::get_avskin() >= 0 && Game::get_avskin() <= 2)
-						set_skin_color (Game::get_avskin());
+					if (Game.get_avskin() >= 0 && Game.get_avskin() <= 2)
+						set_skin_color (Game.get_avskin());
 					else
 						set_skin_color ((strength_val >> 5) & 0x3);
 				*/
@@ -1447,14 +1591,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		} else
 			setTypeFlags (tflags);
 		/* ++++++++FINISH
-		if (num == 0 && Game::get_avsex() == 0) {
+		if (num == 0 && Game.get_avsex() == 0) {
 			clear_type_flag (Actor.tf_sex);
-		} else if (num == 0 && Game::get_avsex() == 1) {
+		} else if (num == 0 && Game.get_avsex() == 1) {
 			set_type_flag (Actor.tf_sex);
 		}
 		*/
 		out.skip (5);	// Unknown
-		next_schedule = (byte)out.read();	// Acty ????? what is this??
+		nextSchedule = (byte)out.read();	// Acty ????? what is this??
 		out.skip (1);	// SN ????? (refer to U7tech.txt)
 		out.skip (2);	// V1 ????? (refer to U7tech.txt)
 		out.skip (2);	// V2 ????? (refer to U7tech.txt)
@@ -1513,8 +1657,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			int skin = out.read();
 			/*++++++++++++++++
 			if (extended_skin) {
-				if (Game::get_avskin() >= 0)
-					set_skin_color (Game::get_avskin());
+				if (Game.get_avskin() >= 0)
+					set_skin_color (Game.get_avskin());
 				else
 					set_skin_color(skin);
 			}
@@ -1549,8 +1693,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 //			cout << "Actor " << namebuf << " has alignment " << alignment << endl;
 		/*+++++++++FINISH
-		if (num == 0 && Game::get_avname()) {
-			name = Game::get_avname();
+		if (num == 0 && Game.get_avname()) {
+			name = Game.get_avname();
 		} else
 		*/
 			name = new String(namebuf, 0, len);		// Store copy of it.
@@ -1596,7 +1740,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		// Only do ready best weapon if we are in BG, this is the first time
 		// and we are the Avatar or Iolo
-		if (Game::get_game_type() == BLACK_GATE && Game::get_avname() && (num == 0 || num == 1))
+		if (Game.get_game_type() == BLACK_GATE && Game.get_avname() && (num == 0 || num == 1))
 			ready_best_weapon();
 		*/				
 	}
@@ -1741,7 +1885,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		EUtil.Write4(out, 0);	// Skip 5
 		out.write(0);
 
-		out.write(next_schedule);	// Acty ????? what is this??
+		out.write(nextSchedule);	// Acty ????? what is this??
 
 		out.write(0);		// Skip 1
 		EUtil.Write2(out, 0);	// Skip 2
