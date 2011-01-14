@@ -643,9 +643,6 @@ public class GameWindow extends GameSingletons {
 					}
 				}
 			}
-		System.out.println("findObject at " + x + ", " + y + ", found ");
-		if (best != null)
-			System.out.println("Found " + best.getShapeNum());
 		return (best);
 	}
 	/*
@@ -674,8 +671,10 @@ public class GameWindow extends GameSingletons {
 		Actor npc = obj != null && obj instanceof Actor ? (Actor) obj : null;
 		/* ++++CHEAT stuff went here. */
 		if (obj != null) {			// Show name.
-			System.out.println("Clicked on shape " + obj.getShapeNum() +
-					":  " + obj.getName());
+			System.out.printf("Found '%1$s'(%2$d:%3$d) at (%4$h, %5$h, %6$h)\n",
+					obj.getName(),
+					obj.getShapeNum(), obj.getFrameNum(),
+					obj.getTileX(), obj.getTileY(), obj.getLift());
 			// ++++ String namestr = Get_object_name(obj);
 				// Combat and an NPC?
 			/* ++++++++

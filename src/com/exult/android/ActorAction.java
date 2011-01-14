@@ -257,8 +257,10 @@ abstract public class ActorAction extends GameSingletons {
 					return null;
 			} else {
 				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, dist);
-				if (!path.NewPath(src, dest, cost))
+				if (!path.NewPath(src, dest, cost)) {
+					System.out.println("PathWalking.walkToTile failed.");
 					return null;
+				}
 			}
 							// Reset direction (but not index).
 			original_dir = EUtil.getDirection4(src.ty - dest.ty, dest.tx - src.tx);
