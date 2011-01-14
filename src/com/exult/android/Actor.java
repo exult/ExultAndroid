@@ -605,10 +605,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			default:
 				/*+++++++++FINISH
-				if (new_schedule_type >= 
+				if (newScheduleType >= 
 						Schedule.first_scripted_schedule)
 					schedule = new Scripted_schedule(this,
-								new_schedule_type);
+								newScheduleType);
 				*/
 				break;
 			}
@@ -627,6 +627,36 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setScheduleType(int newScheduleType) {
 		setScheduleType(newScheduleType, null);
 	}
+	/*
+	 *	Set new schedule by type AND location.
+	 */
+
+	protected void setScheduleAndLoc (int newScheduleType, Tile dest,
+					int delay) {	// -1 for random delay.
+		stop();				// Stop moving.
+		if (schedule != null)			// End prev.
+			schedule.ending(newScheduleType);
+		int mapnum = getMapNum();
+		if (mapnum < 0) mapnum = gmap.getNum();
+		if ((mapnum != gmap.getNum()) ||
+		    (!gmap.isChunkRead(getCx(), getCy()) &&
+		     !gmap.isChunkRead(dest.tx/EConst.c_tiles_per_chunk,
+								dest.ty/EConst.c_tiles_per_chunk))) {	
+						// Not on current map, or
+						//   src, dest. are off the screen.
+			move(dest.tx, dest.ty, dest.tz, mapnum);
+			setScheduleType(newScheduleType);
+			return;
+		}
+						// Going to walk there.
+		scheduleLocTx = dest.tx; scheduleLocTy = dest.ty; scheduleLocTz = dest.tz;
+		nextSchedule = (byte)newScheduleType;
+		scheduleType = Schedule.walk_to_schedule;
+		//+++++FINISH schedule = new Schedule.WalkToSchedule(this, dest, next_schedule, delay);
+		dormant = false;
+		schedule.nowWhat();
+	}
+	
 	public final ActorAction getAction() {
 		return action;
 	}

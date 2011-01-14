@@ -1,6 +1,8 @@
 package com.exult.android;
 
 public class NpcActor extends Actor {
+	protected Schedule.ScheduleChange schedules[];
+	
 	public NpcActor(String nm, int shapenum) { 
 		super(nm, shapenum, -1, -1); 
 	}
@@ -207,5 +209,50 @@ public class NpcActor extends Actor {
 			if (olist != null)		// Moving back into world?
 				dormant = true;	// Cause activation if painted.
 			}
+	}
+	/*
+	 *	Find day's schedule for a given time-of-day.
+	 *
+	 *	Output:	index of schedule change.
+	 *		-1 if not found, or if a party member.
+	 */
+	int findScheduleChange
+		(
+		int hour3			// 0=midnight, 1=3am, etc.
+		) {
+		if (partyId >= 0 || isDead())
+			return (-1);		// Fail if a party member or dead.
+		int cnt = schedules == null ? 0 : schedules.length;
+		for (int i = 0; i < cnt; i++)
+			if (schedules[i].getTime() == hour3)
+				return i;
+		return -1;
+	}
+	/*
+	 *	Update schedule at a 3-hour time change.
+	 */
+	public void updateSchedule
+		(
+		int hour3,			// 0=midnight, 1=3am, etc.
+		int backwards,		// Extra periods to look backwards.
+		int delay			// Delay in msecs, or -1 for random.
+		) {
+		int i = findScheduleChange(hour3);
+		if (i < 0) {	// Not found?  Look at prev.?
+						// Always if noon of first day.
+			long hour = clock.getTotalHours();
+			if (hour == 12 && backwards == 0)
+				backwards++;
+			while (backwards-- != 0 && i < 0)
+				i = findScheduleChange((--hour3 + 8)%8);
+			if (i < 0)
+				return;
+			// This is bad, not always true
+			// location might be different
+			//if (schedule_type == schedules[i].get_type())
+			//	return;		// Already in it.
+			}
+		setScheduleAndLoc(schedules[i].getType(), schedules[i].getPos(),
+									delay);
 	}
 }

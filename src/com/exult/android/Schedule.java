@@ -126,4 +126,39 @@ public abstract class Schedule {
 				npc.start(250, EUtil.rand()%12);
 		}
 	}
+	/*
+	 *	An NPC schedule change:
+	 */
+	public static class ScheduleChange {
+		//+++++FINISH static vector<char *> script_names;	// For Scripted_schedule's.
+		private byte time;		// Time*3hours when this takes effect.
+		private byte type;		// Schedule_type value.
+		private byte days;		// A bit for each day (0-6).  We don't
+						//   yet use this.
+		Tile pos;			// Location.
+		public ScheduleChange() {
+			days = 0x7f;
+		}
+		/* ++++++++++FINISH
+		static void clear();
+		static vector<char *>& get_script_names()
+			{ return script_names; }
+		void set4(unsigned char *ent);	// Create from 4-byte entry.
+		void set8(unsigned char *ent);	// Create from Exult entry (v. -1).
+		void write8(unsigned char *ent);// Write out 8-byte Exult entry.
+		void set(int ax, int ay, int az, 
+				unsigned char stype, unsigned char stime);
+		*/
+		public int getType()
+			{ return type; }
+		public int getTime()
+			{ return time; }
+		public Tile getPos()
+			{ return pos; }
+		/* ++++++++FINISH
+		static char *get_script_name(int ty)
+			{ return ty >= Schedule::first_scripted_schedule ? 
+			    script_names[ty - Schedule::first_scripted_schedule] : 0; }
+		*/
+	}
 }
