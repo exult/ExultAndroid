@@ -1441,8 +1441,8 @@ public class GameWindow extends GameSingletons {
 			npcs.elementAt(i).write(out);
 			
 		out.close();
+		writeSchedules();		// Write schedules
 		/* ++++++++++++++PUT BACK
-		//++++++FINISH writeSchedules();		// Write schedules
 					// Now write out monsters in world.
 		out = EUtil.U7create(EFile.MONSNPCS);
 		int cnt = 0;
@@ -1513,6 +1513,7 @@ public class GameWindow extends GameSingletons {
 				sfile.write(ent, 0, 8);
 			}
 		}
+		sfile.close();
 	}
 	/*
 	 *	Write out the gamedat directory from a saved game.

@@ -140,7 +140,9 @@ public abstract class Schedule {
 			days = 0x7f;
 		}
 		/* ++++++++++FINISH
-		static void clear();
+		static void clear() {
+			script_names.setSize(0);
+		}
 		static vector<char *>& get_script_names()
 			{ return script_names; }
 		void set4(unsigned char *ent);	// Create from 4-byte entry.
