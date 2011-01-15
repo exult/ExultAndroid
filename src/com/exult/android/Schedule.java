@@ -160,5 +160,63 @@ public abstract class Schedule {
 			{ return ty >= Schedule::first_scripted_schedule ? 
 			    script_names[ty - Schedule::first_scripted_schedule] : 0; }
 		*/
+		/*
+		 *	Set a schedule from a U7 'schedule.dat' entry.
+		 */
+		public void set4
+			(
+			byte entry[]		// 4 bytes read from schedule.dat.
+			) {
+			time = (byte)(entry[0]&7);
+			type = (byte)((entry[0]>>3)&0x3f);
+			days = 0x7f;			// All days of the week.
+			byte schunk = entry[3];
+			byte x = entry[1], y = entry[2];
+			int sx = schunk%EConst.c_num_schunks,
+			    sy = schunk/EConst.c_num_schunks;
+			pos = new Tile(sx*EConst.c_tiles_per_schunk + x, 
+					 sy*EConst.c_tiles_per_schunk + y, 0);
+		}
+		/*
+		 *	Set a schedule from an Exult 'schedule.dat' entry (vers. -1).
+		 */
+
+		public void set8
+			(
+			byte entry[]		// 8 bytes read from schedule.dat.
+			)
+			{
+			pos.tx = (short)EUtil.Read2(entry, 0);
+			pos.ty = (short)EUtil.Read2(entry, 2);
+			pos.tz = (short)(entry[4]&0xff);
+			time = (byte)((int)entry[5]&0xff);
+			type = (byte)((int)entry[6]&0xff);
+			days = (byte)((int)entry[7]&0xff);
+		}
+		/*
+		 *	Write out schedule for Exult's 'schedule.dat'.
+		 */
+
+		public void write8
+			(
+			byte entry[]		// 8 bytes to write to schedule.dat.
+			)
+			{
+			EUtil.Write2(entry, 0, pos.tx);
+			EUtil.Write2(entry, 2, pos.ty);		// 4
+			entry[4] = (byte) pos.tz;		// 5
+			entry[5] = time;		// 6
+			entry[6] = type;		// 7
+			entry[7] = days;		// 8
+		}
+		/*
+		 *	Set a schedule.
+		 */
+		public void set(int ax, int ay, int az, byte stype, byte stime) {
+			time = stime;
+			type = stype;
+			pos = new Tile(ax, ay, az);
+		}
+
 	}
 }

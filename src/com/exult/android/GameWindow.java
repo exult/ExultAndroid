@@ -1095,9 +1095,91 @@ public class GameWindow extends GameSingletons {
 			moving_barge = 0;
 			set_moving_barge(b);
 		}
-		read_schedules();		// Now get their schedules.
 		*/
+		readSchedules();		// Now get their schedules.
 		centerView(mainActor.getTileX(), mainActor.getTileY());
+	}
+	/*
+	 *	Read in offsets.  When done, file is set to start of script names (if
+	 *	there are any).
+	 *	Returns: # of script names, or -1 if old-style (entsize==4) file.
+	 */
+	private static int setToReadSchedules
+		(
+		InputStream sfile,
+		Vector<Integer> offsets		// List of offsets ret'd.
+		){
+		int num_script_names = -1;
+		int num_npcs = EUtil.Read4(sfile);	// # of NPC's, not include Avatar.
+		if (num_npcs == -1) {		// Exult format?
+			num_npcs = EUtil.Read4(sfile);
+			num_script_names = 0;
+		} else if (num_npcs == -2) {
+			num_npcs = EUtil.Read4(sfile);
+			num_script_names = EUtil.Read2(sfile);
+		}
+		offsets.setSize(num_npcs);
+		int i;				// Read offsets with list of scheds.
+		for (i = 0; i < num_npcs; i++)
+			offsets.setElementAt(EUtil.Read2(sfile), i);
+		return num_script_names;
+	}
+	/*
+	 *	Read one NPC's schedule.
+	 */
+
+	private void readASchedule(InputStream sfile, int index, Actor npc,
+					int entsize, Vector<Integer> offsets, byte ent[])
+					throws IOException {
+		int cnt = offsets.elementAt(index) - offsets.elementAt(index - 1);
+					// Read schedules into this array.
+		Schedule.ScheduleChange schedules[] = cnt > 0 
+					? new Schedule.ScheduleChange[cnt] : null;
+		if (entsize == 4) {	// U7 format?
+			for (int j = 0; j < cnt; j++) {
+				sfile.read(ent, 0, 4);
+				schedules[j].set4(ent);
+			}
+		} else {		// Exult formats.
+			for (int j = 0; j < cnt; j++) {
+				sfile.read(ent, 0, 8);
+				schedules[j].set8(ent);
+			}
+		}
+		if (npc != null)			// Store in NPC.
+			npc.setSchedules(schedules);
+		}
+
+	private void readSchedules() throws IOException {
+		InputStream sfile = EUtil.U7openStream2(EFile.GSCHEDULE, EFile.SCHEDULE_DAT);
+		if (sfile == null) {
+			ExultActivity.fileFatal(EFile.SCHEDULE_DAT);
+			return;
+		}
+		int i, num_npcs = 0, entsize;
+		Vector<Integer> offsets = new Vector<Integer>();
+		int num_script_names = setToReadSchedules(sfile, offsets);
+		entsize = num_script_names >= 0 ? 8 : 4;
+		//+++++++FINISH Schedule_change::clear();
+		//++++++vector<String>& script_names = Schedule_change::get_script_names();
+		if (num_script_names > 0) {
+			EUtil.Read2(sfile);	// Skip past total size.
+			//++++++++++script_names.reserve(num_script_names);
+			for (i = 0; i < num_script_names; ++i) {
+				int sz = EUtil.Read2(sfile);
+				byte nm[] = new byte[sz];
+				sfile.read(nm);
+				//+++++++++ script_names.push_back(nm);
+			}
+		}
+		byte ent[] = new byte[10];
+		for (i = 0; i < num_npcs - 1; i++) {	// Do each NPC, except Avatar.
+						// Avatar isn't included here.
+			Actor npc = npcs.elementAt(i + 1);
+			readASchedule(sfile, i + 1, npc, entsize, offsets, ent);
+			//+++++++ CYCLE_RED_PLASMA();
+		}
+		sfile.close();
 	}
 	/*
 	 *	Create initial 'gamedat' directory if needed
@@ -1380,6 +1462,57 @@ public class GameWindow extends GameSingletons {
 		}
 		out.close();
 		*/
+	}
+	/*
+	 *	Write NPC schedules.
+	 */
+	private void writeSchedules () throws IOException {
+		Schedule.ScheduleChange schedules[];
+		int cnt;
+		short offset = 0;
+		int i;
+		int num;
+
+		// So do I allow for all NPCs (type1 and type2) - Yes i will
+		num = npcs.size();
+		OutputStream sfile = EUtil.U7create(EFile.GSCHEDULE);
+		//+++++FINISH vector<char *>& script_names = Schedule_change::get_script_names();
+
+		EUtil.Write4(sfile, -2);		// Exult version #.
+		EUtil.Write4(sfile, num);		// # of NPC's, not include Avatar.
+		EUtil.Write2(sfile, 0 /* +++++FINISH script_names.size() */);
+		EUtil.Write2(sfile, 0);		// First offset
+
+		for (i = 1; i < num; i++) {	// write offsets with list of scheds.
+			schedules = npcs.elementAt(i).getSchedules();
+			cnt = schedules == null ? 0 : schedules.length;
+			offset += cnt;
+			EUtil.Write2(sfile, offset);
+		}
+		/* ++++++++++FINISH
+		if (script_names.size()) {
+			int total = 0;		// Figure total size.
+			vector<char *>::iterator it;
+			for (it = script_names.begin(); it != script_names.end(); ++it)
+				total += 2 + strlen(*it);
+			EUtil.Write2(sfile, total);
+			for (it = script_names.begin(); 
+						it != script_names.end(); ++it) {
+				int len = strlen(*it);
+				EUtil.Write2(sfile, len);
+				sfile.write(*it, len);
+			}
+		}
+		*/
+		byte ent[] = new byte[20];
+		for (i = 1; i < num; i++) {	// Do each NPC, except Avatar.
+			schedules = npcs.elementAt(i).getSchedules();
+			cnt = schedules == null ? 0 : schedules.length;
+			for (int j = 0; j < cnt; j++) {
+				schedules[j].write8(ent);
+				sfile.write(ent, 0, 8);
+			}
+		}
 	}
 	/*
 	 *	Write out the gamedat directory from a saved game.

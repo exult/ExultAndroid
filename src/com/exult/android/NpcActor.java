@@ -210,6 +210,12 @@ public class NpcActor extends Actor {
 				dormant = true;	// Cause activation if painted.
 			}
 	}
+	public void setSchedules(Schedule.ScheduleChange sched[]) {
+		schedules = sched;
+	}
+	public Schedule.ScheduleChange[] getSchedules() {
+		return schedules;
+	}
 	/*
 	 *	Find day's schedule for a given time-of-day.
 	 *

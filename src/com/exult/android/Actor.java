@@ -476,6 +476,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public int getAttribute(String nm) {
 		return 0;	// +++++++LATER
 	}
+	public void setSchedules(Schedule.ScheduleChange scheds[]) {
+		// Overloaded.
+	}
+	public Schedule.ScheduleChange[] getSchedules() {
+		return null;
+	}
 	public final int getScheduleType() {
 		return scheduleType;
 	}
