@@ -110,7 +110,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected FramesSequence frames[];
 	protected byte scheduleType;	// Schedule type (scheduleType).	
 	// Location (x,y) of Shedule
-	protected int scheduleLocTx, scheduleLocTy, scheduleLocTz;
+	protected Tile scheduleLoc;
 	protected byte nextSchedule;	// Used so correct schedule type 
 									//   will be saved
 	protected Schedule schedule;		// Current schedule.
@@ -482,6 +482,17 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public Schedule.ScheduleChange[] getSchedules() {
 		return null;
 	}
+	//	Set schedule after reading in.
+	public final void restoreSchedule() {
+						// Activate schedule if not in party.
+		if (!isPosInvalid() && partyId < 0) {
+			if (nextSchedule != 255 && 
+					scheduleType == Schedule.walk_to_schedule)
+				setScheduleAndLoc(nextSchedule, scheduleLoc, -1);
+			else
+				setScheduleType(scheduleType);
+			}
+	}
 	public final int getScheduleType() {
 		return scheduleType;
 	}
@@ -621,12 +632,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		scheduleType = (byte)newScheduleType;
 		// Reset next schedule.
-		scheduleLocTx = scheduleLocTy = scheduleLocTz = 0;
+		if (scheduleLoc != null)
+			scheduleLoc.set(0, 0, 0);
 		nextSchedule = (byte)255;
-		if (!gmap.isChunkRead(getCx(), getCy()))
+		int cx = getCx(), cy = getCy();
+		if (!gmap.isChunkRead(cx, cy)) {
+			
 			dormant = true;		// Chunk hasn't been read in yet.
-		else if (schedule != null) {		// Try to start it.
+		} else if (schedule != null) {		// Try to start it.
 			dormant = false;
+			System.out.printf("setScheduleType: Npc #%1$d is active\n", npcNum);
 			schedule.nowWhat();
 		}
 	}
@@ -636,7 +651,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	/*
 	 *	Set new schedule by type AND location.
 	 */
-
 	protected void setScheduleAndLoc (int newScheduleType, Tile dest,
 					int delay) {	// -1 for random delay.
 		stop();				// Stop moving.
@@ -655,7 +669,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return;
 		}
 						// Going to walk there.
-		scheduleLocTx = dest.tx; scheduleLocTy = dest.ty; scheduleLocTz = dest.tz;
+		if (scheduleLoc != null)
+			scheduleLoc = new Tile();
+		scheduleLoc.set(dest.tx, dest.ty, dest.tz);
 		nextSchedule = (byte)newScheduleType;
 		scheduleType = Schedule.walk_to_schedule;
 		//+++++FINISH schedule = new Schedule.WalkToSchedule(this, dest, next_schedule, delay);
@@ -675,6 +691,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void set_ident(int id) { ident = (byte)id; }
 	public final int getNpcNum() {
 		return npcNum;
+	}
+	public final boolean isUnused() {
+		return unused;
 	}
 	public final int getPartyId() {
 		return partyId;
@@ -947,7 +966,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			ucmachine.callUsecode(0x63d, this, event);	
 		else if (usecode == -1)
 			ucmachine.callUsecode(getUsecode(), this, event);
-		else if (partyId >= 0 || !gwin.isTimeStopped())
+		else if (partyId >= 0 || gwin.isTimeStopped() == 0)
 			ucmachine.callUsecode(getUsecode(), this, event);
 	}
 	public boolean fitsInSpot(GameObject obj, int spot) {
@@ -1612,8 +1631,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		out.skip (2);	// Secondary Attacker
 		oppressor = (short)EUtil.Read2(out);	// Oppressor NPC id.
 		out.skip (4);	//I-Vr ??? (refer to U7tech.txt)
-		scheduleLocTx = EUtil.Read2(out);	//S-Vr Where npc is supposed to 
-		scheduleLocTy = EUtil.Read2(out);	//be for schedule)
+		if (scheduleLoc == null)
+			scheduleLoc = new Tile();
+		scheduleLoc.tx = (short)EUtil.Read2(out);	//S-Vr Where npc is supposed to 
+		scheduleLoc.ty = (short)EUtil.Read2(out);	//be for schedule)
 		// Type flags 2
 		int tflags = EUtil.Read2(out);
 		// First time round, all the flags are garbage
@@ -1912,8 +1933,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		EUtil.Write4(out, 0);	// Skip 2*2
 		
-		EUtil.Write2(out, scheduleLocTx);	//S-Vr Where npc is supposed to 
-		EUtil.Write2(out, scheduleLocTy);	//be for schedule)
+		EUtil.Write2(out, scheduleLoc.tx);	//S-Vr Where npc is supposed to 
+		EUtil.Write2(out, scheduleLoc.ty);	//be for schedule)
 		//EUtil.Write4(out, 0);
 
 		EUtil.Write2(out, getTypeFlags());	// Typeflags

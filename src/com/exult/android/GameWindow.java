@@ -50,6 +50,7 @@ public class GameWindow extends GameSingletons {
 	private int skipAboveActor;		// Level above actor to skip rendering.
 	private boolean ambientLight;	// Permanent version of special_light.
 	private int specialLight;		// Game minute when light spell ends.
+	private int timeStopped;		// For 'stop time' spell.
 	/*
 	 *	Public flags and gameplay options:
 	 */
@@ -137,8 +138,19 @@ public class GameWindow extends GameSingletons {
 	public final boolean inCombat() {
 		return false;	//++++++FINISH
 	}
-	public final boolean isTimeStopped() {
-		return false;	// +++++++FINISH
+	/*
+	 *	Return delay in ticks to expiration (or 1500 (30secs) if indefinite).
+	 */
+	public final int isTimeStopped() {
+		if (timeStopped == 0)
+			return 0;
+		if (timeStopped == -1)	// Indefinite?
+			return 1500;
+		int delay = timeStopped - TimeQueue.ticks;
+		if (delay > 0)
+			return delay;
+		timeStopped = 0;	// Done.
+		return 0;
 	}
 	public final Actor getMainActor() {
 		return mainActor;
@@ -675,6 +687,9 @@ public class GameWindow extends GameSingletons {
 					obj.getName(),
 					obj.getShapeNum(), obj.getFrameNum(),
 					obj.getTileX(), obj.getTileY(), obj.getLift());
+			if (obj instanceof Actor)
+				System.out.printf("Npc #%1$d, sched=%2$d\n",
+					((Actor)obj).getNpcNum(), ((Actor)obj).getScheduleType());
 			// ++++ String namestr = Get_object_name(obj);
 				// Combat and an NPC?
 			/* ++++++++
@@ -1008,7 +1023,7 @@ public class GameWindow extends GameSingletons {
 		for (int i = 0; i < cnt; i++) {	// Init. rings.
 			party[i].initReadied();
 		}
-		time_stopped = 0;
+		timeStopped = 0;
 		*/
 	//+++++The below wasn't prev. done by ::read(), so maybe it should be
 	//+++++controlled by a 'first-time' flag.
@@ -1050,14 +1065,12 @@ public class GameWindow extends GameSingletons {
 			Actor actor = new NpcActor("", 0);
 			npcs.set(i, actor);
 			actor.read(nfile, i, i < numNpcs1);
-			/* ++++++++FINISH
 			if (actor.isUnused()) {		// Not part of the game.
-				actor.removeThis(1);
-				actor.set_schedule_type(Schedule::wait);
+				actor.removeThis();
+				actor.setScheduleType(Schedule.wait);
 			} else
-				actor.restore_schedule();
-			CYCLE_RED_PLASMA();
-			*/
+				actor.restoreSchedule();
+			//+++++++CYCLE_RED_PLASMA();
 		}
 		nfile.close();
 		// +++++ mainActor.setActorShape();

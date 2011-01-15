@@ -32,22 +32,25 @@ public abstract class Schedule {
 		npc = n;
 	}
 	public abstract void nowWhat();
-	public void im_dormant()	// Npc calls this when it goes from
+	public void imDormant()	// Npc calls this when it goes from
 		{  }			//   being active to dormant.
 	public void ending(int newtype)// Switching to another schedule.
 		{  }
-	public void set_weapon(boolean removed)	// Set weapon info.
+	public void setWeapon(boolean removed)	// Set weapon info.
 		{  }
 					// Set where to sleep.
-	public void set_bed(GameObject b)
+	public void setBed(GameObject b)
 		{  }
 					// Notify that schedule's obj. has
 					//   been moved.
-	public void notify_object_gone(GameObject obj)
+	public void notifyObjectGone(GameObject obj)
 		{  }
 					// For Usecode intrinsic.
-	public int get_actual_type(Actor npc) {
+	public int getActualType(Actor npc) {
 		return npc.getScheduleType();
+	}
+	public boolean seekFoes() {
+		return false;	//+++++++++FINISH
 	}
 	/*
 	 * 	THE SCHEDULES
@@ -145,11 +148,6 @@ public abstract class Schedule {
 		}
 		static vector<char *>& get_script_names()
 			{ return script_names; }
-		void set4(unsigned char *ent);	// Create from 4-byte entry.
-		void set8(unsigned char *ent);	// Create from Exult entry (v. -1).
-		void write8(unsigned char *ent);// Write out 8-byte Exult entry.
-		void set(int ax, int ay, int az, 
-				unsigned char stype, unsigned char stime);
 		*/
 		public int getType()
 			{ return type; }

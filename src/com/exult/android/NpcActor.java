@@ -20,83 +20,66 @@ public class NpcActor extends Actor {
 	 *	Handle a time event (for TimeSensitive).
 	 */
 	public void handleEvent(int ctime, Object udata) {
-		/* +++++++++FINISH
-		if ((cheat.in_map_editor() && party_id < 0) ||
-				(get_flag(Obj_flags::paralyzed) || is_dead() ||
-				get_property(static_cast<int>(health)) <= 0 ||
-				(get_flag(Obj_flags::asleep) && schedule_type != Schedule::sleep)))
-			{
-			gwin->get_tqueue()->add(
-					curtime + gwin->get_std_delay(), this, udata);
+		if ((getFlag(GameObject.paralyzed) || isDead() ||
+				getProperty(health) <= 0 ||
+				(getFlag(GameObject.asleep) && scheduleType != Schedule.sleep))) {
+			tqueue.add(ctime + 1, this, udata);
 			return;
-			}
+		}
 		// Prevent actor from doing anything if not in the active map.
 		// ... but not if the NPC is not on the map (breaks pathfinding
 		// from offscreen if NPC not on map).
-		if (get_map() && get_map() != gwin->get_map())
-			{
-			set_action(0);
+		if (getMap() != null && getMap() != gwin.getMap()) {
+			setAction(null);
 			dormant = true;
-			if (schedule)
-				schedule->im_dormant();
+			if (schedule != null)
+				schedule.imDormant();
 			return;
-			}
-		if (schedule && party_id < 0 && can_act() && 
-				(schedule_type != Schedule::combat ||	// Not if already in combat.
+		}
+		if (schedule != null && partyId < 0 && canAct() && 
+				(scheduleType != Schedule.combat ||	// Not if already in combat.
 							// Patrol schedule already does this.
-					schedule_type != Schedule::patrol ||
-					schedule_type != Schedule::sleep ||
-					schedule_type != Schedule::wait) &&
-				!(rand()%3))	// Don't do it every time.
-			schedule->seek_foes();
+					scheduleType != Schedule.patrol ||
+					scheduleType != Schedule.sleep ||
+					scheduleType != Schedule.wait) &&
+				(EUtil.rand()%3) == 0)	// Don't do it every time.
+			schedule.seekFoes();
 
-		if (!action)			// Not doing anything?
-			{
-			if (in_usecode_control() || !can_act())
+		if (action == null) {			// Not doing anything?
+			if (inUsecodeControl() || !canAct())
 					// Can't move on our own. Keep trying.
-				gwin->get_tqueue()->add(
-						curtime + gwin->get_std_delay(), this, udata);
-			else if (schedule)
-				{
+				tqueue.add(ctime + 1, this, udata);
+			else if (schedule != null) {
 					// Should try seeking foes?
-				if (party_id < 0 && can_act() &&
+				if (partyId < 0 && canAct() &&
 							// Not if already in combat.
-						(schedule_type != Schedule::combat ||
+						(scheduleType != Schedule.combat ||
 							// Patrol schedule already does this.
-							schedule_type != Schedule::patrol ||
-							schedule_type != Schedule::sleep ||
-							schedule_type != Schedule::wait) &&
-						!(rand()%4))	// Don't do it every time.
-					{
-					schedule->seek_foes();
+							scheduleType != Schedule.patrol ||
+							scheduleType != Schedule.sleep ||
+							scheduleType != Schedule.wait) &&
+						(EUtil.rand()%4) == 0) {	// Don't do it every time.
+					schedule.seekFoes();
 						// Get back into queue.
-					gwin->get_tqueue()->add(
-							curtime + gwin->get_std_delay(), this, udata);
-					}
-				else
-					schedule->now_what();
-				}
+					tqueue.add(ctime + 1, this, udata);
+				} else
+					schedule.nowWhat();
 			}
-		else
-			{			// Do what we should.
-			int delay = party_id < 0 ? gwin->is_time_stopped() : 0;
-			if (delay <= 0)		// Time not stopped?
-				{
-				int speed = action->get_speed();
-				delay = action->handle_event(this);
-				if (!delay)
-					{	// Action finished. Add a slight delay.
-					frame_time = speed;
-					if (!frame_time)	// Not a path. Add a delay anyway.
-						frame_time = gwin->get_std_delay();
-					delay = frame_time;
-					set_action(0);
+		} else {			// Do what we should.
+			int delay = partyId < 0 ? gwin.isTimeStopped() : 0;
+			if (delay <= 0) {		// Time not stopped?
+				int speed = action.getSpeed();
+				delay = action.handleEvent(this);
+				if (delay == 0) {	// Action finished. Add a slight delay.
+					frameTime = speed;
+					if (frameTime == 0)	// Not a path. Add a delay anyway.
+						frameTime = 1;
+					delay = frameTime;
+					setAction(null);
 					}
 				}
-			gwin->get_tqueue()->add(
-					curtime + delay, this, udata);
-			}
-		*/
+			tqueue.add(ctime + delay, this, udata);
+		}
 	}
 	/*
 	 *	Step onto an adjacent tile.
@@ -108,7 +91,7 @@ public class NpcActor extends Actor {
 		if (getFlag(GameObject.paralyzed) || getMap() != gmap)
 			return false;
 		int oldtx = getTileX(), oldty = getTileY();
-		// System.out.println(getName() + " stepping to " + t.tx + "," + t.ty);
+		//System.out.println("Npc #" + npcNum + " stepping to " + t.tx + "," + t.ty);
 						// Get old chunk.
 		MapChunk olist = getChunk();
 		t.fixme();
@@ -116,10 +99,11 @@ public class NpcActor extends Actor {
 		int cx = t.tx/EConst.c_tiles_per_chunk, cy = t.ty/EConst.c_tiles_per_chunk;
 						// Get rel. tile coords.
 		int tx = t.tx%EConst.c_tiles_per_chunk, ty = t.ty%EConst.c_tiles_per_chunk;
-						// Get ->new chunk.
+						// Get .new chunk.
 		MapChunk nlist = gmap.getChunk(cx, cy);
-		if (nlist == null) {		// Shouldn't happen!
+		if (nlist == null || !nlist.isRead()) {
 			stop();
+			dormant = true;
 			return false;
 		}
 		/* +++++++++FINISH
@@ -133,7 +117,7 @@ public class NpcActor extends Actor {
 				{
 				/* ++++++++++++++
 				if (schedule)		// Tell scheduler.
-					schedule->set_blocked(t);
+					schedule.set_blocked(t);
 				*/
 				stop();
 							// Offscreen, but not in party?
@@ -147,11 +131,11 @@ public class NpcActor extends Actor {
 		}
 		/* ++++++++++++++
 		if (poison && t.tz == 0)
-			Actor::set_flag(static_cast<int>(Obj_flags::poisoned));
+			Actor::set_flag(static_cast<int>(GameObject.poisoned));
 		*/
 		/* ++++++++IS THIS NEEDED?
 						// Check for scrolling.
-		gwin->scroll_if_needed(this, t);
+		gwin.scroll_if_needed(this, t);
 		*/
 		addDirty(false);			// Set to repaint old area.
 						// Move it.
@@ -255,7 +239,7 @@ public class NpcActor extends Actor {
 				return;
 			// This is bad, not always true
 			// location might be different
-			//if (schedule_type == schedules[i].get_type())
+			//if (scheduleType == schedules[i].get_type())
 			//	return;		// Already in it.
 			}
 		setScheduleAndLoc(schedules[i].getType(), schedules[i].getPos(),

@@ -205,7 +205,7 @@ public class GameMap extends GameSingletons {
 	 *	Read in terrain graphics data into window's image.  (May also be
 	 *	called during map-editing if the chunknum changes.)
 	 */
-	public void getChunkObjects(int cx, int cy) {
+	private void getChunkObjects(int cx, int cy) {
 						// Get list we'll store into.
 		MapChunk chunk = getChunk(cx, cy);
 		int chunkNum = terrainMap[cy*EConst.c_num_chunks + cx];
@@ -629,7 +629,7 @@ public class GameMap extends GameSingletons {
 		}
 		*/
 	}
-	public void getSuperchunkObjects(int schunk) {
+	private void getSuperchunkObjects(int schunk) {
 		getMapObjects(schunk);	// Get map objects/scenery.
 		getIfixObjects(schunk);	// Get objects from ifix.
 		getIregObjects(schunk);	// Get moveable objects.

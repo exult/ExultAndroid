@@ -68,6 +68,9 @@ public final class MapChunk extends GameSingletons {
 	public final ChunkTerrain getTerrain() {
 		return terrain;
 	}
+	public final boolean isRead() {
+		return terrain != null;
+	}
 	public final void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {
 			terrain.removeClient();

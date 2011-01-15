@@ -95,7 +95,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		int minOld = minute;
 		int hourOld = hour;
 					// Time stopped?  Don't advance.
-		if (!gwin.isTimeStopped()) {
+		if (gwin.isTimeStopped() == 0) {
 			minute += timeRate;
 			// ++++ TESTING
 			// if (Game::get_game_type() == SERPENT_ISLE)
