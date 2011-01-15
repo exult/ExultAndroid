@@ -35,9 +35,9 @@ public class GameRender {
 		GameWindow gwin = GameWindow.instanceOf();
 		MapChunk olist = gwin.getMap().getChunk(cx, cy);
 						// Paint flat tiles.
-		ImageBuf cflats = olist.getRenderedFlats();
+		byte cflats[] = olist.getRenderedFlats();
 		if (cflats != null)
-			gwin.getWin().copy8(cflats.getPixels(), 0,
+			gwin.getWin().copy8(cflats, 0,
 					EConst.c_chunksize, EConst.c_chunksize, xoff, yoff);
 		}
 	/*

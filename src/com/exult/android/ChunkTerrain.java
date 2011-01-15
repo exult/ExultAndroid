@@ -9,7 +9,7 @@ public class ChunkTerrain {
 							//   chunks that point to us. Each entry
 							//   is of form 0x00ssssff, s=shape, f=frame.
 	private int numClients;		// # of Chunk's that point to us.
-	private ImageBuf renderedFlats;	// Flats rendered for entire chunk.
+	private byte renderedFlats[];	// Flats rendered for entire chunk.
 	// Most-recently used circular queue
 	//   for rendered_flats:
 	private static ChunkTerrain renderQueue = null;
@@ -50,15 +50,21 @@ public class ChunkTerrain {
 	// Create rendered_flats.
 	private final void paintTile(int tilex, int tiley) {
 		ShapeFrame shape = getShape(tilex, tiley);
-		if (shape != null && !shape.isRle())		// Only do flat tiles.
-			renderedFlats.copy8(shape.getData(), 0,
-				EConst.c_tilesize, EConst.c_tilesize, tilex*EConst.c_tilesize,
-							tiley*EConst.c_tilesize);
+		if (shape != null && !shape.isRle()) {		// Only do flat tiles.
+			byte src[] = shape.getData();
+			int from = 0, to = tilex*EConst.c_tilesize + 
+							   tiley*EConst.c_tilesize*EConst.c_chunksize;
+			for (int y = 0; y < EConst.c_tilesize; ++y) {
+				System.arraycopy(src, from, renderedFlats, to, EConst.c_tilesize);
+				from += EConst.c_tilesize;
+				to += EConst.c_chunksize;
+			}
+		}
 	}
 	private void freeRenderedFlats() {
 		renderedFlats = null;
 	}
-	private ImageBuf renderFlats() {
+	private byte[] renderFlats() {
 		if (renderedFlats == null) {
 			if (queueSize > 100) {	// FOR NOW.
 								// Grown too big.  Remove last.
@@ -69,7 +75,7 @@ public class ChunkTerrain {
 				last.renderQueueNext = last.renderQueuePrev = null;
 				queueSize--;
 			}
-		renderedFlats = new ImageBuf(EConst.c_chunksize, EConst.c_chunksize);
+		renderedFlats = new byte[EConst.c_chunksize*EConst.c_chunksize];
 		}
 					// Go through array of tiles.
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
@@ -121,7 +127,7 @@ public class ChunkTerrain {
 		int n = shapes[16*tiley + tilex];
 		return ShapeFiles.SHAPES_VGA.getFile().getShape((n>>8)&0xffff, n&0xff);
 	}
-	public ImageBuf getRenderedFlats() {
+	public byte[] getRenderedFlats() {
 		if (renderQueue != this)// Not already first in queue?
 			// Move to front of queue.
 			insertInQueue();

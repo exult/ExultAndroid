@@ -353,7 +353,7 @@ public final class MapChunk extends GameSingletons {
 		remove(egg);			// Remove it normally.
 		updateEgg(egg, false);
 	}
-	public ImageBuf getRenderedFlats() {
+	public byte[] getRenderedFlats() {
 		return terrain != null ? terrain.getRenderedFlats() : null;
 	}
 	public GameObject findDoor(Tile tile) {

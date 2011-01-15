@@ -184,6 +184,7 @@ abstract public class ActorAction extends GameSingletons {
 		actor.setStepIndex(frames.prevIndex(stepIndex));	// We didn't take the step.
 						// Blocked by a door?
 		if (actor.distance(stepTile) <= 2 &&
+			actor.getScheduleType() != Schedule.loiter &&
 			(actor.getInfo().getShapeClass() == ShapeInfo.human ||
 				actor.getEffectiveProp(Actor.intelligence) > 7))
 					// +++++Check for intelligence; guessing how to do it.
