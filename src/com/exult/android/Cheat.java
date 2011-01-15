@@ -5,4 +5,8 @@ public final class Cheat extends GameSingletons {
 	public boolean inHackMover() {
 		return hackMover;
 	}
+	public void toggleHackMover() {
+		hackMover = !hackMover;
+		ExultActivity.showToast(hackMover?"HackMover Mode":"Ending HackMover");
+	}
 }

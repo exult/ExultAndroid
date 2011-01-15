@@ -254,7 +254,8 @@ public class ExultActivity extends Activity {
     						System.out.println("Starting motion");
         					avatarMotion = MotionEvent.obtain(event);
         					avatarStartX = x; avatarStartY = y;
-    					} else if (!dragging || (obj != null && !obj.isDragable())) {
+    					} else if (!dragging || (obj != null && !obj.isDragable() &&
+    											 !GameSingletons.cheat.inHackMover())) {
     						DraggingInfo.abort();
     						dragging = false;
     						avatarMotion = MotionEvent.obtain(event);
@@ -354,7 +355,13 @@ public class ExultActivity extends Activity {
 		        	case KeyEvent.KEYCODE_DPAD_DOWN:
 		        		gwin.shiftViewVertical(false); break;
 		        	case KeyEvent.KEYCODE_DPAD_UP:
-		        		gwin.shiftViewVertical(true); break;
+		        		gwin.shiftViewVertical(true); break;	
+		        	case KeyEvent.KEYCODE_H:
+			        		if (event.isAltPressed()) {
+			        			GameSingletons.cheat.toggleHackMover();
+			        			return true;
+			        		} else
+			        			return false;
 		        	case KeyEvent.KEYCODE_L:
 		        		if (event.isAltPressed()) {
 		        			if (gwin.skipLift == 16)
