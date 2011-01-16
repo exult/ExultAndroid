@@ -1,6 +1,6 @@
 package com.exult.android;
 
-public abstract class Schedule {
+public abstract class Schedule extends GameSingletons {
 	public static final int
 	combat = 0,	horiz_pace = 1,
 	vert_pace = 2,	talk = 3,
@@ -129,6 +129,107 @@ public abstract class Schedule {
 				npc.start(250, EUtil.rand()%12);
 		}
 	}
+	/*
+	 *	Walk to the destination for a new schedule.
+	 */
+	public static class WalkToSchedule extends Schedule {
+		Rectangle screen;
+		Tile from;
+		Tile dest;			// Where we're going.
+		int firstDelay;		// Starting delay (1/1000's sec.)
+		int newSchedule;		// Schedule to set when we get there.
+		int retries;			// # failures at finding path.
+		int legs;			// # times restarted walk.
+						// Set to walk off screen.
+		private void walkOffScreen(Tile goal) {
+			// Destination.
+			if (goal.tx >= screen.x + screen.w) {
+			goal.tx = (short)(screen.x + screen.w - 1);
+			goal.ty = -1;
+			} else if (goal.tx < screen.x) {
+				goal.tx = (short)screen.x;
+				goal.ty = -1;
+			} else if (goal.ty >= screen.y + screen.h) {
+				goal.ty = (short)(screen.y + screen.h - 1);
+				goal.tx = -1;
+			} else if (goal.ty < screen.y) {
+				goal.ty = (short)screen.y;
+				goal.tx = -1;
+			}
+		}
+		public WalkToSchedule(Actor n, Tile d, int new_sched, int delay) {
+			super(n);
+			screen = new Rectangle();
+			from = new Tile();
+			dest = d;
+			newSchedule = new_sched;
+			// Delay 0-20 secs.
+			firstDelay = delay >= 0 ? delay : 
+							(2*(EUtil.rand()%10000)/TimeQueue.tickMsecs);
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			if (npc.distance(dest) <= 3) {	// Close enough!
+				npc.setScheduleType(newSchedule);
+				return;
+			}
+			if (legs >= 40 || retries >= 2) {	// Trying too hard?  (Following
+		  				//   Patterson takes about 30.)
+						// Going to jump there.
+				npc.move(dest.tx, dest.ty, dest.tz);
+				npc.setScheduleType(newSchedule);
+				return;
+			}
+						// Get screen rect. in tiles.
+			gwin.getWinTileRect(screen);
+			screen.enlarge(6);		// Enlarge in all dirs.
+						// Might do part of it first.
+			npc.getTile(from);
+						// Destination off the screen?
+			if (!screen.hasPoint(dest.tx, dest.ty)) {
+				if (!screen.hasPoint(from.tx, from.ty)) {
+						// Force teleport on next tick.
+					retries = 100;
+					npc.start(200, 100);
+					return;
+				}
+						// Don't walk off screen if close, or
+						//   if lots of legs, indicating that
+						//   Avatar is following this NPC.
+				if (from.distance(dest) > 80 || legs < 10)
+						// Modify 'dest'. to walk off.
+					walkOffScreen(dest);
+			} else if (!screen.hasPoint(from.tx, from.ty))
+						// Modify src. to walk from off-screen.
+				walkOffScreen(from);
+			blocked = new Tile(-1, -1, -1);
+			System.out.println("Finding path to schedule for " 
+					+ npc.getNpcNum());
+						// Create path to dest., delaying
+						//   0 to 1 seconds.
+			if (!npc.walkPathToTile(from, dest, 1,
+							firstDelay + (EUtil.rand()%1000)/TimeQueue.tickMsecs)) {
+						// Wait 1 sec., then try again.
+				System.out.println("Failed to find path for " + npc.getNpcNum());
+				npc.walkToTile(dest, 1, 1000/TimeQueue.tickMsecs);
+				retries++;		// Failed.  Try again next tick.
+			} else {				// Okay.  He's walking there.
+				legs++;
+				retries = 0;
+			}
+			firstDelay = 0;
+		}
+		@Override
+		public void imDormant() {	// Just went dormant.
+			nowWhat();				// Get there by any means.
+		}
+									// For Usecode intrinsic.
+		@Override
+		public int getActualType(Actor npc) {
+			return newSchedule;
+		}
+		};
+	
 	/*
 	 *	An NPC schedule change:
 	 */

@@ -678,13 +678,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			scheduleLoc = new Tile();
 		scheduleLoc.set(dest.tx, dest.ty, dest.tz);
 		nextSchedule = (byte)newScheduleType;
-		/* ++++++++FINISH
 		scheduleType = Schedule.walk_to_schedule;
-		schedule = new Schedule.WalkToSchedule(this, dest, next_schedule, delay);
-		*/
+		schedule = new Schedule.WalkToSchedule(this, dest, nextSchedule, delay);
 		dormant = false;
-		if (schedule != null)
-			schedule.nowWhat();
+		schedule.nowWhat();
 	}
 	
 	public final ActorAction getAction() {
@@ -1371,6 +1368,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public boolean walkPathToTile(Tile dest, int speed, int delay, int dist) {
 		getTile(walkSrc);
 		return walkPathToTile(walkSrc, dest, speed, delay, dist, 3);
+	}
+	public boolean walkPathToTile(Tile src, Tile dest, int speed, int delay) {
+		return walkPathToTile(src, dest, speed, delay, 0, 3);
 	}
 	public void switchedChunks(MapChunk oldchunk, MapChunk newchunk) {
 	}

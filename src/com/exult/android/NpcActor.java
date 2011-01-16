@@ -62,7 +62,7 @@ public class NpcActor extends Actor {
 					schedule.seekFoes();
 						// Get back into queue.
 					tqueue.add(ctime + 1, this, udata);
-				} else if (dormant)
+				} else if (dormant && scheduleType != Schedule.walk_to_schedule)
 					tqueue.add(ctime + 3, this, udata);	// Check in 1/2 sec.
 				else
 					schedule.nowWhat();
