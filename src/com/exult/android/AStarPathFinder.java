@@ -38,7 +38,7 @@ public class AStarPathFinder extends PathFinder {
 			// done = true;
 			return false;
 		}
-		n.set(path[nextIndex].tx, path[nextIndex].ty, path[nextIndex].tz);
+		n.set(path[nextIndex]);
 		nextIndex += dir;
 		//done = (nextIndex == stop);
 		return true;

@@ -333,7 +333,7 @@ public final class PartyManager extends GameSingletons {
 					return false;	// Blocked by non-party-member.
 				next.tz = (short)bnpc.getLift();
 			}
-			from.set(next.tx, next.ty, next.tz);
+			from.set(next);
 		}
 		int difftz = from.tz - destTz;	// Check diff. in z-coords.
 		return difftz*difftz <= 1;	// Can't be more than 2.
@@ -411,7 +411,7 @@ public final class PartyManager extends GameSingletons {
 			if (cost < best_cost) {
 				best_cost = cost;
 				best_in_way = in_way[0];
-				best.set(to.tx, to.ty, to.tz);
+				best.set(to);
 			}
 		}
 		if (best_cost >= max_cost)

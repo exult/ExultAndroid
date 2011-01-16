@@ -547,7 +547,7 @@ public class GameWindow extends GameSingletons {
 			if (person != null && !person.isDead() && 
 			    person.getScheduleType() != Schedule.wait ) {
 				person.setAction(null);
-				t1.set(t.tx, t.ty, t.tz);
+				t1.set(t);
 				if (MapChunk.findSpot(t1, 8,
 					person.getShapeNum(), person.getFrameNum(), 1))
 					person.move(t1.tx, t1.ty, t1.tz, newMap);

@@ -629,6 +629,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					schedule = new Scripted_schedule(this,
 								newScheduleType);
 				*/
+				schedule = new Schedule.Loiter(this);	//+++++++FOR NOW.
 				break;
 			}
 		}
@@ -676,7 +677,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// Going to walk there.
 		if (scheduleLoc != null)
 			scheduleLoc = new Tile();
-		scheduleLoc.set(dest.tx, dest.ty, dest.tz);
+		scheduleLoc.set(dest);
 		nextSchedule = (byte)newScheduleType;
 		scheduleType = Schedule.walk_to_schedule;
 		schedule = new Schedule.WalkToSchedule(this, dest, nextSchedule, delay);

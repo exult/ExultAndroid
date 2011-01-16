@@ -10,6 +10,9 @@ public final class Tile {
 	public void set(int x, int y, int z) {
 		tx = (short)x; ty = (short)y; tz = (short)z;
 	}
+	public void set(Tile t) {
+		tx = t.tx; ty = t.ty; tz = t.tz;
+	}
 	public Tile(int x, int y, int z) {
 		tx = (short)x; ty = (short)y; tz = (short)z;
 	}

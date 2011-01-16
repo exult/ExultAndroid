@@ -134,7 +134,7 @@ public abstract class Schedule extends GameSingletons {
 	 */
 	public static class WalkToSchedule extends Schedule {
 		Rectangle screen;
-		Tile from;
+		Tile from, to;
 		Tile dest;			// Where we're going.
 		int firstDelay;		// Starting delay (1/1000's sec.)
 		int newSchedule;		// Schedule to set when we get there.
@@ -161,6 +161,7 @@ public abstract class Schedule extends GameSingletons {
 			super(n);
 			screen = new Rectangle();
 			from = new Tile();
+			to = new Tile();
 			dest = d;
 			newSchedule = new_sched;
 			// Delay 0-20 secs.
@@ -185,8 +186,9 @@ public abstract class Schedule extends GameSingletons {
 			screen.enlarge(6);		// Enlarge in all dirs.
 						// Might do part of it first.
 			npc.getTile(from);
+			to.set(dest);
 						// Destination off the screen?
-			if (!screen.hasPoint(dest.tx, dest.ty)) {
+			if (!screen.hasPoint(to.tx, to.ty)) {
 				if (!screen.hasPoint(from.tx, from.ty)) {
 						// Force teleport on next tick.
 					retries = 100;
@@ -196,9 +198,9 @@ public abstract class Schedule extends GameSingletons {
 						// Don't walk off screen if close, or
 						//   if lots of legs, indicating that
 						//   Avatar is following this NPC.
-				if (from.distance(dest) > 80 || legs < 10)
+				if (from.distance(to) > 80 || legs < 10)
 						// Modify 'dest'. to walk off.
-					walkOffScreen(dest);
+					walkOffScreen(to);
 			} else if (!screen.hasPoint(from.tx, from.ty))
 						// Modify src. to walk from off-screen.
 				walkOffScreen(from);
@@ -207,7 +209,7 @@ public abstract class Schedule extends GameSingletons {
 					+ npc.getNpcNum());
 						// Create path to dest., delaying
 						//   0 to 1 seconds.
-			if (!npc.walkPathToTile(from, dest, 1,
+			if (!npc.walkPathToTile(from, to, 1,
 							firstDelay + (EUtil.rand()%1000)/TimeQueue.tickMsecs)) {
 						// Wait 1 sec., then try again.
 				System.out.println("Failed to find path for " + npc.getNpcNum());
