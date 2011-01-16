@@ -743,7 +743,8 @@ public class GameMap extends GameSingletons {
 		return c;
 	}	
 	public final boolean isChunkRead(int cx, int cy) {
-		return cx < EConst.c_num_chunks && cy < EConst.c_num_chunks &&
+		return cx >= 0 && cy >= 0 &&
+			cx < EConst.c_num_chunks && cy < EConst.c_num_chunks &&
 			schunkRead[12*(cy/EConst.c_chunks_per_schunk) +
 			           cx/EConst.c_chunks_per_schunk]; 
 	}

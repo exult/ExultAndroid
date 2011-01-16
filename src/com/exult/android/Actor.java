@@ -658,10 +658,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		stop();				// Stop moving.
 		if (schedule != null)			// End prev.
 			schedule.ending(newScheduleType);
+		int cx = getCx(), cy = getCy();
+		System.out.printf("Setting NPC %1$d at chunk %2$d, %3$d schedule to %4$d at %5$d, %6$d\n", 
+				npcNum, cx, cy, newScheduleType, dest.tx, dest.ty);
 		int mapnum = getMapNum();
 		if (mapnum < 0) mapnum = gmap.getNum();
 		if ((mapnum != gmap.getNum()) ||
-		    (!gmap.isChunkRead(getCx(), getCy()) &&
+		    (!gmap.isChunkRead(cx, cy) &&
 		     !gmap.isChunkRead(dest.tx/EConst.c_tiles_per_chunk,
 								dest.ty/EConst.c_tiles_per_chunk))) {	
 						// Not on current map, or
@@ -677,8 +680,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		nextSchedule = (byte)newScheduleType;
 		scheduleType = Schedule.walk_to_schedule;
 		//+++++FINISH schedule = new Schedule.WalkToSchedule(this, dest, next_schedule, delay);
-		dormant = false;
-		schedule.nowWhat();
+		//++++++ dormant = false;
+		//++++++++ schedule.nowWhat();
 	}
 	
 	public final ActorAction getAction() {

@@ -1140,7 +1140,7 @@ public class GameWindow extends GameSingletons {
 	private static int setToReadSchedules
 		(
 		InputStream sfile,
-		Vector<Integer> offsets		// List of offsets ret'd.
+		Vector<Integer> offsets		// List of offsets ret'd., preceded by num_npcs.
 		){
 		int num_script_names = -1;
 		int num_npcs = EUtil.Read4(sfile);	// # of NPC's, not include Avatar.
@@ -1151,10 +1151,11 @@ public class GameWindow extends GameSingletons {
 			num_npcs = EUtil.Read4(sfile);
 			num_script_names = EUtil.Read2(sfile);
 		}
-		offsets.setSize(num_npcs);
-		int i;				// Read offsets with list of scheds.
-		for (i = 0; i < num_npcs; i++)
-			offsets.setElementAt(EUtil.Read2(sfile), i);
+		offsets.setSize(num_npcs + 1);
+		offsets.setElementAt(num_npcs, 0);
+		// Read offsets with list of scheds.
+		for (int i = 0; i < num_npcs; i++)
+			offsets.setElementAt(EUtil.Read2(sfile), i + 1);
 		return num_script_names;
 	}
 	/*
@@ -1171,14 +1172,17 @@ public class GameWindow extends GameSingletons {
 		if (entsize == 4) {	// U7 format?
 			for (int j = 0; j < cnt; j++) {
 				sfile.read(ent, 0, 4);
+				schedules[j] = new Schedule.ScheduleChange();
 				schedules[j].set4(ent);
 			}
 		} else {		// Exult formats.
 			for (int j = 0; j < cnt; j++) {
 				sfile.read(ent, 0, 8);
+				schedules[j] = new Schedule.ScheduleChange();
 				schedules[j].set8(ent);
 			}
 		}
+		//System.out.printf("Read %1$d schedules for NPC # %2$d\n", cnt, npc.getNpcNum());
 		if (npc != null)			// Store in NPC.
 			npc.setSchedules(schedules);
 		}
@@ -1189,9 +1193,10 @@ public class GameWindow extends GameSingletons {
 			ExultActivity.fileFatal(EFile.SCHEDULE_DAT);
 			return;
 		}
-		int i, num_npcs = 0, entsize;
+		int i, num_npcs, entsize;
 		Vector<Integer> offsets = new Vector<Integer>();
 		int num_script_names = setToReadSchedules(sfile, offsets);
+		num_npcs = offsets.remove(0);
 		entsize = num_script_names >= 0 ? 8 : 4;
 		//+++++++FINISH Schedule_change::clear();
 		//++++++vector<String>& script_names = Schedule_change::get_script_names();
