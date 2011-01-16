@@ -376,9 +376,12 @@ public class ExultActivity extends Activity {
 		        		} else
 		        			return false;
 		        		
-		        	case KeyEvent.KEYCODE_C:	//++++++++TESTING
-		        		new EffectsManager.CloudsEffect(20, 0, null, 6);
-		        		return true;
+		        	case KeyEvent.KEYCODE_C:	
+		        		if (event.isAltPressed()) {
+		        			GameSingletons.clock.fakeNextPeriod();
+		        			return true;
+		        		} else
+		        			return false;
 		        	case KeyEvent.KEYCODE_R:
 		        		if (event.isAltPressed()) {
 		        			gwin.read(1);	// +++++++TESTING

@@ -75,10 +75,8 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		// Update palette to new time.
 		setPalette();
 		// Check to see if we need to update the NPC schedules.
-		/* ++++++++++FINISH
 		if (hour != oldHour)		// Update NPC schedules.
 			gwin.scheduleNpcs(hour);
-		*/
 	}
 	
 	@Override
@@ -128,7 +126,21 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		ctime += ticksPerMinute;
 		tqueue.add(ctime, this, udata);
 	}
+	/*
+	 *	Fake an update to the next 3-hour period.
+	 */
 
+	public void fakeNextPeriod() {
+		minute = 0;
+		hour = ((hour/3 + 1)*3);
+		day += hour/24;			// Update day.
+		hour %= 24;
+		setPalette();
+		//++++++FINISH checkHunger();
+		gwin.scheduleNpcs(hour);
+		//++++++++FINISHgwin.mendNpcs();		// Just do it once, cheater.
+		ExultActivity.showToast("The hour is now " + hour);
+	}
 	@Override
 	public void removedFromQueue() {
 		--timeQueueCount;

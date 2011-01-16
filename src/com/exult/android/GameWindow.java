@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.Vector;
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.io.RandomAccessFile;
@@ -184,6 +185,25 @@ public class GameWindow extends GameSingletons {
 	}
 	public final boolean mainActorCanAct() {
 		return mainActor.canAct();
+	}
+	public final void scheduleNpcs(int hour, int backwards, boolean repaint) {
+		// Go through npc's, skipping Avatar.
+		Iterator<Actor> iter = npcs.iterator();
+		iter.next();		// Skip Avatar.
+		while (iter.hasNext()) {
+			Actor npc = iter.next();
+						// Don't want companions leaving.
+			if (npc != null && npc.getScheduleType() != Schedule.wait &&
+					(npc.getScheduleType() != Schedule.combat ||
+						npc.getTarget() == null))
+				npc.updateSchedule(hour/3, backwards, hour%3 == 0 ? -1 : 0);
+			}
+
+		if (repaint)
+			paint();			// Repaint all.
+	}
+	public final void scheduleNpcs(int hour) {
+		scheduleNpcs(hour, 7, true);
 	}
 	// Get screen location for an object.
 	public final void getShapeLocation(Point loc, int tx, int ty, int tz) {
@@ -956,7 +976,7 @@ public class GameWindow extends GameSingletons {
 		game.clearAvSkin();
 		// Update gamedat if there was a change
 		if (changed) {
-			//++++++++++FINISH schedule_npcs(6,7,false);
+			scheduleNpcs(6,7,false);
 			writeNpcs();
 		}
 	}

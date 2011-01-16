@@ -481,6 +481,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public Schedule.ScheduleChange[] getSchedules() {
 		return null;
+	} 
+	public void updateSchedule(int hour3, int backwards, int delay) {
 	}
 	//	Set schedule after reading in.
 	public final void restoreSchedule() {
@@ -1303,6 +1305,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			addDirty(false);
 		}
 		frameTime = 0;
+	}
+	public final GameObject getTarget() {
+		return target;
 	}
 	public final boolean canAct() {
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)

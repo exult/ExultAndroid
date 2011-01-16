@@ -221,6 +221,7 @@ public class NpcActor extends Actor {
 	/*
 	 *	Update schedule at a 3-hour time change.
 	 */
+	@Override
 	public void updateSchedule
 		(
 		int hour3,			// 0=midnight, 1=3am, etc.
