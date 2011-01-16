@@ -678,10 +678,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			scheduleLoc = new Tile();
 		scheduleLoc.set(dest.tx, dest.ty, dest.tz);
 		nextSchedule = (byte)newScheduleType;
+		/* ++++++++FINISH
 		scheduleType = Schedule.walk_to_schedule;
-		//+++++FINISH schedule = new Schedule.WalkToSchedule(this, dest, next_schedule, delay);
-		//++++++ dormant = false;
-		//++++++++ schedule.nowWhat();
+		schedule = new Schedule.WalkToSchedule(this, dest, next_schedule, delay);
+		*/
+		dormant = false;
+		if (schedule != null)
+			schedule.nowWhat();
 	}
 	
 	public final ActorAction getAction() {

@@ -62,7 +62,9 @@ public class NpcActor extends Actor {
 					schedule.seekFoes();
 						// Get back into queue.
 					tqueue.add(ctime + 1, this, udata);
-				} else
+				} else if (dormant)
+					tqueue.add(ctime + 3, this, udata);	// Check in 1/2 sec.
+				else
 					schedule.nowWhat();
 			}
 		} else {			// Do what we should.
@@ -153,6 +155,7 @@ public class NpcActor extends Actor {
 						getScheduleType() != Schedule.street_maintenance) {
 						// No longer on screen.
 			stop();
+			System.out.println("npcActor.step: NPC " + npcNum + " going dormant.");
 			dormant = true;
 			return false;
 		}
@@ -245,5 +248,25 @@ public class NpcActor extends Actor {
 			}
 		setScheduleAndLoc(schedules[i].getType(), schedules[i].getPos(),
 									delay);
+	}
+	/*
+	 *	Render.
+	 */
+	public void paint() {
+		super.paint();			// Draw on screen.
+		if (dormant && schedule != null &&	// Resume schedule.
+						// FOR NOW:  Not when in formation.
+		    (partyId < 0 || scheduleType != Schedule.follow_avatar)) {
+			dormant = false;	// But clear out old entries first.??
+			tqueue.remove(this);
+						// Force schedule->now_what() in about 1/2 sec.
+						// DO NOT call now_what here!!!
+			int curtime = TimeQueue.ticks;
+			tqueue.add(curtime + 3, this, gwin);
+		}
+		/* ++++++FINISH
+		if (!nearby)			// Make sure we're in 'nearby' list.
+			gwin.add_nearby_npc(this);
+		*/
 	}
 }
