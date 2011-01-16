@@ -22,6 +22,10 @@ public final class Tile {
 		tx = s.tx; ty = s.ty; tz = s.tz;
 	}
 	@Override
+	public String toString() {
+		return "Tile("+ tx + "," + ty + "," + tz + ")";
+	}
+	@Override
 	public boolean equals(Object o2) {
 		Tile t2 = (Tile)o2;
 		return t2.tx == tx && t2.ty == ty && t2.tz == tz;

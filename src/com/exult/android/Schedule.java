@@ -179,6 +179,8 @@ public abstract class Schedule extends GameSingletons {
 						// Going to jump there.
 				npc.move(dest.tx, dest.ty, dest.tz);
 				npc.setScheduleType(newSchedule);
+				System.out.println("WalkToSchedule: Teleporting #" 
+						+ npc.getNpcNum());
 				return;
 			}
 						// Get screen rect. in tiles.
@@ -205,8 +207,8 @@ public abstract class Schedule extends GameSingletons {
 						// Modify src. to walk from off-screen.
 				walkOffScreen(from);
 			blocked = new Tile(-1, -1, -1);
-			System.out.println("Finding path to schedule for " 
-					+ npc.getNpcNum());
+			System.out.println("WalkToSchedule: Finding path to schedule for " 
+					+ npc.getNpcNum() + " from " + from + " to " + to);
 						// Create path to dest., delaying
 						//   0 to 1 seconds.
 			if (!npc.walkPathToTile(from, to, 1,

@@ -152,6 +152,7 @@ public class NpcActor extends Actor {
 						1 + EConst.c_screen_tile_size &&
 				//++++++++Try getting rid of the 'talk' line:
 						getScheduleType() != Schedule.talk &&
+						getScheduleType() != Schedule.walk_to_schedule &&
 						getScheduleType() != Schedule.street_maintenance) {
 						// No longer on screen.
 			stop();
