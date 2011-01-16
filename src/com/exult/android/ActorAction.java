@@ -274,6 +274,8 @@ abstract public class ActorAction extends GameSingletons {
 		public boolean openDoor(Actor actor, GameObject door) {
 			int curTx = actor.getTileX(), curTy = actor.getTileY(),
 				curTz = actor.getLift();
+			System.out.println("openDoor: NPC # " + actor.getNpcNum() + 
+					", schedule = " + actor.getScheduleType());
 			// Get door's footprint in tiles.
 			Rectangle foot = new Rectangle();
 			door.getFootprint(foot);

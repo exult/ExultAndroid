@@ -186,6 +186,7 @@ public abstract class Schedule {
 			byte entry[]		// 8 bytes read from schedule.dat.
 			)
 			{
+			pos = new Tile();
 			pos.tx = (short)EUtil.Read2(entry, 0);
 			pos.ty = (short)EUtil.Read2(entry, 2);
 			pos.tz = (short)(entry[4]&0xff);
