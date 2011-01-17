@@ -91,7 +91,7 @@ public abstract class Schedule extends GameSingletons {
 			loc = new Tile(center.tx - dist + EUtil.rand()%(2*dist),
 								center.ty - dist + EUtil.rand()%(2*dist), center.tz);
 							// Wait a bit.
-			npc.walkToTile(loc, 2, EUtil.rand()%8);
+			npc.walkToTile(loc, 2+EUtil.rand()%2, EUtil.rand()%8);
 		}
 	}
 	/*
@@ -124,9 +124,9 @@ public abstract class Schedule extends GameSingletons {
 				pos.ty = (short)(center.ty - dist);
 							// Find a free spot.
 			if (!MapChunk.findSpot(pos, 4, npc.getShapeNum(), 0, 1) ||
-					!npc.walkPathToTile(pos, 1, EUtil.rand()%8, 1))
+					!npc.walkPathToTile(pos, 2+EUtil.rand()%2, EUtil.rand()%8, 1))
 							// Failed?  Try again a little later.
-				npc.start(250, EUtil.rand()%12);
+				npc.start(2, EUtil.rand()%12);
 		}
 	}
 	/*
