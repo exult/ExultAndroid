@@ -660,8 +660,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (schedule != null)			// End prev.
 			schedule.ending(newScheduleType);
 		int cx = getCx(), cy = getCy();
-		System.out.printf("Setting NPC #%1$d schedule to %2$d at %3$s\n", 
-				npcNum, newScheduleType, dest);
+		//System.out.printf("Setting NPC #%1$d schedule to %2$d at %3$s\n", 
+		//		npcNum, newScheduleType, dest);
 		int mapnum = getMapNum();
 		if (mapnum < 0) mapnum = gmap.getNum();
 		if ((mapnum != gmap.getNum()) ||

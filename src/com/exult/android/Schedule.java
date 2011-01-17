@@ -140,20 +140,23 @@ public abstract class Schedule extends GameSingletons {
 		int newSchedule;		// Schedule to set when we get there.
 		int retries;			// # failures at finding path.
 		int legs;			// # times restarted walk.
-						// Set to walk off screen.
+		/*
+		 * 	Set to walk off screen.  We MUST get outside the screen rect. so we don't
+		 * 	keep repeating this.
+		 */
 		private void walkOffScreen(Tile goal) {
 			// Destination.
 			if (goal.tx >= screen.x + screen.w) {
-			goal.tx = (short)(screen.x + screen.w - 1);
-			goal.ty = -1;
+				goal.tx = (short)(screen.x + screen.w);
+				goal.ty = -1;
 			} else if (goal.tx < screen.x) {
-				goal.tx = (short)screen.x;
+				goal.tx = (short)(screen.x - 1);
 				goal.ty = -1;
 			} else if (goal.ty >= screen.y + screen.h) {
-				goal.ty = (short)(screen.y + screen.h - 1);
+				goal.ty = (short)(screen.y + screen.h);
 				goal.tx = -1;
 			} else if (goal.ty < screen.y) {
-				goal.ty = (short)screen.y;
+				goal.ty = (short)(screen.y - 1);
 				goal.tx = -1;
 			}
 		}
@@ -185,12 +188,15 @@ public abstract class Schedule extends GameSingletons {
 			}
 						// Get screen rect. in tiles.
 			gwin.getWinTileRect(screen);
-			screen.enlarge(6);		// Enlarge in all dirs.
+			screen.enlarge(5);		// Enlarge in all dirs.
 						// Might do part of it first.
 			npc.getTile(from);
 			to.set(dest);
 						// Destination off the screen?
 			if (!screen.hasPoint(to.tx, to.ty)) {
+				System.out.println("Npc #"+ npc.getNpcNum() + 
+						": !screen.hasPoint: screen=" + screen +
+						", from=" + from + ", dormant = " + npc.isDormant());
 				if (!screen.hasPoint(from.tx, from.ty)) {
 						// Force teleport on next tick.
 					retries = 100;
@@ -207,14 +213,14 @@ public abstract class Schedule extends GameSingletons {
 						// Modify src. to walk from off-screen.
 				walkOffScreen(from);
 			blocked = new Tile(-1, -1, -1);
-			System.out.println("WalkToSchedule: Finding path to schedule for " 
+			System.out.println("WalkToSchedule: Finding path to schedule for #" 
 					+ npc.getNpcNum() + " from " + from + " to " + to);
 						// Create path to dest., delaying
 						//   0 to 1 seconds.
 			if (!npc.walkPathToTile(from, to, 1,
 							firstDelay + (EUtil.rand()%1000)/TimeQueue.tickMsecs)) {
 						// Wait 1 sec., then try again.
-				System.out.println("Failed to find path for " + npc.getNpcNum());
+				System.out.println("Failed to find path for #" + npc.getNpcNum());
 				npc.walkToTile(dest, 1, 1000/TimeQueue.tickMsecs);
 				retries++;		// Failed.  Try again next tick.
 			} else {				// Okay.  He's walking there.
@@ -273,10 +279,10 @@ public abstract class Schedule extends GameSingletons {
 			byte entry[]		// 4 bytes read from schedule.dat.
 			) {
 			time = (byte)(entry[0]&7);
-			type = (byte)((entry[0]>>3)&0x3f);
+			type = (byte)((entry[0]>>3)&0x1f);
 			days = 0x7f;			// All days of the week.
-			byte schunk = entry[3];
-			byte x = entry[1], y = entry[2];
+			int schunk = ((int)entry[3])&0xff;
+			int x = ((int)entry[1])&0xff, y = ((int)entry[2])&0xff;
 			int sx = schunk%EConst.c_num_schunks,
 			    sy = schunk/EConst.c_num_schunks;
 			pos = new Tile(sx*EConst.c_tiles_per_schunk + x, 

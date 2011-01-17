@@ -17,6 +17,10 @@ public class Rectangle {
 	public final void set(Rectangle r) {
 		x = r.x; y = r.y; w = r.w; h = r.h;
 	}
+	@Override
+	public String toString() {
+		return "Rect("+ x + "," + y + "," + w + "," + h + ")";
+	}
 	public final boolean hasPoint(int px, int py) {
 		return (px >= x && px < x + w && py >= y && py < y + h);
 	}
