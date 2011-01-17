@@ -511,14 +511,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.combat:
 				schedule = new Combat_schedule(this, old_schedule);
 				break;
+			*/
 			case Schedule.horiz_pace:
-				ready_best_weapon();
-				schedule = Pace_schedule.create_horiz(this);
+				//++++++FINISH ready_best_weapon();
+				schedule = Schedule.Pace.createHoriz(this);
 				break;
 			case Schedule.vert_pace:
-				ready_best_weapon();
-				schedule = Pace_schedule.create_vert(this);
+				//+++++++FINISH ready_best_weapon();
+				schedule = Schedule.Pace.createVert(this);
 				break;
+			/*
 			case Schedule.talk:
 				schedule = new Talk_schedule(this);
 				break;
@@ -613,10 +615,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				unready_weapon();
 				schedule = new Desk_schedule(this);
 				break;
-			case Schedule.follow_avatar:
-				schedule = new Follow_avatar_schedule(this);
-				break;
 			*/
+			case Schedule.follow_avatar:
+				schedule = new Schedule.FollowAvatar(this);
+				break;
 			case Schedule.walk_to_schedule:
 				System.out.println(
 					"Attempted to set a \"walk to schedule\" activity for NPC " +

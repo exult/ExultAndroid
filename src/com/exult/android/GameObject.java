@@ -280,6 +280,25 @@ public abstract class GameObject extends ShapeID {
 			  (ty - ytiles + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, 
 				xtiles, ytiles);
 	}
+	/*
+	 *	Based on frame #, get direction (N, S, E, W, 0-7), this (generally an
+	 *	NPC) is facing.
+	 */
+	public int getDirFacing() {
+		int reflect = getFrameNum()&(16 | 32);
+		switch (reflect)
+			{
+		case 0:
+			return EConst.north;
+		case 48:
+			return EConst.east;
+		case 16:
+			return EConst.south;
+		case 32:
+		default:
+			return EConst.west;
+		}
+	}
 	public final int getVolume() {
 		return getInfo().getVolume();
 	}

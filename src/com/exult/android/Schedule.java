@@ -1,4 +1,5 @@
 package com.exult.android;
+import com.exult.android.shapeinf.MonsterInfo;
 
 public abstract class Schedule extends GameSingletons {
 	public static final int
@@ -56,6 +57,83 @@ public abstract class Schedule extends GameSingletons {
 	 * 	THE SCHEDULES
 	 */
 	/*
+	 *	For following the Avatar (by party members):
+	 */
+	public static class FollowAvatar extends Schedule {
+		int nextPathTime;	// Next time we're allowed to use
+							//   pathfinding to follow leader.
+		Tile pos, goal;
+		public FollowAvatar(Actor n) {
+			super(n);
+			pos = new Tile();
+			goal = new Tile();
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			/*++++++++++FINISH
+			boolean is_blocked = blocked != null && blocked.tx != -1;
+			if (blocked == null)
+				blocked = new Tile();
+			blocked.set(-1, -1, -1);
+			if (npc.getFlag(GameObject.asleep) || npc.isDead() ||
+			    npc.getFlag(GameObject.paralyzed) ||
+			    gwin.mainActorDontMove())	// Under Usecode control.
+				return;			// Disabled.
+			Actor av = gwin.getMainActor();
+			av.getTile(goal);
+			npc.getTile(pos);
+			int dist2lead = av.distance(pos);
+			if (!av.isMoving() &&		// Avatar stopped.
+			    dist2lead <= 12)		// And we're already close enough.
+				return;
+			int curtime = TimeQueue.ticks;// Want the REAL time here.
+			if (!is_blocked) {		// Not blocked?
+				npc.follow(av);		// Then continue following.
+				return;
+			}
+			if (curtime < nextPathTime) {	// Failed pathfinding recently?
+							// Wait a bit.
+				npc.start(1, nextPathTime - curtime);
+				return;
+			}
+							// Find a free spot within 3 tiles.
+			int where = MapChunk.anywhere;
+							// And try to be inside/outside.
+			where = gwin.isMainActorInside() ?
+							MapChunk.inside : MapChunk.outside;
+			if (!MapChunk.findSpot(goal, 3, npc, 0, where)) {
+							// No free spot?  Give up.
+				System.out.println(npc.getName() + " can't find free spot");
+				nextPathTime = TimeQueue.ticks + 1000/TimeQueue.tickMsecs;
+				return;
+			}
+							// Get his speed.
+			int speed = av.getFrameTime();
+			if (speed == 0)			// Avatar stopped?
+				speed = 1;
+			if (pos.distance(goal) <= 3)
+				return;			// Already close enough!
+							// Succeed if within 3 tiles of goal.
+			if (npc.walkPathToTile(pos, goal, speed - speed/4, 0, 3, 1))
+				return;			// Success.
+			System.out.println("... but failed to find path.");
+							// On screen (roughly)?
+			boolean ok;
+							// Get window rect. in tiles.
+			Rectangle wrect = new Rectangle();
+			gwin.getWinTileRect(wrect);
+			if (wrect.hasPoint(pos.tx - pos.tz/2, pos.ty - pos.tz/2)) {
+							// Try walking off-screen.
+				goal.set(-1, -1, -1);
+				ok = npc.walkPathToTile(pos, goal,
+									speed - speed/4, 0);
+			} else				// Off screen already?
+				ok = npc.approachAnother(av);
+			if (!ok)			// Failed? Don't try again for a bit.
+				nextPathTime = 1 + 1000/TimeQueue.tickMsecs;
+			*/
+		}
+	}
+	/*
 	 *	A do-nothing schedule.
 	 */
 	public static class Wait extends Schedule {
@@ -63,6 +141,135 @@ public abstract class Schedule extends GameSingletons {
 			super(n);
 		}
 		public void nowWhat() {
+		}
+	}
+	/*
+	 *	A schedule for pacing between two obstacles:
+	 */
+	public static class Pace extends Schedule {
+		int which;		// 0 for north-south, 1 for east-west
+		Tile loc;	// The starting position of the schedule
+		Tile npcpos;
+		int phase;		// Current phase
+		public Pace(Actor n, int dir, Tile pos) {
+			super(n);
+			which = dir;
+			loc = pos;
+			npcpos = new Tile();
+		}
+						// Create common schedules:
+		public static Pace createHoriz(Actor n) {
+			Tile t = new Tile();
+			n.getTile(t);
+			return (new Pace(n, 1, t));
+		}
+		public static Pace createVert(Actor n) {
+			Tile t = new Tile();
+			n.getTile(t);
+			return (new Pace(n, 0, t));
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			/*+++++++FINISH
+			if (EUtil.rand() % 6 == 0)		// Check for lamps, etc.
+				if (try_street_maintenance())
+					return;		// We no longer exist.
+			*/
+			int dir = npc.getDirFacing();	// Use NPC facing for starting direction
+			int delay = 1;
+			
+			switch (phase) {
+			case 0:
+				phase++;
+				npc.getTile(npcpos);
+				if (!loc.equals(npcpos))
+					npc.walkToTile(loc, delay, delay);
+				else
+					npc.start(delay, delay);
+				break;
+			case 1: {
+				boolean changedir = false;
+				Tile offset = null;
+				switch (dir) {
+				case EConst.north:
+				case EConst.south:
+					if (which != 0)
+						changedir = true;
+					else
+						offset = new Tile(0, dir == EConst.south ? 1 : -1, 0);
+					break;
+				case EConst.east:
+				case EConst.west:
+					if (which == 0)
+						changedir = true;
+					else
+						offset = new Tile(dir == EConst.east ? 1 : -1, 0, 0);
+					break;
+				}
+				if (changedir) {
+					phase = 4;
+					npc.start(delay, delay);
+					return;
+				}
+				if (blocked != null && blocked.tx != -1) {		// Blocked?
+					GameObject obj = npc.findBlocking(blocked, dir);
+					if (obj != null) {
+						if (obj instanceof Actor) {
+							MonsterInfo minfo = npc.getInfo().getMonsterInfo();
+							if (minfo != null || !minfo.cantYell()) {
+								/* ++++++++FINISH
+								npc.say(first_move_aside, last_move_aside);
+										// Ask NPC to move aside.
+								if (obj.moveAside(npc, dir))
+											// Wait longer.
+									npc.start(3*delay, 3*delay);
+								else */ // Wait longer.
+									npc.start(delay, delay);
+								return;
+							}
+						}
+						blocked.tx = -1;
+						changedir = true;
+					}
+				}	
+				if (changedir)
+					phase++;
+				else {
+					Tile p0 = new Tile();
+					npc.getTile(p0);
+					if (offset != null)
+						p0.set(p0.tx + offset.tx, p0.ty + offset.ty, p0.tz + offset.tz);
+					Actor.FramesSequence frames = npc.getFrames(dir);
+					int step_index = npc.getStepIndex();
+					if (step_index == 0)		// First time?  Init.
+						step_index = frames.findUnrotated(npc.getFrameNum());
+										// Get next (updates step_index).
+					step_index = frames.nextIndex(step_index);
+							// One step at a time.
+						npc.step(p0, frames.get(step_index), false);
+				}
+				npc.start(delay, delay);
+				break;
+				}
+			case 2:
+				phase++;
+				npc.changeFrame(npc.getDirFramenum(npc.getDirFacing(), Actor.standing));
+				npc.start(3*delay, 3*delay);
+				break;
+			case 3:
+			case 4: {
+				phase++;
+				int facedirs[] = {EConst.west, EConst.north, EConst.north, EConst.east, 
+						EConst.east, EConst.south, EConst.south, EConst.west};
+				npc.changeFrame(npc.getDirFramenum(
+						facedirs[dir], Actor.standing));
+				npc.start(3*delay, 3*delay);
+				break;
+				}
+			default:
+				phase = 1;
+				npc.start(2*delay, 2*delay);
+				break;
+			}
 		}
 	}
 	/*
@@ -84,7 +291,7 @@ public abstract class Schedule extends GameSingletons {
 		}
 		public void nowWhat() {	// Now what should NPC do?
 			/* ++++++++FINISH
-			if (rand() % 3 == 0)		// Check for lamps, etc.
+			if (EUtil.rand() % 3 == 0)		// Check for lamps, etc.
 				if (try_street_maintenance())
 					return;		// We no longer exist.
 			*/
