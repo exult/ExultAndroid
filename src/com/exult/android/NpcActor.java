@@ -113,14 +113,9 @@ public class NpcActor extends Actor {
 		get_tile_info(this, gwin, nlist, tx, ty, water, poison);
 		*/
 		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
-			/* +++++++++++++
-			if (is_really_blocked(t, force))
-			*/
-				{
-				/* ++++++++++++++
-				if (schedule)		// Tell scheduler.
-					schedule.set_blocked(t);
-				*/
+			if (isReallyBlocked(t, force)) {
+				if (schedule != null)		// Tell scheduler.
+					schedule.setBlocked(t);
 				stop();
 							// Offscreen, but not in party?
 				if (gwin.addDirty(this) && partyId < 0 &&
@@ -129,7 +124,7 @@ public class NpcActor extends Actor {
 										1 + EConst.c_screen_tile_size)
 					dormant = true;	// Go dormant.
 				return false;		// Done.
-				}
+			}
 		}
 		/* ++++++++++++++
 		if (poison && t.tz == 0)

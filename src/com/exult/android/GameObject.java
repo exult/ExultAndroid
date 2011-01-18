@@ -60,7 +60,7 @@ public abstract class GameObject extends ShapeID {
 	private HashSet<GameObject> dependencies;	// Objects which must be painted before
 						//   this can be rendered.
 	private HashSet<GameObject> dependors;	// Objects which must be painted after.
-	private static byte rotate[] = new byte[8];	// For getting rotated frame #.
+	private static byte rotate[] = { 0, 0, 48, 48, 16, 16, 32, 32};	// For getting rotated frame #.
 	protected Point paintLoc = new Point();	// Temp for getting coords.
 	public long renderSeq;		// Render sequence #.
 	
@@ -452,6 +452,18 @@ public abstract class GameObject extends ShapeID {
 		while ((above = top.getOwner()) != null)
 			top = above;
 		return top;
+	}
+	// Show text by the object.
+	public void say(String text) {
+		eman.addText(text, this);
+	}
+	// Show random msg. from 'text.flx'.
+	public void say(int from, int to) {
+		if (from > to) 
+			return;
+		int msgnum = from + EUtil.rand()%(to - from + 1);
+		if (msgnum < ItemNames.msgs.length)
+			say(ItemNames.msgs[msgnum]);
 	}
 	public int getUsecode() {
 		ShapeInfo inf = getInfo();

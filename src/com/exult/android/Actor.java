@@ -760,6 +760,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}	
 	// Step aside to a free tile, or try to swap places
 	protected boolean moveAside(Actor forActor, int dir) {	
+		if (this == gwin.getMainActor() && forActor.partyId < 0)
+			return false;
 		Tile cur = swapTile1; getTile(cur);
 		Tile to = swapTile2;
 		int i;

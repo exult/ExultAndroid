@@ -95,10 +95,8 @@ public class MonsterActor extends NpcActor {
 		MapChunk nlist = gmap.getChunk(cx, cy);
 						// Blocked?
 		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
-			/* ++++++++FINISH
-			if (schedule)		// Tell scheduler.
-				schedule.set_blocked(t);
-			*/
+			if (schedule != null)		// Tell scheduler.
+				schedule.setBlocked(t);
 			stop();
 			if (!gwin.addDirty(this))
 				dormant = true;	// Off-screen.

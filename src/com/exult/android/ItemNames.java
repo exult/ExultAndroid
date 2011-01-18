@@ -108,13 +108,13 @@ public class ItemNames {
 			while (itemlen > 0 && buf[itemlen - 1] == 0)	// Skip ending nulls.
 				itemlen--;
 			String nm = new String(buf, 0, itemlen);
-			if (i < num_item_names)
+			if (i < num_item_names) {
 				names[i] = nm;
-			else if (i - num_item_names < num_text_msgs)
+			} else if (i - num_item_names < num_text_msgs) {
 				msgs[i - num_item_names] = nm;
-			else 
+			} else { 
 				misc[remapIndex(doremap, i - num_item_names - num_text_msgs)] = nm;
-			
+			}
 		}
 		for (i = first_msg; i < total_msgs; i++)
 			msgs[i] = msglist.get(i + 0x400);
@@ -148,6 +148,53 @@ public class ItemNames {
 		ReadTextMsgFile(txtfile, msgs, MSGS_SECT);
 		ReadTextMsgFile(txtfile, misc, MISC_SECT);
 		*/
-		}
+	}
+	/*
+	 *	Message #'s.  These are (offset-0x400) in text.flx and exultmsg.txt:
+	 */
+	public static final int first_move_aside = 0x00,	// For guards when blocked.
+	 last_move_aside = 0x02,
+	 first_preach = 0x03, last_preach = 0x07,
+	 first_preach2 = 0x08, last_preach2 = 0x0b,
+	 first_amen = 0x0c, last_amen = 0x0f,
+	 first_thief = 0x10, last_thief = 0x13,
+	 first_talk = 0x14, last_talk = 0x16,
+	 first_waiter_ask = 0x1b, last_waiter_ask = 0x1f,
+	 first_more_food = 0x20, last_more_food = 0x24,
+	 first_munch = 0x25, last_munch = 0x28,
+	 first_ouch = 0x29,
+	 last_ouch = 0x2c,
+	 first_need_help = 0x30,
+	 last_need_help = 0x33,
+	 first_will_help = 0x34,
+	 last_will_help = 0x36,
+	 first_to_battle = 0x39,
+	 last_to_battle = 0x3b,
+	 first_farmer = 0x3f, last_farmer = 0x41,
+	 first_miner = 0x42, last_miner = 0x44,
+	 first_miner_gold = 0x45, last_miner_gold = 0x47,
+	 first_flee = 0x48,
+	 last_flee = 0x4e,
+	 first_lamp_on = 0x63,
+	 last_lamp_on = 0x66,
+	 lamp_off = 0x67,
+	 first_call_police = 0x69,
+	 last_call_police = 0x6d,
+	 first_call_guards = 0x6c,
+	 last_call_guards = 0x6d,
+	 first_theft = 0x6e,		// Warnings.
+	 last_theft = 0x70,
+	 first_close_shutters = 0x71,
+	 last_close_shutters = 0x73,
+	 first_open_shutters = 0x74,
+	 last_open_shutters = 0x76,
+	 first_hunger = 0x77,		// A little hungry.  (3 of each).
+	 first_needfood = 0x7a,	// Must have food.
+	 first_starving = 0x7b,	// Starving.
+	 heard_something = 0x95,
+	 first_awakened = 0x95,
+	 last_awakened = 0x9a,
+	 first_magebane_struck = 0x9b,	// (SI only).
+	 last_magebane_struck = 0x9d;	// (SI only).
 
 }

@@ -76,10 +76,8 @@ public class MainActor extends Actor {
 		*/
 		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
 			if (isReallyBlocked(t, force)) {
-				/*++++++++++++
 				if (schedule != null)		// Tell scheduler.
-					schedule.set_blocked(t);
-				*/
+					schedule.setBlocked(t);
 				stop();
 				return false;
 			}

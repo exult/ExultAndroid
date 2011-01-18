@@ -32,6 +32,12 @@ public abstract class Schedule extends GameSingletons {
 	public Schedule(Actor n) {
 		npc = n;
 	}
+	public void setBlocked(Tile t) {
+		if (blocked == null)
+			blocked = new Tile(t);
+		else
+			blocked.set(t);
+	}
 	public abstract void nowWhat();
 	public void imDormant()	// Npc calls this when it goes from
 		{  }			//   being active to dormant.
@@ -176,7 +182,6 @@ public abstract class Schedule extends GameSingletons {
 			*/
 			int dir = npc.getDirFacing();	// Use NPC facing for starting direction
 			int delay = 1;
-			
 			switch (phase) {
 			case 0:
 				phase++;
@@ -188,21 +193,21 @@ public abstract class Schedule extends GameSingletons {
 				break;
 			case 1: {
 				boolean changedir = false;
-				Tile offset = null;
+				int offsetx = 0, offsety = 0;
 				switch (dir) {
 				case EConst.north:
 				case EConst.south:
 					if (which != 0)
 						changedir = true;
 					else
-						offset = new Tile(0, dir == EConst.south ? 1 : -1, 0);
+						offsety = dir == EConst.south ? 1 : -1;
 					break;
 				case EConst.east:
 				case EConst.west:
 					if (which == 0)
 						changedir = true;
 					else
-						offset = new Tile(dir == EConst.east ? 1 : -1, 0, 0);
+						offsetx = dir == EConst.east ? 1 : -1;
 					break;
 				}
 				if (changedir) {
@@ -212,17 +217,19 @@ public abstract class Schedule extends GameSingletons {
 				}
 				if (blocked != null && blocked.tx != -1) {		// Blocked?
 					GameObject obj = npc.findBlocking(blocked, dir);
+					System.out.println("Blocked by object at " + blocked);
 					if (obj != null) {
-						if (obj instanceof Actor) {
+						Actor act = obj.asActor();
+						if (act != null) {
 							MonsterInfo minfo = npc.getInfo().getMonsterInfo();
-							if (minfo != null || !minfo.cantYell()) {
-								/* ++++++++FINISH
-								npc.say(first_move_aside, last_move_aside);
+							if (minfo == null || !minfo.cantYell()) {
+								npc.say(ItemNames.first_move_aside, 
+										ItemNames.last_move_aside);
 										// Ask NPC to move aside.
-								if (obj.moveAside(npc, dir))
+								if (act.moveAside(npc, dir))
 											// Wait longer.
 									npc.start(3*delay, 3*delay);
-								else */ // Wait longer.
+								else  // Wait longer.
 									npc.start(delay, delay);
 								return;
 							}
@@ -236,8 +243,7 @@ public abstract class Schedule extends GameSingletons {
 				else {
 					Tile p0 = new Tile();
 					npc.getTile(p0);
-					if (offset != null)
-						p0.set(p0.tx + offset.tx, p0.ty + offset.ty, p0.tz + offset.tz);
+					p0.set(p0.tx + offsetx, p0.ty + offsety, p0.tz);
 					Actor.FramesSequence frames = npc.getFrames(dir);
 					int step_index = npc.getStepIndex();
 					if (step_index == 0)		// First time?  Init.
