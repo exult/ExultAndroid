@@ -42,7 +42,13 @@ abstract public class ActorAction extends GameSingletons {
 	public int getSpeed() {
 		return 0;
 	}
-	public IfElsePath hasUsecodePath() {
+	public boolean getDest(Tile dest) {
+		return false;
+	}
+	public boolean followingSmartPath() {
+		return false;
+	}
+	public IfElsePath asUsecodePath() {
 		return null; 
 	}
 	/*
@@ -323,15 +329,12 @@ abstract public class ActorAction extends GameSingletons {
 			}
 			return false;
 		}
-		/* ++++++
-						// Get destination, or ret. 0.
-		public int get_dest(Tile dest) {
-			
+		public boolean getDest(Tile dest) {
+			path.getDest(dest);
+			return true;
 		}
-		*/
-						// Check for Astar.
 		public boolean followingSmartPath() {
-			return false; //++++++++++++++
+			return path != null && path.followingSmartPath();
 		}
 		public int getSpeed()
 			{ return speed; }
@@ -401,7 +404,7 @@ abstract public class ActorAction extends GameSingletons {
 				done = true;		// All done now.
 			return delay;
 		}
-		public IfElsePath hasUsecodePath()
+		public IfElsePath asUsecodePath()
 			{ return this; }
 		}
 	/*

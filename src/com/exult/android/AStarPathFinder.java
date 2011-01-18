@@ -16,12 +16,17 @@ public class AStarPathFinder extends PathFinder {
 		cmp = new NodeComparator();
 		open = new PriorityQueue<SearchNode>(300, cmp);
 		lookup = new HashMap<Tile,SearchNode>(300);
+	}	
+	public boolean followingSmartPath() {
+		return true;
 	}
 	public boolean NewPath(Tile s, Tile d, Client client) {	
 		/* Not using these for now.
 		src = s;			// Store start, destination.
-		dest = d;
 		*/
+		if (dest == null)
+			dest = new Tile();
+		dest.set(d);
 		path = null;		// Clear out old path, if there.
 		nextIndex = 0;
 		dir = 1;

@@ -1,16 +1,17 @@
 package com.exult.android;
 
 public abstract class PathFinder {
+	protected Tile dest;
 	/* +++++MAYBE not needed.
-	protected Tile src, dest;
+	protected Tile src;
 	
 	public final void getSrc(Tile s) {
 		return s.set(src);
 	}
-	public final void getDest(Tile d) {
-		return d.set(dest);
-	}
 	*/
+	public final void getDest(Tile d) {
+		d.set(dest);
+	}
 	abstract public boolean NewPath(Tile s, Tile d, Client c);
 	abstract public boolean getNextStep(Tile n);
 	abstract public int getNumSteps();
@@ -18,7 +19,9 @@ public abstract class PathFinder {
 	boolean setBackwards() {
 		return false;	// Default: Can't do it.
 	}
-	
+	public boolean followingSmartPath() {
+		return false;
+	}
 	public boolean NewPath(Tile s, Tile d) {
 		return NewPath(s, d, null);
 	}

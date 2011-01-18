@@ -196,5 +196,36 @@ public class ItemNames {
 	 last_awakened = 0x9a,
 	 first_magebane_struck = 0x9b,	// (SI only).
 	 last_magebane_struck = 0x9d;	// (SI only).
+	//	Messages in exultmsg.txt ( - 0x400):
+	public static final int first_chair_thief = 0x100, last_chair_thief = 0x104,
+	 first_waiter_banter = 0x105, last_waiter_banter = 0x107,
+	 first_waiter_serve = 0x108, last_waiter_serve = 0x109,
+	 first_bed_occupied = 0x10a, num_bed_occupied = 3,
+	 first_catchup = 0x10d, last_catchup = 0x10f,
+	 with_help_from = 0x110, exult_team = 0x111, driven_by_exult = 0x112,
+	 end_of_ultima7 = 0x113, end_of_britannia = 0x114,
+	 you_cannot_do_that = 0x115, damn_avatar = 0x116,
+	 blackgate_destroyed = 0x117, guardian_has_stopped = 0x118,
+	 txt_screen0 = 0x119, //to 0x11E
+	 txt_screen1 = 0x11F, //to 0x128
+	 txt_screen2 = 0x129, //to 0x12E
+	 txt_screen3 = 0x12F, //to 0x134
+	 txt_screen4 = 0x135, //to 0x138
+	 lord_castle = 0x139, dick_castle = 0x13A,
+	 bg_fellow = 0x13B, //to 0x13D
+	 my_leige = 0x13E, yo_homes = 0x53F,
+	 all_we0 = 0x140, //to 0x541
+	 and_a0 = 0x142, //to 0x543
+	 indeed = 0x144, //to 0x545
+	 iree = 0x146,
+	 stand_back = 0x147,
+	 jump_back = 0x148,
+	 batlin = 0x149,
+	 you_shall = 0x14B,
+	 there_i = 0x14D,
+	 batlin2 = 0x14F,
+	 you_must = 0x151,
+	 soon_i = 0x153,
+	 tis_my = 0x155;
 
 }

@@ -1314,12 +1314,167 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		frameTime = 0;
 	}
+	/*
+	 *	Want one value to approach another.
+	 */
+	private int approach
+		(
+		int from, int to,
+		int dist			// Desired distance.
+		) {
+		if (from <= to)			// Going forwards?
+			return (to - from <= dist ? from : to - dist);
+		else				// Going backwards.
+			return (from - to <= dist ? from : to + dist);
+	}
+	/*
+	 *	Follow the leader.
+	 */
+	public void follow(Actor leader){
+		if (isDead())
+			return;			// Not when dead.
+		int delay = 0;
+		int dist;			// How close to aim for.
+		Tile leaderpos = new Tile();
+		leader.getTile(leaderpos);
+		Tile pos = new Tile();
+		getTile(pos);
+		Tile goal = new Tile();
+		if (leader.isMoving()) {	// Figure where to aim.
+						// Aim for leader's dest.
+			dist = 2 + partyId/3;
+			leader.getDest(goal);
+			goal.tx = (short) approach(pos.tx, goal.tx, dist);
+			goal.ty = (short) approach(pos.ty, goal.ty, dist);
+		} else {			// Leader stopped?
+			goal = leaderpos;	// Aim for leader.
+			if (distance(leader) <= 6)
+				return;		// In formation, & close enough.
+//			cout << "Follow:  Leader is stopped" << endl;
+			// +++++For formation, why not get correct positions?
+			final int xoffs[] = {-1, 1, -2, 2, -3, 3, -4, 4, -5, 5},
+				   	   yoffs[] = {1, -1, 2, -2, 3, -3, 4, -4, 5, -5};
+			goal.tx += xoffs[partyId] + 1 - EUtil.rand()%3;
+			goal.ty += yoffs[partyId] + 1 - EUtil.rand()%3;
+			dist = 1;
+			}
+						// Already aiming along a path?
+		if (isMoving() && action != null && action.followingSmartPath()) {
+						// And leader moving, or dest ~= goal?
+			if (leader.isMoving())
+				return;
+			Tile dest = new Tile();
+			getDest(dest);
+			if (goal.distance(dest) <= 5)
+				return;
+		}
+						// Tiles to goal.
+		int goaldist = goal.distance(pos);
+		if (goaldist < dist) {		// Already close enough?
+			if (!leader.isMoving())
+				stop();
+			return;
+		}
+						// Is leader following a path?
+		boolean leaderpath = leader.action != null && 
+					leader.action.followingSmartPath();
+						// Get leader's distance from goal.
+		int leaderdist = leader.distance(goal);
+						// Get his speed.
+		int speed = leader.getFrameTime();
+		if (speed == 0) {			// Not moving?
+			speed = 100;
+			if (goaldist < leaderdist)	// Closer than leader?
+						// Delay a bit IF not moving.
+				delay = (1 + leaderdist - goaldist)*100;
+			}
+		if (goaldist - leaderdist >= 5)
+			speed -= 20;		// Speed up if too far.
+						// Get window rect. in tiles.
+		Rectangle wrect = new Rectangle();
+		gwin.getWinTileRect(wrect);
+		int dist2lead = leader.distance(pos);
+						// Getting kind of far away?
+		if (dist2lead > wrect.w + wrect.w/2 &&
+		    partyId >= 0 &&		// And a member of the party.
+		    !leaderpath)		// But leader is not following path.
+			{			// Approach, or teleport.
+						// Try to approach from offscreen.
+			if (approachAnother(leader, false))
+				return;
+						// Find a free spot.
+			leader.getTile(goal);
+			if (!MapChunk.findSpot(goal, 2, this, 0, MapChunk.anywhere)) {
+				move(goal.tx, goal.ty, goal.tz);
+				if (EUtil.rand()%2 != 0)
+					say(ItemNames.first_catchup, ItemNames.last_catchup);
+				gwin.paint();
+				return;
+				}
+			}
+						// NOTE:  Avoid delay when moving,
+						//  as it creates jerkiness.  AND,
+						//  0 retries if blocked.
+		walkToTile(goal, speed, delay, 0);
+		}
+
+	
+	/*
+	 *	Approach another actor from offscreen.
+	 *
+	 *	Output:	false if failed.
+	 */
+	public boolean approachAnother
+		(
+		Actor other,
+		boolean wait			// If true, game hangs until arrival.
+		) {
+		Tile dest = new Tile();
+		other.getTile(dest);
+						// Look outwards for free spot.
+		if (!MapChunk.findSpot(dest, 8, getShapeNum(), getFrameNum(), 0))
+			return false;
+						// Where are we now?
+		Tile src = new Tile();
+		getTile(src);
+		Rectangle r = new Rectangle();
+		gwin.getWinTileRect(r);
+		if (!r.hasPoint(src.tx - src.tz/2, 
+								src.ty - src.tz/2))
+						// Off-screen?
+			src.set(-1, -1, 0);
+		int destmap = other.getMapNum();
+		int srcmap = getMapNum();
+		if (destmap != -1 && srcmap != -1 && srcmap != destmap) {
+			src.set(-1, -1, 0);
+			move(src.tx, src.ty, src.tz, destmap);
+		}
+		ActorAction action = new ActorAction.PathWalking(null);
+		if (action.walkToTile(this, src, dest, 0) == null) {
+			return false;
+		}
+		setAction(action);
+		int speed = 1;
+		start(speed, 0);			// Walk fairly fast.
+		/* ++++++++FINISH?
+		if (wait)			// Only wait ~1/5 sec.
+			Wait_for_arrival(this, dest, 2*);
+		*/
+		return true;
+	}
 	public final GameObject getTarget() {
 		return target;
 	}
 	public final boolean canAct() {
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)
 				|| isDead() || getProperty(health) <= 0);
+	}
+	//	Get destination or current spot if none.
+	public void getDest(Tile dest) {
+		if (action != null && action.getDest(dest))
+			return;
+		else
+			getTile(dest);
 	}
 	/*
 	 *	Walk towards a given tile.

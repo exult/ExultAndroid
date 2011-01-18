@@ -75,7 +75,6 @@ public abstract class Schedule extends GameSingletons {
 			goal = new Tile();
 		}
 		public void nowWhat() {	// Now what should NPC do?
-			/*++++++++++FINISH
 			boolean is_blocked = blocked != null && blocked.tx != -1;
 			if (blocked == null)
 				blocked = new Tile();
@@ -133,10 +132,9 @@ public abstract class Schedule extends GameSingletons {
 				ok = npc.walkPathToTile(pos, goal,
 									speed - speed/4, 0);
 			} else				// Off screen already?
-				ok = npc.approachAnother(av);
+				ok = npc.approachAnother(av, false);
 			if (!ok)			// Failed? Don't try again for a bit.
 				nextPathTime = 1 + 1000/TimeQueue.tickMsecs;
-			*/
 		}
 	}
 	/*
