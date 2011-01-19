@@ -26,6 +26,7 @@ public class GameWindow extends GameSingletons {
 	private TimeQueue tqueue;
 	private UsecodeMachine usecode;
 	private Rectangle paintBox;		// Temp used for painting.
+	private Rectangle clipBox;
 	private Rectangle tempDirty;	// Temp for addDirty.
 	private Rectangle tempFind;		// For findObject.
 	private Point tempPoint = new Point();
@@ -87,6 +88,7 @@ public class GameWindow extends GameSingletons {
 		dirty = new Rectangle();
 		scrollBounds = new Rectangle();
 		paintBox = new Rectangle();
+		clipBox = new Rectangle();
 		tempDirty = new Rectangle();
 		tempFind = new Rectangle();
 		GameSingletons.init(this);
@@ -927,8 +929,8 @@ public class GameWindow extends GameSingletons {
 	}
 	// Clip 'r' to window.
 	public void clipToWin(Rectangle r) {
-		paintBox.set(0, 0, win.getWidth(), win.getHeight());
-		r.intersect(paintBox);
+		clipBox.set(0, 0, win.getWidth(), win.getHeight());
+		r.intersect(clipBox);
 	}
 	public void paintDirty() {
 		/*
@@ -940,6 +942,7 @@ public class GameWindow extends GameSingletons {
 		*/
 		paintBox.set(dirty);
 		clipToWin(paintBox);
+		//System.out.printf("paintDirty: x = %1$d, w = %2$d\n", dirty.x, dirty.w);
 		if (paintBox.w > 0 && paintBox.h > 0)
 			paint(paintBox);	// (Could create new dirty rects.)
 		clearDirty();

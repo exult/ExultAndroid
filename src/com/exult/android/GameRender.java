@@ -118,6 +118,8 @@ public class GameRender {
 		renderSeq++;			// Increment sequence #.
 		gwin.setPainted();
 
+		//System.out.printf("paint x = %1$d, y = %2$d, w = %3$d, h = %4$d\n", 
+		//		x, y, w, h);
 		int scrolltx = gwin.getScrolltx(), scrollty = gwin.getScrollty();
 		int light_sources = 0;		// Count light sources found.
 						// Get chunks to start with, starting

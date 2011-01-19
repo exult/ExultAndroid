@@ -190,7 +190,7 @@ public final class DraggingInfo extends GameSingletons {
 			audio.playSfx(Audio.gameSfx(76));
 			return false;
 		}
-		int max_lift = /* +++++++ cheat.inHackMover() ? 255 : */
+		int max_lift = cheat.inHackMover() ? 255 :
 						gwin.getMainActor().getLift() + 5;
 		int skip = gwin.getRenderSkipLift();
 		if (max_lift >= skip)		// Don't drop where we cannot see.
@@ -490,16 +490,10 @@ public final class DraggingInfo extends GameSingletons {
 		int frame = to_drop.getFrameNum();
 		int xtiles = info.get3dXtiles(frame), ytiles = info.get3dYtiles(frame);
 		int max_drop, move_flags;
-		/* +++++++++++++++
-		if (cheat.inHackMover())
-			{
-			max_drop = at_lift - cheat.get_edit_lift();
-//			max_drop = max_drop < 0 ? 0 : max_drop;
-			if (max_drop < 0)	// Below lift we're editing?
-				return 0;
-			move_flags = MOVE_WALK|MOVE_MAPEDIT;
-			}
-		else */ {			// Allow drop of 5;
+		if (cheat.inHackMover()) {
+			max_drop = at_lift;
+			move_flags = EConst.MOVE_WALK|EConst.MOVE_MAPEDIT;
+		} else {			// Allow drop of 5;
 			max_drop = 5;
 			move_flags = EConst.MOVE_WALK;
 		}
