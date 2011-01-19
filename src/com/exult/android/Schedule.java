@@ -178,6 +178,9 @@ public abstract class Schedule extends GameSingletons {
 				if (try_street_maintenance())
 					return;		// We no longer exist.
 			*/
+			if (npc.isDormant()) {
+				return;
+			}
 			int dir = npc.getDirFacing();	// Use NPC facing for starting direction
 			int delay = 1;
 			switch (phase) {
@@ -249,7 +252,13 @@ public abstract class Schedule extends GameSingletons {
 										// Get next (updates step_index).
 					step_index = frames.nextIndex(step_index);
 							// One step at a time.
-						npc.step(p0, frames.get(step_index), false);
+					if (!npc.step(p0, frames.get(step_index), false)) {
+						if (npc.isDormant()) {
+							System.out.println("Pace: Npc #" + npc.getNpcNum()
+									+ " is dormant");
+							return;
+						}
+					}
 				}
 				npc.start(delay, delay);
 				break;
