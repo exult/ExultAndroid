@@ -151,7 +151,6 @@ public class NpcActor extends Actor {
 						getScheduleType() != Schedule.street_maintenance) {
 						// No longer on screen.
 			stop();
-			System.out.println("npcActor.step: NPC " + npcNum + " going dormant.");
 			dormant = true;
 			return false;
 		}
@@ -253,8 +252,6 @@ public class NpcActor extends Actor {
 		if (dormant && schedule != null &&	// Resume schedule.
 						// FOR NOW:  Not when in formation.
 		    (partyId < 0 || scheduleType != Schedule.follow_avatar)) {
-			if (npcNum == 14)
-				System.out.println("Painting npc #14");
 			dormant = false;	// But clear out old entries first.??
 			tqueue.remove(this);
 						// Force schedule->now_what() in about 1/2 sec.

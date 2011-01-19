@@ -254,8 +254,6 @@ public abstract class Schedule extends GameSingletons {
 							// One step at a time.
 					if (!npc.step(p0, frames.get(step_index), false)) {
 						if (npc.isDormant()) {
-							System.out.println("Pace: Npc #" + npc.getNpcNum()
-									+ " is dormant");
 							return;
 						}
 					}

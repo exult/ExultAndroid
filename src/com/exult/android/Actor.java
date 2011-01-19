@@ -1298,8 +1298,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int delay			// Delay before starting (ticks) (only
 							//   if not already moving).
 		) {
-		if (npcNum == 14)
-			System.out.println("Starting NPC 14 with delay " + delay);
 		dormant = false;		// 14-jan-2001 - JSF.
 		frameTime = speed;
 		if (!inQueue() || delay > 0) {	// Not already in queue?
