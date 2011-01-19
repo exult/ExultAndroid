@@ -153,7 +153,7 @@ public class GameWindow extends GameSingletons {
 		timeStopped = 0;	// Done.
 		return 0;
 	}
-	public final Actor getMainActor() {
+	public final MainActor getMainActor() {
 		return mainActor;
 	}
 	public final Actor getCameraActor() {

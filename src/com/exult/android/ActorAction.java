@@ -175,10 +175,8 @@ abstract public class ActorAction extends GameSingletons {
 					return 0;
 				if (getParty) {		// MUST be the Avatar.
 					partyman.getFollowers(newdir);
-					/* +++++NOT SURE about this
-					if (done)
-						gwin.getMainActor().get_followers();
-					*/
+					if (reached_end)
+						gwin.getMainActor().getFollowers();
 				}
 				if (reached_end)		// Was this the last step?
 					return (0);

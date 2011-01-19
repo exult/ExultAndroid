@@ -44,24 +44,20 @@ public class MainActor extends Actor {
 			if (npc == null || npc.getFlag(GameObject.asleep) ||
 			    npc.isDead())
 				continue;
-			/* ++++++++++FINISH
 			int sched = npc.getScheduleType();
 						// Skip if in combat or set to 'wait'.
-			if (sched != Schedule::combat &&
-			    sched != Schedule::wait &&
+			if (sched != Schedule.combat &&
+			    sched != Schedule.wait &&
 						// Loiter added for SI.
-			    sched != Schedule::loiter)
-				{
-				if (sched != Schedule::follow_avatar)
-					npc.set_schedule_type(
-							Schedule::follow_avatar);
+			    sched != Schedule.loiter) {
+				if (sched != Schedule.follow_avatar)
+					npc.setScheduleType(
+							Schedule.follow_avatar);
 				else
 					npc.follow(this);
-				}
-			*/
 			}
 		}
-
+	}
 	public boolean step(Tile t, int frame, boolean force) {
 		restTime = 0;			// Reset counter.
 		t.fixme();
