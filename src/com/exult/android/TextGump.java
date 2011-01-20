@@ -71,7 +71,7 @@ public class TextGump extends Gump {
 	}
 	// Next page of book/scroll.
 	boolean showNextPage() {
-		if (curend >= text.length())
+		if (text == null || curend >= text.length())
 			return false;
 		curtop = curend;// Start next page or pair of pages.
 		return true;

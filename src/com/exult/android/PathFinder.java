@@ -117,7 +117,10 @@ public abstract class PathFinder {
 			if (poison && to.tz == 0)
 				cost *= 2;		// And avoid poison if possible.
 						// Get 'flat' shapenum.
-			int shapenum = olist.getTerrain().getShapeNum(tx, ty);
+			ChunkTerrain ter = olist.getTerrain();
+			if (ter == null)
+				return -1;
+			int shapenum = ter.getShapeNum(tx, ty);
 			if (shapenum == 24) {		// Cobblestone path in BlackGate?
 				int framenum = olist.getTerrain().getFrameNum(tx, ty);
 				if (framenum <= 1)

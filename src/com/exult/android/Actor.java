@@ -94,7 +94,25 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		sleep_frame = 13,
 		up_frame = 14,		// Both hands reach up.
 		out_frame = 15		// Both hands reach out.
-		;	
+		;	//	Actor frame to substitute when a frame is empty (as some are):
+	public static final int visibleFrames[] = {
+			Actor.standing,		// Standing.
+			Actor.standing,		// Steps.
+			Actor.standing,
+			Actor.standing,		// Ready.
+			Actor.raise2_frame,		// 1-handed strikes => 2-handed.
+			Actor.reach2_frame,
+			Actor.strike2_frame,
+			Actor.raise1_frame,		// 2-handed => 1-handed.
+			Actor.reach1_frame,
+			Actor.strike1_frame,
+			Actor.standing,		// When you can't sit...
+			Actor.kneel_frame,		// When you can't bow.
+			Actor.bow_frame,		// When you can't kneel.
+			Actor.standing,		// Can't lie.
+			Actor.strike2_frame,		// Can't raise hands.
+			Actor.ready_frame };	// Can't strech arms outward.
+
 	public static final int // Describes alignment field.
 			neutral = 0,
 			friendly = 1,
@@ -589,25 +607,31 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				unready_weapon();
 				schedule = new Thief_schedule(this);
 				break;
+			*/
 			case Schedule.waiter:
-				unready_weapon();
-				schedule = new Waiter_schedule(this);
+				// ++++FINISH unready_weapon();
+				schedule = new Schedule.Waiter(this);
 				break;
+			/*+++++++++++
 			case Schedule.kid_games:
 				unready_weapon();
 				schedule = new Kid_games_schedule(this);
 				break;
+			*/
 			case Schedule.eat_at_inn:
-				unready_weapon();
-				schedule = new Eat_at_inn_schedule(this);
+				//+++++++ unready_weapon();
+				schedule = new Schedule.EatAtInn(this);
 				break;
+			/*+++++++++++
 			case Schedule.duel:
 				schedule = new Duel_schedule(this);
 				break;
+			*/
 			case Schedule.preach:
-				ready_best_weapon();	// Fellowship staff.
-				schedule = new Preach_schedule(this);
+				//+++++++FINISH ready_best_weapon();	// Fellowship staff.
+				schedule = new Schedule.Preach(this);
 				break;
+			/*+++++++++++++++
 			case Schedule.patrol:
 				ready_best_weapon();
 				schedule = new Patrol_schedule(this);
@@ -890,17 +914,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public final void changeFrame(int frnum) {
 		addDirty(false);			// Set to repaint old area.
-		/* FINISH+++++++++++
-		ShapeID id(getShapeNum(), frnum, get_shapefile());
-		Shape_frame *shape = id.get_shape();
-		if (!shape || shape.is_empty())
-			{		// Swap 1hand <=> 2hand frames.
-			frnum = (frnum&48)|visible_frames[frnum&15];
-			id.set_frame(frnum);
-			if (!(shape = id.get_shape()) || shape.is_empty())
+		int shnum = getShapeNum();
+		ShapeFrame shape = getShapeFile().getFile().getShape(shnum, frnum);
+		if (shape == null || shape.isEmpty()) {
+					// Swap 1hand <=> 2hand frames.
+			frnum = (frnum&48)|visibleFrames[frnum&15];
+			shape = getShapeFile().getFile().getShape(shnum, frnum);
+			if (shape == null || shape.isEmpty())
 				frnum = (frnum&48)|Actor.standing;
-			}
-		*/
+		}
 		restTime = 0;
 		setFrame(frnum);
 		addDirty(true);			// Set to repaint new.
