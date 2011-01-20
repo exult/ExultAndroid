@@ -60,8 +60,9 @@ public abstract class GameObject extends ShapeID {
 	private HashSet<GameObject> dependencies;	// Objects which must be painted before
 						//   this can be rendered.
 	private HashSet<GameObject> dependors;	// Objects which must be painted after.
-	private static byte rotate[] = { 0, 0, 48, 48, 16, 16, 32, 32};	// For getting rotated frame #.
+	private static final byte rotate[] = { 0, 0, 48, 48, 16, 16, 32, 32};	// For getting rotated frame #.
 	protected Point paintLoc = new Point();	// Temp for getting coords.
+	private static Tile nearbyLoc = new Tile();	// Temp.
 	public long renderSeq;		// Render sequence #.
 	
 	public GameObject(int shapenum, int framenum, int tilex, 
@@ -206,7 +207,7 @@ public abstract class GameObject extends ShapeID {
 	}
 	public GameObject findClosest(Vector<GameObject> vec, int shapenums[], int dist) {
 		int i, cnt = shapenums.length;
-		Tile pos = new Tile();
+		Tile pos = nearbyLoc;;
 		getTile(pos);
 		for (i = 0; i < cnt; i++)
 						// 0xb0 mask finds anything.
@@ -224,6 +225,39 @@ public abstract class GameObject extends ShapeID {
 	}
 	public GameObject findClosest(Vector<GameObject> vec, int shapenums[]) {
 		return findClosest(vec, shapenums, 24);
+	}
+	public GameObject findClosest(int shapenum, int dist) {
+		getTile(nearbyLoc);
+		Vector<GameObject> vec = new Vector<GameObject>();
+		if (gmap.findNearby(vec, nearbyLoc, shapenum, dist, 0xb0) == 0)
+			return null;
+		GameObject closest = null;
+		int bestDist = 10000;	// Tiles.
+		for (GameObject obj:vec) {
+			int d = obj.distance(nearbyLoc);
+			if (d < bestDist) {
+				bestDist = d;
+				closest = obj;
+			}
+		}
+		return closest;
+	}
+	public GameObject findClosest(int shapenum) {
+		return findClosest(shapenum, 24);
+	}
+	public int findNearby(Vector<GameObject> vec, int shapenum, int delta, 
+			int mask, int qual, int framenum) {
+		getTile(nearbyLoc);
+		return gmap.findNearby(vec, nearbyLoc, shapenum, delta, mask, qual,
+														framenum);
+	}
+	public int findNearby(Vector<GameObject> vec, int shapenum, int delta, 
+			int mask) {
+		return findNearby(vec, shapenum, delta, mask, EConst.c_any_qual,
+													EConst.c_any_framenum);
+	}
+	public int findNearbyActors(Vector<GameObject> vec, int shapenum, int delta) {
+		return findNearby(vec, shapenum, delta, 8);
 	}
 	public boolean isClosedDoor() {
 		ShapeInfo info = getInfo();
@@ -538,6 +572,10 @@ public abstract class GameObject extends ShapeID {
 	// Get frame for desired direction.
 	public final int getDirFramenum(int dir, int frnum) {
 		return (frnum&0xf) + rotate[dir]; 
+	}
+	// Get it using current dir.
+	public final int getDirFramenum(int frnum) {
+		return (frnum&0xf) + (getFrameNum()&(16 | 32));
 	}
 	public final GameMap getMap() {
 		return chunk != null ? chunk.getMap() : null;

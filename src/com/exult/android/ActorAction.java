@@ -119,6 +119,15 @@ abstract public class ActorAction extends GameSingletons {
 		public PathWalking(PathFinder p) {
 			path = p != null ? p : new AStarPathFinder();
 			max_blocked = 3;
+		}	
+		public static PathWalking createPath(Tile src, Tile dest, 
+						PathFinder.Client cost) {
+			AStarPathFinder path = new AStarPathFinder();
+			// Get to within 1 tile.
+			if (path.NewPath(src, dest, cost))
+				return new PathWalking(path);
+			else
+				return null;
 		}
 						// Handle time event.
 		public int handleEvent(Actor actor) {
@@ -497,6 +506,10 @@ abstract public class ActorAction extends GameSingletons {
 					ActorAction a2, ActorAction a3) {
 			actions = new ActorAction[4];
 			actions[0] = a0; actions[1] = a1; actions[2] = a2; actions[3] = a3;
+		}				// Create with 2.
+		public Sequence(ActorAction a0, ActorAction a1) {
+			actions = new ActorAction[2];
+			actions[0] = a0; actions[1] = a1;
 		}
 		public int getSpeed()
 			{ return speed; }
@@ -517,5 +530,33 @@ abstract public class ActorAction extends GameSingletons {
 			}
 			return (delay);
 		}
+	}/*
+	 *	Action to turn towards an object or spot.
+	 */
+	public static class FacePos extends ActorAction {
+		int speed;			// Time between frames.
+		Tile pos;			// Where to put it.
+		public FacePos(Tile p, int spd) {
+			pos = p;
+			speed = spd;
+		}
+						// To pick up an object:
+		public FacePos(GameObject o, int spd) {
+			pos = new Tile();
+			o.getTile(pos);
+			speed = spd;
+		}
+		@Override
+		public int handleEvent(Actor actor) {
+			int dir = actor.getDirection(pos);
+			int frnum = actor.getDirFramenum(dir, Actor.standing);
+			if (actor.getFrameNum() == frnum)
+				return 0;		// There.
+			actor.changeFrame(frnum);
+			return speed;
+		}
+		@Override
+		public int getSpeed()
+			{ return speed; }
 	}
 }

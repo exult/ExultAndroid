@@ -1,5 +1,7 @@
 package com.exult.android;
 import com.exult.android.shapeinf.MonsterInfo;
+
+import java.util.Iterator;
 import java.util.Vector;
 
 public abstract class Schedule extends GameSingletons {
@@ -290,6 +292,232 @@ public abstract class Schedule extends GameSingletons {
 			}
 		}
 	}
+	/*
+	 *	A schedule for eating at an inn.
+	 */
+	public static class EatAtInn extends Schedule {
+		public EatAtInn(Actor n) {
+			super(n);
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			int frnum = npc.getFrameNum();
+			if ((frnum&0xf) != Actor.sit_frame)
+				{			// First have to sit down.
+				if (Schedule.Sit.setAction(npc, null, 0) == null)
+							// Try again in a while.
+					npc.start(250, 5000);
+				return;
+				}
+			Vector<GameObject> foods = new Vector<GameObject>();// Food nearby?
+			int cnt = npc.findNearby(foods, 377, 2, 0);
+			if (cnt > 0) {			// Found?
+				// Find closest.
+				GameObject food = null;
+				int dist = 500;
+				for (GameObject obj : foods) {
+					int odist = obj.distance(npc);
+					if (odist < dist) {
+						dist = odist;
+						food = obj;
+					}
+				}
+				if (EUtil.rand()%5 == 0) {
+					gwin.addDirty(food);
+					food.removeThis();
+				}
+				if (EUtil.rand()%4 != 0)
+					npc.say(ItemNames.first_munch, ItemNames.last_munch);
+			} else if (EUtil.rand()%4 != 0)
+				npc.say(ItemNames.first_more_food, ItemNames.last_more_food);
+							// Wake up in a little while.
+			npc.start(250, 5000 + EUtil.rand()%12000);
+		}
+	}
+
+	/*
+	 *	A schedule for preaching.
+	 */
+	public static class Preach extends Schedule {
+		static final int
+			find_podium = 0,
+			at_podium = 1,
+			exhort = 2,
+			visit = 3,
+			talk_member = 4,
+			find_icon = 5,
+			pray = 6;
+		int state;
+		Tile npcPos = new Tile(), podiumPos = new Tile();
+		public Preach(Actor n) {
+			super(n);
+			state = find_podium;
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			switch (state) {
+			case find_podium:
+				{
+				Vector<GameObject> vec = new Vector<GameObject>();
+				if (npc.findNearby(vec, 697, 17, 0) == 0) {
+					npc.setScheduleType(loiter);
+					return;
+				}
+				GameObject podium = vec.firstElement();
+				podium.getTile(podiumPos);
+				final int deltas[][] = {{-1, 0},{1, 0},{0, -2},{0, 1}};
+				int frnum = podium.getFrameNum()%4;
+				podiumPos.tx += deltas[frnum][0];
+				podiumPos.ty += deltas[frnum][1];
+				npc.getTile(npcPos);
+				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 0);
+				ActorAction pact = ActorAction.PathWalking.createPath(
+											npcPos, podiumPos, cost);
+				if (pact != null) {
+					state = at_podium;
+					npc.setAction(new ActorAction.Sequence(pact,
+							new ActorAction.FacePos(podium, 200)));
+					npc.start(1, 0);
+					return;
+				}
+				// Try again later.
+				npc.start(250, 5000 + (EUtil.rand()%5000)/TimeQueue.tickMsecs);	
+				return;
+				}
+			case at_podium:
+				if (EUtil.rand()%2 != 0)		// Just wait a little.
+					npc.start(1, (EUtil.rand()%3000)/TimeQueue.tickMsecs);
+				else  {
+					if (EUtil.rand()%3 != 0)
+						state = exhort;
+					else if (game.isSI() || EUtil.rand()%3 != 0)
+						state = visit;
+					else
+						state = find_icon;
+					npc.start(1, (2000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
+				}
+				return;
+			case exhort:
+				{
+				byte frames[] = new byte[8];		// Frames.
+				//+++++++++INDENT:
+			int cnt = 1 + EUtil.rand()%(frames.length - 1);
+						// Frames to choose from:
+			final byte choices[] = {0, 8, 9};
+			for (int i = 0; i < cnt - 1; i++)
+				frames[i] = (byte)npc.getDirFramenum(
+						choices[EUtil.rand()%(choices.length)]);
+						// Make last one standing.
+			frames[cnt - 1] = (byte)npc.getDirFramenum(Actor.standing);
+			npc.setAction(new ActorAction.Frames(frames, cnt, 250, null));
+			npc.start(1, 0);
+			npc.say(ItemNames.first_preach, ItemNames.last_preach);
+			state = at_podium;
+			Actor member = findCongregant(npc);
+			if (member != null) {
+				UsecodeScript scr = new UsecodeScript(member);
+				scr.add(UsecodeScript.delay_ticks, 3);
+				scr.add(UsecodeScript.face_dir, member.getDirFacing());
+				scr.add(UsecodeScript.npc_frame + Actor.standing);
+				scr.add(UsecodeScript.say).add(ItemNames.msgs[ItemNames.first_amen +
+					EUtil.rand()%(ItemNames.last_amen - ItemNames.first_amen + 1)]);
+				scr.add(UsecodeScript.delay_ticks, 2);
+				scr.add(UsecodeScript.npc_frame + Actor.sit_frame);
+				scr.finish();
+				scr.start(1);	// Start next tick.
+				}
+			return;
+			}
+		case visit:
+			{
+			state = find_podium;
+			npc.start(1, (1000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
+			Actor member = findCongregant(npc);
+			if (member == null)
+				return;
+			Tile pos = new Tile();
+			member.getTile(pos);
+			npc.getTile(npcPos);
+			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
+			ActorAction pact = ActorAction.PathWalking.createPath(
+														npcPos, pos, cost);
+			if (pact == null)
+				return;
+			npc.setAction(new ActorAction.Sequence(pact,
+					new ActorAction.FacePos(member, 200)));
+			state = talk_member;
+			return;
+			}
+		case talk_member:
+			state = find_podium;
+			npc.say(ItemNames.first_preach2, ItemNames.last_preach2);
+			npc.start(250, 2000);
+			return;
+		case find_icon:
+			{
+			state = find_podium;		// In case we fail.
+			npc.start(2, 0);
+			GameObject icon = npc.findClosest(724);
+			if (icon == null)
+				return;
+			Tile pos = new Tile();
+			icon.getTile(pos);
+			pos.tx += 2;
+			pos.ty -= 1;
+			npc.getTile(npcPos);
+			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 0);
+			ActorAction pact = ActorAction.PathWalking.createPath(
+				npcPos, pos, cost);
+			if (pact != null) {
+				npc.setAction(pact);
+				state = pray;
+			}
+			return;
+			}
+		case pray:
+			{
+			UsecodeScript scr = new UsecodeScript(npc);
+			scr.add(UsecodeScript.face_dir << 6,	// Face west.
+					UsecodeScript.npc_frame + Actor.standing,
+					UsecodeScript.npc_frame + Actor.bow_frame,
+					UsecodeScript.delay_ticks << 3,
+					UsecodeScript.npc_frame + Actor.kneel_frame);
+			scr.add(UsecodeScript.say).add(
+					ItemNames.msgs[ItemNames.first_amen + EUtil.rand()%2]);
+			scr.add(UsecodeScript.delay_ticks << 5,
+					UsecodeScript.npc_frame + Actor.bow_frame,
+					UsecodeScript.delay_ticks << 3,
+					UsecodeScript.npc_frame + Actor.standing);
+			scr.finish();
+			scr.start(1);	// Start next tick.
+			state = find_podium;
+			npc.start(2, 4000/TimeQueue.tickMsecs);
+			return;
+			}
+		default:
+			state = find_podium;
+			npc.start(250, 0);
+			return;
+		}
+
+		}
+		/*
+		 * Find someone listening.
+		 */
+		private Actor findCongregant(Actor npc) {
+			Vector<GameObject> vec = new Vector<GameObject>();
+			if (npc.findNearbyActors(vec, EConst.c_any_shapenum, 16) == 0)
+				return null;
+			Iterator<GameObject> iter = vec.iterator();
+			while (iter.hasNext()) {
+				Actor n = iter.next().asActor();
+				if (n == null || n.getScheduleType() != Schedule.sit ||
+						n.getFlag(Actor.in_party))
+					iter.remove();
+			}
+			int sz = vec.size();
+			return sz > 0 ? vec.elementAt(EUtil.rand()%sz).asActor() : null;
+		}
+	}
+
 	/*
 	 *	Loiter within a rectangle.
 	 */
