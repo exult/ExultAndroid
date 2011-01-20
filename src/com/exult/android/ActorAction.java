@@ -351,6 +351,66 @@ abstract public class ActorAction extends GameSingletons {
 		}
 	}
 	/*
+	 *	Follow a path to approach a given object, and stop half-way if it
+	 *	moved.
+	 */
+	public static class Approach extends PathWalking {
+		GameObject dest_obj;		// Destination object.
+		int goal_dist;			// Stop if within this distance.
+		Tile orig_dest_pos;	// Dest_obj's pos. when we start.
+		int cur_step;			// Count steps.
+		int check_step;			// Check at this step.
+		boolean for_projectile;		// Check for proj. path.
+		public Approach(PathFinder p, GameObject d, int gdist, boolean for_proj) {
+			super(p, 0);	// Stop if blocked.
+			dest_obj = d;
+			orig_dest_pos = new Tile();
+			d.getTile(orig_dest_pos);
+			goal_dist = gdist;
+			for_projectile = for_proj;
+			// Get length of path.
+			int nsteps = path.getNumSteps();
+			System.out.println("Aproach nsteps is " + nsteps + ".");
+			if (nsteps >= 6)		// (May have to play with this).
+				check_step = nsteps > 18 ? 9 : nsteps/2;
+			else
+				check_step = 10000;
+		}
+		public static Approach createPath(Tile src,
+					GameObject dest, int gdist, PathFinder.Client cost) {
+			AStarPathFinder path = new AStarPathFinder();
+			// Get to within 1 tile.
+			Tile t = new Tile();
+			dest.getTile(t);
+			if (path.NewPath(src, t, cost))
+				return new Approach(path, dest, gdist, false);
+			else
+				return null;
+		}
+		// Handle time event.
+		public int handleEvent(Actor actor) {
+			int delay = super.handleEvent(actor);
+			if (delay == 0 || deleted)			// Done or blocked.
+				return 0;
+							// Close enough?
+			if (goal_dist >= 0 && actor.distance(dest_obj) <= goal_dist)
+				return 0;
+			if (++cur_step == check_step) {	// Time to check.
+				if (dest_obj.distance(orig_dest_pos) > 2)
+					return 0;	// Moved too much, so stop.
+				if (for_projectile /* ++++++FINISH &&
+				    Fast_pathfinder_client::is_straight_path(actor, dest_obj) */)
+					return 0;	// Can fire projectile.
+							// Figure next check.
+				int nsteps = path.getNumSteps();
+				if (nsteps >= 6)
+					// Try checking more often.
+					check_step += 3;
+			}
+			return delay;
+		}
+	}	
+	/*
 	 *	Follow a path and execute one action if successful, another if
 	 *	failed.
 	 */

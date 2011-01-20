@@ -227,7 +227,6 @@ public abstract class Schedule extends GameSingletons {
 				}
 				if (blocked != null && blocked.tx != -1) {		// Blocked?
 					GameObject obj = npc.findBlocking(blocked, dir);
-					System.out.println("Blocked by object at " + blocked);
 					if (obj != null) {
 						Actor act = obj.asActor();
 						if (act != null) {
@@ -305,7 +304,7 @@ public abstract class Schedule extends GameSingletons {
 				{			// First have to sit down.
 				if (Schedule.Sit.setAction(npc, null, 0) == null)
 							// Try again in a while.
-					npc.start(250, 5000);
+					npc.start(1, 5000/TimeQueue.tickMsecs);
 				return;
 				}
 			Vector<GameObject> foods = new Vector<GameObject>();// Food nearby?
@@ -330,7 +329,7 @@ public abstract class Schedule extends GameSingletons {
 			} else if (EUtil.rand()%4 != 0)
 				npc.say(ItemNames.first_more_food, ItemNames.last_more_food);
 							// Wake up in a little while.
-			npc.start(250, 5000 + EUtil.rand()%12000);
+			npc.start(2, (5000 + EUtil.rand()%12000)/TimeQueue.tickMsecs);
 		}
 	}
 
@@ -379,7 +378,7 @@ public abstract class Schedule extends GameSingletons {
 					return;
 				}
 				// Try again later.
-				npc.start(250, 5000 + (EUtil.rand()%5000)/TimeQueue.tickMsecs);	
+				npc.start(1, (5000 + EUtil.rand()%5000)/TimeQueue.tickMsecs);	
 				return;
 				}
 			case at_podium:
@@ -449,7 +448,7 @@ public abstract class Schedule extends GameSingletons {
 		case talk_member:
 			state = find_podium;
 			npc.say(ItemNames.first_preach2, ItemNames.last_preach2);
-			npc.start(250, 2000);
+			npc.start(2, 2000/TimeQueue.tickMsecs);
 			return;
 		case find_icon:
 			{
@@ -494,7 +493,7 @@ public abstract class Schedule extends GameSingletons {
 			}
 		default:
 			state = find_podium;
-			npc.start(250, 0);
+			npc.start(2, 0);
 			return;
 		}
 
@@ -517,7 +516,106 @@ public abstract class Schedule extends GameSingletons {
 			return sz > 0 ? vec.elementAt(EUtil.rand()%sz).asActor() : null;
 		}
 	}
-
+	/*
+	 *	Talk to avatar.
+	 */
+	public static class Talk extends Schedule {
+		boolean debug = true;
+		int phase;			// 0=walk to Av., 1=talk, 2=done.
+		Tile pos = new Tile();	// Temp.
+		public Talk(Actor n) {
+			super(n);
+			phase = 0;
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			int speed = 1;
+			if (debug) System.out.println("Talk: phase = " + phase);
+			// Switch to phase 3 if we are reasonable close
+			if (phase < 3 && 
+			    npc.distance(gwin.getMainActor()) < 6) {
+				phase = 3;
+				npc.start(speed, 1);
+				return;
+			}
+			switch (phase) {
+			case 0:				// Start by approaching Avatar.
+				{
+				if (npc.distance(gwin.getMainActor()) > 50) {// Too far?  
+							// Try a little later.
+					npc.start(speed, 5000/TimeQueue.tickMsecs);
+					return;
+				}
+							// Aim for within 5 tiles.
+				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 5);
+				npc.getTile(pos);
+				ActorAction pact = ActorAction.Approach.createPath(
+										pos, gwin.getMainActor(), 5, cost);
+				if (pact == null) {
+					// No path found; try again a little later.
+					npc.start(speed, 3);
+					return;
+				} else {
+					if (EUtil.rand()%3 == 0)
+						npc.say(ItemNames.first_talk, ItemNames.last_talk);
+							// Walk there, and retry if
+							//   blocked.
+					npc.setAction(pact);
+					npc.start(speed, 0);	// Start walking.
+					}
+				phase++;
+				return;
+				}
+			case 1:				// Wait a second.
+			case 2:
+				{
+				if (EUtil.rand()%3 == 0)
+					npc.say(ItemNames.first_talk, ItemNames.last_talk);
+				// Step towards Avatar.
+				npc.getTile(pos);
+				int destx = gwin.getMainActor().getTileX(),
+					desty = gwin.getMainActor().getTileY();
+				int dx = destx > pos.tx ? 1 : (destx < pos.tx ? -1 : 0);
+				int dy = desty > pos.ty ? 1 : (desty < pos.ty ? -1 : 0);
+				pos.tx += dx;
+				pos.ty += dy;
+				npc.walkToTile(pos, speed, 2);
+				phase = 3;
+				return;
+				}
+			case 3:				// Talk.
+				{
+				int dist = npc.distance(gwin.getMainActor());
+							// Got to be close & reachable.
+				if (dist > 5 /*++++++++FINISH ||
+					!Fast_pathfinder_client::is_grabable(npc,
+						gwin.getMainActor()) +++*/) {
+					phase = 0;
+					npc.start(speed, 2);
+					return;
+				}
+							// But first face Avatar.
+				npc.changeFrame(npc.getDirFramenum(npc.getDirection(
+						gwin.getMainActor()), Actor.standing));
+				phase++;
+				npc.start(speed, 1);	// Wait another 1/4 sec.
+				break;
+				}
+			case 4:
+				npc.stop();		// Stop moving.
+							// NOTE:  This could DESTROY us!
+				if (game.isSI())
+					npc.activate(9);
+				else
+					npc.activate(1);
+							// SO don't refer to any instance
+							//   variables from here on.
+				gwin.paint();
+				return;
+			default:
+				break;
+			}
+		}
+	}
 	/*
 	 *	Loiter within a rectangle.
 	 */
@@ -757,6 +855,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	Wait tables.
 	 */
 	public static class Waiter extends Schedule {
+		boolean debug = false;
 		Tile startPos;		// Starting position.
 		Actor customer;		// Current customer.
 		GameObject prepTable;	// Table we're working at.
@@ -771,7 +870,8 @@ public abstract class Schedule extends GameSingletons {
 			serve_food = 4;
 		int state;
 		boolean findCustomer() {
-			if (customers == null) {			// Got to search?
+			if (debug) System.out.println("findCustomer");
+			if (customers == null || customers.isEmpty()) {			// Got to search?
 				customers = new Vector<GameObject>();
 						// Look within 32 tiles;
 				npc.findNearbyActors(customers, EConst.c_any_shapenum, 32);
@@ -811,6 +911,7 @@ public abstract class Schedule extends GameSingletons {
 			}
 		}
 		boolean walkToCustomer(int min_delay) {	
+			if (debug) System.out.println("walkToCustomer");
 			if (customer != null) {
 				if (customer.getScheduleType() != Schedule.eat_at_inn)
 				// Customer schedule changed. Tell schedule to refresh the list
@@ -830,6 +931,7 @@ public abstract class Schedule extends GameSingletons {
 			return false;
 		}
 		boolean walkToPrep() {
+			if (debug) System.out.println("walkToPrep");
 			Tile pos = new Tile();
 			if (prepTables != null)	{	// Walk to a 'prep' table.
 				prepTable = prepTables.elementAt(EUtil.rand()%prepTables.size());
@@ -848,6 +950,7 @@ public abstract class Schedule extends GameSingletons {
 		}
 		//	Return plate if found, with spot set.
 		GameObject findServingSpot(Tile spot) {
+			if (debug) System.out.println("findServingSpot");
 			GameObject plate = null;
 			Vector<GameObject> plates = new Vector<GameObject>();
 			int cnt = npc.findNearby(plates, 717, 1, 0);
@@ -911,7 +1014,7 @@ public abstract class Schedule extends GameSingletons {
 				int dist = customer != null ? npc.distance(customer) : 5000;
 				if (dist > 32) {	// Need a new customer?
 					state = get_customer;
-					npc.start(200, 1000 + EUtil.rand()%1000);
+					npc.start(1, (1000 + EUtil.rand()%1000)/TimeQueue.tickMsecs);
 					return;
 				}
 							// Not close enough, so try again.
@@ -947,7 +1050,7 @@ public abstract class Schedule extends GameSingletons {
 						npc.say(ItemNames.first_waiter_banter, 
 								ItemNames.last_waiter_banter);
 					state = get_customer;
-					npc.start(200, 1000 + EUtil.rand()%2000);
+					npc.start(1, (1000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
 					break;
 				}
 							// Ask for order.
@@ -1014,7 +1117,7 @@ public abstract class Schedule extends GameSingletons {
 				}
 				state = get_customer;
 				customer = null;		// Done with this one.
-				npc.start(250, 1000 + EUtil.rand()%2000);
+				npc.start(1, (1000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
 				return;
 			}
 
@@ -1101,7 +1204,7 @@ public abstract class Schedule extends GameSingletons {
 				if (!screen.hasPoint(from.tx, from.ty)) {
 						// Force teleport on next tick.
 					retries = 100;
-					npc.start(200, 100);
+					npc.start(2, 1);
 					return;
 				}
 						// Don't walk off screen if close, or

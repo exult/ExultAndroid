@@ -538,10 +538,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				//+++++++FINISH ready_best_weapon();
 				schedule = Schedule.Pace.createVert(this);
 				break;
-			/*
 			case Schedule.talk:
-				schedule = new Talk_schedule(this);
+				schedule = new Schedule.Talk(this);
 				break;
+			/*++++++
 			case Schedule.dance:
 				unready_weapon();
 				schedule = new Dance_schedule(this);
