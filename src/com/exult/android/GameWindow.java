@@ -170,6 +170,9 @@ public class GameWindow extends GameSingletons {
 		skipAboveActor = lift;
 		return true;
 	}
+	public final GameObject getMovingBarge() {
+		return movingBarge;
+	}
 	public final int getNumNpcs() {
 		return npcs.size();
 	}

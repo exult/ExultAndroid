@@ -1,5 +1,6 @@
 package com.exult.android;
 import com.exult.android.shapeinf.MonsterInfo;
+import java.util.Vector;
 
 public abstract class Schedule extends GameSingletons {
 	public static final int
@@ -348,6 +349,171 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	Action to sit in the chair NPC is in front of.
+	 */
+
+	static class SitActorAction extends ActorAction.Frames {
+		GameObject chair;		// Chair.
+		Tile chairloc;		// Original chair location.
+		Tile sitloc;		// Actually where NPC sits.
+		byte frames[];
+		static short offsets[] = {0,-1, 1,0, 0,1, -1,0};// Offsets where NPC should sit.
+		byte [] init(GameObject chairobj, Actor actor) {
+						// Frame 0 faces N, 1 E, etc.
+			int dir = 2*(chairobj.getFrameNum()%4);
+			frames = new byte[2];
+			frames[0] = (byte)actor.getDirFramenum(dir, Actor.bow_frame);
+			frames[1] = (byte)actor.getDirFramenum(dir, Actor.sit_frame);
+			return frames;
+		}
+		static boolean isOccupied(Tile sitloc, Actor actor)
+			{
+			Vector<GameObject> occ = new Vector<GameObject>();	// See if occupied.
+			if (gmap.findNearby(occ, sitloc, EConst.c_any_shapenum, 0, 8) > 0) {
+				for (GameObject npc : occ) {
+					if (npc == actor)
+						continue;
+					int frnum = npc.getFrameNum() & 15;
+					if (frnum == Actor.sit_frame ||
+					    frnum == Actor.bow_frame)
+						return true;
+				}
+			}
+			/* Seems to work.  Added Nov. 2, 2001 */
+			Tile pos = new Tile();
+			actor.getTile(pos);
+			if (pos.equals(sitloc))
+				return false;	// We're standing there.
+						// See if spot is blocked.
+			pos.set(sitloc);// Careful, .tz gets updated.
+			MapChunk nlist = gmap.getChunk(pos.tx/EConst.c_tiles_per_chunk, 
+										   pos.ty/EConst.c_tiles_per_chunk);
+			if (nlist.spotAvailable(actor.getInfo().get3dHeight(), 
+					pos.tx, pos.ty, pos.tz, EConst.MOVE_WALK, 0, -1) >= 0)
+				return true;
+			return false;
+		}
+		public SitActorAction(GameObject o, Actor actor) {
+			super(null,0);//++++++super(init(o, actor), 2);
+			chair = o;
+			sitloc = new Tile(); chairloc = new Tile();
+			chair.getTile(sitloc);
+			chairloc.set(sitloc);
+						// Frame 0 faces N, 1 E, etc.
+			int nsew = o.getFrameNum()%4;
+			sitloc.tx += offsets[2*nsew];
+			sitloc.ty += offsets[2*nsew + 1];
+		}
+		Tile getSitloc()
+			{ return sitloc; }
+		static boolean isOccupied(GameObject chair, Actor actor) {
+			int dir = 2*(chair.getFrameNum()%4);
+			Tile t = new Tile();
+			chair.getTile(t);
+			t.tx += offsets[dir]; t.ty += offsets[dir + 1];
+			return isOccupied(t, actor);
+		}
+						// Handle time event.
+		public int handleEvent(Actor actor) {
+			if (getIndex() == 0) {		// First time?
+				if (isOccupied(sitloc, actor))
+					return 0;	// Abort.
+				if (chairloc.tx != chair.getTileX() || 
+						chairloc.ty != chair.getTileY() ||
+								chairloc.tz != chair.getLift()) {
+					// Chair was moved!
+					actor.say(ItemNames.first_chair_thief, ItemNames.last_chair_thief);
+					return 0;
+				}
+			}
+			return super.handleEvent(actor);
+		}
+	}
+	/*
+	 *	Sit in a chair.
+	 */
+	public static class Sit extends Schedule {
+		GameObject chair;		// What to sit in.
+		boolean sat;			// True if we already sat down.
+		boolean did_barge_usecode;		// So we only call it once.
+		public Sit(Actor n, GameObject ch) {
+			super(n);
+			chair = ch;
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			int frnum = npc.getFrameNum();
+			if (chair != null && (frnum&0xf) == Actor.sit_frame && 
+			    npc.distance(chair) <= 1) {			// Already sitting.
+							// Seat on barge?
+				/* ++++++++FINISH
+				if (chair.getInfo().getBargeType() != ShapeInfo.barge_seat)
+					return;
+				*/
+				if (did_barge_usecode)
+					return;		// But NOT more than once for party.
+				did_barge_usecode = true;
+				if (gwin.getMovingBarge() != null)
+					return;		// Already moving.
+				if (!npc.getFlag(Actor.in_party))
+					return;		// Not a party member.
+				int cnt = partyman.getCount();	// See if all sitting.
+				for (int i = 0; i < cnt; i++) {
+					Actor npc = gwin.getNpc(partyman.getMember(i));
+					if ((npc.getFrameNum()&0xf) != Actor.sit_frame)
+						return;	// Nope.
+				}
+							// Find barge.
+				GameObject barge = null; //+++++FINISH chair.findClosest(961);
+				if (barge == null)
+					return;
+				int usefun = 0x634;	// I hate using constants like this.
+				did_barge_usecode = true;
+							// Special usecode for barge pieces:
+							// (Call with item=Avatar to avoid
+							//   running nearby barges.)
+				ucmachine.callUsecode(usefun, gwin.getMainActor(),
+							UsecodeMachine.double_click);
+				return;
+			}
+							// Wait a while if we got up.
+			if (setAction(npc, chair, sat ? (2000 + EUtil.rand()%3000) : 0) == null)
+				npc.start(200, 5000);	// Failed?  Try again later.
+			else
+				sat = true;
+		}
+		public static boolean isOccupied(GameObject chairobj, Actor actor) {
+			return false; //++++++++++FINISH
+		}
+		//	Return chair found.
+		public static GameObject setAction(Actor actor, GameObject chairobj,
+					int delay) {
+			/* ++++++++FINISH
+			final int chairshapes[] = {873,292};
+			Vector<GameObject> chairs = new Vector<GameObject>();
+			if (chairobj == null) {			// Find chair if not given.
+				actor.findClosest(chairs, chairshapes, chairshapes.length);
+				for (GameObject ch : chairs) {
+					if (!SitActorAction.isOccupied(ch, actor)) {
+							// Found an unused one.
+						chairobj = ch;
+						break;
+					}
+				}
+				if (chairobj == null)
+					return null;
+			} else if (SitActorAction.isOccupied(chairobj, actor))
+				return null;		// Given chair is occupied.
+			SitActorAction act = new SitActorAction(chairobj, actor);
+							// Walk there, then sit.
+			setActionSequence(actor, act.getSitloc(), act, false, delay);
+			*/
+			return chairobj;
+		}
+		public static GameObject setAction(Actor actor) {
+			return setAction(actor, null, 0);
+		}
+	}
+	/*
 	 *	Walk to the destination for a new schedule.
 	 */
 	public static class WalkToSchedule extends Schedule {
@@ -486,8 +652,8 @@ public abstract class Schedule extends GameSingletons {
 			{ return pos; }
 		/* ++++++++FINISH
 		static char *get_script_name(int ty)
-			{ return ty >= Schedule::first_scripted_schedule ? 
-			    script_names[ty - Schedule::first_scripted_schedule] : 0; }
+			{ return ty >= Schedule.first_scripted_schedule ? 
+			    script_names[ty - Schedule.first_scripted_schedule] : 0; }
 		*/
 		/*
 		 *	Set a schedule from a U7 'schedule.dat' entry.

@@ -13,6 +13,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 						new LinkedList<UsecodeScript>();
 	private GameObject obj;		// From objval.
 	private UsecodeValue code;		// Array of code to execute.
+	private Vector<UsecodeValue> building;
 	private int cnt;			// Length of arrval.
 	private int i;				// Current index.
 	private int frame_index;		// For taking steps.
@@ -98,6 +99,29 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		delay = del;
 		no_halt = (nhalt != 0);
 		cnt = code.getArraySize();
+	}
+	//	For using 'add', 'complete'.
+	public UsecodeScript(GameObject o) {
+		obj = o;
+		building = new Vector<UsecodeValue>(16);
+	}
+	public UsecodeScript add(int v) {
+		building.add(new UsecodeValue.IntValue(v));
+		return this;
+	}
+	public UsecodeScript add(String v) {
+		building.add(new UsecodeValue.StringValue(v));
+		return this;
+	}
+	public UsecodeScript add(int ...vals){
+		for(int v : vals)
+			add(v);
+		return this;
+	}
+	public void finish() {
+		code = new UsecodeValue.ArrayValue(building);
+		cnt = code.getArraySize();
+		building = null;
 	}
 	public final boolean isActivated() {
 		return i > 0;
