@@ -377,6 +377,8 @@ public abstract class Schedule extends GameSingletons {
 			Vector<GameObject> occ = new Vector<GameObject>();	// See if occupied.
 			if (gmap.findNearby(occ, sitloc, EConst.c_any_shapenum, 0, 8) > 0) {
 				for (GameObject npc : occ) {
+					System.out.printf("isOccupied: found %1$d at %2$s\n",
+							npc.getShapeNum(), sitloc);
 					if (npc == actor)
 						continue;
 					int frnum = npc.getFrameNum() & 15;
@@ -395,7 +397,9 @@ public abstract class Schedule extends GameSingletons {
 			MapChunk nlist = gmap.getChunk(pos.tx/EConst.c_tiles_per_chunk, 
 										   pos.ty/EConst.c_tiles_per_chunk);
 			if (nlist.spotAvailable(actor.getInfo().get3dHeight(), 
-					pos.tx, pos.ty, pos.tz, EConst.MOVE_WALK, 0, -1) >= 0)
+					pos.tx%EConst.c_tiles_per_chunk, 
+					pos.ty%EConst.c_tiles_per_chunk, pos.tz, 
+					EConst.MOVE_WALK, 0, -1) < 0)
 				return true;
 			return false;
 		}
@@ -481,14 +485,16 @@ public abstract class Schedule extends GameSingletons {
 							UsecodeMachine.double_click);
 				return;
 			}
+			System.out.println("Setting Sit action for NPC #" + npc.getNpcNum());
 							// Wait a while if we got up.
-			if (setAction(npc, chair, sat ? (2000 + EUtil.rand()%3000) : 0) == null)
-				npc.start(200, 5000);	// Failed?  Try again later.
+			if ((chair = setAction(npc, chair, sat ? 
+					(2000 + EUtil.rand()%3000)/TimeQueue.tickMsecs : 0)) == null)
+				npc.start(1, 5000/TimeQueue.tickMsecs);	// Failed?  Try again later.
 			else
 				sat = true;
 		}
 		public static boolean isOccupied(GameObject chairobj, Actor actor) {
-			return false; //++++++++++FINISH
+			return SitActorAction.isOccupied(chairobj, actor);
 		}
 		//	Return chair found.
 		public static GameObject setAction(Actor actor, GameObject chairobj,
@@ -497,6 +503,7 @@ public abstract class Schedule extends GameSingletons {
 			Vector<GameObject> chairs = new Vector<GameObject>();
 			if (chairobj == null) {			// Find chair if not given.
 				actor.findClosest(chairs, chairshapes);
+				System.out.println("setAction: checking chairs: " + chairs.size());
 				for (GameObject ch : chairs) {
 					if (!SitActorAction.isOccupied(ch, actor)) {
 							// Found an unused one.
@@ -508,6 +515,7 @@ public abstract class Schedule extends GameSingletons {
 					return null;
 			} else if (SitActorAction.isOccupied(chairobj, actor))
 				return null;		// Given chair is occupied.
+			System.out.println("setAction: found chair for NPC #" + actor.getNpcNum());
 			SitActorAction act = new SitActorAction(chairobj, actor);
 							// Walk there, then sit.
 			setActionSequence(actor, act.getSitloc(), act, false, delay);

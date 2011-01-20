@@ -608,18 +608,20 @@ public final class MapChunk extends GameSingletons {
 		int tx, int ty			// Tile within chunk.
 		)
 		{
+		if (terrain == null)
+			return 0;
 		int shnum = terrain.getShapeNum(tx, ty);
-		int terrain = 0;
+		int ter = 0;
 		if (shnum >= 0) {
 			ShapeInfo info = ShapeID.getInfo(shnum);
 			if (info.isWater())
-				terrain |= 2;
+				ter |= 2;
 			else if (info.isSolid())
-				terrain |= 4;
+				ter |= 4;
 			else
-				terrain |= 1;
+				ter |= 1;
 		}
-		return terrain;
+		return ter;
 	}
 	/*
 	 *	Is a given square available at a given lift?
