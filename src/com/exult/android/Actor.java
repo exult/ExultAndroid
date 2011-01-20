@@ -562,12 +562,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.wait:
 				schedule = new Schedule.Wait(this);
 				break;
-			/*++++++++++++++++
+		
 			case Schedule.eat:		// For now.
 			case Schedule.sit:
-				unready_weapon();
-				schedule = new Sit_schedule(this);
-				break;
+				//++++FINISH unready_weapon();
+				schedule = new Schedule.Sit(this, null);
+				break;	
+			/*++++++++++++++++
 			case Schedule.bake:
 				schedule = new Bake_schedule(this);
 				break;

@@ -1254,6 +1254,17 @@ public class UsecodeIntrinsics extends GameSingletons {
 			}
 		}
 	}
+	private void sitDown(UsecodeValue p0, UsecodeValue p1) {
+		// Sit_down(npc, chair).
+		GameObject nobj = getItem(p0);
+		Actor npc = asActor(nobj);
+		if (npc == null)
+			return;	// Doesn't look like an NPC.
+		GameObject chair = getItem(p1);
+		if (chair == null)
+			return;
+		npc.setScheduleType(Schedule.sit, new Schedule.Sit(npc, chair));
+	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
 		TextGump gump;
@@ -1743,6 +1754,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getLift(parms[0]);
 		case 0x43:
 			setLift(parms[0], parms[1]); break;
+		//++++++++
+		case 0x46:
+			sitDown(parms[0], parms[1]); break;
 		//++++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;

@@ -204,6 +204,27 @@ public abstract class GameObject extends ShapeID {
 		}
 		return null;
 	}
+	public GameObject findClosest(Vector<GameObject> vec, int shapenums[], int dist) {
+		int i, cnt = shapenums.length;
+		Tile pos = new Tile();
+		getTile(pos);
+		for (i = 0; i < cnt; i++)
+						// 0xb0 mask finds anything.
+			gmap.findNearby(vec, pos, shapenums[i], dist, 0xb0);
+		cnt = vec.size();
+		if (cnt == 0)
+			return null;
+		if (cnt > 1) {
+			/* +++++++++FINISH
+			std::sort(vec.begin(), vec.end(), 
+					Object_closest_sorter(get_tile()));
+			*/
+		}
+		return vec.elementAt(0);
+	}
+	public GameObject findClosest(Vector<GameObject> vec, int shapenums[]) {
+		return findClosest(vec, shapenums, 24);
+	}
 	public boolean isClosedDoor() {
 		ShapeInfo info = getInfo();
 		if (!info.isDoor())

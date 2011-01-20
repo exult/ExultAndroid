@@ -39,6 +39,12 @@ public abstract class Schedule extends GameSingletons {
 		else
 			blocked.set(t);
 	}
+	public static void setActionSequence(Actor actor, Tile dest, 
+			ActorAction when_there, boolean from_off_screen, int delay) {
+		actor.setAction(ActorAction.createActionSequence(
+				actor, dest, when_there, from_off_screen));
+		actor.start(2, delay);	// Get into time queue.
+	}
 	public abstract void nowWhat();
 	public void imDormant()	// Npc calls this when it goes from
 		{  }			//   being active to dormant.
@@ -358,10 +364,10 @@ public abstract class Schedule extends GameSingletons {
 		Tile sitloc;		// Actually where NPC sits.
 		byte frames[];
 		static short offsets[] = {0,-1, 1,0, 0,1, -1,0};// Offsets where NPC should sit.
-		byte [] init(GameObject chairobj, Actor actor) {
+		static byte [] init(GameObject chairobj, Actor actor) {
 						// Frame 0 faces N, 1 E, etc.
 			int dir = 2*(chairobj.getFrameNum()%4);
-			frames = new byte[2];
+			byte frames[] = new byte[2];
 			frames[0] = (byte)actor.getDirFramenum(dir, Actor.bow_frame);
 			frames[1] = (byte)actor.getDirFramenum(dir, Actor.sit_frame);
 			return frames;
@@ -394,7 +400,7 @@ public abstract class Schedule extends GameSingletons {
 			return false;
 		}
 		public SitActorAction(GameObject o, Actor actor) {
-			super(null,0);//++++++super(init(o, actor), 2);
+			super(init(o, actor), 2);
 			chair = o;
 			sitloc = new Tile(); chairloc = new Tile();
 			chair.getTile(sitloc);
@@ -487,11 +493,10 @@ public abstract class Schedule extends GameSingletons {
 		//	Return chair found.
 		public static GameObject setAction(Actor actor, GameObject chairobj,
 					int delay) {
-			/* ++++++++FINISH
 			final int chairshapes[] = {873,292};
 			Vector<GameObject> chairs = new Vector<GameObject>();
 			if (chairobj == null) {			// Find chair if not given.
-				actor.findClosest(chairs, chairshapes, chairshapes.length);
+				actor.findClosest(chairs, chairshapes);
 				for (GameObject ch : chairs) {
 					if (!SitActorAction.isOccupied(ch, actor)) {
 							// Found an unused one.
@@ -506,7 +511,6 @@ public abstract class Schedule extends GameSingletons {
 			SitActorAction act = new SitActorAction(chairobj, actor);
 							// Walk there, then sit.
 			setActionSequence(actor, act.getSitloc(), act, false, delay);
-			*/
 			return chairobj;
 		}
 		public static GameObject setAction(Actor actor) {
