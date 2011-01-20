@@ -754,6 +754,283 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	Wait tables.
+	 */
+	public static class Waiter extends Schedule {
+		Tile startPos;		// Starting position.
+		Actor customer;		// Current customer.
+		GameObject prepTable;	// Table we're working at.
+		Vector<GameObject> customers;	// List of customers.
+		Vector<GameObject> prepTables;// Prep. tables.
+		Vector<GameObject> eatingTables;// Tables with chairs around them.
+		final static int
+			waiter_setup = 0,
+			get_customer = 1,
+			get_order = 2,
+			prep_food = 3,
+			serve_food = 4;
+		int state;
+		boolean findCustomer() {
+			if (customers == null) {			// Got to search?
+				customers = new Vector<GameObject>();
+						// Look within 32 tiles;
+				npc.findNearbyActors(customers, EConst.c_any_shapenum, 32);
+				Iterator<GameObject> iter = customers.iterator();
+				while (iter.hasNext()) {
+					Actor each = iter.next().asActor();
+					if (each == null || each.getScheduleType() !=
+														Schedule.eat_at_inn)
+						iter.remove();
+				}
+			}
+			if (!customers.isEmpty()) {
+				customer = customers.remove(customers.size() - 1).asActor();
+			}
+			return customer != null;
+		}
+		void findTables(int shapenum) {
+			eatingTables = new Vector<GameObject>();
+			npc.findNearby(eatingTables, shapenum, 32, 0);
+			Vector<GameObject> chairs = new Vector<GameObject>();
+			int floor = npc.getLift()/5;	// Make sure it's on same floor.
+			Iterator<GameObject> iter = eatingTables.iterator();
+			while (iter.hasNext()) {
+				GameObject table = iter.next();
+				if (table.getLift()/5 != floor) {
+					iter.remove();
+					continue;
+				}
+				chairs.setSize(0);;		// No chairs by it?
+				if (table.findNearby(chairs, 873, 3, 0) == 0 &&
+					table.findNearby(chairs, 292, 3, 0) == 0) {
+					if (prepTables == null)
+						prepTables = new Vector<GameObject>();
+					prepTables.add(table);
+					iter.remove();
+				}
+			}
+		}
+		boolean walkToCustomer(int min_delay) {	
+			if (customer != null) {
+				if (customer.getScheduleType() != Schedule.eat_at_inn)
+				// Customer schedule changed. Tell schedule to refresh the list
+				// (this happens with Hawk & others in SI).
+					customers.clear();
+				else {
+					Tile dest = new Tile();
+					customer.getTile(dest);
+					if (MapChunk.findSpot(dest, 3, npc) &&
+							npc.walkPathToTile(dest, 1, min_delay + 
+								(EUtil.rand()%1000)/TimeQueue.tickMsecs,0))
+						return true;		// Walking there.
+				}
+			}
+			// Failed so try again later.
+			npc.start(2, (2000 + EUtil.rand()%4000)/TimeQueue.tickMsecs);	
+			return false;
+		}
+		boolean walkToPrep() {
+			Tile pos = new Tile();
+			if (prepTables != null)	{	// Walk to a 'prep' table.
+				prepTable = prepTables.elementAt(EUtil.rand()%prepTables.size());
+				prepTable.getTile(pos);
+				if (MapChunk.findSpot(pos, 1, npc) &&
+				    npc.walkPathToTile(pos, 1, 
+								(1000 + EUtil.rand()%1000)/TimeQueue.tickMsecs, 0))
+					return true;
+			} else
+				prepTable = null;
+			final int dist = 8;		// Bad luck?  Walk randomly.
+			pos.set(startPos.tx - dist + EUtil.rand()%(2*dist),
+					startPos.ty - dist + EUtil.rand()%(2*dist), startPos.tz);
+			npc.walkToTile(pos, 2, (EUtil.rand()%2000)/TimeQueue.tickMsecs, 0);
+			return false;
+		}
+		//	Return plate if found, with spot set.
+		GameObject findServingSpot(Tile spot) {
+			GameObject plate = null;
+			Vector<GameObject> plates = new Vector<GameObject>();
+			int cnt = npc.findNearby(plates, 717, 1, 0);
+			if (cnt == 0)
+				cnt = npc.findNearby(plates, 717, 2, 0);
+			int floor = npc.getLift()/5;	// Make sure it's on same floor.
+			for (GameObject p : plates) {
+				if (p.getLift()/5 == floor) {
+					p.getTile(spot);
+					spot.tz++;	// Just above plate.
+					return p;
+				}
+			}
+			Tile cpos = new Tile();
+			customer.getTile(cpos);			
+				// Go through tables.
+			if (eatingTables == null)
+				return null;
+			Rectangle foot = new Rectangle();
+			for (GameObject table : eatingTables) {
+			
+				table.getFootprint(foot);
+				if (foot.distance(cpos.tx, cpos.ty) > 2)
+					continue;
+							// Found it.
+				spot = cpos;		// Start here.
+							// East/West of table?
+				if (cpos.ty >= foot.y && cpos.ty < foot.y + foot.h)
+					spot.tx = (short)(cpos.tx <= foot.x ? foot.x
+									: foot.x + foot.w - 1);
+				else			// North/south.
+					spot.ty = (short)(cpos.ty <= foot.y ? foot.y
+								: foot.y + foot.h - 1);
+				if (foot.hasPoint(spot.tx, spot.ty)) {		// Passes test.
+					ShapeInfo info = table.getInfo();
+					spot.tz = (short)(table.getLift() + info.get3dHeight());
+					plate = IregGameObject.create(717, 0);
+					plate.move(spot);
+					spot.tz++;	// Food goes above plate.
+					return plate;
+				}
+			}
+			return null;			// Failed.
+		}
+		public Waiter(Actor n) {
+			super(n);
+			startPos = new Tile();
+			n.getTile(startPos);
+			state = waiter_setup;
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			GameObject food;
+			/* ++++++++++FINISH
+			if (state == get_customer &&
+			    EUtil.rand() % 4 == 0)		// Check for lamps, etc.
+				if (try_street_maintenance())
+					return;		// We no longer exist.
+			*/
+			if (state == get_order || state == serve_food) {
+				int dist = customer != null ? npc.distance(customer) : 5000;
+				if (dist > 32) {	// Need a new customer?
+					state = get_customer;
+					npc.start(200, 1000 + EUtil.rand()%1000);
+					return;
+				}
+							// Not close enough, so try again.
+				if (dist >= 3 && !walkToCustomer(0)) {
+					state = get_customer;
+					return;
+				}
+			}
+			switch (state) {
+			case waiter_setup:
+				findTables(971);
+				findTables(633);
+				findTables(847);
+				findTables(1003);
+				findTables(1018);
+				findTables(890);
+				findTables(964);
+				findTables(333);
+				state = get_customer;
+				/* FALL THROUGH */
+			case get_customer:
+				if (!findCustomer()) {
+					walkToPrep();
+					state = prep_food;
+				} else if (walkToCustomer(0))
+					state = get_order;
+				break;
+			case get_order: {
+				Vector<GameObject> foods = new Vector<GameObject>();
+							// Close enough to customer?
+				if (customer.findNearby(foods, 377, 2, 0) > 0) {
+					if (EUtil.rand()%4 != 0)
+						npc.say(ItemNames.first_waiter_banter, 
+								ItemNames.last_waiter_banter);
+					state = get_customer;
+					npc.start(200, 1000 + EUtil.rand()%2000);
+					break;
+				}
+							// Ask for order.
+				npc.say(ItemNames.first_waiter_ask, ItemNames.last_waiter_ask);
+				walkToPrep();
+				state = prep_food;
+				break;
+			}
+			case prep_food:
+				if (prepTable != null && npc.distance(prepTable) <= 3) {
+					npc.changeFrame(npc.getDirFramenum(
+						npc.getFacingDirection(prepTable),
+									Actor.standing));
+					UsecodeScript scr = new UsecodeScript(npc);
+					scr.add(UsecodeScript.face_dir, npc.getDirFacing());
+					for (int cnt = 1 + EUtil.rand()%3; cnt != 0; --cnt) {
+						scr.add(UsecodeScript.npc_frame + Actor.ready_frame,
+								UsecodeScript.delay_ticks, 1,
+								UsecodeScript.npc_frame + Actor.raise1_frame,
+								UsecodeScript.delay_ticks, 1);
+					}
+					scr.add(UsecodeScript.npc_frame + Actor.standing);
+					scr.finish();
+					scr.start(1);	// Start next tick.
+				}
+				if (npc.getReadied(Ready.lhand) == null) {
+							// Acquire some food.
+					int nfoods = ShapeFiles.SHAPES_VGA.getFile().getNumFrames(377);
+					int frame = EUtil.rand()%nfoods;
+					food = new IregGameObject(377, frame, 0, 0, 0);
+					npc.addReadied(food, Ready.lhand);
+				}
+				if (!walkToCustomer(3000/TimeQueue.tickMsecs)) {
+					state = get_customer;
+					if (EUtil.rand()%3 == 0)
+						ucmachine.callUsecode(
+							npc.getUsecode(), npc,
+							UsecodeMachine.npc_proximity);
+				} else {
+					state = serve_food;
+				}
+				break;
+			case serve_food:
+				food = npc.getReadied(Ready.lhand);
+				Tile spot = new Tile();
+				if (food != null && food.getShapeNum() == 377 &&
+				    findServingSpot(spot) != null) {
+					npc.changeFrame(npc.getDirFramenum(
+						npc.getDirection(customer),
+									Actor.standing));
+					npc.remove(food);
+					food.setInvalid();
+					food.move(spot);
+					if (EUtil.rand()%3 != 0)
+						npc.say(ItemNames.first_waiter_serve,
+								ItemNames.last_waiter_serve);
+					UsecodeScript scr = new UsecodeScript(npc);
+					scr.add(UsecodeScript.face_dir, npc.getDirFacing(),
+							UsecodeScript.npc_frame + Actor.ready_frame,
+							UsecodeScript.delay_ticks, 2,
+							UsecodeScript.npc_frame + Actor.standing);
+					scr.finish();
+					scr.start(1);	// Start next tick.
+				}
+				state = get_customer;
+				customer = null;		// Done with this one.
+				npc.start(250, 1000 + EUtil.rand()%2000);
+				return;
+			}
+
+		}
+		@Override
+		public void ending(int newtype) {// Switching to another schedule.
+			// Remove what he/she is carrying.
+			GameObject obj = npc.getReadied(Ready.lhand);
+			if (obj != null)
+				obj.removeThis();
+			obj = npc.getReadied(Ready.rhand);
+			if (obj != null)
+				obj.removeThis();
+		}
+	}
+	/*
 	 *	Walk to the destination for a new schedule.
 	 */
 	public static class WalkToSchedule extends Schedule {

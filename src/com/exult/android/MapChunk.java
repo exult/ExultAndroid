@@ -927,6 +927,9 @@ public final class MapChunk extends GameSingletons {
 		return findSpot(pos, dist, obj.getShapeNum(), obj.getFrameNum(),
 				max_drop, dir, where);
 	}
+	public static boolean findSpot(Tile pos, int dist, GameObject obj) {
+		return findSpot(pos, dist, obj, 0, anywhere);
+	}
 	/*
 	 *	Get the list of tiles in a square perimeter around a given tile.
 	 *

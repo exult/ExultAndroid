@@ -191,6 +191,30 @@ public abstract class GameObject extends ShapeID {
 		getCenterTile(t1);
 		return EUtil.getDirection(t1.ty - t2.ty, t2.tx - t1.tx);
 	}
+	/*
+	 *	Get direction to best face an object.
+	 */
+
+	public final int getFacingDirection(GameObject o2) {
+		Tile t1 = new Tile();
+		getTile(t1);
+		Rectangle torect = new Rectangle();
+		o2.getFootprint(torect);
+		if (torect.x + torect.w <= t1.tx && 
+		    t1.ty >= torect.y && t1.ty < torect.y + torect.h)
+			return EConst.west;
+		else if (t1.tx < torect.x &&
+		    t1.ty >= torect.y && t1.ty < torect.y + torect.h)
+			return EConst.east;
+		else if (torect.y + torect.h <= t1.ty &&
+		    t1.tx >= torect.x && t1.tx < torect.w + torect.h)
+			return EConst.south;
+		else if (t1.ty < torect.y &&
+		    t1.tx >= torect.x && t1.tx < torect.w + torect.h)
+			return EConst.north;
+		else
+			return getDirection(o2);
+	}
 	// Find object blocking a given tile.
 	public static GameObject findBlocking(Tile tile) {
 		tile.fixme();
@@ -695,6 +719,9 @@ public abstract class GameObject extends ShapeID {
 	public boolean addReadied(GameObject obj, int index,
 				boolean dont_check, boolean force_pos, boolean noset)
 		{ return add(obj, dont_check, false, noset); }
+	public boolean addReadied(GameObject obj, int index) {
+		return addReadied(obj, index, false, false, false);
+	}
 	public boolean isEgg() {
 		return false;
 	}

@@ -40,6 +40,13 @@ public class Rectangle {
 	}		
 	public final void enlarge(int delta) {
 		x -= delta; y -= delta; w += 2*delta; h += 2*delta;
+	}	
+	public final int distance(int px, int py) {	// Get distance from a point (max.
+		//   dist. along x or y coord.)
+		int xdist = px <= x ? (x - px) : (px - x - w + 1);
+		int ydist = py <= y ? (y - py) : (py - y - h + 1);
+		int dist = xdist > ydist ? xdist : ydist;
+		return dist < 0 ? 0 : dist;
 	}
 	// Does it intersect another?
 	public boolean intersects(Rectangle r2)	{

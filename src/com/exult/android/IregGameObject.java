@@ -101,7 +101,11 @@ public class IregGameObject extends GameObject {
 							tilex, tiley, lift, 0);
 		} else
 			return new IregGameObject(shnum, frnum, tilex, tiley, lift);
-	}				// Write 1 IREG data.
+	}
+	public static IregGameObject create(int shnum, int frnum) {
+		return create(ShapeID.getInfo(shnum), shnum, frnum, 0, 0, 0);
+	}
+	// Write 1 IREG data.
 	public final int getCommonIregSize() {
 		return (getShapeNum() >= 1024 || getFrameNum() >= 64) 
 								? 7 : 5; 
