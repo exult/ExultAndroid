@@ -12,7 +12,7 @@ import java.lang.InterruptedException;
 import android.graphics.Point;
 
 public class UsecodeMachine extends GameSingletons {
-	public boolean debug = true;
+	public boolean debug = false;
 	private byte gflags[];	// Global flags.
 	// ++++ protected Conversation conv;		// Handles conversations.
 	// Functions: I'th entry contains funs for ID's 256*i + n.

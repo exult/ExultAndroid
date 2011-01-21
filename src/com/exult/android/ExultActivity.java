@@ -396,6 +396,11 @@ public class ExultActivity extends Activity {
 		        			gwin.setAllDirty();
 		        		}
 		        		return true;
+		        	case KeyEvent.KEYCODE_U:
+			        	if (event.isAltPressed())
+			        		GameSingletons.ucmachine.debug = !
+			        					GameSingletons.ucmachine.debug;
+			        	return true;
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {
 		        			finish();

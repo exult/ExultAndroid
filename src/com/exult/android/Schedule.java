@@ -68,6 +68,9 @@ public abstract class Schedule extends GameSingletons {
 	public boolean seekFoes() {
 		return false;	//+++++++++FINISH
 	}
+	protected final void bark() {
+		ucmachine.callUsecode(npc.getUsecode(), npc, UsecodeMachine.npc_proximity);
+	}
 	/*
 	 * 	THE SCHEDULES
 	 */
@@ -643,6 +646,8 @@ public abstract class Schedule extends GameSingletons {
 								center.ty - dist + EUtil.rand()%(2*dist), center.tz);
 							// Wait a bit.
 			npc.walkToTile(loc, 2+EUtil.rand()%2, EUtil.rand()%8);
+			if (EUtil.rand()%4 == 0)
+				bark();
 		}
 	}
 	/*
@@ -678,6 +683,8 @@ public abstract class Schedule extends GameSingletons {
 					!npc.walkPathToTile(pos, 2+EUtil.rand()%2, EUtil.rand()%8, 1))
 							// Failed?  Try again a little later.
 				npc.start(2, EUtil.rand()%12);
+			else if (EUtil.rand()%3 == 0)
+				bark();
 		}
 	}
 	/*
