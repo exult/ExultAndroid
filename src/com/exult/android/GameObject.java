@@ -1,10 +1,14 @@
 package com.exult.android;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.Comparator;
+import java.util.Collections;
 import android.graphics.Point;
 import java.io.OutputStream;
 import java.io.IOException;
+
 
 public abstract class GameObject extends ShapeID {
 	//	Flags
@@ -229,6 +233,18 @@ public abstract class GameObject extends ShapeID {
 		}
 		return null;
 	}
+	/*
+	 * For sorting closest to a given spot.
+	 */
+	public static class ClosestSorter implements Comparator<GameObject> {
+		Tile pos;		// Pos to get closest to.
+		public ClosestSorter(Tile p) {
+			pos = p;
+		}
+		public int compare(GameObject o1, GameObject o2) {
+			return o1.distance(pos) - o2.distance(pos);
+		}
+	}
 	public GameObject findClosest(Vector<GameObject> vec, int shapenums[], int dist) {
 		int i, cnt = shapenums.length;
 		Tile pos = nearbyLoc;;
@@ -240,10 +256,7 @@ public abstract class GameObject extends ShapeID {
 		if (cnt == 0)
 			return null;
 		if (cnt > 1) {
-			/* +++++++++FINISH
-			std::sort(vec.begin(), vec.end(), 
-					Object_closest_sorter(get_tile()));
-			*/
+			Collections.sort(vec, new ClosestSorter(pos));
 		}
 		return vec.elementAt(0);
 	}

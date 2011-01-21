@@ -337,6 +337,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	A schedule for preaching.
 	 */
 	public static class Preach extends Schedule {
+		static boolean debug = true;
 		static final int
 			find_podium = 0,
 			at_podium = 1,
@@ -352,6 +353,7 @@ public abstract class Schedule extends GameSingletons {
 			state = find_podium;
 		}
 		public void nowWhat() {	// Now what should NPC do?
+			if (debug) System.out.println("Preach: state = " + state);
 			switch (state) {
 			case find_podium:
 				{
@@ -373,7 +375,7 @@ public abstract class Schedule extends GameSingletons {
 				if (pact != null) {
 					state = at_podium;
 					npc.setAction(new ActorAction.Sequence(pact,
-							new ActorAction.FacePos(podium, 200)));
+							new ActorAction.FacePos(podium, 1)));
 					npc.start(1, 0);
 					return;
 				}
@@ -397,106 +399,104 @@ public abstract class Schedule extends GameSingletons {
 			case exhort:
 				{
 				byte frames[] = new byte[8];		// Frames.
-				//+++++++++INDENT:
-			int cnt = 1 + EUtil.rand()%(frames.length - 1);
+				int cnt = 1 + EUtil.rand()%(frames.length - 1);
 						// Frames to choose from:
-			final byte choices[] = {0, 8, 9};
-			for (int i = 0; i < cnt - 1; i++)
-				frames[i] = (byte)npc.getDirFramenum(
+				final byte choices[] = {0, 8, 9};
+				for (int i = 0; i < cnt - 1; i++)
+					frames[i] = (byte)npc.getDirFramenum(
 						choices[EUtil.rand()%(choices.length)]);
 						// Make last one standing.
-			frames[cnt - 1] = (byte)npc.getDirFramenum(Actor.standing);
-			npc.setAction(new ActorAction.Frames(frames, cnt, 250, null));
-			npc.start(1, 0);
-			npc.say(ItemNames.first_preach, ItemNames.last_preach);
-			state = at_podium;
-			Actor member = findCongregant(npc);
-			if (member != null) {
-				UsecodeScript scr = new UsecodeScript(member);
-				scr.add(UsecodeScript.delay_ticks, 3);
-				scr.add(UsecodeScript.face_dir, member.getDirFacing());
-				scr.add(UsecodeScript.npc_frame + Actor.standing);
-				scr.add(UsecodeScript.say).add(ItemNames.msgs[ItemNames.first_amen +
+				frames[cnt - 1] = (byte)npc.getDirFramenum(Actor.standing);
+				npc.setAction(new ActorAction.Frames(frames, cnt, 1, null));
+				npc.start(1, 0);
+				npc.say(ItemNames.first_preach, ItemNames.last_preach);
+				state = at_podium;
+				Actor member = findCongregant(npc);
+				if (member != null) {
+					UsecodeScript scr = new UsecodeScript(member);
+					scr.add(UsecodeScript.delay_ticks, 3);
+					scr.add(UsecodeScript.face_dir, member.getDirFacing());
+					scr.add(UsecodeScript.npc_frame + Actor.standing);
+					scr.add(UsecodeScript.say).add(ItemNames.msgs[ItemNames.first_amen +
 					EUtil.rand()%(ItemNames.last_amen - ItemNames.first_amen + 1)]);
-				scr.add(UsecodeScript.delay_ticks, 2);
-				scr.add(UsecodeScript.npc_frame + Actor.sit_frame);
+					scr.add(UsecodeScript.delay_ticks, 2);
+					scr.add(UsecodeScript.npc_frame + Actor.sit_frame);
+					scr.finish();
+					scr.start(1);	// Start next tick.
+				}
+				return;
+				}
+			case visit:
+				{
+				state = find_podium;
+				npc.start(1, (1000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
+				Actor member = findCongregant(npc);
+				if (member == null)
+					return;
+				Tile pos = new Tile();
+				member.getTile(pos);
+				npc.getTile(npcPos);
+				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
+				ActorAction pact = ActorAction.PathWalking.createPath(
+														npcPos, pos, cost);
+				if (pact == null)
+					return;
+				npc.setAction(new ActorAction.Sequence(pact,
+					new ActorAction.FacePos(member, 1)));
+				state = talk_member;
+				return;
+				}
+			case talk_member:
+				state = find_podium;
+				npc.say(ItemNames.first_preach2, ItemNames.last_preach2);
+				npc.start(2, 2000/TimeQueue.tickMsecs);
+				return;
+			case find_icon:
+				{
+				state = find_podium;		// In case we fail.
+				npc.start(2, 0);
+				GameObject icon = npc.findClosest(724);
+				if (icon == null)
+					return;
+				Tile pos = new Tile();
+				icon.getTile(pos);
+				pos.tx += 2;
+				pos.ty -= 1;
+				npc.getTile(npcPos);
+				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 0);
+				ActorAction pact = ActorAction.PathWalking.createPath(
+												npcPos, pos, cost);
+				if (pact != null) {
+					npc.setAction(pact);
+					state = pray;
+				}
+				return;
+				}
+			case pray:
+				{
+				UsecodeScript scr = new UsecodeScript(npc);
+				scr.add(UsecodeScript.face_dir << 6,	// Face west.
+						UsecodeScript.npc_frame + Actor.standing,
+						UsecodeScript.npc_frame + Actor.bow_frame,
+						UsecodeScript.delay_ticks << 3,
+						UsecodeScript.npc_frame + Actor.kneel_frame);
+				scr.add(UsecodeScript.say).add(
+						ItemNames.msgs[ItemNames.first_amen + EUtil.rand()%2]);
+				scr.add(UsecodeScript.delay_ticks << 5,
+						UsecodeScript.npc_frame + Actor.bow_frame,
+						UsecodeScript.delay_ticks << 3,
+						UsecodeScript.npc_frame + Actor.standing);
 				scr.finish();
 				scr.start(1);	// Start next tick.
+				state = find_podium;
+				npc.start(2, 4000/TimeQueue.tickMsecs);
+				return;
 				}
-			return;
-			}
-		case visit:
-			{
-			state = find_podium;
-			npc.start(1, (1000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
-			Actor member = findCongregant(npc);
-			if (member == null)
+			default:
+				state = find_podium;
+				npc.start(2, 0);
 				return;
-			Tile pos = new Tile();
-			member.getTile(pos);
-			npc.getTile(npcPos);
-			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
-			ActorAction pact = ActorAction.PathWalking.createPath(
-														npcPos, pos, cost);
-			if (pact == null)
-				return;
-			npc.setAction(new ActorAction.Sequence(pact,
-					new ActorAction.FacePos(member, 200)));
-			state = talk_member;
-			return;
 			}
-		case talk_member:
-			state = find_podium;
-			npc.say(ItemNames.first_preach2, ItemNames.last_preach2);
-			npc.start(2, 2000/TimeQueue.tickMsecs);
-			return;
-		case find_icon:
-			{
-			state = find_podium;		// In case we fail.
-			npc.start(2, 0);
-			GameObject icon = npc.findClosest(724);
-			if (icon == null)
-				return;
-			Tile pos = new Tile();
-			icon.getTile(pos);
-			pos.tx += 2;
-			pos.ty -= 1;
-			npc.getTile(npcPos);
-			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 0);
-			ActorAction pact = ActorAction.PathWalking.createPath(
-				npcPos, pos, cost);
-			if (pact != null) {
-				npc.setAction(pact);
-				state = pray;
-			}
-			return;
-			}
-		case pray:
-			{
-			UsecodeScript scr = new UsecodeScript(npc);
-			scr.add(UsecodeScript.face_dir << 6,	// Face west.
-					UsecodeScript.npc_frame + Actor.standing,
-					UsecodeScript.npc_frame + Actor.bow_frame,
-					UsecodeScript.delay_ticks << 3,
-					UsecodeScript.npc_frame + Actor.kneel_frame);
-			scr.add(UsecodeScript.say).add(
-					ItemNames.msgs[ItemNames.first_amen + EUtil.rand()%2]);
-			scr.add(UsecodeScript.delay_ticks << 5,
-					UsecodeScript.npc_frame + Actor.bow_frame,
-					UsecodeScript.delay_ticks << 3,
-					UsecodeScript.npc_frame + Actor.standing);
-			scr.finish();
-			scr.start(1);	// Start next tick.
-			state = find_podium;
-			npc.start(2, 4000/TimeQueue.tickMsecs);
-			return;
-			}
-		default:
-			state = find_podium;
-			npc.start(2, 0);
-			return;
-		}
-
 		}
 		/*
 		 * Find someone listening.
@@ -520,7 +520,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	Talk to avatar.
 	 */
 	public static class Talk extends Schedule {
-		boolean debug = true;
+		static boolean debug = true;
 		int phase;			// 0=walk to Av., 1=talk, 2=done.
 		Tile pos = new Tile();	// Temp.
 		public Talk(Actor n) {
@@ -855,7 +855,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	Wait tables.
 	 */
 	public static class Waiter extends Schedule {
-		boolean debug = false;
+		static boolean debug = false;
 		Tile startPos;		// Starting position.
 		Actor customer;		// Current customer.
 		GameObject prepTable;	// Table we're working at.
