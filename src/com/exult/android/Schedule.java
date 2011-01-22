@@ -541,6 +541,7 @@ public abstract class Schedule extends GameSingletons {
 			wrap = true;
 			center = new Tile(0, 0, 0);
 			pos = new Tile();
+			paths = new Vector<GameObject>();
 		}
 		private static final int speed = 1;
 		private static final int PATH_SHAPE = 607;
@@ -832,10 +833,10 @@ public abstract class Schedule extends GameSingletons {
 						else	// Book already open; we shouldn't close it then.
 							book = null;
 						}
-					npc.start(250, 5000 + EUtil.rand()%10000);
+					npc.start(2, (5000 + EUtil.rand()%10000)/TimeQueue.tickMsecs);
 					}
 				else			// Not sitting.
-					npc.start(250, EUtil.rand()%1000);
+					npc.start(2, (EUtil.rand()%1000)/TimeQueue.tickMsecs);
 				state = 3;	// Continue on afterward.
 				break;
 			case 3:	// Stand up.
