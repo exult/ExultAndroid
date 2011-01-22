@@ -631,13 +631,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				//+++++++FINISH ready_best_weapon();	// Fellowship staff.
 				schedule = new Schedule.Preach(this);
 				break;
-			/*+++++++++++++++
 			case Schedule.patrol:
-				ready_best_weapon();
-				schedule = new Patrol_schedule(this);
+				//+++++++readyBestWeapon();
+				schedule = new Schedule.Patrol(this);
 				break;
+			/*
 			case Schedule.desk_work:
-				unready_weapon();
+				unreadyWeapon();
 				schedule = new Desk_schedule(this);
 				break;
 			*/
@@ -929,6 +929,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return false;
 		//+++++++FINISH: Figure casting/weapon rectangle.
 		return true;
+	}
+	public final boolean addDirty() {
+		return addDirty(false);
 	}
 	public final void changeFrame(int frnum) {
 		addDirty(false);			// Set to repaint old area.

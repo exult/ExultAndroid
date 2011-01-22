@@ -118,7 +118,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			add(v);
 		return this;
 	}
-	public void finish() {
+	private void finish() {
 		code = new UsecodeValue.ArrayValue(building);
 		cnt = code.getArraySize();
 		building = null;
@@ -140,6 +140,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		(
 		int d			// Start after this many clicks.
 		) {
+		if (code == null && building != null)
+			finish();
 		int cnt = code.getArraySize();// Check initial elems.
 		for (int i = 0; i < cnt; i++) {
 			int opval0 = code.getElem(i).getIntValue();
@@ -157,6 +159,9 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		count++;			// Keep track of total.
 		scripts.addFirst(this);	// Put in chain.
 		tqueue.add(d + TimeQueue.ticks, this, ucmachine);
+	}
+	public void start() {	// Next tick.
+		start(1);
 	}
 	/*
 	 *	Terminate all scripts for a given object.
