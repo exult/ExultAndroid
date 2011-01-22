@@ -345,9 +345,12 @@ public class GameWindow extends GameSingletons {
 		setAllDirty();
 	}
 	/*
-	 *	Shift view by one tile.
+	 *	Shift view by one tile.  Use 'nopaint = true' if there are thread issues.
 	 */
-	public void shiftViewHoriz(boolean toleft) {
+	public void shiftViewHoriz(boolean toLeft) {
+		shiftViewHoriz(toLeft, false);
+	}
+	public void shiftViewHoriz(boolean toleft, boolean nopaint) {
 		int w = getWidth(), h = getHeight();
 		if (toleft) {
 			scrolltx = EConst.DECR_TILE(scrolltx);
@@ -357,29 +360,30 @@ public class GameWindow extends GameSingletons {
 			scrolltx = EConst.INCR_TILE(scrolltx);
 			scrollBounds.x = EConst.INCR_TILE(scrollBounds.x);
 		}
-		if (gumpman.showingGumps()) {		// Gump on screen?
+		if (nopaint || gumpman.showingGumps()) {		// Gump on screen?
 			setAllDirty();
 			return;
 		}
 		map.readMapData();		// Be sure objects are present.
 		synchronized(win) {
-		mouse.hide();
-		if (toleft) {			// Shift image to right.
-			win.copy(0, 0, w - EConst.c_tilesize, h, EConst.c_tilesize, 0);
-			paint(0, 0, EConst.c_tilesize, h);
-			dirty.x += EConst.c_tilesize;
-		} else { 				// Shift image to left.
-			win.copy(EConst.c_tilesize, 0, w - EConst.c_tilesize, h, 0, 0);
+			mouse.hide();
+			if (toleft) {			// Shift image to right.
+				win.copy(0, 0, w - EConst.c_tilesize, h, EConst.c_tilesize, 0);
+				paint(0, 0, EConst.c_tilesize, h);
+				dirty.x += EConst.c_tilesize;
+			} else { 				// Shift image to left.
+				win.copy(EConst.c_tilesize, 0, w - EConst.c_tilesize, h, 0, 0);
 						// Paint 1 column to right.
-			paint(w - EConst.c_tilesize, 0, EConst.c_tilesize, h);
-			dirty.x -= EConst.c_tilesize;	// Shift dirty rect.
-			
-		}
+				paint(w - EConst.c_tilesize, 0, EConst.c_tilesize, h);
+				dirty.x -= EConst.c_tilesize;	// Shift dirty rect.
+			}
 		}
 		clipToWin(dirty);
 	}
-	
 	public void shiftViewVertical(boolean up) {
+		shiftViewVertical(up, false);
+	}
+	public void shiftViewVertical(boolean up, boolean nopaint) {
 		int w = getWidth(), h = getHeight();
 		if (up) {
 			scrollty = EConst.DECR_TILE(scrollty);
@@ -389,23 +393,23 @@ public class GameWindow extends GameSingletons {
 			scrollty = EConst.INCR_TILE(scrollty);
 			scrollBounds.y = EConst.INCR_TILE(scrollBounds.y);
 		}
-		if (gumpman.showingGumps())			// Gump on screen?
+		if (nopaint || gumpman.showingGumps())			// Gump on screen?
 			{
 			setAllDirty();
 			return;
 			}
 		map.readMapData();		// Be sure objects are present.
 		synchronized(win) {
-		mouse.hide();
-		if (up) {
-			win.copy(0, 0, w, h - EConst.c_tilesize, 0, EConst.c_tilesize);
-			paint(0, 0, w, EConst.c_tilesize);
-			dirty.y += EConst.c_tilesize;		// Shift dirty rect.
-		} else {
-			win.copy(0, EConst.c_tilesize, w, h - EConst.c_tilesize, 0, 0);
-			paint(0, h - EConst.c_tilesize, w, EConst.c_tilesize);
-			dirty.y -= EConst.c_tilesize;		// Shift dirty rect.
-		}
+			mouse.hide();
+			if (up) {
+				win.copy(0, 0, w, h - EConst.c_tilesize, 0, EConst.c_tilesize);
+				paint(0, 0, w, EConst.c_tilesize);
+				dirty.y += EConst.c_tilesize;		// Shift dirty rect.
+			} else {
+				win.copy(0, EConst.c_tilesize, w, h - EConst.c_tilesize, 0, 0);
+				paint(0, h - EConst.c_tilesize, w, EConst.c_tilesize);
+				dirty.y -= EConst.c_tilesize;		// Shift dirty rect.
+			}
 		}
 		clipToWin(dirty);
 	}

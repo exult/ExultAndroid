@@ -143,8 +143,7 @@ public class ExultActivity extends Activity {
     	private int avatarStartX, avatarStartY;
     	@Override
     	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
-    		System.out.println("Size changed.  Old w was " + oldw +
-    				", neww is " + w);
+    		System.out.printf("Size changed to %1$d, %2$d\n", w, h);
     		gwin.getWin().setToScale(w, h);
     	}
     	@Override
@@ -350,13 +349,21 @@ public class ExultActivity extends Activity {
 		        		return false;		// Weed these out for performance.
 		        	switch (keyCode) {
 		        	case KeyEvent.KEYCODE_DPAD_RIGHT:
-		        		gwin.shiftViewHoriz(false); break;
-		        	case KeyEvent.KEYCODE_DPAD_LEFT:
-		        		gwin.shiftViewHoriz(true); break;
-		        	case KeyEvent.KEYCODE_DPAD_DOWN:
-		        		gwin.shiftViewVertical(false); break;
-		        	case KeyEvent.KEYCODE_DPAD_UP:
-		        		gwin.shiftViewVertical(true); break;	
+		        		for (int i = 0; i < 4; ++i)
+		        			gwin.shiftViewHoriz(false, true); 
+		        		break;
+		        	case KeyEvent.KEYCODE_DPAD_LEFT:		        		
+		        		for (int i = 0; i < 4; ++i)
+		        			gwin.shiftViewHoriz(true, true); 
+		        		break;
+		        	case KeyEvent.KEYCODE_DPAD_DOWN:		        		
+		        		for (int i = 0; i < 4; ++i)
+		        			gwin.shiftViewVertical(false, true); 
+		        		break;
+		        	case KeyEvent.KEYCODE_DPAD_UP:		        		
+		        		for (int i = 0; i < 4; ++i)
+		        			gwin.shiftViewVertical(true, true); 
+		        		break;	
 		        	case KeyEvent.KEYCODE_H:
 			        		if (event.isAltPressed()) {
 			        			GameSingletons.cheat.toggleHackMover();
