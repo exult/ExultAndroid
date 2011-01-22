@@ -263,10 +263,12 @@ public abstract class GameObject extends ShapeID {
 	public GameObject findClosest(Vector<GameObject> vec, int shapenums[]) {
 		return findClosest(vec, shapenums, 24);
 	}
-	public GameObject findClosest(int shapenum, int dist) {
+	public GameObject findClosest(int shapenum, int dist, 
+								int mask, int qual, int framenum) {
 		getTile(nearbyLoc);
 		Vector<GameObject> vec = new Vector<GameObject>();
-		if (gmap.findNearby(vec, nearbyLoc, shapenum, dist, 0xb0) == 0)
+		if (gmap.findNearby(vec, nearbyLoc, shapenum, dist, mask,
+													qual, framenum) == 0)
 			return null;
 		GameObject closest = null;
 		int bestDist = 10000;	// Tiles.
@@ -278,6 +280,10 @@ public abstract class GameObject extends ShapeID {
 			}
 		}
 		return closest;
+	}
+	public GameObject findClosest(int shapenum, int dist) {
+		return findClosest(shapenum, dist, 0xb0, EConst.c_any_qual,
+				EConst.c_any_framenum);
 	}
 	public GameObject findClosest(int shapenum) {
 		return findClosest(shapenum, 24);

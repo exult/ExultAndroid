@@ -609,7 +609,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			*/
 			case Schedule.waiter:
-				// ++++FINISH unready_weapon();
+				unreadyWeapon();
 				schedule = new Schedule.Waiter(this);
 				break;
 			/*+++++++++++
@@ -619,7 +619,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			*/
 			case Schedule.eat_at_inn:
-				//+++++++ unready_weapon();
+				unreadyWeapon();
 				schedule = new Schedule.EatAtInn(this);
 				break;
 			/*+++++++++++
@@ -905,6 +905,24 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 	public void setActorShape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
+	}
+	/*
+	 *	Try to store the readied weapon.
+	 */
+	public void unreadyWeapon() {
+		GameObject obj = spots[Ready.lhand];
+		if (obj == null)
+			return;
+		ShapeInfo info = obj.getInfo();
+		/* +++++++FINISH
+		if (info.getWeaponInfo() == null)	// A weapon?
+			return;
+		*/
+		gwin.addDirty(this);
+		if (spots[Ready.belt] == null) {	// Belt free?
+			obj.removeThis();
+			addReadied(obj, Ready.belt);
+		}
 	}
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))

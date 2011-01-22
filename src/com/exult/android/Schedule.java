@@ -520,6 +520,472 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	A schedule for patrolling along 'path' objects.
+	 */
+	public static class Patrol extends Schedule {
+		Vector<GameObject> paths;	// Each 'path' object.
+		int pathnum;			// # of next we're heading towards.
+		int dir;				// 1 or -1;
+		boolean wrap;				// If true, wraps to zero when reached last path
+		int failures;			// # of failures to find marker.
+		int state;				// The patrol state.
+		Tile center;		// For 'loiter' and 'pace' path eggs.
+		Tile pos;			// A temp.
+		byte whichdir;			// For 'pace' path eggs.
+		int pace_count;			// For 'pace' path eggs.
+		GameObject hammer;	// For 'hammer' path eggs.
+		GameObject book;		// For 'read' path eggs.
+		boolean seek_combat;		// The NPC should seek enemies while patrolling.
+		public Patrol(Actor n) {
+			super(n);
+			pathnum = -1;
+			dir = 1;
+			wrap = true;
+			center = new Tile(0, 0, 0);
+			pos = new Tile();
+		}
+		private static final int PATH_SHAPE = 607;
+		private void findNextPath() {
+			final int speed = 1;
+			pathnum += dir;			// Find next path.
+			if (pathnum == 0 && dir == -1)
+				dir = 1;	// Start over from zero.
+			if (pathnum >= paths.size())
+				paths.setSize(pathnum + 1);
+							// Already know its location?
+			GameObject path =  pathnum >= 0 ? paths.elementAt(pathnum) : null;
+			if (path == null) {			// No, so look around.
+				path = npc.findClosest(PATH_SHAPE, 25, 0x10, 
+							EConst.c_any_qual, pathnum);
+				if (path != null) {		// Save it.
+					failures = 0;
+					paths.setElementAt(path, pathnum);
+				} else {			// Turn back if at end.
+					failures++;
+					dir = 1;
+					if (pathnum == 0) {	// At start?  Retry.
+						if (failures < 4) {
+							pathnum = -1;
+							npc.start(speed, 2*speed);
+								// Makes some enemies more prone to attacking.
+							seek_combat = true;
+							return;
+						}
+							// After 4, fall through.
+					} else {		// At end, go back to start.
+						if (wrap) {
+							pathnum = 0;
+							path = !paths.isEmpty() ? paths.firstElement() : null;
+						} else {
+							pathnum = pathnum-2 >= 0 ? pathnum-2 : 0;
+							dir = -1;
+							path = !paths.isEmpty() ? paths.elementAt(pathnum) 
+									: null;
+						}
+					}
+				}
+				if (path == null) {	// Still failed?
+							// Wiggle a bit.
+					npc.getTile(pos);
+					int dist = failures + 2;
+					pos.set(pos.tx + EUtil.rand()%dist - dist/2,
+							pos.ty + EUtil.rand()%dist - dist, pos.tz);
+					npc.walkToTile(pos, speed, 
+									(failures*300)/TimeQueue.tickMsecs);
+					int pathcnt = paths.size();
+					pathnum = EUtil.rand()%(pathcnt < 4 ? 4 : pathcnt);
+						// Makes some enemies more prone to attacking.
+					seek_combat = true;
+					return;
+				}
+			}
+			path.getTile(pos);
+			if (!npc.walkPathToTile(pos, speed, 2*speed + EUtil.rand()%3, 0)) {		
+							// Look for free tile within 1 square.
+				path.getTile(pos);
+				if (!MapChunk.findSpot(pos, 1, npc.getShapeNum(),
+														npc.getFrameNum(), 1) ||
+					!npc.walkPathToTile(pos, speed, EUtil.rand()%5, 0)) {
+							// Failed.  Later.
+					npc.start(speed, 2000/TimeQueue.tickMsecs);
+					return;
+				}
+			}
+			state = 1;	// Walking to path.
+		}
+		public void nowWhat() {	// Now what should NPC do?
+			/* ++++++++++FINISH
+			if (EUtil.rand() % 8 == 0)		// Check for lamps, etc.
+				if (try_street_maintenance())
+					return;		// We no longer exist.
+			*/
+			
+			if (seek_combat && seekFoes())	// Check for nearby foes.
+				return;
+			int speed = 1;
+			
+			GameObject path;
+			switch (state){
+			case 0:	// Find next path.
+				findNextPath();
+				break;/* ++++++++++FINISH
+			case 1:	// Walk to next path.
+					if (pathnum >= 0 &&		// Arrived at path?
+						(unsigned int)pathnum < paths.size() &&
+						(path = paths[pathnum]) != 0 &&	npc.distance(path) < 2)
+						{
+						whichdir = 1;	// Default to East-West pace.
+						int delay = 2;
+						// Scripts for all actions. At worst, display standing frame
+						// once the path egg is reached.
+						Usecode_script *scr = new Usecode_script(npc);
+						(*scr) << Ucscript::npc_frame + Actor::standing;
+									// Quality = type.  (I think high bits
+									// are flags).
+						int qual = path.get_quality();
+						seek_combat = (qual&32)!=0;
+						// TODO: Find out what flags 64 and 128 mean. It would seem
+						// that they are 'Repeat Forever' and 'Exc. Reserved.', but
+						// what does those mean?
+						switch (qual&31)
+							{
+						case 0:			// None.
+							break;
+						case 25:		// 50% wrap to 0.
+							if (EUtil.rand()%2)
+								break;
+							// Fall through to wrap.
+						case 1:			// Wrap to 0.
+							pathnum = -1;
+							dir = 1;
+							break;
+						case 2:			// Pause; guessing 3 ticks.
+							{
+							(*scr) << Ucscript::delay_ticks << 3;
+							delay = 5;
+							break;
+							}
+						case 24:		// Read
+							// Find the book which will be read.
+							book = npc.find_closest(642, 4);
+							// Fall through to sit.
+						case 3:			// Sit.
+							if (Sit_schedule::set_action(npc))
+								{
+								scr.start();	// Start next tick.
+								state = 2;
+								return;
+								}
+							break;
+						case 4:			// Kneel at tombstone.
+						case 5:			// Kneel
+							{	// Both seem to work identically.
+							(*scr) << Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::bow_frame <<
+								Ucscript::delay_ticks << 4 <<
+								Ucscript::npc_frame + Actor::kneel_frame <<
+								Ucscript::delay_ticks << 20 <<
+								Ucscript::npc_frame + Actor::bow_frame <<
+								Ucscript::delay_ticks << 4 <<
+								Ucscript::npc_frame + Actor::standing; 
+							delay = 36;
+							break;
+							}
+						case 6:			// Loiter.
+							{
+							scr.start();	// Start next tick.
+							center = path.get_tile();
+							state = 4;
+							npc.start(speed, speed*delay);
+							return;
+							}
+						case 7:			// Right about-face.
+						case 8:			// Left about-face.
+							{
+							wrap = false;	// Guessing; seems to match the original.
+							const int dirs_left[] = {west, north, north, east, east, south, south, west};
+							const int dirs_right[] = {east, east, south, south, west, west, north, north};
+							const int *face_dirs;
+							if ((path.get_quality()&31) == 7)
+								face_dirs = dirs_right;
+							else
+								face_dirs = dirs_left;
+							int facing = npc.get_dir_facing();
+							for (int i=0; i<2; i++)
+								{
+								(*scr) << Ucscript::delay_ticks << 2 <<
+								Ucscript::face_dir << face_dirs[facing];
+								facing = face_dirs[facing];
+								}
+							delay = 8;
+							break;
+							}
+						// Both 9 and 10 appear to pace vertically in the originals.
+						// I am having 9 as vert. pace for the guards in Fawn.
+						case 9:			// Vert. pace.
+							whichdir = 0;
+						case 10:		// Horiz. pace.
+							{
+							pace_count = -1;
+							scr.start();	// Start next tick.
+							center = path.get_tile();
+							state = 5;
+							npc.start(speed, speed*delay);
+							return;
+							}
+						case 11:		// 50% reverse.
+							if (EUtil.rand()%2)
+								dir *= -1;
+							break;
+						case 12:		// 50% skip next.
+							{
+							if (EUtil.rand()%2)
+								pathnum += dir;
+							break;
+							}
+						case 13:		// Hammer.
+							{
+							if (!hammer)	// Create hammer if does not exist.
+								hammer = new Ireg_game_object(623, 0, 0, 0);
+								// For safety, unready weapon first.
+							npc.unready_weapon();
+							npc.add_dirty();
+								// Ready the hammer in the weapon hand.
+							npc.add_readied(hammer, lhand, 0, 1);
+							npc.add_dirty();
+
+							int hammersfx= Game::get_game_type() == BLACK_GATE ? 45:49;
+							(*scr) << Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::ready_frame <<
+								Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::raise1_frame <<
+								Ucscript::delay_ticks << 2 <<
+								Ucscript::sfx << hammersfx <<
+								Ucscript::npc_frame + Actor::out_frame <<
+								Ucscript::repeat << -11 << 1 <<
+								Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::ready_frame <<
+								Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::standing;
+							delay = 24;
+							break;
+							}
+						case 15:	// Usecode.
+							{		// Don't let this script halt others,
+									//   as it messes up automaton in
+									//   SI-Freedom.
+							(*scr) << Ucscript::usecode2 << npc.get_usecode() <<
+								  static_cast<int>(Usecode_machine::npc_proximity);
+							delay = 3;
+							break;
+							}
+						case 16:		// Bow to ground.
+						case 17:		// Bow from ground, seems to work exactly like 16
+							{
+							(*scr) << Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::bow_frame <<
+								Ucscript::delay_ticks << 2 <<
+								Ucscript::npc_frame + Actor::standing;
+							delay = 8;
+							break;
+							}
+						case 20:		// Ready weapon
+							npc.ready_best_weapon();
+							break;
+						case 14:		// Check area.
+							// Maybe could be improved?
+							delay += 2;
+							(*scr) << Ucscript::delay_ticks << 2;
+						case 21:		// Unready weapon
+							npc.unready_weapon();
+							break;
+						case 22:		// One-handed swing.
+						case 23:		// Two-handed swing.
+							{
+							int dir = npc.get_dir_facing();
+							signed char frames[12];		// Get frames to show.
+							Game_object *weap = npc.get_readied(rhand);
+							int cnt = npc.get_attack_frames(weap ? weap.getShapeNum() : 0,
+										0, dir, frames);
+							if (cnt)
+								npc.set_action(new Frames_actor_action(frames, cnt, speed));
+							npc.start(speed, speed*(delay+1));		// Get back into time queue.
+							break;
+							}
+						// What should these two do???
+						case 18:		// Wait for semaphore+++++
+						case 19:		// Release semaphore+++++
+						default:
+		#ifdef DEBUG
+			cout << "Unhandled path egg quality in patrol schedule: " << qual << endl;
+		#endif
+							break;
+							}
+						scr.start();	// Start next tick.
+						state = 0;	// THEN, find next path.
+						npc.start(speed, speed*delay);
+						}
+					else
+						{
+						state = 0;	// Walking to path.
+						npc.start(speed, speed);
+						}
+					break;
+				case 2:	// Sitting/reading.
+					{
+							// Stay 5-15 secs.
+					if ((npc.getFrameNum()&0xf) == Actor::sit_frame)
+						{
+						if (book)
+							{	// Open book if reading.
+							int frnum = book.getFrameNum();
+							if (frnum%3)
+								book.change_frame(frnum - frnum%3);
+							else	// Book already open; we shouldn't close it then.
+								book = 0;
+							}
+						npc.start(250, 5000 + EUtil.rand()%10000);
+						}
+					else			// Not sitting.
+						npc.start(250, EUtil.rand()%1000);
+					state = 3;	// Continue on afterward.
+					break;
+					}
+				case 3:	// Stand up.
+					{
+					if ((npc.getFrameNum()&0xf) == Actor::sit_frame)
+						{
+						if (book)
+							{		// Close book we opened it.
+							int frnum = book.getFrameNum();
+							book.change_frame(frnum - frnum%3 + 1);
+							book = 0;
+							}
+						// Standing up animation.
+						Usecode_script *scr = new Usecode_script(npc);
+						(*scr) << Ucscript::delay_ticks << 2 <<
+							Ucscript::npc_frame + Actor::bow_frame <<
+							Ucscript::delay_ticks << 2 <<
+							Ucscript::npc_frame + Actor::standing;
+						scr.start();	// Start next tick.
+						npc.start(speed, speed*7);
+						}
+					state = 0;
+					break;
+					}
+				case 4:	// Loiter.
+					{
+					if (EUtil.rand()%5 == 0)
+						{
+						state = 0;
+						npc.start(speed, speed);
+						}
+					else
+						{
+						int dist = 12;
+						int newx = center.tx - dist + EUtil.rand()%(2*dist);
+						int newy = center.ty - dist + EUtil.rand()%(2*dist);
+										// Wait a bit.
+						npc.walk_to_tile(newx, newy, center.tz, speed, 
+													EUtil.rand()%2000);
+						}
+					break;
+					}
+				case 5:	// Pacing.
+					{
+					if (npc.get_tile().distance(center) < 1)
+						{
+						pace_count++;
+						if (pace_count > 0 && pace_count == 6)
+							{
+							Usecode_script *scr = new Usecode_script(npc);
+							(*scr) << Ucscript::npc_frame + Actor::standing;
+							scr.start();	// Start next tick.
+							state = 0;
+							npc.start(speed, 2*speed);
+							return;
+							}
+						}
+					int dir = npc.get_dir_facing();	// Use NPC facing for starting direction
+					bool changedir = false;
+					Tile offset;
+					switch (dir)
+						{
+						case north:
+						case south:
+							if (whichdir)
+								changedir = true;
+							else
+								offset = Tile(0, dir == south ? 1 : -1, 0);
+							break;
+						case east:
+						case west:
+							if (!whichdir)
+								changedir = true;
+							else
+								offset = Tile(dir == east ? 1 : -1, 0, 0);
+							break;
+						}
+					
+					if (blocked.tx != -1)		// Blocked?
+						{
+						Game_object *obj = npc.find_blocking(blocked, dir);
+						if (obj)
+							{
+							blocked.tx = -1;
+							changedir = true;
+							if (obj.as_actor())
+								{
+								Monster_info *minfo = npc.get_info().get_monster_info();
+								if (!minfo || !minfo.cant_yell())
+									{
+									npc.say(first_move_aside, last_move_aside);
+										// Wait longer.
+									npc.start(speed, speed);
+									return;
+									}
+								}
+							}
+						}
+
+					if (changedir)
+						{
+						if (npc.get_tile().distance(center) < 1)
+							pace_count--;
+						const int facedirs[] = {west, north, north, east, east, south, south, west};
+						npc.change_frame(npc.get_dir_framenum(
+							facedirs[dir], Actor::standing));
+						npc.start(2*speed, 2*speed);
+						return;
+						}
+
+					Tile p0 = npc.get_tile() + offset;
+					Frames_sequence *frames = npc.get_frames(dir);
+					int& step_index = npc.get_step_index();
+					if (!step_index)		// First time?  Init.
+						step_index = frames.find_unrotated(npc.getFrameNum());
+									// Get next (updates step_index).
+					int frame = frames.get_next(step_index);
+						// One step at a time.
+					npc.step(p0, frame);
+					npc.start(speed, speed);
+					break;
+					}*/
+				default:
+					// Just in case.
+					break;
+				}
+				
+
+		}
+		public void ending(int newtype) { // Switching to another schedule
+			if (hammer != null) {
+				hammer.removeThis();
+				hammer = null;
+			}
+		}
+	}
+	/*
 	 *	Talk to avatar.
 	 */
 	public static class Talk extends Schedule {
