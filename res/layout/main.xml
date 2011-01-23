@@ -18,7 +18,7 @@
         android:padding= "4px"
         android:text="T" />
         <Button
-    	android:id="@+id/combat_button"
+    	android:id="@+id/combat_button"    	
         android:layout_width="fill_parent"
         android:layout_height="30px"
         style="?android:attr/buttonStyleSmall"

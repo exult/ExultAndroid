@@ -14,6 +14,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.app.AlertDialog;
 import android.widget.Toast;
+import android.widget.Button;
 import android.util.AttributeSet;
 import android.content.DialogInterface;
 import java.util.LinkedList;
@@ -21,6 +22,7 @@ import java.util.LinkedList;
 public class ExultActivity extends Activity {
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	private static ExultActivity instance;
+	private static GameWindow gwin;
 	
     /** Called when the activity is first created. */
     @Override
@@ -34,6 +36,7 @@ public class ExultActivity extends Activity {
         super.onCreate(savedInstanceState);
         //setContentView(new MySurfaceView(this));
         setContentView(R.layout.main);
+        setButtonHandlers();
     }
     @Override
     public void onDestroy() {
@@ -95,6 +98,69 @@ public class ExultActivity extends Activity {
     	clickPoint = save;
     }
     /*
+     * Button handlers:
+     */
+    private void setButtonHandlers() {
+    	Button button;
+    	button = (Button) findViewById(R.id.target_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonTarget(v);}
+        });
+        button = (Button) findViewById(R.id.combat_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonCombat(v);}
+        });
+        button = (Button) findViewById(R.id.inventory_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonInv(v);}
+        });
+        button = (Button) findViewById(R.id.stats_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonStats(v);}
+        });
+        button = (Button) findViewById(R.id.feed_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonFeed(v);}
+        });
+        button = (Button) findViewById(R.id.zoom_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonZoom(v);}
+        });
+        button = (Button) findViewById(R.id.save_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonSave(v);}
+        });
+        button = (Button) findViewById(R.id.quit_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { buttonQuit(v);}
+        });
+    }
+    private void buttonTarget(View view) {
+    	
+    }
+    private void buttonCombat(View view) {
+    	
+    }
+    private void buttonInv(View view) {
+    	gwin.getMainActor().activate();
+    }
+    private void buttonStats(View view) {
+    	
+    }
+    private void buttonFeed(View view) {
+    	
+    }
+    private void buttonZoom(View view) {
+    	
+    }
+    private void buttonSave(View view) {
+    	new NewFileGump();
+		gwin.setAllDirty();
+    }
+    private void buttonQuit(View view) {
+    	finish();
+    }
+    /*
      * Subclasses.
      */
     public static class MySurfaceThread extends Thread {
@@ -129,7 +195,6 @@ public class ExultActivity extends Activity {
     public static class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback{
     	private MySurfaceThread thread;
     	private MotionEvent avatarMotion;	// When moving Avatar.
-    	public GameWindow gwin;
     	public ImageBuf ibuf;
     	public long GameTime;
     	public long nextTickTime;
@@ -421,8 +486,7 @@ public class ExultActivity extends Activity {
 		        		if (event.isAltPressed()) 
 		        			gwin.write(1, "Test save to zip");	//++++++++++TESTING.
 		        		else if (!event.isShiftPressed()) {
-		        			new NewFileGump();
-		        			gwin.setAllDirty();
+		        			ExultActivity.instance.buttonSave(null);
 		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_U:
