@@ -14,16 +14,11 @@ import android.content.Context;
 import android.graphics.Point;
 import android.app.AlertDialog;
 import android.widget.Toast;
+import android.util.AttributeSet;
 import android.content.DialogInterface;
 import java.util.LinkedList;
 
 public class ExultActivity extends Activity {
-	public long GameTime;
-	public long nextTickTime;
-	public static int stdDelay = 200;	// Frame delay in msecs.
-	public GameWindow gwin;
-	public ImageBuf ibuf;
-	private Point movePoint = new Point();	// A temp.
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	private static ExultActivity instance;
 	
@@ -37,7 +32,8 @@ public class ExultActivity extends Activity {
     	EUtil.initSystemPaths();
     	ShapeFiles.load();
         super.onCreate(savedInstanceState);
-        setContentView(new MySurfaceView(this));
+        //setContentView(new MySurfaceView(this));
+        setContentView(R.layout.main);
     }
     @Override
     public void onDestroy() {
@@ -101,7 +97,7 @@ public class ExultActivity extends Activity {
     /*
      * Subclasses.
      */
-    public class MySurfaceThread extends Thread {
+    public static class MySurfaceThread extends Thread {
     	private SurfaceHolder myThreadSurfaceHolder;
     	private MySurfaceView myThreadSurfaceView;
     	private boolean myThreadRun = false;
@@ -117,7 +113,6 @@ public class ExultActivity extends Activity {
     		while (myThreadRun) {
     			Canvas c = null;
     			try {
-    				GameTime = System.currentTimeMillis();
     				c = myThreadSurfaceHolder.lockCanvas(null);
     				synchronized (myThreadSurfaceHolder) {
     					myThreadSurfaceView.onDraw(c);
@@ -131,16 +126,22 @@ public class ExultActivity extends Activity {
     	}
     }	// End of MySurfaceThread
     
-    public class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback{
+    public static class MySurfaceView extends SurfaceView implements SurfaceHolder.Callback{
     	private MySurfaceThread thread;
     	private MotionEvent avatarMotion;	// When moving Avatar.
+    	public GameWindow gwin;
+    	public ImageBuf ibuf;
+    	public long GameTime;
+    	public long nextTickTime;
+    	public static int stdDelay = 200;	// Frame delay in msecs.
     	private int showItemsX = -1, showItemsY = -1;
-    	public long showItemsTime = 0;
+    	private long showItemsTime = 0;
     	private long lastB1Click = 0;
     	private int leftDownX = -1, leftDownY = -1;
     	private boolean dragging = false, dragged = false;
     	private boolean movingAvatar = false;
     	private int avatarStartX, avatarStartY;
+    	private Point movePoint = new Point();	// A temp.
     	@Override
     	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
     		System.out.printf("Size changed to %1$d, %2$d\n", w, h);
@@ -148,6 +149,7 @@ public class ExultActivity extends Activity {
     	}
     	@Override
     	protected void onDraw(Canvas canvas){
+    		GameTime = System.currentTimeMillis();
     		if (GameTime > nextTickTime) {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
@@ -190,10 +192,27 @@ public class ExultActivity extends Activity {
     		} else
     			gwin.getWin().blit(canvas);
     	}
+    	// For direct instantiation.
     	public MySurfaceView(Context ctx){
     		super(ctx);
     		init();
-    		
+    	}
+    	// For instantiation from XML
+    	public MySurfaceView(Context context, AttributeSet attrs) {
+    		super(context, attrs);
+    		init();
+        } 
+    	@Override
+        protected void onMeasure(int widthSpec, int heightSpec) {
+    		int w = figureDim(widthSpec), h = figureDim(heightSpec);
+    		System.out.printf("onMeasure: %1$d, %2$d\n", w, h);
+            setMeasuredDimension(w, h);
+        }
+    	private int figureDim(int spec) {
+    		//int result = 0;
+            //int specMode = MeasureSpec.getMode(spec);
+            int specSize = MeasureSpec.getSize(spec);
+            return specSize;
     	}
     	private void init(){
     		getHolder().addCallback(this);
@@ -207,10 +226,13 @@ public class ExultActivity extends Activity {
     		requestFocus();
     		ItemNames.init(false, false);
     		TimeQueue.tickMsecs = stdDelay;
+    		/* +++++++++NEEDED
     		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
     		int width = display.getWidth(), height = display.getHeight();
-    		gwin = new GameWindow(320, 200);	// Standard U7 dims.
+    		
     		gwin.getWin().setToScale(width, height);
+    		*/
+    		gwin = new GameWindow(320, 200);	// Standard U7 dims.
     		gwin.initFiles(false);
     		gwin.readGwin();
     		gwin.setupGame();
@@ -410,7 +432,7 @@ public class ExultActivity extends Activity {
 			        	return true;
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {
-		        			finish();
+		        			ExultActivity.instance.finish();
 		        			return true;
 		        		} else
 		        			return false;

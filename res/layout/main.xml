@@ -1,12 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     >
-<TextView  
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/hello"
-    />
+    <LinearLayout
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="fill_parent"
+    android:layout_weight="0">
+    	<Button
+    	android:id="@+id/zoom_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding= "4px"
+        android:text="Zoom" />
+        <Button
+        android:id="@+id/quit_button"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:padding= "4px"
+        android:textColor="#ff0000"
+        android:text="Quit" />
+    </LinearLayout>
+    <FrameLayout 
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent" 
+	android:layout_weight="1"
+	xmlns:android="http://schemas.android.com/apk/res/android">
+    	<view
+    	class = "com.exult.android.ExultActivity$MySurfaceView"
+	  	android:id="@+id/game"
+  		android:layout_width="fill_parent"
+  		android:layout_height="fill_parent"
+  		android:padding="10dip"
+  		android:layout_weight="1"
+  		android:fadingEdge="vertical" />
+  	</FrameLayout>
 </LinearLayout>

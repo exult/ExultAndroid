@@ -16,5 +16,16 @@
 	Avatar moves when you drag with the mouse on any area that isn't 
 	       draggable.
 	Fixed a crash when double-clicking doors.
+1-20-2011
+	Several schedules implemented, and maybe work:
+		Loiter
+		Wander
+		Pace
+		Sit - You can double-click a chair.
+		Talk - The mayor approaches you at the start.
+		Waiter
+		EatAtInn
+		Preach (untested)
+	I suggest removing all files from gamedat, and old savegames too.
 
 
