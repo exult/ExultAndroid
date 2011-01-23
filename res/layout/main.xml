@@ -6,22 +6,67 @@
     >
     <LinearLayout
     android:orientation="vertical"
+    android:background="#8f8f40"
     android:layout_width="wrap_content"
     android:layout_height="fill_parent"
     android:layout_weight="0">
     	<Button
+    	android:id="@+id/target_button"
+        android:layout_width="fill_parent"
+        android:layout_height="30px"
+		style="?android:attr/buttonStyleSmall"
+        android:padding= "4px"
+        android:text="T" />
+        <Button
+    	android:id="@+id/combat_button"
+        android:layout_width="fill_parent"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
+        android:padding= "4px"
+        android:text="C" />
+        <Button
+    	android:id="@+id/inventory_button"
+        android:layout_width="fill_parent"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
+        android:padding= "4px"
+        android:text="I" />
+        <Button
+    	android:id="@+id/stats_button"
+        android:layout_width="fill_parent"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
+        android:padding= "4px"
+        android:text="Z" />
+        <Button
+    	android:id="@+id/feed_button"
+        android:layout_width="fill_parent"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
+        android:padding= "4px"
+        android:text="F" />
+        <Button
     	android:id="@+id/zoom_button"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
-        android:text="Zoom" />
+        android:text="+" />
+        <Button
+    	android:id="@+id/save_button"
+        android:layout_width="fill_parent"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
+        android:padding= "4px"
+        android:text="S" />
         <Button
         android:id="@+id/quit_button"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="30px"
+        style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:textColor="#ff0000"
-        android:text="Quit" />
+        android:text="Q" />
     </LinearLayout>
     <FrameLayout 
 	android:layout_width="fill_parent" 
