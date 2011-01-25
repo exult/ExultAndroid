@@ -360,11 +360,12 @@ public class GameWindow extends GameSingletons {
 			scrolltx = EConst.INCR_TILE(scrolltx);
 			scrollBounds.x = EConst.INCR_TILE(scrollBounds.x);
 		}
+		map.readMapData();		// Be sure objects are present.
 		if (nopaint || gumpman.showingGumps()) {		// Gump on screen?
 			setAllDirty();
 			return;
 		}
-		map.readMapData();		// Be sure objects are present.
+		
 		synchronized(win) {
 			mouse.hide();
 			if (toleft) {			// Shift image to right.
@@ -393,12 +394,11 @@ public class GameWindow extends GameSingletons {
 			scrollty = EConst.INCR_TILE(scrollty);
 			scrollBounds.y = EConst.INCR_TILE(scrollBounds.y);
 		}
-		if (nopaint || gumpman.showingGumps())			// Gump on screen?
-			{
+		map.readMapData();		// Be sure objects are present.
+		if (nopaint || gumpman.showingGumps()) {			// Gump on screen?
 			setAllDirty();
 			return;
-			}
-		map.readMapData();		// Be sure objects are present.
+		}
 		synchronized(win) {
 			mouse.hide();
 			if (up) {
