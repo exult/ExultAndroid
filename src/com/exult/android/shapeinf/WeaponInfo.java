@@ -1,7 +1,6 @@
 package com.exult.android.shapeinf;
 import java.io.InputStream;
 import java.io.IOException;
-import java.util.Vector;
 import com.exult.android.*;
 
 public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
