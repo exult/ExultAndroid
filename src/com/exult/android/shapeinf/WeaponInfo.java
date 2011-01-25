@@ -49,35 +49,35 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		ethereal_damage = 4,
 		sonic_damage = 5
 		;
-	static WeaponInfo defaultInfo;	// For shapes not found.
-	byte damage;			// Damage points (positive).
-	byte powers;		// Poison, sleep, charm. flags.
-	byte damageType;	// See Damage_type above.
-	byte actorFrames;	// Frames for NPC when using (from
+	private static WeaponInfo defaultInfo;	// For shapes not found.
+	private byte damage;			// Damage points (positive).
+	private byte powers;		// Poison, sleep, charm. flags.
+	private byte damageType;	// See Damage_type above.
+	private byte actorFrames;	// Frames for NPC when using (from
 					//   Actor_frames above).  Low 2 bits
 					//   are for 'strike', next 2 are for
 					//   shooting/throwing.
-	short ammo;			// Shape # of ammo. consumed, or
+	private short ammo;			// Shape # of ammo. consumed, or
 					//   -1 = weapon is ammo.
 					//   -2 = consummes weapon quality.
 					//   -3 = consumes weapon quantity if ranged.
-	short projectile;		// Projectile shape, or
+	private short projectile;		// Projectile shape, or
 					//	-1 = no projectile shown.
 					//	-3 = use weapon shape as sprite shape.
-	boolean m_autohit;			// Weapon always hits.
-	boolean m_lucky;			// Easier to hit with.
-	boolean m_explodes;		// Explodes on impact.
-	boolean m_no_blocking;		// Can move through walls.
-	boolean m_delete_depleted;	// Delete ammo == -2 weapon when quality reaches 0.
-	boolean m_returns;			// Boomerang, magic axe.
-	boolean m_need_target;		// If false, can be used to attack a tile.
-	short missileSpeed;	// # of steps taken by the missile each cycle.
-	short rotationSpeed;	// Added to frame # each cycle (misslies only).
-	int usecode;			// Usecode function, or 0.
-	byte uses;		// 0 = hand-hand, 1 = poor throwable,
+	private boolean m_autohit;			// Weapon always hits.
+	private boolean m_lucky;			// Easier to hit with.
+	private boolean m_explodes;		// Explodes on impact.
+	private boolean m_no_blocking;		// Can move through walls.
+	private boolean m_delete_depleted;	// Delete ammo == -2 weapon when quality reaches 0.
+	private boolean m_returns;			// Boomerang, magic axe.
+	private boolean m_need_target;		// If false, can be used to attack a tile.
+	private short missileSpeed;	// # of steps taken by the missile each cycle.
+	private short rotationSpeed;	// Added to frame # each cycle (misslies only).
+	private int usecode;			// Usecode function, or 0.
+	private byte uses;		// 0 = hand-hand, 1 = poor throwable,
 					//   2 = good throwable, 3 = missile-firing.
-	byte range;		// Distance weapon can be used.
-	short sfx, hitsfx;		// Sound when using/hit, or -1.
+	private byte range;		// Distance weapon can be used.
+	private short sfx, hitsfx;		// Sound when using/hit, or -1.
 	public WeaponInfo() {
 	}
 	public static final int is_binary = 1, entry_size = 21;
