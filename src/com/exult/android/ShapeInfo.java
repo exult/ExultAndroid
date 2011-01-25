@@ -11,12 +11,10 @@ public final class ShapeInfo {
 	private byte weight, volume;	// From "wgtvol.dat".
 	private byte shpdims[] = new byte[2];	// From "shpdims.dat".
 	private byte weaponOffsets[];	// From "wihh.dat": pixel offsets
-	/*
 	//   for drawing weapon in hand
-	private ArmorInfo armor;		// From armor.dat.
+	//++++FINISH private ArmorInfo armor;		// From armor.dat.
 	private WeaponInfo weapon;		// From weapon.dat, if a weapon.
 	private AmmoInfo ammo;		// From ammo.dat, if ammo.
-	*/
 	private MonsterInfo monstinf;		// From monster.dat.
 	/*
 	private SFXInfo sfxinf;
@@ -125,21 +123,24 @@ public final class ShapeInfo {
 
 int get_body_shape() {;
 int get_body_frame() {;
-
-bool has_weapon_info() {
-{ return weapon != 0; }
-Weapon_info *get_weapon_info_safe() {;
-Weapon_info *get_weapon_info() {
-{ return weapon; }
-Weapon_info *set_weapon_info(bool tf);
-
-bool has_ammo_info() {
-{ return ammo != 0; }
-Ammo_info *get_ammo_info_safe() {;
-Ammo_info *get_ammo_info() {
-{ return ammo; }
-Ammo_info *set_ammo_info(bool tf);
-
+*/
+	public boolean hasWeaponInfo() {
+		return weapon != null; 
+	}
+	public WeaponInfo getWeaponInfo()
+		{ return weapon; }
+	public void setWeaponInfo(WeaponInfo i) {
+		weapon = i;
+	}
+	boolean has_ammo_info() 
+		{ return ammo != null; }
+	public AmmoInfo getAmmoInfo() {
+		return ammo; 
+	}
+	public void setAmmoInfo(AmmoInfo i) {
+		ammo = i;
+	}
+/*++++++++++FINISH
 bool has_armor_info() {
 { return armor != 0; }
 Armor_info *get_armor_info() {

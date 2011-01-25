@@ -375,5 +375,20 @@ public class EUtil {
 			result++;
 		return result;
 	}
+	private static final int TWO(int c)
+		{ return (byte)(1<<c); }
+	private static final int MASK(int c) {
+		 return ((-1)) / (TWO(TWO(c)) + 1);
+	}
+	private static final int COUNT(int x, int c) {
+		return ((x) & MASK(c)) + (((x) >> (TWO(c))) & MASK(c));
+	}
+	public static final int bitcount(byte v) {
+			// Only works for 8-bit numbers.
+		int n =  COUNT(v, 0) & 0xff;
+		n = COUNT(n, 1) & 0xff;
+		n = COUNT(n, 2) & 0xff;
+		return n;
+	}
 }
 
