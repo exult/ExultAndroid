@@ -40,7 +40,7 @@ public class ArmorInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		int ind = 0;
 		if (buf[entry_size-3] == 0xff) {	// means delete entry.
 			setInvalid(true);
-			info.setWeaponInfo(null);
+			info.setArmorInfo(null);
 			return true;
 		}	
 		prot = buf[ind++];			// Protection value.

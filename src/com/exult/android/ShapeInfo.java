@@ -12,7 +12,7 @@ public final class ShapeInfo {
 	private byte shpdims[] = new byte[2];	// From "shpdims.dat".
 	private byte weaponOffsets[];	// From "wihh.dat": pixel offsets
 	//   for drawing weapon in hand
-	//++++FINISH private ArmorInfo armor;		// From armor.dat.
+	private ArmorInfo armor;		// From armor.dat.
 	private WeaponInfo weapon;		// From weapon.dat, if a weapon.
 	private AmmoInfo ammo;		// From ammo.dat, if ammo.
 	private MonsterInfo monstinf;		// From monster.dat.
@@ -132,7 +132,7 @@ int get_body_frame() {;
 	public void setWeaponInfo(WeaponInfo i) {
 		weapon = i;
 	}
-	boolean has_ammo_info() 
+	boolean hasAmmoInfo() 
 		{ return ammo != null; }
 	public AmmoInfo getAmmoInfo() {
 		return ammo; 
@@ -140,9 +140,16 @@ int get_body_frame() {;
 	public void setAmmoInfo(AmmoInfo i) {
 		ammo = i;
 	}
+	public boolean hasArmorInfo() {
+		return armor != null;
+	}
+	public ArmorInfo getArmorInfo()
+		{ return armor; }
+	public void setArmorInfo(ArmorInfo i) {
+		armor = i;
+	}
 /*++++++++++FINISH
-bool has_armor_info() {
-{ return armor != 0; }
+
 Armor_info *get_armor_info() {
 { return armor; }
 Armor_info *set_armor_info(bool tf);
@@ -268,36 +275,12 @@ int get_object_warmth(int frame);
 
 int get_mountain_top_type() {
 { return mountain_top; }
-void set_mountain_top(int sh)
-{
-if (mountain_top != (unsigned char)sh)
-{
-modified_flags |= mountain_top_flag;
-mountain_top = (unsigned char)sh;
-}
-}
 
 int get_barge_type() {
 { return barge_type; }
-void set_barge_type(int sh)
-{
-if (barge_type != (unsigned char)sh)
-{
-modified_flags |= barge_type_flag;
-barge_type = (unsigned char)sh;
-}
-}
 
 int get_field_type() {
 { return field_type; }
-void set_field_type(int sh)
-{
-if (field_type != (char)sh)
-{
-modified_flags |= field_type_flag;
-field_type = (char)sh;
-}
-}
 */
 	public int getGumpShape() { 
 		return gumpShape;
@@ -306,38 +289,9 @@ field_type = (char)sh;
 		return gumpFont; }
 	public short getShapeFlags() {
 		return shapeFlags; }
-	/*
-void set_shape_flags(unsigned short flags)
-{
-if (shape_flags != flags)
-{
-int diff = (shape_flags ^ flags) * usecode_events_flag;
-modified_flags |= diff;
-shape_flags = flags;
-}
-}
-*/
 	public boolean getShapeFlag(int tf) { 
 		return (shapeFlags & (1 << tf)) != 0;
 	}
-/*
-void set_shape_flag(int tf, int mod)
-{
-if (!(shape_flags & (1U << tf)))
-{
-modified_flags |= (1U << mod);
-shape_flags |= (1U << tf);
-}
-}
-void clear_shape_flag(int tf, int mod)
-{
-if (shape_flags & (1U << tf))
-{
-modified_flags |= (1U << mod);
-shape_flags &= ~(1U << tf);
-}
-}
-*/
 	public final boolean hasUsecodeEvents() {
 		return getShapeFlag(usecode_events); }
 	public final boolean isBodyShape() {
@@ -584,6 +538,23 @@ int get_weapon_offset(int frame)
 		
 		//++++++++++LOTS MORE
 		DataUtils.IDReaderFunctor idReader = new DataUtils.IDReaderFunctor();
+		DataUtils.FunctorMultidataReader armorinf = 
+			new DataUtils.FunctorMultidataReader(
+					info, new ArmorInfo(), null, idReader, false);
+		armorinf.read(EFile.ARMOR, false, game);
+		armorinf.read(EFile.PATCH_ARMOR, true, game);
+		
+		DataUtils.FunctorMultidataReader weaponinf = 
+			new DataUtils.FunctorMultidataReader(
+					info, new WeaponInfo(), null, idReader, false);
+		weaponinf.read(EFile.WEAPONS, false, game);
+		weaponinf.read(EFile.PATCH_WEAPONS, true, game);
+		
+		DataUtils.FunctorMultidataReader ammoinf = 
+			new DataUtils.FunctorMultidataReader(
+					info, new AmmoInfo(), null, idReader, false);
+		ammoinf.read(EFile.AMMO, false, game);
+		ammoinf.read(EFile.PATCH_AMMO, true, game);
 		
 		DataUtils.FunctorMultidataReader monstinf = 
 			new DataUtils.FunctorMultidataReader(
