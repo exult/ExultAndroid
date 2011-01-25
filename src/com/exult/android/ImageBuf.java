@@ -4,10 +4,10 @@ import android.graphics.Canvas;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Rect;
-import android.graphics.Color;
+//import android.graphics.Color;
 import java.util.Arrays;
 
-public class ImageBuf {
+public final class ImageBuf {
 	private int width, height;
 	private int clipx, clipy, clipw, cliph;
 	private byte pixels[];		// The RGB data.
@@ -16,7 +16,7 @@ public class ImageBuf {
 	private int clipbuf[] = new int[3];		// srcx, srcw, destx
 	private Rectangle tempClipSrc = new Rectangle();
 	private Point tempClipDest = new Point();
-	private Rectangle tempShowRect = new Rectangle();
+	//private Rectangle tempShowRect = new Rectangle();
 	private Bitmap toScale;
 	private int scalew, scaleh;
 	private Rect scaleSrc, scaleDest;
@@ -269,6 +269,11 @@ public class ImageBuf {
 			to += width; 
 		}
 	}
+	// Place one pixel.
+	public final void putPixel(byte pix, int x, int y) {
+		if (x >= clipx && x < clipx + clipw && y >= clipy && y < clipy + cliph)
+			pixels[y*width + x] = pix;
+	}
 	/*
 	 *	Get a rectangle from here into another Image_buffer.
 	 */
@@ -300,7 +305,6 @@ public class ImageBuf {
 	/*
 	 *	Retrieve data from another buffer.
 	 */
-
 	public final void put
 		(
 		byte src[],		// Copy from here.

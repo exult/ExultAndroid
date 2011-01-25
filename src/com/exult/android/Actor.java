@@ -4,12 +4,13 @@ import java.util.Vector;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import android.graphics.Point;
 
 public abstract class Actor extends ContainerGameObject implements TimeSensitive {
 	protected String name;			// Its name.
 	protected int usecode;			// # of usecode function.
 	protected boolean usecodeAssigned;		// Usecode # explicitly assigned.
-	protected String usecodeName;		// Name of usecode fun explicitly assigned.
+	protected String usecodeName;
 	protected boolean unused;			// If npc_num > 0, this NPC is unused in the game.
 	protected short npcNum;			// # in Game_window.npcs list, or -1.
 	protected short faceNum;			// Which shape for conversations.
@@ -160,6 +161,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 	// Npc_timer_list *timers;		// Timers for poison, hunger, etc.
 	protected Rectangle weaponRect;		// Screen area weapon was drawn in.
+	protected Point weaponPoint;
 	protected long restTime;			// # ticks of not doing anything.
 	protected int timeQueueCount;		// # times in timeQueue.
 	public Actor(String nm, int shapenum, int num, int uc) {
@@ -180,6 +182,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		dormant = true;
 		skinColor = -1;
 		weaponRect = new Rectangle(0,0,0,0);
+		weaponPoint = new Point();
 	}
 	/*
 	 *	Initialize frames, properties and spots.
@@ -1257,6 +1260,122 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setStepIndex(int i) {
 		stepIndex = i;
 	}
+	/*
+	 *	Get effective weapon shape, taking casting frames in consideration.
+	 */
+	private int getEffectiveWeaponShape() {
+		/*+++++++FINISH
+		if (get_casting_mode() == Actor::show_casting_frames)
+			// Casting frames
+			return casting_shape;
+		else */
+			{
+			GameObject weapon = spots[Ready.lhand];
+			return weapon.getShapeNum();
+		}
+	}
+	protected void paintWeapon() {
+		
+		if (figureWeaponPos(weaponRect)) {
+			int weapon_x = weaponRect.x, weapon_y = weaponRect.y, 
+				weapon_frame = weaponRect.w;
+			int shnum = getEffectiveWeaponShape();
+			ShapeFrame wshape = ShapeFiles.SHAPES_VGA.getShape(shnum, weapon_frame);
+			if (wshape == null) {
+				weaponRect.w = 0;
+				return;
+			}
+						// Set dirty area rel. to NPC.
+			gwin.getShapeRect(weaponRect, wshape, weapon_x, weapon_y);
+			// Paint the weapon shape using the actor's coordinates
+			gwin.getShapeLocation(weaponPoint, this);
+			int xoff = weaponPoint.x + weapon_x, yoff = weaponPoint.y + weapon_y;
+			/* +++++++FINISH if ((flags & (1L<<GameObject.invisible)) != 0)
+				wshape.paintInvisible(xoff, yoff);
+			else */
+				wshape.paint(gwin.getWin(), xoff, yoff);
+		} else
+			weaponRect.w = 0;
+	}
+	/*
+	 *	Figure weapon drawing info.  We need this in advance to set the dirty
+	 *	rectangle.
+	 *
+	 *	Output:	false if don't need to paint weapon.
+	 *  Weapon frames:
+		0 - normal item
+		1 - in hand, actor facing north/south
+		2 - attacking (pointing north)
+		3 - attacking (pointing east)
+		4 - attacking (pointing south)
+	*/
+	private boolean figureWeaponPos(Rectangle ret) {	// Gets x, y, weapon_frame
+		int weapon_x, weapon_y, weapon_frame;
+		if((spots[Ready.lhand] == null) && (castingMode != Actor.show_casting_frames))
+			return false;
+		// Get offsets for actor shape
+		int myframe = getFrameNum();
+		int off = getInfo().getWeaponOffset(myframe & 0x1f);
+		int actor_x = (off>>8)&0xff, actor_y = off&0xff;
+		// Get weapon frames for actor frame:
+		switch (myframe & 0x1f) {
+			case 4:
+			case 7:
+			case 22:
+			case 25:
+				weapon_frame = 4;
+				break;
+			case 5:
+			case 8:
+			case 21:
+			case 24:
+				weapon_frame = 3;
+				break;
+			case 6:
+			case 9:
+			case 20:
+			case 23:
+				weapon_frame = 2;
+				break;
+			//The next cases (before the default) are here to make use of all
+			//the frames of the "casting frames" shape (shape 859):
+			case 14:
+			case 30:
+				weapon_frame = 5;
+				break;
+			case 15:
+				weapon_frame = 6;
+				break;
+			case 31:
+				weapon_frame = 7;
+				break;
+			
+			default:
+				weapon_frame = 1;
+		}
+		weapon_frame |= (myframe & 32);
+
+		// Get offsets for weapon shape
+		int shnum = getEffectiveWeaponShape();
+		ShapeInfo info = ShapeID.getInfo(shnum);
+		off = info.getWeaponOffset(weapon_frame&0xf);
+		int wx = (off>>8)&0xff, wy = off&0xff;
+		// actor_x will be 255 if (for example) the actor is lying down
+		// wx will be 255 if the actor is not holding a proper weapon
+		if(actor_x != 255 && wx != 255) {
+						// Store offsets rel. to NPC.
+			ret.x = wx - actor_x;
+			ret.y = wy - actor_y;
+			ret.w = weapon_frame;
+			// Need to swap offsets if actor's shape is reflected
+			if((myframe & 32) != 0) {
+				ret.x = wy - actor_y;
+				ret.y = wx - actor_x;
+			}			
+			return true;// Combat frames are already done.
+		} else
+			return false;
+	}
 	public void paint() {
 		int flag = game.isBG() ? GameObject.bg_dont_render : GameObject.dont_render;
 		if ((flags & (1L << flag)) == 0) {
@@ -1269,8 +1388,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				paint_invisible(xoff, yoff);
 			*/ else
 				paintShape(paintLoc.x, paintLoc.y);
+			
+			paintWeapon();
 			/* +++++++++FINISH
-			paint_weapon();
 			if (hit)		// Want a momentary red outline.
 				ShapeID.paint_outline(xoff, yoff, HIT_PIXEL);
 			else if (flags & ((1L<<GameObject.protection) | 

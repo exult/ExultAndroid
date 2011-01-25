@@ -7,6 +7,10 @@ public class ShapeID extends GameSingletons {
 	private ShapeFiles shapeFile;
 	private ShapeFrame shape;
 	private static ImageBuf.XformPalette xforms[];
+	public static final int // Special pixels
+		POISON_PIXEL = 0, PROTECT_PIXEL = 1, CURSED_PIXEL = 2,
+		CHARMED_PIXEL = 3, HIT_PIXEL = 4, PARALYZE_PIXEL = 5, NPIXCOLORS = 6;
+	private static byte specialPixels[]; 
 	// Shape_info *info;
 
 	private ShapeFrame cacheShape() {
@@ -103,6 +107,12 @@ public class ShapeID extends GameSingletons {
 			}
 		}
 	}
+	public void paintOutline(int xoff, int yoff, int pix) {
+		ShapeFrame s = getShape();
+		if (s != null) {
+			s.paintRleOutline(gwin.getWin(), xoff, yoff, specialPixels[pix]);
+		}
+	}
 	/*
 	 * Load static/global data.
 	 */
@@ -131,5 +141,21 @@ public class ShapeID extends GameSingletons {
 		} else {
 			xforms = null;
 		}
+		specialPixels = new byte[NPIXCOLORS];
+		// Determine some colors based on the default palette
+		Palette pal = new Palette(gwin.getWin());
+		pal.load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, 0);
+			// Get a bright green.
+		specialPixels[POISON_PIXEL] = (byte)pal.findColor(4, 63, 4);
+			// Get a light gray.
+		specialPixels[PROTECT_PIXEL] = (byte)pal.findColor(62, 62, 55);
+			// Yellow for cursed.
+		specialPixels[CURSED_PIXEL] = (byte)pal.findColor(62, 62, 5);
+			// Light blue for charmed.
+		specialPixels[CHARMED_PIXEL] = (byte)pal.findColor(30, 40, 63);
+			// Red for hit in battle.
+		specialPixels[HIT_PIXEL] = (byte)pal.findColor(63, 4, 4);
+			// Purple for paralyze.
+		specialPixels[PARALYZE_PIXEL] = (byte)pal.findColor(49, 27, 49);
 	}
 }

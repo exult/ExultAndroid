@@ -437,19 +437,18 @@ bool quake_on_walk() {
 	public byte getAltReady2()
 		{ return altReady2; }
 
-// Returns x<<8 + y, as bytes.
-// Sets x to 255 if there is no weapon offset
-int get_weapon_offset(int frame)
-{
-	int x, y;
-	if (weaponOffsets == null) {
-		x = y = 255;
-	} else {
-		// x could be 255 (see read_info())
-		x = weaponOffsets[frame * 2]&0xff;
-		y = weaponOffsets[frame * 2 + 1]&0xff;
-	}
-	return (x<<8)|y;
+	// Returns x<<8 + y, as bytes.
+	// Sets x to 255 if there is no weapon offset
+	public int getWeaponOffset(int frame) {
+		int x, y;
+		if (weaponOffsets == null) {
+			x = y = 255;
+		} else {
+			// x could be 255 (see read_info())
+			x = weaponOffsets[frame * 2]&0xff;
+			y = weaponOffsets[frame * 2 + 1]&0xff;
+		}
+		return (x<<8)|y;
 	}
 	public int getRotatedFrame(int curframe, int quads) {
 		// Seat is a special case.
@@ -510,6 +509,38 @@ int get_weapon_offset(int frame)
 				s.setTfaData();
 			}
 		} catch (IOException e) { }
+		// Load data about drawing the weapon in an actor's hand
+		RandomAccessFile wihh = EUtil.U7open2(EFile.PATCH_WIHH, EFile.WIHH);
+		
+		if (wihh != null) {
+			int offsets[] = new int[EConst.c_max_shapes];
+			int cnt = num_shapes;
+			for (i = 0; i < cnt; i++)
+				offsets[i] = EUtil.Read2(wihh)&0xffff;
+			for (i = 0; i < cnt; i++) {
+				// A zero offset means there is no record
+				if(offsets[i] == 0)
+					info[i].weaponOffsets = null;
+				else try {
+					wihh.seek(offsets[i]);
+					// There are two bytes per frame: 64 total
+					info[i].weaponOffsets = new byte[64];
+					for(int j = 0; j < 32; j++) {
+						byte x = (byte)(wihh.read());
+						byte y = (byte)(wihh.read());
+						// Set x/y to 255 if weapon is not to be drawn
+						// In the file x/y are either 64 or 255:
+						// I am assuming that they mean the same
+						if(x > 63 || y > 63)
+							x = y = (byte)255;
+						info[i].weaponOffsets[j * 2] = x;
+						info[i].weaponOffsets[j * 2 + 1] = y;
+					}
+				} catch (IOException e) {
+					ExultActivity.fileFatal(EFile.WIHH);
+				}
+			}
+		}
 		// Get 'equip.dat'.
 		InputStream equip = EUtil.U7openStream2(EFile.PATCH_EQUIP, EFile.EQUIP);
 		if (equip != null) {
@@ -537,6 +568,7 @@ int get_weapon_offset(int frame)
 			wgtvol.close();
 			tfa.close();
 			equip.close();
+			wihh.close();
 		} catch (IOException e) { }
 		
 		//++++++++++LOTS MORE

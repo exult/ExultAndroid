@@ -759,9 +759,12 @@ public abstract class GameObject extends ShapeID {
 		}
 	}
 	public void paint() {
-		int x, y;
 		gwin.getShapeLocation(paintLoc, this);
 		paintShape(paintLoc.x, paintLoc.y);
+	}
+	public void paintOutline(int pix) {
+		gwin.getShapeLocation(paintLoc, this);
+		paintOutline(paintLoc.x, paintLoc.y, pix);
 	}
 	public boolean isFindable() { 
 		return true; 

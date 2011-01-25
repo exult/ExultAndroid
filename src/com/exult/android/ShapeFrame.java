@@ -1,7 +1,4 @@
 package com.exult.android;
-import android.graphics.Canvas;
-import java.io.RandomAccessFile;
-import java.io.IOException;
 
 public class ShapeFrame {
 	private byte data[];			// The actual data.
@@ -11,7 +8,6 @@ public class ShapeFrame {
 	private short yabove;			// Extent above origin.
 	private short ybelow;			// Extent below origin.
 	private boolean rle;			// Run-length encoded.
-	private static Canvas scrwin;	// Screen window to render to.
 	
 	public byte[] getData() {
 		return data;
@@ -235,7 +231,7 @@ public class ShapeFrame {
 	/*
 	 *	Encode an 8-bit image into an RLE frame.
 	 *
-	 *	Output:	->allocated RLE data.
+	 *	Output:	.allocated RLE data.
 	 */
 
 	public static byte[] encodeRle(
@@ -249,7 +245,6 @@ public class ShapeFrame {
 		int out = 0;	// Index into buf.
 		int ind = 0;
 		int newx;			// Gets new x at end of a scan line.
-		int deltax;
 		short runs[] = new short[200];
 		for (int y = 0; y < h; y++) {	// Go through rows.
 			int x, oldx = 0;
@@ -433,6 +428,65 @@ public class ShapeFrame {
 						xfstart, 0xfe, xforms);
 					in += bcnt;
 				}
+				b += bcnt;
+			}
+		}
+	}
+	/*
+	 *	Paint outline around a shape.
+	 */
+	public void paintRleOutline
+		(
+		ImageBuf win,		// Buffer to paint in.
+		int xoff, int yoff,		// Where to show in win.
+		byte color		// Color to use.
+		) {
+		assert(rle);
+		int w = getWidth(), h = getHeight();
+		if (w >= EConst.c_tilesize || h >= EConst.c_tilesize) // Big enough to check?  Off screen?
+			if (!win.isVisible(xoff - xleft, yoff - yabove, w, h))
+				return;
+		int firsty = -10000;		// Finds first line.
+		int lasty = -10000;
+		int ind = 0;
+		int scanlen;
+		while ((scanlen = EUtil.Read2(data, ind)) != 0) {
+			ind += 2;
+						// Get length of scan line.
+			int encoded = scanlen&1;// Is it encoded?
+			scanlen = scanlen>>1;
+			short scanx = (short)EUtil.Read2(data, ind);
+			short scany = (short)EUtil.Read2(data, ind + 2);
+			ind += 4;
+			int x = xoff + scanx;
+			int y = yoff + scany;
+			if (firsty == -10000) {
+				firsty = y;
+				lasty = y + h - 1;
+			}
+						// Put pixel at both ends.
+			win.putPixel(color, x, y);
+			win.putPixel(color, x + scanlen - 1, y);
+
+			if (encoded == 0) {		// Raw data?
+				if (y == firsty ||	// First line?
+				    y == lasty)		// Last line?
+					win.fillLine8(color, scanlen, x, y);
+				ind += scanlen;
+				continue;
+			}
+			for (int b = 0; b < scanlen; ) {
+				int bcnt = (int)(data[ind++])&0xff;
+						// Repeat next char. if odd.
+				int repeat = bcnt&1;
+				bcnt = bcnt>>1; // Get count.
+				if (repeat != 0)	// Pass repetition byte.
+					ind++;
+				else		// Skip that # of bytes.
+					ind += bcnt;
+				if (y == firsty || 	// First line?
+				    y == lasty)		// Last line?
+					win.fillLine8(color, bcnt, x + b, y);
 				b += bcnt;
 			}
 		}

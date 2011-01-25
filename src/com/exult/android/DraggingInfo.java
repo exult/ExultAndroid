@@ -353,8 +353,10 @@ public final class DraggingInfo extends GameSingletons {
 			/*++++++++++
 			if (obj.getFlag(GameObject.invisible))
 				obj.paintInvisible(paint.x, paint.y);
-			else */
+			else */ {
 				obj.paintShape(paint.x, paint.y);
+				obj.paintOutline(paint.x, paint.y, ShapeID.HIT_PIXEL);
+			}
 		} else if (gump != null) {
 			gump.paint();
 		}

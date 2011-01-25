@@ -72,6 +72,9 @@ public class Palette {
 		byte buf[] = EFileManager.instanceOf().retrieve(fname0, fname1, index);
 		setLoaded(buf, xfname, xindex);
 	}
+	public void load(String fname0, String fname1, int index) {
+		load(fname0, fname1, index, null, -1);
+	}
 	/*
 	 * This does the actual load.
 	 */
@@ -103,5 +106,26 @@ public class Palette {
 			// may be loaded and just cleanup.
 			return;
 		}
+	}
+	//	Find index (0-255) of closest color (r,g,b < 64).
+	public int findColor(int r, int g, int b, int last) {
+		int best_index = -1;
+		long best_distance = 0xfffffff;
+						// But don't search rotating colors.
+		for (int i = 0; i < last; i++) {
+						// Get deltas.
+			long dr = r - pal1[3*i], dg = g - pal1[3*i + 1], 
+								db = b - pal1[3*i + 2];
+						// Figure distance-squared.
+			long dist = dr*dr + dg*dg + db*db;
+			if (dist < best_distance) {	// Better than prev?
+				best_index = i;
+				best_distance = dist;
+			}
+		}
+		return best_index;
+	}
+	public int findColor(int r, int g, int b) {
+		return findColor(r, g, b, 0xe0);
 	}
 }
