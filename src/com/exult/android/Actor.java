@@ -1,5 +1,6 @@
 package com.exult.android;
 import com.exult.android.shapeinf.*;
+import java.util.Vector;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
@@ -906,6 +907,81 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void setActorShape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
 	}
+	//	Find best ammo of given type.
+	public GameObject findBestAmmo(int family, int needed){
+		GameObject best = null;
+		int best_strength = -20;
+		Vector<GameObject> vec = new Vector<GameObject>(50);		// Get list of all possessions.
+		getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, EConst.c_any_framenum);
+		for (GameObject obj : vec) {
+			if (/*++++FINISH obj.insideLocked() || */ !inAmmoFamily(obj.getShapeNum(), family))
+				continue;
+			AmmoInfo ainf = obj.getInfo().getAmmoInfo();
+			if (ainf == null)	// E.g., musket ammunition doesn't have it.
+				continue;
+				// Can't use it.
+			if (obj.getQuantity() < needed)
+				continue;
+				// Calc ammo strength.
+			int strength = ainf.getBaseStrength();
+				// Favor those with more shots remaining.
+			if (obj.getQuantity() < 5*needed)
+				strength /= 3;
+			else if (obj.getQuantity() < 10*needed)
+				strength /= 2;
+			if (strength > best_strength) {
+				best = obj;
+				best_strength = strength;
+				}
+			}
+		return best;
+	}
+	/*
+	 *	Is a given ammo shape in a given family. ++++++ Was in combat.cc in Exult.
+	 */
+	public static boolean inAmmoFamily(int shnum, int family) {
+		if (shnum == family)
+			return true;
+		AmmoInfo ainf = ShapeID.getInfo(shnum).getAmmoInfo();
+		return (ainf != null && ainf.getFamilyShape() == family);
+	}
+	@Override
+	public GameObject findWeaponAmmo(int weapon, int needed, boolean recursive) {
+		if (weapon < 0)
+			return null;
+		WeaponInfo winf = ShapeID.getInfo(weapon).getWeaponInfo();
+		if (winf == null)
+			return null;
+		int family = winf.getAmmoConsumed();
+		if (family >= 0) {
+			GameObject aobj = getReadied(Ready.quiver);
+			if (aobj != null && inAmmoFamily(aobj.getShapeNum(), family) &&
+										aobj.getQuantity() >= needed)
+				return aobj;		// Already readied.
+			else if (recursive)
+				return findBestAmmo(family, needed);
+			return null;
+		}
+		// Search readied weapons first.
+		final int wspots[] = {Ready.lhand, Ready.rhand, Ready.back_2h, Ready.belt};
+		final int num_weapon_spots = wspots.length;
+		for (int i = 0; i < num_weapon_spots; i++) {
+			GameObject obj = spots[wspots[i]];
+			if (obj == null || obj.getShapeNum() != weapon)
+				continue;
+			ShapeInfo inf = obj.getInfo();
+			if (family == -2) {
+				if (!inf.hasQuality() || obj.getQuality() >= needed)
+					return obj;
+			}
+				// Family -1 and family -3.
+			else if (obj.getQuantity() >= needed)
+				return obj;
+			}
+
+		// Now recursively search all contents.
+		return recursive ? super.findWeaponAmmo(weapon, 1, false) : null;
+	}
 	/*
 	 *	Try to store the readied weapon.
 	 */
@@ -914,10 +990,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (obj == null)
 			return;
 		ShapeInfo info = obj.getInfo();
-		/* +++++++FINISH
 		if (info.getWeaponInfo() == null)	// A weapon?
 			return;
-		*/
 		gwin.addDirty(this);
 		if (spots[Ready.belt] == null) {	// Belt free?
 			obj.removeThis();

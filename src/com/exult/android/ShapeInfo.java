@@ -219,8 +219,11 @@ private vector<Content_rules>& set_content_rules(bool tf);
 void clean_invalid_content_rules();
 void clear_content_rules();
 void add_content_rule(Content_rules& add);
-bool is_shape_accepted(int shape);
-
+*/
+	public boolean isShapeAccepted(int shape) {
+		return true;//+++++++FINISH
+	}
+/*
 bool has_effective_hp_info() {;
 private vector<Effective_hp_info>& get_effective_hp_info()
 { return hpinf; }

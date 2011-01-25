@@ -106,62 +106,62 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		}
 	return defaultInfo;
 	}
-	int getDamage() 
+	public int getDamage() 
 		{ return damage; }
-	int getDamageType() 
+	public int getDamageType() 
 		{ return damageType; }
-	byte getPowers() 
+	public byte getPowers() 
 		{ return powers; }
-	byte getActorFrames(boolean projectile) 
+	public byte getActorFrames(boolean projectile) 
 		{ return projectile ? (byte)(actorFrames&3) : (byte)((actorFrames>>2)&3); }
-	int getAmmoConsumed() 
+	public int getAmmoConsumed() 
 		{ return ammo; }
-	int getAmmo() 			// Raw value, for map-editor.
+	public int getAmmo() 			// Raw value, for map-editor.
 		{ return ammo; }
-	boolean uses_charges() 
+	public boolean uses_charges() 
 		{ return ammo == -2; }
-	boolean usesAmmoOnRanged() 
+	public boolean usesAmmoOnRanged() 
 		{ return ammo != -1; }
-	boolean isThrown() 
+	public boolean isThrown() 
 		// Figured this out from printing out values:
 		{ return ammo == -3 && uses != 0 && uses != 3; }
-	boolean returns() 
+	public boolean returns() 
 		{ return m_returns; }
-	boolean explodes() 
+	public boolean explodes() 
 		{ return m_explodes; }
-	boolean noBlocking() 
+	public boolean noBlocking() 
 		{ return m_no_blocking; }
-	boolean autohits() 
+	public boolean autohits() 
 		{ return m_autohit; }
-	boolean lucky() 
+	public boolean lucky() 
 		{ return m_lucky; }
-	boolean deleteDepleted() 
+	public boolean deleteDepleted() 
 		{ return m_delete_depleted; }
-	boolean needsTarget() 
+	public boolean needsTarget() 
 		{ return m_need_target; }
-	byte getUses() 
+	public byte getUses() 
 		{ return uses; }
-	int getTange() 			// Raw # (for map-editor).
+	public int getRange() 			// Raw # (for map-editor).
 		{ return range; }
-	int getStrikingTange() 
+	public int getStrikingTange() 
 		{ return uses < 3 ? range : 0; }
-	int getProjectileRange() 	// +++Guess for thrown weapons.
+	public int getProjectileRange() 	// +++Guess for thrown weapons.
 		{ return uses == 3 ? range : -1; }
-	int getProjectile() 
+	public int getProjectile() 
 		{ return projectile; }
-	int getMissileSpeed() 
+	public int getMissileSpeed() 
 		{ return missileSpeed; }
-	int getRotationSpeed() 
+	public int getRotationSpeed() 
 		{ return rotationSpeed; }
-	int getUsecode() 
+	public int getUsecode() 
 		{ return usecode; }
-	int getSfx() 			// Return sound-effects #, or -1.
+	public int getSfx() 			// Return sound-effects #, or -1.
 		{ return sfx; }
-	int getHitsfx() 
+	public int getHitsfx() 
 		{ return hitsfx; }
-	static int getInfoFlag()
+	public static int getInfoFlag()
 		{ return 1; }
-	int getBaseStrength() {
+	public int getBaseStrength() {
 		// ++++The strength values are utter guesses.
 		if (m_explodes && uses == melee)
 			return -50;		// Avoid hand-held explosives at all costs.
@@ -194,7 +194,7 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 			return strength;
 		}
 	}
-	int getBaseXpValue() {
+	public int getBaseXpValue() {
 		// This formula is exact.
 		int expval = damage;
 		expval += 2*EUtil.bitcount(powers);

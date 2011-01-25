@@ -2,6 +2,7 @@ package com.exult.android;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.util.Vector;
+import com.exult.android.shapeinf.*;
 
 public class ContainerGameObject extends IregGameObject {
 	private int volumeUsed;		// Amount of volume occupied.
@@ -17,6 +18,15 @@ public class ContainerGameObject extends IregGameObject {
 	}
 	public ObjectList.ObjectIterator getIterator() {
 		return objects.getIterator();
+	}
+	/*
+	 *	Determines if a shape can be added/found inside a container.
+	 */
+	private boolean canBeAdded(int shapenum) {
+		ShapeInfo info = getInfo();
+		return !(getShapeNum() == shapenum	// Shape can't be inside itself.
+				|| info.isContainerLocked()	// Locked container.
+				|| !info.isShapeAccepted(shapenum));	// Shape can't be inside.
 	}
 	public void remove(GameObject obj) {
 		if (objects.isEmpty())
@@ -96,13 +106,6 @@ public class ContainerGameObject extends IregGameObject {
 	}
 	public int findReadied(GameObject obj) {
 		return -1;
-	}
-	private boolean canBeAdded(int shapenum) {
-		return true; /* ++++++++FINISH
-		ShapeInfo info = getInfo();
-		return !(getShapeNum() == shapenum	// Shape can't be inside itself.
-				|| info.isContainerLocked()	// Locked container.
-				|| !info.isShapeAccepted(shapenum)); */	// Shape can't be inside.
 	}
 	/*
 	 *	Recursively add a quantity of an item to those existing in
@@ -524,44 +527,37 @@ public class ContainerGameObject extends IregGameObject {
 	 *	Output:	.object if found. Additionally, is_readied is set to
 	 *	true if the ammo is readied.
 	 */
-
-	public GameObject find_weapon_ammo
+	@Override
+	public GameObject findWeaponAmmo
 		(
 		int weapon,			// Weapon shape.
 		int needed,
 		boolean recursive
 		)
 		{
-		/* +++++++++++FINISH 
-		if (weapon < 0 || !canBeAdded(this, weapon))
-			return 0;
-		WeaponInfo winf = ShapeID.getInfo(weapon).get_weapon_info();
-		if (!winf)
-			return 0;
-		int family = winf.get_ammo_consumed();
+		if (weapon < 0 || !canBeAdded(weapon))
+			return null;
+		WeaponInfo winf = ShapeID.getInfo(weapon).getWeaponInfo();
+		if (winf == null)
+			return null;
+		int family = winf.getAmmoConsumed();
 		if (family >= 0)
-			return 0;
+			return null;
 
-		Game_object_vector vec;		// Get list of all possessions.
-		vec.reserve(50);
+		Vector<GameObject> vec = new Vector<GameObject>(50);	// Get list of all possessions.
 		getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, EConst.c_any_framenum);
-		for (Game_object_vector.const_iterator it = vec.begin(); 
-					it != vec.end(); ++it)
-			{
-			GameObject obj = *it;
+		for (GameObject obj : vec) {
 			if (obj.getShapeNum() != weapon)
 				continue;
 			ShapeInfo inf = obj.getInfo();
-			if (family == -2)
-				{
+			if (family == -2) {
 				if (!inf.hasQuality() || obj.getQuality() >= needed)
 					return obj;
-				}
+			}
 				// Family -1 and family -3.
 			else if (obj.getQuantity() >= needed)
 				return obj;
-			}
-		*/
+		}
 		return null;
 	}
 

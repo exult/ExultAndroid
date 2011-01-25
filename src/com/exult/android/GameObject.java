@@ -677,7 +677,9 @@ public abstract class GameObject extends ShapeID {
 	//	Step:  Overridden by Actors.
 	public boolean step(Tile t, int frame, boolean force) {
 		return false;
-	}
+	} 
+	public GameObject findWeaponAmmo(int weapon, int needed, boolean recursive)
+			{ return null; }
 	public int reduceHealth(int delta, int damage_type, GameObject attacker) {
 		//+++++++++++FINISH
 		return delta;

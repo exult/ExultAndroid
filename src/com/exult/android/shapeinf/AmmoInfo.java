@@ -41,31 +41,31 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		}
 		return defaultInfo;
 	}
-	int getFamilyShape()
+	public int getFamilyShape()
 		{ return familyShape; }
-	int getSpriteShape()
+	public int getSpriteShape()
 		{ return sprite; }
-	int getDamage()
+	public int getDamage()
 		{ return damage; }
-	int getDamageType()
+	public int getDamageType()
 		{ return damageType; }
-	byte get_powers()
+	public byte get_powers()
 		{ return powers; }
-	boolean no_blocking()
+	public boolean no_blocking()
 		{ return m_no_blocking; }
-	byte get_drop_type()
+	public byte get_drop_type()
 		{ return dropType; }
-	boolean autohits()
+	public boolean autohits()
 		{ return m_autohit; }
-	boolean lucky()
+	public boolean lucky()
 		{ return m_lucky; }
-	boolean returns()
+	public boolean returns()
 		{ return m_returns; }
-	boolean is_homing()
+	public boolean is_homing()
 		{ return homing; }
-	boolean explodes()
+	public boolean explodes()
 		{ return m_explodes; }
-	static int get_info_flag()
+	public static int get_info_flag()
 		{ return 2; }
 	public int getBaseStrength() {
 		// ++++The strength values are utter guesses.
