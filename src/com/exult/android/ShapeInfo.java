@@ -107,13 +107,13 @@ public final class ShapeInfo {
 	public int getVolume() { 
 		return volume; 
 	}
-	/*
 	public int getArmor() {
-		return armor != null ? armor.prot : 0;
+		return armor != null ? armor.getProt() : 0;
 	}
 	public int getArmorImmunity() {
-		return armor != null? armor.immune : 0;
+		return armor != null? armor.getImmune() : 0;
 	}
+	/*
 	public int getExplosionSprite() {
 		return explosion != null ? explosion.sprite : 5;
 	}

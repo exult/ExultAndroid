@@ -229,11 +229,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		else if (prop == Actor.missile_weapon)
 			{
 			// Seems to give the same results as in the originals.
-			Game_object *weapon = get_readied(lhand);
-			Weapon_info *winf = weapon ? weapon.get_info().get_weapon_info() : 0;
+			GameObject weapon = get_readied(lhand);
+			WeaponInfo winf = weapon ? weapon.getInfo().getWeaponInfo() : 0;
 			if (!winf)
 				return 0;
-			return (winf.get_uses() >= 2);
+			return (winf.getUses() >= 2);
 			}
 		*/
 		return (prop >= 0 && prop < Actor.sex_flag) ? properties[prop] : 0;
@@ -532,11 +532,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			*/
 			case Schedule.horiz_pace:
-				//++++++FINISH ready_best_weapon();
+				readyBestWeapon();
 				schedule = Schedule.Pace.createHoriz(this);
 				break;
 			case Schedule.vert_pace:
-				//+++++++FINISH ready_best_weapon();
+				readyBestWeapon();
 				schedule = Schedule.Pace.createVert(this);
 				break;
 			case Schedule.talk:
@@ -558,7 +558,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				schedule = new Miner_schedule(this);
 				break;
 			case Schedule.hound:
-				ready_best_weapon();
+				readyBestWeapon();
 				schedule = new Hound_schedule(this);
 				break;
 			*/
@@ -629,11 +629,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			*/
 			case Schedule.preach:
-				//+++++++FINISH ready_best_weapon();	// Fellowship staff.
+				readyBestWeapon();	// Fellowship staff.
 				schedule = new Schedule.Preach(this);
 				break;
 			case Schedule.patrol:
-				//+++++++readyBestWeapon();
+				readyBestWeapon();
 				schedule = new Schedule.Patrol(this);
 				break;
 			/*
@@ -907,8 +907,43 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void setActorShape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
 	}
+	/*
+	 *	Get effective maximum range for weapon taking in consideration
+	 *	the actor's strength and combat.
+	 *
+	 *	@return Weapon's effective range.
+	 */
+	private int getEffectiveRange(WeaponInfo winf, int reach) {
+		if (reach < 0) {
+			if (winf == null) {
+				MonsterInfo minf = getInfo().getMonsterInfo();
+				return minf != null ? minf.getReach()
+						: MonsterInfo.getDefault().getReach();
+			}
+			reach = winf.getRange();
+		}
+		int uses = winf != null ? winf.getUses() : WeaponInfo.melee;
+		if (uses == 0 || uses == WeaponInfo.ranged)
+			return reach;
+		else {
+			int eff_range;
+			int str = getEffectiveProp(Actor.strength);
+			int combat = getEffectiveProp(Actor.combat);
+			if (str < combat)
+				eff_range = str;
+			else
+				eff_range = combat;
+			if (uses == WeaponInfo.good_thrown)
+				eff_range *= 2;
+			if (eff_range < reach)
+				eff_range = reach;
+			if (eff_range > 31)
+				eff_range = 31;
+			return eff_range;
+		}
+	}
 	//	Find best ammo of given type.
-	public GameObject findBestAmmo(int family, int needed){
+	public GameObject findBestAmmo(int family, int needed) {
 		GameObject best = null;
 		int best_strength = -20;
 		Vector<GameObject> vec = new Vector<GameObject>(50);		// Get list of all possessions.
@@ -981,6 +1016,197 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		// Now recursively search all contents.
 		return recursive ? super.findWeaponAmmo(weapon, 1, false) : null;
+	}
+	/*
+	 *	Swap new ammo with old.
+	 */
+	public void swapAmmo(GameObject newammo) {
+		GameObject aobj = getReadied(Ready.quiver);
+		if (aobj == newammo)
+			return;			// Already what we need.
+		if (aobj != null)			// Something there already?
+			aobj.removeThis();	// Remove it.
+		newammo.removeThis();
+		add(newammo, true);		// Should go to the right place.
+		if (aobj != null)			// Put back old ammo.
+			add(aobj, true);
+	}
+	/*
+	 *	Recursively searches for ammunition for a given weapon, if needed.
+	 *	@return true if the weapon can be used, ammo is pointer to best ammunition.
+	 */
+	private boolean isWeaponUsable(GameObject bobj, GameObject ammo[], 
+					boolean recursive) {
+		ammo[0] = null;
+		WeaponInfo winf = bobj.getInfo().getWeaponInfo();
+		if (winf == null)
+			return false;		// Not a weapon.
+		// Check ranged first.
+		int need_ammo = getWeaponAmmo(bobj.getShapeNum(),
+				winf.getAmmoConsumed(), winf.getProjectile(),
+				true, ammo, recursive);
+		if (need_ammo == 0)
+			return true;
+			// Try melee if the weapon is not ranged.
+		else if (ammo[0] == null && winf.getUses() != WeaponInfo.ranged)
+			need_ammo = getWeaponAmmo(bobj.getShapeNum(),
+					winf.getAmmoConsumed(), winf.getProjectile(),
+					false, ammo, recursive);
+		if (need_ammo != 0 && ammo[0] == null)
+			return false;
+		return true;
+	}
+	/*
+	 *	Ready ammo for weapon being carried.
+	 */
+	boolean readyAmmo() {
+		GameObject weapon = spots[Ready.lhand];
+		if (weapon == null)
+			return false;
+		ShapeInfo info = weapon.getInfo();
+		WeaponInfo winf = info.getWeaponInfo();
+		if (winf == null)
+			return false;
+		int ammo;
+		if ((ammo = winf.getAmmoConsumed()) < 0) {	// Ammo not needed.
+			if (winf.usesCharges() && info.hasQuality() &&
+						weapon.getQuality() <= 0)
+				return false;	// Uses charges, but none left.
+			else
+				return true;
+		}
+		GameObject found[] = new GameObject[1];
+			// Try non-recursive search for ammo first.
+		boolean usable = isWeaponUsable(weapon, found, false);
+		if (usable)	// Ammo is available and ready.
+			return true;
+		else if (winf.getAmmoConsumed() < 0)
+			return false;	// Weapon can't be used.
+			// Try recursive search now.
+		found[0] = findBestAmmo(winf.getAmmoConsumed(), 1);
+		if (found[0] == null)
+			return false;
+		swapAmmo(found[0]);
+		return true;
+	}
+	/*
+	 *	If no shield readied, look through all possessions for the best one.
+	 *	@return Returns true if successful.
+	 */
+	boolean readyBestShield()	{
+		if (spots[Ready.rhand] != null) {
+			ShapeInfo inf = spots[Ready.rhand].getInfo();
+			return inf.getArmor() != 0 || inf.getArmorImmunity() != 0;
+		}
+		Vector<GameObject> vec = new Vector<GameObject>(50);		// Get list of all possessions.
+		getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, EConst.c_any_framenum);
+		GameObject best = null;
+		int best_strength = -20;
+		for (GameObject obj : vec) {
+			/*++++++++FINISH
+			if (obj.insideLocked())
+				continue;
+			*/
+			ShapeInfo info = obj.getInfo();
+				// Only want those that can be readied in hand.
+			int ready = info.getReadyType();
+			if (ready != Ready.lhand && ready != Ready.backpack)
+				continue;
+			ArmorInfo arinf = info.getArmorInfo();
+			if (arinf == null)
+				continue;	// Not a shield.
+			int strength = arinf.getBaseStrength();
+			if (strength > best_strength)
+				{
+				best = obj;
+				best_strength = strength;
+				}
+			}
+		if (best == null)
+			return false;
+		// Spot is free already.
+		best.removeThis();
+		add(best, true);			// Should go to the right place.
+		return true;
+	}
+	/*
+	 *	Get weapon value.
+	 */
+	GameObject getWeapon() {
+		GameObject weapon = spots[Ready.lhand];
+		if (weapon != null && weapon.getInfo().getWeaponInfo() != null) {
+			return weapon;
+		} else
+			return null;
+	}
+	/*
+	 *	If no weapon readied, look through all possessions for the best one.
+	 */
+	public boolean readyBestWeapon() {
+		if (getWeapon() != null && readyAmmo())
+			return true;		// Already have one.
+		// Check for spellbook.
+		GameObject robj = getReadied(Ready.lhand);
+		if (robj != null && robj.getInfo().getShapeClass() == ShapeInfo.spellbook) {
+			/*++++++++FINISH
+			if ((static_cast<Spellbook_object*> (robj)).can_do_spell(this))
+				return true;
+			*/
+		}
+		Vector<GameObject> vec = new Vector<GameObject>(50);		// Get list of all possessions.
+		getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, EConst.c_any_framenum);
+		GameObject best = null, best_ammo = null;
+		GameObject ammo_obj[] = new GameObject[1];
+		int best_strength = -20;
+		int wtype = Ready.backpack;
+		for (GameObject obj : vec) {
+			//+++++++FINISH if (obj.insideLocked())
+			//++++++++	continue;
+			ShapeInfo info = obj.getInfo();
+			int ready = info.getReadyType();
+			if (ready != Ready.lhand && ready != Ready.both_hands)
+				continue;
+			WeaponInfo winf = info.getWeaponInfo();
+			if (winf == null)
+				continue;	// Not a weapon.
+			if (!isWeaponUsable(obj, ammo_obj, true))
+				continue;
+			int strength = winf.getBaseStrength();
+			strength += getEffectiveRange(winf, -1);
+			if (strength > best_strength) {
+				wtype = ready;
+				best = obj;
+				best_ammo = ammo_obj[0] != obj ? ammo_obj[0] : null;
+				best_strength = strength;
+			}
+		}
+		if (best == null)
+			return false;
+			// If nothing is in left hand, nothing will happen.
+		GameObject remove1 = spots[Ready.lhand], remove2 = null;
+		if (wtype == Ready.both_hands)
+			remove2 = spots[Ready.rhand];
+			// Prevent double removal and double add (can corrupt objects list).
+			// No need for similar check for remove1 as we wouldn't be here
+			// if remove1 were a weapon we could use.
+		if (remove2 == best)
+			remove2 = null;
+						// Free the spot(s).
+		if (remove1 != null)
+			remove1.removeThis();
+		if (remove2 != null)
+			remove2.removeThis();
+		best.removeThis();
+		add(best, true);			// Should go to the right place.
+		if (wtype == Ready.lhand)
+			readyBestShield();	// Also add a shield for 1-handed weapons.
+		if (remove1 != null)			// Put back other things.
+			add(remove1, true);
+		if (remove2 != null)
+			add(remove2, true);
+		if (best_ammo != null)
+			swapAmmo(best_ammo);
+		return true;
 	}
 	/*
 	 *	Try to store the readied weapon.
@@ -1368,15 +1594,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			int gump = getInfo().getGumpShape();
 			/* +++++++FINISH
 			if (gump < 0)
-				gump = ShapeID.get_info(get_sexed_coloured_shape()).get_gump_shape();
+				gump = ShapeID.getInfo(get_sexed_coloured_shape()).get_gump_shape();
 			if (gump < 0)
-				gump = ShapeID.get_info(get_shape_real()).get_gump_shape();
+				gump = ShapeID.getInfo(get_shape_real()).get_gump_shape();
 			
 			if (gump < 0) {
 				int shape = getTypeFlag(Actor.tf_sex) ?
 					Shapeinfo_lookup.GetFemaleAvShape() :
 					Shapeinfo_lookup.GetMaleAvShape();
-				gump = ShapeID.get_info(shape).get_gump_shape();
+				gump = ShapeID.getInfo(shape).get_gump_shape();
 			}
 			*/
 			if (gump < 0)
@@ -2078,17 +2304,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// If a monster can't die, force it to have at least 1 hit point,
 			// but only if the monster is used.
 			// Maybe we should restore it to full health?
-			Monster_info *minf = get_info().get_monster_info();
+			MonsterInfominf = getInfo().get_monsterInfo();
 			if (minf && minf.cant_die())
 				setProperty(Actor.static_cast<int>(Actor.health),
 					getProperty(static_cast<int>(Actor.strength)));
 		}
-
+		*/
 		// Only do ready best weapon if we are in BG, this is the first time
 		// and we are the Avatar or Iolo
-		if (Game.get_game_type() == BLACK_GATE && Game.get_avname() && (num == 0 || num == 1))
-			ready_best_weapon();
-		*/				
+		if (game.isBG() && game.getAvName() != null && (num == 0 || num == 1))
+			readyBestWeapon();				
 	}
 	public void writeIreg(OutputStream out) throws IOException {	// Don't write to IREG.
 	}

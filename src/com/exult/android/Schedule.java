@@ -763,7 +763,7 @@ public abstract class Schedule extends GameSingletons {
 				delay = 8;
 				break;
 			case 20:		// Ready weapon
-				//++++++++++FINISH npc.readyBestWeapon();
+				npc.readyBestWeapon();
 				break;
 			case 14:		// Check area.
 				// Maybe could be improved?

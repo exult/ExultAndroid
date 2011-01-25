@@ -118,7 +118,7 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return ammo; }
 	public int getAmmo() 			// Raw value, for map-editor.
 		{ return ammo; }
-	public boolean uses_charges() 
+	public boolean usesCharges() 
 		{ return ammo == -2; }
 	public boolean usesAmmoOnRanged() 
 		{ return ammo != -1; }

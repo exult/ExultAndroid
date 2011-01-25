@@ -438,19 +438,19 @@ public class ExultActivity extends Activity {
 		        	case KeyEvent.KEYCODE_DPAD_RIGHT:
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewHoriz(false, true); 
-		        		break;
+		        		return true;
 		        	case KeyEvent.KEYCODE_DPAD_LEFT:		        		
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewHoriz(true, true); 
-		        		break;
+		        		return true;
 		        	case KeyEvent.KEYCODE_DPAD_DOWN:		        		
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewVertical(false, true); 
-		        		break;
+		        		return true;
 		        	case KeyEvent.KEYCODE_DPAD_UP:		        		
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewVertical(true, true); 
-		        		break;	
+		        		return true;
 		        	case KeyEvent.KEYCODE_H:
 			        		if (event.isAltPressed()) {
 			        			GameSingletons.cheat.toggleHackMover();

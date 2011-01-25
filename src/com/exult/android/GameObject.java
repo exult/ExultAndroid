@@ -8,7 +8,7 @@ import java.util.Collections;
 import android.graphics.Point;
 import java.io.OutputStream;
 import java.io.IOException;
-
+import com.exult.android.shapeinf.*;
 
 public abstract class GameObject extends ShapeID {
 	//	Flags
@@ -680,6 +680,41 @@ public abstract class GameObject extends ShapeID {
 	} 
 	public GameObject findWeaponAmmo(int weapon, int needed, boolean recursive)
 			{ return null; }
+	/*
+	 *	Checks to see if the object has ammo for a weapon.
+	 *	Output is ammount of ammo needed and . to ammo
+	 *	object, if the argument is not null.
+	 */
+	public final int getWeaponAmmo(int weapon, int family, int proj, boolean ranged,
+				GameObject ammo[], boolean recursive)
+		{
+		if (ammo != null)
+			ammo[0] = null;
+		if (weapon < 0)
+			return 0;	// Bare hands.
+		// See if we need ammo.
+		WeaponInfo winf = ShapeID.getInfo(weapon).getWeaponInfo();
+		if (winf == null)
+			// No ammo needed.
+			return 0;
+		int uses = winf.getUses();
+		int need_ammo = 0;
+			// This seems to match perfectly the originals.
+		if (family == -1 || !ranged)
+			need_ammo = (uses == 0 && winf.usesCharges()) ? 1 : 0;
+		else
+			need_ammo = 1;
+		if (need_ammo != 0 && family >= 0 && proj >= 0) {
+			// BG triple crossbows uses 3x ammo.
+			ShapeInfo info = ShapeID.getInfo(winf.getProjectile());
+			if (info.getReadyType() == Ready.triple_bolts)
+				need_ammo = 3;
+			}
+
+		if (ammo != null)
+			ammo[0] = findWeaponAmmo(weapon, need_ammo, recursive);
+		return need_ammo;
+	}
 	public int reduceHealth(int delta, int damage_type, GameObject attacker) {
 		//+++++++++++FINISH
 		return delta;

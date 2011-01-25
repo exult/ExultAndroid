@@ -18,6 +18,9 @@ public abstract class Game extends GameSingletons {
 	public void setNewGame() {
 		newGame = true;
 	}
+	public String getAvName() {
+		return avName;
+	}
 	public void setAvName(String nm) {
 		avName = nm;
 	}

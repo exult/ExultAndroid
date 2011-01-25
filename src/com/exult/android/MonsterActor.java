@@ -246,11 +246,9 @@ public class MonsterActor extends NpcActor {
 			monster.move(pos.tx, pos.ty, pos.tz);
 		if (equipment) {
 			monster.equip(inf, temporary);	// Get equipment.
-			/* +++++FINISH
 			if (sched == Schedule.combat)
 				monster.readyBestWeapon();
-			*/
-			}
+		}
 		if (sched < 0)			// Set sched. AFTER equipping.
 			sched = Schedule.loiter;
 		monster.setScheduleType(sched);
