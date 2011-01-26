@@ -58,6 +58,7 @@ public class GameWindow extends GameSingletons {
 	 */
 	public int skipLift;	// Skip objects with lift >= this.  0
 							//   means 'terrain-editing' mode.
+	public static GameObject targetObj;	// Currently selected when targeting.
 	public boolean paintEggs = true;//++++TRUE for testing.
 	public int blits;		// For frame-counting.
 	public boolean skipFirstScene;

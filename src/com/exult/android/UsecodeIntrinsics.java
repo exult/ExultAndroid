@@ -636,12 +636,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 		return(u);
 	}
 	private final UsecodeValue updateLastCreated(UsecodeValue p0) {
-		/*++++TESTING
-		System.out.println("Calling getClick");
-		Point pt = new Point();
-		ExultActivity.getClick(pt);
-		System.out.println("Got x,y = " + pt.x + "," + pt.y);
-		*/
 		// Think it takes array from 0x18,
 		//   updates last-created object.
 		//   ??guessing??
@@ -999,10 +993,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 			//if (!Get_click(x, y, Mouse.greenselect, 0, true))
 				//return Usecode_value(0);
 			Point p = new Point();
-			ExultActivity.getClick(p);
+			obj = ExultActivity.getTarget(p);
 						// Get abs. tile coords. clicked on.
 			t = new Tile(gwin.getScrolltx() + p.x/EConst.c_tilesize,
 						 gwin.getScrollty() + p.y/EConst.c_tilesize, 0);
+			/*+++++++++PREVIOUS
 						// Look for obj. in open gump.
 			Gump gump = gumpman.findGump(p.x, p.y);
 			if (gump != null) {
@@ -1012,9 +1007,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			} else {			// Search rest of world.
 				obj = gwin.findObject(p.x, p.y);
 				if (obj != null) {	// Found object?  Use its coords.
-					obj.getTile(t = new Tile());
+					obj.getTile(t);
 				}
 			}
+			*/
+			if (obj != null && obj.getOwner() == null)
+				obj.getTile(t);	// Object, not in gump, so use its coords.
 		}
 		// Ret. array with obj as 1st elem.
 		return new UsecodeValue.ArrayValue(

@@ -344,6 +344,9 @@ public abstract class Gump extends ShapeID {
 				}
 				obj.paintShape(paintBox.x + obj.getTx(),
 								paintBox.y + obj.getTy());
+				if (obj == GameWindow.targetObj)
+					obj.paintOutline(paintBox.x + obj.getTx(),
+							paintBox.y + obj.getTy(), ShapeID.HIT_PIXEL);
 			}
 		}
 	}

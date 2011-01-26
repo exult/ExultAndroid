@@ -204,6 +204,8 @@ public class GameRender {
 								stop_chunky);
 			}
 		*/
+		if (GameWindow.targetObj != null)
+			GameWindow.targetObj.paintOutline(ShapeID.HIT_PIXEL);
 		return light_sources;
 		}
 }

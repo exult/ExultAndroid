@@ -18,9 +18,13 @@ import android.widget.Button;
 import android.util.AttributeSet;
 import android.content.DialogInterface;
 import java.util.LinkedList;
+import java.util.concurrent.Semaphore;
+import java.lang.InterruptedException;
 
 public class ExultActivity extends Activity {
 	private static Point clickPoint;	// Non-null if getClick() is active.
+	private static final Semaphore clickWait = new Semaphore(1, true);
+	private static boolean targeting;
 	private static ExultActivity instance;
 	private static GameWindow gwin;
 	
@@ -84,18 +88,36 @@ public class ExultActivity extends Activity {
     public static void fatal(String msg) {
     	instance.runOnUiThread(new MessageDisplayer(msg, false, true));
     }
-    public static void getClick(Point p) {
-    	Point save = clickPoint;	// Don't expect this to happen.
+    public static GameObject waitForClick(Point p, Boolean target) {
     	p.x = -1;
+    	
+    	GameWindow.targetObj = null;
+    	try {clickWait.acquire();} catch (InterruptedException e) {
+    		return null;	// Failed.
+    	}
+    	targeting = target;
+    	GameSingletons.mouse.setShape(Mouse.greenselect);
+    	Point save = clickPoint;	// Don't expect this to happen.
     	clickPoint = p;
-    	while (p.x < 0) {
-    		try {
-    			Thread.sleep(200);
-    		} catch (InterruptedException e) {
-    			p.x = -1; break;
-    		}
+    	// Wait for the click.
+    	try { clickWait.acquire(); } catch (InterruptedException e) {
+    		p.x = -1;
     	}
     	clickPoint = save;
+    	clickWait.release();
+    	GameObject ret = GameWindow.targetObj;
+    	if (ret != null)
+    		gwin.addDirty(ret);
+    	GameWindow.targetObj = null;
+    	targeting = false;
+    	return ret;
+    }
+    public static void getClick(Point p) {
+    	waitForClick(p, false);
+    }
+    public static GameObject getTarget(Point p) {
+    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
+    	return waitForClick(p, true);
     }
     /*
      * Button handlers:
@@ -136,7 +158,14 @@ public class ExultActivity extends Activity {
         });
     }
     private void buttonTarget(View view) {
-    	
+    	Thread t = new Thread() {
+    		public void run() {
+    			GameObject t = getTarget(new Point());
+    			if (t != null)
+    				t.activate();
+    		}
+    	};
+    	t.start();
     }
     private void buttonCombat(View view) {
     	
@@ -243,7 +272,7 @@ public class ExultActivity extends Activity {
                 	gwin.paintDirty();
                 }
                 synchronized (gwin.getWin()) {
-                	if (dragging || movingAvatar)
+                	if (dragging || movingAvatar || targeting)
                 		GameSingletons.mouse.show();
                 	if (TimeQueue.ticks%3 == 0)
                 		rotatePalette();
@@ -326,7 +355,7 @@ public class ExultActivity extends Activity {
     			// int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
-    				GameSingletons.mouse.setLocation(x, y);
+    				GameSingletons.mouse.move(x, y);
     				if (clickPoint == null && UsecodeMachine.running <= 0) {
     					if (modal != null) {
     						modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
@@ -354,15 +383,17 @@ public class ExultActivity extends Activity {
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
-    				GameSingletons.mouse.hide();
+    				if (!targeting)
+    					GameSingletons.mouse.hide();
     				gwin.stopActor();
     				avatarMotion = null;
     				movingAvatar = false;
     				if (clickPoint != null) {
-    					
-    					if (leftDownX - 1 <= x && x <= leftDownX + 1 &&
-    						leftDownY - 1 <= y && y <= leftDownY + 1) {
+    					if (targeting ||
+    					   (leftDownX - 1 <= x && x <= leftDownX + 1 &&
+    						leftDownY - 1 <= y && y <= leftDownY + 1)) {
     						clickPoint.set(x, y);
+    						clickWait.release();
     					}
     					return true;
     				}
@@ -410,8 +441,23 @@ public class ExultActivity extends Activity {
     					avatarMotion.setLocation(sx, sy);
     					gwin.startActor(avatarStartX, avatarStartY, x, y, 
     							GameSingletons.mouse.avatarSpeed);
-    				} else if (dragging)
+    				} else if (dragging) {
     					dragged = GameSingletons.drag.moved(x, y);
+    				} else if (targeting) {
+    					GameObject obj;
+    					Gump gump = GameSingletons.gumpman.findGump(x, y);
+    					if (gump != null)
+    						obj = gump.findObject(x, y);
+    					else
+    						obj = gwin.findObject(x, y);
+    					if (obj != GameWindow.targetObj) {
+    						if (GameWindow.targetObj != null)
+    							gwin.addDirty(GameWindow.targetObj);
+    						if (obj != null)
+    							gwin.addDirty(obj);
+    						GameWindow.targetObj = obj;
+    					}
+    				}
     				return true;
     			case MotionEvent.ACTION_CANCEL:
     				return true;
@@ -487,6 +533,12 @@ public class ExultActivity extends Activity {
 		        			gwin.write(1, "Test save to zip");	//++++++++++TESTING.
 		        		else if (!event.isShiftPressed()) {
 		        			ExultActivity.instance.buttonSave(null);
+		        		}
+		        		return true;
+		        		
+		        	case KeyEvent.KEYCODE_T:
+		        		if (!event.isAltPressed()) {
+		        			ExultActivity.instance.buttonTarget(null);
 		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_U:
