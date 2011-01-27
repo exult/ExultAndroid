@@ -105,7 +105,7 @@ public final class GumpManager extends GameSingletons {
 		Gump *dragged = gwin.get_dragging_gump();
 		if (dragged && dragged.getOwner() == owner &&
 			    (shapenum == EConst.c_any_shapenum || 
-				 dragged.get_shapenum() == shapenum))
+				 dragged.getShapenum() == shapenum))
 			return dragged;
 		*/
 		return null;
@@ -134,7 +134,7 @@ public final class GumpManager extends GameSingletons {
 		Gump *dragged = gwin.get_dragging_gump();
 		// If we are dragging the same, just return
 		if (dragged && dragged.getOwner() == obj && 
-			dragged.get_shapenum() == shapenum)
+			dragged.getShapenum() == shapenum)
 			return;
 		*/
 		System.out.println("Adding gump for shape " + shapenum);
@@ -173,18 +173,18 @@ public final class GumpManager extends GameSingletons {
 			new_gump = new Paperdoll_gump(npc, x, y, npc.get_npc_num());
 		else */ if (npc != null && actorgump) 
 			new_gump = new ActorGump(npc, x, y, shapenum);
-		/* ++++++FINISH
-		else if (shapenum == game.get_shape("gumps/statsdisplay"))
-			new_gump = Stats_gump.create(obj, x, y);
-		else if (shapenum == game.get_shape("gumps/spellbook"))
+		else if (npc != null && shapenum == game.getShape("gumps/statsdisplay"))
+			new_gump = StatsGump.create(npc, x, y);
+		/*
+		else if (shapenum == game.getShape("gumps/spellbook"))
 			new_gump = new Spellbook_gump((Spellbook_object *) obj);
 		else if (Game.get_game_type() == SERPENT_ISLE) {
-			if (shapenum == game.get_shape("gumps/spell_scroll"))
+			if (shapenum == game.getShape("gumps/spell_scroll"))
 				new_gump = new Spellscroll_gump(obj);
-			else if (shapenum >= game.get_shape("gumps/cstats/1")&&
-					 shapenum <= game.get_shape("gumps/cstats/6"))
+			else if (shapenum >= game.getShape("gumps/cstats/1")&&
+					 shapenum <= game.getShape("gumps/cstats/6"))
 				new_gump = new CombatStats_gump(x, y);
-			else if (shapenum == game.get_shape("gumps/jawbone"))
+			else if (shapenum == game.getShape("gumps/jawbone"))
 				new_gump = new Jawbone_gump((Jawbone_object*) obj, x, y);
 		} */
 		if (new_gump == null)
@@ -258,6 +258,20 @@ public final class GumpManager extends GameSingletons {
 			if (g.isModal() == modal)
 				g.paint();
 		}
+	}
+	/*
+	 *	Show a number.
+	 */
+	public void paintNum
+		(
+		int num,
+		int x,				// Coord. of right edge of #.
+		int y				// Coord. of top of #.
+		) {
+		//	Shape_manager *sman = Shape_manager::get_instance();
+		final int font = 2;
+		String buf = String.format("%1$d", num);
+		fonts.paintText(font, buf, x - fonts.getTextWidth(font, buf), y);
 	}	
 	public GameObject doubleClicked(Gump gump, int x, int y) {	
 		// If avatar cannot act, a double-click will only close gumps, and

@@ -174,7 +174,8 @@ public class ExultActivity extends Activity {
     	gwin.getMainActor().activate();
     }
     private void buttonStats(View view) {
-    	
+    	GameSingletons.gumpman.addGump(gwin.getMainActor(), 
+    			GameSingletons.game.getShape("gumps/statsdisplay"), false);
     }
     private void buttonFeed(View view) {
     	

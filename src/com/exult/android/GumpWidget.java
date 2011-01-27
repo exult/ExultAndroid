@@ -111,11 +111,9 @@ public class GumpWidget extends ShapeID {
 		public boolean activate(boolean button) {
 			if (!button) 
 				return false;
-			/* +++++++FINISH
 			else
 				gumpman.addGump(parent.getContainer(), game.getShape(
-						"gumps/statsdisplay"));
-			*/
+						"gumps/statsdisplay"), false);
 			return true;
 		}
 	}
