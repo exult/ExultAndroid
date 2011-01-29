@@ -10,9 +10,13 @@ public class StatsGump extends Gump {
 	public StatsGump(Actor a, int initx, int inity) {
 		super(game.getShape("gumps/statsdisplay"));
 		actor = a;
+		addCheckMark(6, 136);
 	}
 	public static StatsGump create(Actor npc, int x, int y) {
 		return new StatsGump(npc, x, y);
+	}
+	public ContainerGameObject getContainer() {
+		return actor;
 	}
 	public void paint() {
 		GumpManager gman = gumpman;

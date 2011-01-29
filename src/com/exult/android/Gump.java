@@ -125,6 +125,10 @@ public abstract class Gump extends ShapeID {
 	public boolean isDraggable() {
 		return true;
 	}
+	protected void addCheckMark(int checkx, int checky) {
+		checkx += 16; checky -= 12;
+		elems.add(new GumpWidget.Checkmark(this, checkx, checky));
+	}
 	/*
 	 *	A generic gump used by generic containers:
 	 */
@@ -210,8 +214,7 @@ public abstract class Gump extends ShapeID {
 		protected final void setObjectArea(int x, int y, int w, int h, 
 									int checkx, int checky) {
 			objectArea.set(x, y, w, h);
-			checkx += 16; checky -= 12;
-			elems.add(new GumpWidget.Checkmark(this, checkx, checky));
+			addCheckMark(checkx, checky);
 		}
 		protected final void setObjectArea(int x, int y, int w, int h) {
 			objectArea.set(x, y, w, h);

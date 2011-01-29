@@ -126,69 +126,39 @@ public class ExultActivity extends Activity {
     	Button button;
     	button = (Button) findViewById(R.id.target_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonTarget(v);}
+            public void onClick(View v) { Shortcuts.target();}
         });
         button = (Button) findViewById(R.id.combat_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonCombat(v);}
+            public void onClick(View v) { Shortcuts.combat();}
         });
         button = (Button) findViewById(R.id.inventory_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonInv(v);}
+            public void onClick(View v) { Shortcuts.inv();}
         });
         button = (Button) findViewById(R.id.stats_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonStats(v);}
+            public void onClick(View v) { Shortcuts.stats();}
         });
         button = (Button) findViewById(R.id.feed_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonFeed(v);}
+            public void onClick(View v) { Shortcuts.feed();}
         });
         button = (Button) findViewById(R.id.zoom_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonZoom(v);}
+            public void onClick(View v) { Shortcuts.zoom();}
         });
         button = (Button) findViewById(R.id.save_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonSave(v);}
+            public void onClick(View v) { Shortcuts.save();}
         });
         button = (Button) findViewById(R.id.quit_button);
         button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { buttonQuit(v);}
+            public void onClick(View v) { Shortcuts.quit();}
         });
     }
-    private void buttonTarget(View view) {
-    	Thread t = new Thread() {
-    		public void run() {
-    			GameObject t = getTarget(new Point());
-    			if (t != null)
-    				t.activate();
-    		}
-    	};
-    	t.start();
-    }
-    private void buttonCombat(View view) {
-    	
-    }
-    private void buttonInv(View view) {
-    	gwin.getMainActor().activate();
-    }
-    private void buttonStats(View view) {
-    	GameSingletons.gumpman.addGump(gwin.getMainActor(), 
-    			GameSingletons.game.getShape("gumps/statsdisplay"), false);
-    }
-    private void buttonFeed(View view) {
-    	
-    }
-    private void buttonZoom(View view) {
-    	
-    }
-    private void buttonSave(View view) {
-    	new NewFileGump();
-		gwin.setAllDirty();
-    }
-    private void buttonQuit(View view) {
-    	finish();
+    public static void quit() {
+    	instance.finish();
     }
     /*
      * Subclasses.
@@ -533,13 +503,13 @@ public class ExultActivity extends Activity {
 		        		if (event.isAltPressed()) 
 		        			gwin.write(1, "Test save to zip");	//++++++++++TESTING.
 		        		else if (!event.isShiftPressed()) {
-		        			ExultActivity.instance.buttonSave(null);
+		        			Shortcuts.save();
 		        		}
 		        		return true;
 		        		
 		        	case KeyEvent.KEYCODE_T:
 		        		if (!event.isAltPressed()) {
-		        			ExultActivity.instance.buttonTarget(null);
+		        			Shortcuts.target();
 		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_U:

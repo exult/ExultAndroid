@@ -117,6 +117,7 @@ public final class GumpManager extends GameSingletons {
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 			// And pause the game, if we want it
 			nonPersistentCount++;
+			System.out.println("addGump: nonPersistentCount = " + nonPersistentCount);
 			if (g.isModal())
 				modal = (Gump.Modal)g;
 			if (!dontPauseGame || g.isModal()) 
@@ -137,7 +138,6 @@ public final class GumpManager extends GameSingletons {
 			dragged.getShapenum() == shapenum)
 			return;
 		*/
-		System.out.println("Adding gump for shape " + shapenum);
 		ListIterator<Gump> iter = openGumps.listIterator();
 		Gump gump = null;
 		while (iter.hasNext()) {	// See if already open.
@@ -146,7 +146,7 @@ public final class GumpManager extends GameSingletons {
 				    gump.getShapeNum() == shapenum) {
 				// If found, move to end.
 				if (iter.hasNext()) {
-					iter.remove();
+					removeGump(gump);
 					addGump(gump);
 				} else
 					setKbdFocus(gump);
