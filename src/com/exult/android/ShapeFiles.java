@@ -27,6 +27,8 @@ public enum ShapeFiles {
 		if (EUtil.U7exists(EFile.EXULT_FLX) == null)
 			ExultActivity.fileFatal(EFile.EXULT_FLX);
 		EXULT_FLX.file = new VgaFile(EFile.EXULT_FLX, EFile.BUNDLE_EXULT_FLX);
-		//++++FINISH.
+		GAME_FLX.file = GameSingletons.game.isBG() 
+			? new VgaFile(EFile.EXULT_BG_FLX, EFile.BUNDLE_EXULT_BG_FLX)
+			: new VgaFile(EFile.EXULT_SI_FLX, EFile.BUNDLE_EXULT_SI_FLX);
 	}
 }

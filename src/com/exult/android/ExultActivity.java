@@ -508,7 +508,9 @@ public class ExultActivity extends Activity {
 		        		return true;
 		        		
 		        	case KeyEvent.KEYCODE_T:
-		        		if (!event.isAltPressed()) {
+		        		if (event.isAltPressed()) {
+		        			GameSingletons.cheat.mapTeleport();
+		        		} else if (!event.isShiftPressed()) {
 		        			Shortcuts.target();
 		        		}
 		        		return true;
