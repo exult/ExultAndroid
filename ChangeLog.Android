@@ -27,5 +27,9 @@
 		EatAtInn
 		Preach (untested)
 	I suggest removing all files from gamedat, and old savegames too.
-
+1-25-2011
+	Weapons are drawn with NPC's.
+	Shortcut buttons are on the left side, and a few work: Q, T, S, I.
+	Targeting:  You drag with the mouse, and the object it's on shows up 
+	with a red outline.  When you release, the action is taken.
 

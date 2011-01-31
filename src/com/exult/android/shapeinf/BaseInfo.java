@@ -8,7 +8,7 @@ public abstract class BaseInfo {
 	From_patch = 2,
 	Have_static = 4,
 	Is_invalid = 8;
-	private int infoFlags;	
+	protected int infoFlags;	
 	protected void setFlag(boolean tf, int flag)
 		{
 		if (tf)
