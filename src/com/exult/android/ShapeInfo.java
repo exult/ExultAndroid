@@ -192,8 +192,12 @@ Explosion_info *set_explosion_info(bool tf);
 	public AnimationInfo getAnimationInfo() {
 		return aniinf; 
 	}
+	public AnimationInfo getAnimationInfoSafe(int nframes) {
+		if (aniinf == null)
+			aniinf = AnimationInfo.createFromTfa(0, nframes);
+		return aniinf; 
+	}
 /*
-Animation_info *get_animation_info_safe(int shnum, int nframes);
 Animation_info *set_animation_info(bool tf);
 
 bool has_body_info() {
