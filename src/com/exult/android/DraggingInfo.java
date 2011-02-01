@@ -376,13 +376,22 @@ public final class DraggingInfo extends GameSingletons {
 			Thread t = new Thread() {
 	    		public void run() {
 	    			quantity = gumpman.promptForNumber(0, quantity, 1, quantity);
-	    			dropQuantity(dropx, dropy, quantity);
+	    			dropQuantityAndClear(dropx, dropy, quantity);
 	    		}
 	    	};
 	    	t.start();
 			return true;
 		}
-		return dropQuantity(x, y, quantity);
+		return dropQuantityAndClear(x, y, quantity);
+	}
+	private boolean dropQuantityAndClear(int x, int y, int quantity) {
+		Boolean ret = dropQuantity(x, y, quantity);
+		if (obj != null)
+			lastDropped = obj;
+		obj = null;			// Clear so we don't paint them.
+		gump = null;
+		gwin.paint();
+		return ret;
 	}
 	private boolean dropQuantity(int x, int y, int quantity) {
 		// Get orig. loc. info.
@@ -469,11 +478,9 @@ public final class DraggingInfo extends GameSingletons {
 		else if (!drop(x, y)) {		// Drop it.
 			System.out.println("Failed to drop.  Putting back.");
 			putBack();		// Wasn't (all) moved.
+			obj = null;			// Clear so we don't paint them.
+			gump = null;
 		}
-		if (obj != null)
-			lastDropped = obj;
-		obj = null;			// Clear so we don't paint them.
-		gump = null;
 		gwin.paint();
 		return handled;
 	}

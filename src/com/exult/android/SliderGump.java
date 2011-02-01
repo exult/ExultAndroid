@@ -90,6 +90,7 @@ public class SliderGump extends Gump.Modal {
 	}
 	@Override
 	public void close() {
+		super.close();
 		setDone();
 		done = true; 
 	}
