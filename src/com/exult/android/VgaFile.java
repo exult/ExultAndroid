@@ -25,6 +25,9 @@ public class VgaFile {
 	protected void reset() {
 	// Not sure if this is needed.	
 	}
+	public int getNumShapes() {
+		return shapes.length;
+	}
 	/*
 	 *	Open file.
 	 */

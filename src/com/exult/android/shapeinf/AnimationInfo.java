@@ -20,7 +20,7 @@ public class AnimationInfo extends BaseInfo {
 	private int		freezeFirst;	// % chance of advancing first frame of animation.
 	private int		recycle;		// Repeat the last recycle frames when wrapping;
 									// all frames if zero.
-	public static AnimationInfo CreateFromTfa(int type, int nframes) {	
+	public static AnimationInfo createFromTfa(int type, int nframes) {	
 		AnimationInfo inf = new AnimationInfo();
 		switch (type) {
 		case 0:

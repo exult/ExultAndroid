@@ -16,9 +16,9 @@ public final class ShapeInfo {
 	private WeaponInfo weapon;		// From weapon.dat, if a weapon.
 	private AmmoInfo ammo;		// From ammo.dat, if ammo.
 	private MonsterInfo monstinf;		// From monster.dat.
-	/*
-	private SFXInfo sfxinf;
+	//+++++++ private SFXInfo sfxinf;
 	private AnimationInfo aniinf;
+	/*
 	private ExplosionInfo explosion;
 	private BodyInfo body;
 	private PaperdollNpc npcpaperdoll;
@@ -185,11 +185,14 @@ bool has_explosion_info() {
 Explosion_info *get_explosion_info() {
 { return explosion; }
 Explosion_info *set_explosion_info(bool tf);
-
-bool has_animation_info() {
-{ return aniinf != 0; }
-Animation_info *get_animation_info() {
-{ return aniinf; }
+*/
+	public boolean hasAnimationInfo() {
+		return aniinf != null; 
+	}
+	public AnimationInfo getAnimationInfo() {
+		return aniinf; 
+	}
+/*
 Animation_info *get_animation_info_safe(int shnum, int nframes);
 Animation_info *set_animation_info(bool tf);
 
@@ -470,8 +473,9 @@ bool quake_on_walk() {
 						// Reflect.  Bit 32==horizontal.
 			return curframe ^ ((quads%2)<<5);
 	}
-	public static void read(int num_shapes, ShapeInfo info[], int game) {
+	public static void read(VgaFile vgafile, ShapeInfo info[], int game) {
 		int i;
+		int num_shapes = vgafile.getNumShapes();
 		ShapeInfo s;
 		// ShapeDims
 
@@ -509,6 +513,27 @@ bool quake_on_walk() {
 				s.setTfaData();
 			}
 		} catch (IOException e) { }
+		if (game == EConst.BLACK_GATE || game == EConst.SERPENT_ISLE) try {
+			// Animation data at the end of BG and SI TFA.DAT
+			tfa.seek(3*1024);
+			byte buf [] = new byte[512];
+			tfa.read(buf);
+			int ind = 0;
+			for (i = 0; i < 512; i++, ind++) {
+				int val = (int)buf[ind]&0xff;
+				int shape = 2*i;
+				while (val != 0) {
+					if ((val&0xf) != 0) {
+						//System.out.println("Anim. data for shape " + shape + " is " + (val&0xf));
+						info[shape].aniinf = AnimationInfo.createFromTfa(
+								val&0xf, vgafile.getNumFrames(shape));
+					}
+					val >>= 4;
+					shape++;
+				}
+			}
+		} catch (IOException e) { }
+
 		// Load data about drawing the weapon in an actor's hand
 		RandomAccessFile wihh = EUtil.U7open2(EFile.PATCH_WIHH, EFile.WIHH);
 		
