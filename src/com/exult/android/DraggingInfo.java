@@ -366,22 +366,34 @@ public final class DraggingInfo extends GameSingletons {
 	 *      Return true iff the dropping mouseclick has been handled. 
 	 *		(by buttonpress, drag)
 	 */
+	private int dropx, dropy;
 	public boolean drop(int x, int y) {	// Drop obj. at given position.
+						// First see if it's a gump.
+		Gump on_gump = gumpman.findGump(x, y);
+						// Don't prompt if within same gump.
+		if (quantity > 1 && (on_gump == null || on_gump != gump)) {
+			dropx = x; dropy = y;
+			Thread t = new Thread() {
+	    		public void run() {
+	    			quantity = gumpman.promptForNumber(0, quantity, 1, quantity);
+	    			dropQuantity(dropx, dropy, quantity);
+	    		}
+	    	};
+	    	t.start();
+			return true;
+		}
+		return dropQuantity(x, y, quantity);
+	}
+	private boolean dropQuantity(int x, int y, int quantity) {
 		// Get orig. loc. info.
 		int oldcx = old_pos.tx/EConst.c_tiles_per_chunk, 
 		    oldcy = old_pos.ty/EConst.c_tiles_per_chunk;
 		GameObject to_drop = obj;	// If quantity, split it off.
 		ShapeInfo info = obj.getInfo();
-						// Being liberal about taking stuff:
-		boolean okay_to_move = to_drop.getFlag(GameObject.okay_to_take);
+		// Being liberal about taking stuff:
+		boolean okay_to_move = obj.getFlag(GameObject.okay_to_take);
 		int old_top = old_pos.tz + info.get3dHeight();
-						// First see if it's a gump.
-		Gump on_gump = gumpman.findGump(x, y);
-						// Don't prompt if within same gump.
-		/* ++++++++FINISH
-		if (quantity > 1 && (on_gump == null || on_gump != gump))
-			quantity = gumpman.prompt_for_number(0, quantity, 1, quantity);
-		*/
+		
 		if (quantity <= 0)
 			return false;
 		if (quantity < obj.getQuantity()) {
@@ -392,6 +404,7 @@ public final class DraggingInfo extends GameSingletons {
 			if (okay_to_move)	// Make sure copy is okay to take.
 				to_drop.setFlag(GameObject.okay_to_take);
 		}
+		Gump on_gump = gumpman.findGump(x, y);
 						// Drop it.
 		if (!(on_gump != null ? dropOnGump(x, y, to_drop, on_gump)
 				  : dropOnMap(x, y, to_drop)))
