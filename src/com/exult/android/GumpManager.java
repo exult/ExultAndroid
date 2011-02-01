@@ -1,12 +1,16 @@
 package com.exult.android;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Observer;
+import java.util.Observable;
+import java.util.concurrent.Semaphore;
 
 public final class GumpManager extends GameSingletons {	
 	private static int gumpCount = 0;			// For staggering them.
 	private LinkedList<Gump> openGumps;
 	private Gump.Modal modal;				// Set to modal gump that has focus.
 	private Gump kbdFocus = null;
+	private Semaphore wait = new Semaphore(1, true);
 	private int nonPersistentCount;
 	private boolean dontPauseGame;	// NEVER SET THIS MANUALLY! YOU MUST 
 										// CALL set_gumps_dontPauseGame.
@@ -274,7 +278,7 @@ public final class GumpManager extends GameSingletons {
 		fonts.paintText(font, buf, x - fonts.getTextWidth(font, buf), y);
 	}	
 	/*
-	 *	Prompt for a numeric value using a slider.
+	 *	Prompt for a numeric value using a slider.  This will hang the current thread.
 	 *
 	 *	Output:	Value, or 0 if user hit ESC.
 	 */
@@ -284,13 +288,21 @@ public final class GumpManager extends GameSingletons {
 		int step,
 		int defval			// Default to start with.
 		) {
+		Observer o = new Observer() {
+			public void update(Observable o, Object arg) {
+				wait.release();
+			}
+		};
 		SliderGump slider = new SliderGump(minval, maxval,
-								step, defval);
-		/* ++++++++++FINISH
-		int ok = do_modal_gump(slider, Mouse::hand, paint);
-		int ret = !ok ? 0 : slider->get_val();
-		return (ret);
-		*/ return 0;
+								step, defval, o);
+		try {wait.acquire();} catch (InterruptedException e) {
+			return 0;	// Failed.
+		}
+		// Now wait for the answer.
+		try {wait.acquire();} catch (InterruptedException e) {
+			return 0;	// Failed.
+		}
+		return slider.getVal();
 	}
 	public GameObject doubleClicked(Gump gump, int x, int y) {	
 		// If avatar cannot act, a double-click will only close gumps, and

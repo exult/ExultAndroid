@@ -1,7 +1,10 @@
 package com.exult.android;
 import android.view.KeyEvent;
+import java.util.Observable;
+import java.util.Observer;
 
 public class SliderGump extends Gump.Modal {
+	private Reporter reporter;
 	protected int diamondx;			// Rel. pos. where diamond is shown.
 	protected static final short diamondy = 6;
 	protected int min_val, max_val;		// Max., min. values to choose from.
@@ -24,7 +27,7 @@ public class SliderGump extends Gump.Modal {
 
 	protected ShapeID	diamond;		// Diamond
 
-	public SliderGump(int mival, int mxval, int step, int defval) {
+	public SliderGump(int mival, int mxval, int step, int defval, Observer c) {
 		super(game.getShape("gumps/slider"));
 		min_val = mival; max_val = mxval;
 		step_val = step;
@@ -41,6 +44,15 @@ public class SliderGump extends Gump.Modal {
 		else if (defval > max_val)
 		  defval = max_val;
 		setVal(defval);
+		reporter = new Reporter();
+		reporter.addObserver(c);
+	}
+	public void setDone() {		// Done from 'yes'/'no' button.
+		reporter.setChanged();
+		reporter.notifyObservers(this);
+	}
+	private static class Reporter extends Observable {
+		public void setChanged() { super.setChanged(); }
 	}
 	public int getVal()			// Get last value set.
 		{ return val; }
@@ -76,8 +88,11 @@ public class SliderGump extends Gump.Modal {
 		gumpman.paintNum(val, x + textx, y + texty);
 		gwin.setPainted();
 	}
-	public void close()
-			{ done = true; }
+	@Override
+	public void close() {
+		setDone();
+		done = true; 
+	}
 						// Handle events:
 	@Override
 	public boolean mouseDown(int mx, int my, int button) {
@@ -145,7 +160,7 @@ public class SliderGump extends Gump.Modal {
 	public void keyDown(int chr) { // Character typed.
 		switch(chr) {		
 		case KeyEvent.KEYCODE_ENTER:
-			done = true;
+			close();
 			break;
 		case KeyEvent.KEYCODE_DPAD_LEFT:
 			clickedLeftArrow();

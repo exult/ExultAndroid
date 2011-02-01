@@ -204,6 +204,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 		conv.setUserChoice(null);
 		return(val);
 	}
+	private final UsecodeValue inputNumericValue(UsecodeValue p0, UsecodeValue p1,
+									UsecodeValue p2, UsecodeValue p3) {
+		int val = gumpman.promptForNumber(	p0.getIntValue(), p1.getIntValue(),
+				p2.getIntValue(), p3.getIntValue());
+		conv.clearTextPending();	// Answered a question.
+		return new UsecodeValue.IntValue(val);
+	}
 	private final void setItemShape(UsecodeValue itemVal, UsecodeValue shapeVal) {
 		int shape = shapeVal.getIntValue();
 		GameObject item = getItem(itemVal);
@@ -1662,7 +1669,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return selectFromMenu();
 		case 0x0b:
 			return selectFromMenu2();
-		//++++++++++
+		case 0x0c:
+			return inputNumericValue(parms[0], parms[1], parms[2], parms[3]);
 		case 0x0d:
 			synchronized(gwin.getWin()) {
 				setItemShape(parms[0], parms[1]);
