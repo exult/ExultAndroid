@@ -168,9 +168,7 @@ public class IregGameObject extends GameObject {
 		writeBuf[ind++] = 0;
 		out.write(writeBuf, 0, ind);
 					// Write scheduled usecode.
-		/* +++++++++FINISH
-		GameMap.writeScheduled(out, this);	
-		 */
+		GameMap.writeScheduled(out, this, false);	
 	}
 	public static class Animated extends IregGameObject {
 		private Animator animator;

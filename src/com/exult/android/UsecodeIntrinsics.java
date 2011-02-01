@@ -1252,7 +1252,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			}
 		}
 	}
-	private void sitDown(UsecodeValue p0, UsecodeValue p1) {
+	private final void sitDown(UsecodeValue p0, UsecodeValue p1) {
 		// Sit_down(npc, chair).
 		GameObject nobj = getItem(p0);
 		Actor npc = asActor(nobj);
@@ -1262,6 +1262,27 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (chair == null)
 			return;
 		npc.setScheduleType(Schedule.sit, new Schedule.Sit(npc, chair));
+	}
+	private final UsecodeValue summon(UsecodeValue p0) {
+		// summon(shape, flag??).  Create monster of desired shape.
+
+		int shapenum = p0.getIntValue();
+		MonsterInfo info = ShapeID.getInfo(shapenum).getMonsterInfo();
+		if (info == null)
+			return UsecodeValue.getZero();
+		Tile dest = new Tile();
+		gwin.getMainActor().getTile(dest);
+		if (!MapChunk.findSpot(dest, 5, shapenum, 0, 1,
+				-1, gwin.isMainActorInside() ?
+					MapChunk.inside : MapChunk.outside))
+			return UsecodeValue.getZero();
+		Actor npc = asActor(ucmachine.get_caller_item());
+		int align = Actor.friendly;
+		if (npc != null && !npc.getFlag(Actor.in_party))
+			align = npc.getAlignment();
+		MonsterActor monst = MonsterActor.create(shapenum, dest,
+						Schedule.combat, align);
+		return new UsecodeValue.ObjectValue(monst);
 	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
@@ -1594,7 +1615,26 @@ public class UsecodeIntrinsics extends GameSingletons {
 			*/
 		}
 	}
-
+	private final static UsecodeValue isWater(UsecodeValue p0) {
+		// Is_water(pos).
+		int size = p0.getArraySize();
+		if (size >= 3) {
+			int tx = p0.getElem(0).getIntValue(),
+				ty = p0.getElem(1).getIntValue(),
+				tz = p0.getElem(2).getIntValue();
+						// Didn't click on an object?
+			int x = (tx - gwin.getScrolltx())*EConst.c_tilesize,
+			    y = (ty - gwin.getScrollty())*EConst.c_tilesize;
+			if (tz != 0 || gwin.findObject(x, y) != null)
+				return UsecodeValue.getZero();
+			ShapeID sid = gwin.getFlat(null, x, y);
+			if (sid.isInvalid())
+				return UsecodeValue.getZero();
+			ShapeInfo info = sid.getInfo();
+			return info.isWater() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		}
+		return UsecodeValue.getZero();
+	}
 	//	For BlackGate.
 	public UsecodeValue execute(int id, int event, int num_parms, UsecodeValue parms[]) {
 		switch (id) {
@@ -1752,9 +1792,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getLift(parms[0]);
 		case 0x43:
 			setLift(parms[0], parms[1]); break;
-		//++++++++
+		case 0x44:
+			return new UsecodeValue.IntValue(eman.getWeather());
+		case 0x45:
+			EggObject.setWeather(parms[0].getIntValue());
 		case 0x46:
 			sitDown(parms[0], parms[1]); break;
+		case 0x47:
+			return summon(parms[0]);
 		//++++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
@@ -1820,7 +1865,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 		//+++++++++++++
 		case 0x8d:
 			return getPartyList();	// get_party_list2.  Seems the same.
+		case 0x8e:
+			return gwin.inCombat() ? UsecodeValue.getOne() : UsecodeValue.getZero();
 		//+++++++++++++++
+		case 0x90:
+			return isWater(parms[0]);
+		//++++++++++++++++
 		default:
 			System.out.printf("*** UNHANDLED intrinsic # %1$02x\n", id);
 			break;

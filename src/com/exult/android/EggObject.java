@@ -19,9 +19,17 @@ public class EggObject extends IregGameObject {
 	private static final byte writeBuf[] = new byte[30];
 
 	private static Rectangle inside = new Rectangle();	// A temp.
-	// +++++FINISH Animator *animator;		// Controls animation.
+	Animator animator;		// Controls animation.
 	protected void initField(byte ty) {
-		//+++++++++++++
+		type = ty;
+		probability = 100;
+		data1 = data2 = 0;
+		area = new Rectangle(0, 0, 0, 0);
+		criteria = party_footpad;
+		distance = 0;
+		solid_area = false;
+		animator = null;
+		flags = (1 << auto_reset);
 	}
 	public static final int // Types of eggs:
 		monster = 1,
@@ -132,10 +140,8 @@ public class EggObject extends IregGameObject {
 			obj = new EggObject(shnum, frnum, tx, ty, tz, itype, prob,
 								data1, data2, data3);
 		}
-		/* ++++++FINISH
 		if (animated)
-			obj.setAnimator(new Frame_animator(obj));
-		*/
+			obj.setAnimator(new Animator.Frame(obj));
 		return (obj);
 	}
 
@@ -178,7 +184,7 @@ public class EggObject extends IregGameObject {
 		criteria = party_footpad;
 		distance = 0;
 		solid_area = false;
-		//++++++++FINISH animator = null;
+		animator = null;
 		flags = (1 << auto_reset);
 	}
 	public void setArea() { // Set up active area.
@@ -234,10 +240,9 @@ public class EggObject extends IregGameObject {
 		{  }
 				// Can this be clicked on?
 	public boolean isFindable() {
-		/* +++++++FINISH
 		if (animator != null)
 			return super.isFindable();
-		else */
+		else 
 			return gwin.paintEggs && super.isFindable();
 	}
 	public void set(int crit, int dist) {
@@ -259,13 +264,11 @@ public class EggObject extends IregGameObject {
 			int tx, int ty, int tz, int from_tx, int from_ty) {	
 		if (isDormant())
 			return false;		// For now... Already hatched.
-		/* +++++++++++FINISH
 		if ((flags & (1 << (int) nocturnal)) != 0) {	// Nocturnal.
-				int hour = gclock.getHour();
+				int hour = clock.getHour();
 				if (!(hour >= 9 || hour <= 5))
 					return false;	// It's not night.
 		}
-		*/
 		int cri = getCriteria();
 		int deltaz = tz - getLift();
 		//System.out.println("Checking criteria " + cri + ", deltaz = " + deltaz);
@@ -337,33 +340,33 @@ public class EggObject extends IregGameObject {
 		{ return area; }
 	public final boolean isSolidArea()
 		{ return solid_area; }
-	/* +++++++FINISH
-	void set_animator(Animator *a);
-	void stop_animation();
-	*/
+	void setAnimator(Animator a) {
+		animator = a;
+	}
+	void stopAnimation() {
+		if (animator != null)
+			animator.stopAnimation();
+	}
 	public void paint() {
-		/* +++++++++
-		if (animator) {
-			animator.want_animation();	// Be sure animation is on.
-			Ireg_game_object::paint();	// Always paint these.
-		} else */
+		if (animator != null) {
+			animator.wantAnimation();	// Be sure animation is on.
+			super.paint();	// Always paint these.
+		} else
 			if (gwin.paintEggs)
 				super.paint();
 	}
 				// Run usecode function.
 	public void activate(int event) {
 		hatch(null, false);
-		/* +++++++++FINISH
-		if (animator)
+		if (animator != null)
 			flags &= ~(1 << (int) hatched);	// Moongate:  reset always.
-		 */
 	}
 	public static void setWeather(int weather) {
 		setWeather(weather, 15, null);
 	}
 	public static void setWeather(int weather, int len, GameObject egg) {
-		//+++++++++FINISHif (!len)			// Means continuous.
-		len = 6000;		// Confirmed from originals.
+		if (len == 0)			// Means continuous.
+			len = 6000;		// Confirmed from originals.
 		int cur = eman.getWeather();
 		// Experimenting.
 		if (weather != 4 && (weather == 3 || cur != weather))
@@ -460,9 +463,7 @@ public class EggObject extends IregGameObject {
 		if (str1 != null && str1.length() != 0)	// This will be usecode fun. name.
 			GameMap.writeString(out, str1);
 						// Write scheduled usecode.
-		/* +++++++++FINISH
-		GameMap.writeScheduled(out, this);	
-		*/
+		GameMap.writeScheduled(out, this, false);	
 	}
 	// Get size of IREG. Returns -1 if can't write to buffer
 	public int getIregSize() {

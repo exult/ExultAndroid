@@ -2630,9 +2630,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			get_attributes(attlist);
 			GameMap.writeAttributes(out, attlist);
 		}
+		*/
 						// Write scheduled usecode.
 		GameMap.writeScheduled(out, this, true);
-		*/
 	}
 	public void writeContents(OutputStream out) throws IOException {
 		if (!objects.isEmpty()) {	// Now write out what's inside.

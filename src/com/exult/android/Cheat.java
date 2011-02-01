@@ -16,11 +16,10 @@ public final class Cheat extends GameSingletons {
 		ShapeFrame map;
 		int w, h;
 		Tile t = new Tile();	// For Avatar's pos.
-		VgaFile mini;	// If "minimaps.vga" is found.
 		CheatMapGump(int mapnum) {
 			super(0, 0, 0, null);	// Manage everything here.
 			if (EUtil.U7exists(EFile.PATCH_MINIMAPS) != null) {
-				mini = new VgaFile(EFile.PATCH_MINIMAPS, null);
+				VgaFile mini = new VgaFile(EFile.PATCH_MINIMAPS, null);
 				if ((map = mini.getShape(0, mapnum)) == null)
 					map = mini.getShape(0, 0);
 			} else {

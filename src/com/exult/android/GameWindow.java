@@ -264,6 +264,29 @@ public class GameWindow extends GameSingletons {
 			s.getWidth(), s.getHeight());
 		return r;
 	}
+	/*
+	 *	Get the 'flat' that a screen point is in.
+	 */
+	public ShapeID getFlat
+		(
+		ShapeID id,				// What to set, or NULL.
+		int x, int y			// Window point.
+		) {
+		int tx = (scrolltx + x/EConst.c_tilesize)%EConst.c_num_tiles;
+		int ty = (scrollty + y/EConst.c_tilesize)%EConst.c_num_tiles;
+		int cx = tx/EConst.c_tiles_per_chunk, cy = ty/EConst.c_tiles_per_chunk;
+		tx = tx%EConst.c_tiles_per_chunk;
+		ty = ty%EConst.c_tiles_per_chunk;
+		MapChunk chunk = map.getChunk(cx, cy);
+		if (id == null)
+			id = new ShapeID();
+		ChunkTerrain ter = chunk.getTerrain();
+		if (ter != null)
+			chunk.getTerrain().getFlat(id, tx, ty);
+		else
+			id.setShape(-1);
+		return id;
+		}
 	public void getWinTileRect(Rectangle r) {
 		r.set(getScrolltx(), getScrollty(),
 				(win.getWidth() + EConst.c_tilesize - 1)/EConst.c_tilesize,

@@ -645,9 +645,9 @@ public class GameMap extends GameSingletons {
 	 *	Write out scheduled usecode for an object.
 	 */
 
-	public void writeScheduled
+	public static void writeScheduled
 		(
-		ByteArrayOutputStream ireg,
+		OutputStream ireg,
 		GameObject obj,
 		boolean writeMark			// Write an IREG_ENDMARK if true.
 		) throws IOException {

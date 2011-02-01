@@ -434,9 +434,7 @@ public class ContainerGameObject extends IregGameObject {
 		out.write(writeBuf, 0, ind);
 		writeContents(out);		// Write what's contained within.
 						// Write scheduled usecode.
-		/* ++++++++FINISH
-		GameMap.writeScheduled(out, this);	
-		*/
+		GameMap.writeScheduled(out, this, false);	
 	}
 	// Get size of IREG. Returns -1 if can't write to buffer
 	public int getIregSize() {

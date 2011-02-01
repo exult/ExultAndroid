@@ -273,6 +273,25 @@ public final class GumpManager extends GameSingletons {
 		String buf = String.format("%1$d", num);
 		fonts.paintText(font, buf, x - fonts.getTextWidth(font, buf), y);
 	}	
+	/*
+	 *	Prompt for a numeric value using a slider.
+	 *
+	 *	Output:	Value, or 0 if user hit ESC.
+	 */
+	public int promptForNumber
+		(
+		int minval, int maxval,		// Range.
+		int step,
+		int defval			// Default to start with.
+		) {
+		SliderGump slider = new SliderGump(minval, maxval,
+								step, defval);
+		/* ++++++++++FINISH
+		int ok = do_modal_gump(slider, Mouse::hand, paint);
+		int ret = !ok ? 0 : slider->get_val();
+		return (ret);
+		*/ return 0;
+	}
 	public GameObject doubleClicked(Gump gump, int x, int y) {	
 		// If avatar cannot act, a double-click will only close gumps, and
 		// nothing else.
