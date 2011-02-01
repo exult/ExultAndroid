@@ -29,6 +29,8 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 			return new Wiggle(ob);
 	}
 	public void delete() {
+		while (tqueue.remove(this))		// Remove from queue.
+			;
 		if (objsfx != null)
 			objsfx.stop();
 	}

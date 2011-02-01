@@ -72,10 +72,9 @@ public class IregGameObject extends GameObject {
 		if (info.isField() && info.getFieldType() >= 0)
 			return new Field_object(shnum, frnum, tilex, tiley,
 					lift, Egg_object::fire_field + info.get_field_type());
-		else if (info.is_animated() || info.has_sfx())
-			return new Animated_ireg_object(
-				   shnum, frnum, tilex, tiley, lift);
-		else */ if (shnum == 607)		// Path.
+		else */ if (info.isAnimated() || info.hasSfx())
+			return new Animated(shnum, frnum, tilex, tiley, lift);
+		else if (shnum == 607)		// Path.
 			return new EggObject.PathMarker(
 					shnum, frnum, tilex, tiley, lift);
 		/*++++++++++++++
@@ -149,6 +148,7 @@ public class IregGameObject extends GameObject {
 		}
 		return endptr;
 	}
+	@Override
 	public void writeIreg(OutputStream out) throws IOException {
 		int ind = writeCommonIreg(10, writeBuf);
 		writeBuf[ind++] = (byte)((getLift()&15)<<4);
@@ -171,5 +171,36 @@ public class IregGameObject extends GameObject {
 		/* +++++++++FINISH
 		GameMap.writeScheduled(out, this);	
 		 */
+	}
+	public static class Animated extends IregGameObject {
+		private Animator animator;
+		public Animated(int shapenum, int framenum, int tilex, int tiley, int lft) {
+			super(shapenum, framenum, tilex, tiley, lft);
+			animator = Animator.create(this);
+		}
+		@Override
+		public void removeThis() {
+			super.removeThis();
+			animator.delete();
+		}
+		@Override
+		public void paint() {
+			animator.wantAnimation();	// Be sure animation is on.
+			super.paint();
+		}
+		// Get coord. where this was placed.
+		@Override
+		public void getOriginalTileCoord(Tile t) {
+			getTile(t);
+			t.tx -= animator.getDeltax();
+			t.ty -= animator.getDeltay();
+		}
+					// Write out to IREG file.
+		public void writeIreg(OutputStream out) throws IOException {
+			int oldframe = getFrameNum();
+			setFrame(animator.getFrameNum());
+			super.writeIreg(out);
+			setFrame(oldframe);
+		}
 	}
 }

@@ -275,30 +275,28 @@ public class GameMap extends GameSingletons {
 				int shnum = (int)(data[ent + 2]&0xff)+256*hi, 
 					frnum = (data[ent + 3]&0xff)>>2;
 				ShapeInfo info = ShapeID.getInfo(shnum);
-				obj = /*+++++ (info.isAnimated() || info.hasSfx()) ?
-				    new Animated_ifix_object(shnum, frnum,tx, ty, tz)
-				  : */  new IfixGameObject(shnum, frnum, tx, ty, tz);
+				obj = (info.isAnimated() || info.hasSfx()) ?
+				    new IfixGameObject.Animated(shnum, frnum,tx, ty, tz)
+				  : new IfixGameObject(shnum, frnum, tx, ty, tz);
 				olist.add(obj);
 				ifixCount++;
-				}
 			}
-		else if (vers == FlexFile.exultV2) {
+		} else if (vers == FlexFile.exultV2) {
 			// b0 = tx,ty, b1 = lift, b2-3 = shnum, b4=frnum
 			int cnt = len/5;
-			for (int i = 0; i < cnt; i++, ent += 5)
-				{
+			for (int i = 0; i < cnt; i++, ent += 5) {
 				int tx = (data[ent]>>4)&0xf, ty = data[ent]&0xf, 
 					tz = data[ent + 1] & 0xf;
 				int hi = data[ent + 3]&0xff;
 				int shnum = (int)(data[ent + 2]&0xff)+256*hi, 
 					frnum = data[ent + 4]&0xff;
 				ShapeInfo info = ShapeID.getInfo(shnum);
-				obj = /*++++++ (info.isAnimated() || info.hasSfx()) ?
-				    new Animated_ifix_object(shnum, frnum,tx, ty, tz)
-				  : */  new IfixGameObject(shnum, frnum, tx, ty, tz);
+				obj = (info.isAnimated() || info.hasSfx()) ?
+				    new IfixGameObject.Animated(shnum, frnum,tx, ty, tz)
+				  : new IfixGameObject(shnum, frnum, tx, ty, tz);
 				olist.add(obj);
-				}
 			}
+		}
 		/* ++++++FINISH
 		olist.setup_dungeon_levels();	// Should have all dungeon pieces now.
 		*/

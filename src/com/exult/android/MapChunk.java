@@ -79,17 +79,16 @@ public final class MapChunk extends GameSingletons {
 		terrain = ter;
 		terrain.addClient();	
 		// Get RLE objects in chunk.
-		ShapeID id = new ShapeID();
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
 			for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++) {
 				int shapenum = ter.getShapeNum(tilex, tiley);
 				if (shapenum >= EConst.c_first_obj_shape) {
 					ShapeInfo info = ShapesVgaFile.getInfo(shapenum);
 					int framenum = ter.getFrameNum(tilex, tiley);
-					GameObject obj = /* +++++++ info.is_animated() ?
-						new Animated_object(shapenum,
-						    	framenum, tilex, tiley)
-						: */ new TerrainGameObject(shapenum,
+					GameObject obj = info.isAnimated() ?
+						new TerrainGameObject.Animated(shapenum,
+						    	framenum, tilex, tiley, 0)
+						: new TerrainGameObject(shapenum,
 						    	framenum, tilex, tiley, 0);
 					add(obj);
 				}
