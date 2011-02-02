@@ -77,36 +77,65 @@ public final class DataUtils {
 	}
 	public static int readTextMsgFileSections
 		(
-		InputStream in,
+		InputStream instream,
 		Vector<Vector<byte[]> > strings,	// Strings returned here
 		String sections[]			// Section names
 		) throws IOException {
 		int numsections = sections.length;
 		strings.setSize(numsections);
 		int version = 1;
-
+		
+		DataInputStream textin = new DataInputStream(instream);
+        BufferedReader in = new BufferedReader(new InputStreamReader(textin));
 		Vector<byte[]> versioninfo;
 		in.mark(1000000);
-		/* ++++++++++FINISH
 		// Read version.
 		final String versionstr = "version";
-		if (Search_text_msg_section(in, versionstr) && 
-				readTextMsgFile(in, versioninfo, versionstr) != -1) {
-			version = static_cast<int>(strtol(versioninfo[0], 0, 0));
+		if (searchTextMsgSection(in, versionstr) && 
+				(versioninfo = readTextMsgFile(in, null)) != null) {
+			byte s[] = versioninfo.elementAt(0);
+			int ind, strlen = s.length;
+			for (ind = 0; ind < strlen && Character.isDigit(s[ind]); ++ind)
+				;
+			if (ind > 0)
+				version = Integer.parseInt(new String(s, 0, ind));
 		}
-		*/
 		for (int i = 0; i < numsections; i++) {
 			in.reset();
-			//+++++FINISH if (!Search_text_msg_section(in, sections[i]))
-			//++++++	continue;
-			strings.setElementAt(readTextMsgFile(in, sections[i]), i);
+			if (!searchTextMsgSection(in, sections[i]))
+				continue;
+			strings.setElementAt(readTextMsgFile(in, null), i);
 		}
 	return version;
+	}
+	/*
+	 *	Searches for the start of section in a text msg file.
+	 *	Returns true if section is found. The data source will
+	 *	be just after the %%section line.
+	 */
+	private static boolean searchTextMsgSection(BufferedReader in, String section)
+														throws IOException {
+		String s;
+		while ((s = in.readLine()) != null) {
+			if (s.length() == 0)
+				continue;	// Empty line.
+			if (!s.startsWith("%%section"))
+				continue;
+			int ind, strlen = s.length();
+			for (ind = 9; ind < strlen && Character.isSpace(s.charAt(ind)); ++ind)
+					;
+			if (s.startsWith(section, ind)) {	
+				return true;
+			}
+		}
+			// Section was not found.
+		return false;
 	}
 	/*
 	 *	Read in text, where each line is of the form "nnn:sssss", where nnn is
 	 *	to be the Flex entry #, and anything after the ':' is the string to
 	 *	store.  
+	 *	If 'section' passed is null, we assume we're just passed the "%%section" line.
 	 *	NOTES:	Entry #'s may be skipped, and may be given in hex (0xnnn)
 	 *			or decimal.
 	 *		Max. text length is 1024.
@@ -118,11 +147,9 @@ public final class DataUtils {
 	 *	Output:	# of first message (i.e., lowest-numbered msg), or -1 if
 	 *		error.
 	 */
-	private static Vector<byte[]> readTextMsgFile(InputStream instream, String section)
+	private static Vector<byte[]> readTextMsgFile(BufferedReader in, String section)
 														throws IOException {
 		Vector<byte[]> strings = new Vector<byte[]>(1000);
-		DataInputStream textin = new DataInputStream(instream);
-        BufferedReader in = new BufferedReader(new InputStreamReader(textin));
 		int linenum = 0;
 		final int NONEFOUND = 0xffffffff;
 		int first = NONEFOUND;// Index of first one found.
@@ -177,7 +204,6 @@ public final class DataUtils {
 		}
 		return strings;
 	}
-
 	/*
 	 *	Generic base data-agnostic reader class.
 	 */
