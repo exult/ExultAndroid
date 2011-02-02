@@ -386,6 +386,8 @@ public final class DraggingInfo extends GameSingletons {
 	}
 	private boolean dropQuantityAndClear(int x, int y, int quantity) {
 		Boolean ret = dropQuantity(x, y, quantity);
+		if (!ret)
+			putBack();		// Not all dropped.
 		if (obj != null)
 			lastDropped = obj;
 		obj = null;			// Clear so we don't paint them.
@@ -403,6 +405,7 @@ public final class DraggingInfo extends GameSingletons {
 		boolean okay_to_move = obj.getFlag(GameObject.okay_to_take);
 		int old_top = old_pos.tz + info.get3dHeight();
 		
+		//System.out.println("dropQuantity: " + quantity + ", obj quant = " + obj.getQuantity());
 		if (quantity <= 0)
 			return false;
 		if (quantity < obj.getQuantity()) {
@@ -449,8 +452,8 @@ public final class DraggingInfo extends GameSingletons {
 			return true;		// All done.
 		}
 						// Subtract quantity moved.
-		obj.modifyQuantity(-quantity);
-		return false;			// Put back the rest.
+		obj.modifyQuantity(-quantity);	
+		return false;	// Put back the rest.		
 	}
 	/*
 	 *	Mouse was released, so drop object. 
@@ -477,7 +480,6 @@ public final class DraggingInfo extends GameSingletons {
 			return handled;
 		else if (!drop(x, y)) {		// Drop it.
 			System.out.println("Failed to drop.  Putting back.");
-			putBack();		// Wasn't (all) moved.
 			obj = null;			// Clear so we don't paint them.
 			gump = null;
 		}

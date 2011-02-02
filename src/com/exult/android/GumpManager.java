@@ -298,10 +298,13 @@ public final class GumpManager extends GameSingletons {
 		try {wait.acquire();} catch (InterruptedException e) {
 			return 0;	// Failed.
 		}
+		System.out.println("promptForNumber: waiting");
 		// Now wait for the answer.
 		try {wait.acquire();} catch (InterruptedException e) {
 			return 0;	// Failed.
 		}
+		wait.release();
+		//System.out.println("promptForNumber: got " + slider.getVal());
 		return slider.getVal();
 	}
 	public GameObject doubleClicked(Gump gump, int x, int y) {	

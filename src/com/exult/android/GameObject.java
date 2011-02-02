@@ -457,6 +457,7 @@ public abstract class GameObject extends ShapeID {
 		if (quant == 0)
 			quant = 1;		// Might not be set.
 		int newquant = quant + delta;
+		//System.out.println("modifyQuantity: old is " + quant + ", new is " + newquant);
 		if (delta >= 0)			// Adding?
 			{			// Too much?
 			if (newquant > MAX_QUANTITY)
@@ -470,18 +471,17 @@ public abstract class GameObject extends ShapeID {
 		quality = (short) newquant;	// Store new value.
 		
 						// Set appropriate frame.
-		/* ++++++++++FINISH
 		if (info.hasWeaponInfo())	// Starbursts, serpent(ine) daggers, knives.
 			setFrame(0);		// (Fixes messed-up games.)
-		else if (info.hasQuantityFrames())
-			{
+		else if (info.hasQuantityFrames()) {
 				// This is actually hard-coded in the originals, but doing
 				// it this way is consistent with musket ammo.
 			int base = info.hasAmmoInfo() ? 24 : 0;
 				// Verified.
 			int new_frame = newquant > 12 ? 7 : (newquant > 6 ? 6 : newquant - 1);
 			setFrame(base + new_frame);
-			}
+		}
+		/* ++++++++++FINISH
 		ContainerGameObject owner = getOwner();
 		if (owner != null)			// Update owner's volume.
 			owner.modifyVolumeUsed(getVolume() - oldvol);
@@ -504,12 +504,154 @@ public abstract class GameObject extends ShapeID {
 		int shnum = getShapeNum();
 		if (hasHitpoints(shnum))
 			setQuality(hp);
+	}/*
+	 *	For objects that can have a quantity, the name is in the format:
+	 *		%1/%2/%3/%4
+	 *	Where
+	 *		%1 : singular prefix (e.g. "a")
+	 *		%2 : main part of name
+	 *		%3 : singular suffix
+	 *		%4 : plural suffix (e.g. "s")
+	 */
+	/*
+	 *	Extracts the first, second and third parts of the name string
+	 */
+	private static String getSingularName(String name) {
+		StringBuffer output_name = new StringBuffer(name.length() + 10);
+		int cnt;
+		int ind = 0;
+		if (name.charAt(0) != '/') {		// Output the first part
+			cnt = name.indexOf('/');
+			if (cnt < 0)
+				cnt = name.length();
+			output_name.append(name.substring(0, cnt));
+			ind = cnt;
+			// If there is a first part it is followed by a space
+			output_name.append(' ');
+		}
+		ind++;
+						// Output the second part
+		cnt = name.indexOf('/', ind);
+		if (cnt < 0)
+			cnt = name.length();
+		output_name.append(name.substring(ind, cnt));
+		ind = cnt + 1;
+						// Output the third part
+		cnt = name.indexOf('/', ind);
+		if (cnt < 0)
+			cnt = name.length();
+		output_name.append(name.substring(ind, cnt));
+		return new String(output_name);
+	}
+	/*
+	 *	Extracts the second and fourth parts of the name string
+	 */
+	private static String getPluralName(String name, int quantity) {
+		StringBuffer output_name = new StringBuffer(name.length() + 20);
+		//System.out.println("getPluralName from '" + name + "'");
+		output_name.append(String.format("%1$d ", quantity));
+		int namelen = name.length();
+						// Skip the first part
+		int ind = name.indexOf('/');
+		if (ind < 0)		// should not happen
+			return "?";
+		ind++;
+						// Output the second part
+		int cnt = name.indexOf('/', ind);
+		if (cnt < 0)
+			cnt = namelen;
+		output_name.append(name.substring(ind, cnt));
+		ind = cnt + 1;
+		// Skip the third part
+		cnt = name.indexOf('/', ind);
+		if (cnt < 0)
+			cnt = namelen;
+		ind = cnt + 1;
+		if (ind < namelen)
+			output_name.append(name.substring(ind, namelen));	// Output the last part
+		return new String(output_name);
 	}
 	public String getName() {
-		//+++++FOR NOW:
+		ShapeInfo info = getInfo();
+		int qual = info.hasQuality() && !info.isNpc() ? getQuality() : -1;
+		//+++++FINISH FrameName_info nminf = info.getFrameName(getFrameNum(), qual);
 		int shnum = getShapeNum();
-		return shnum >= 0 && shnum < ItemNames.names.length ? ItemNames.names[shnum]
-		         : new String("Unknown");
+		String name;
+		String shpname = shnum >= 0 && shnum < ItemNames.names.length 
+					? ItemNames.names[shnum] : null;
+		int type = /* +++++++++FINISH nminf ? nminf->get_type() : */ -255;
+		int msgid = -1;
+		if (type == -255 /* ++++FINISH || (msgid = nminf->get_msgid()) >= num_misc_names */)
+			name = shpname;
+		else if (type < 0)
+			return "";	// None.
+		else if (type == 0)
+			name = ItemNames.misc[msgid];
+		else if (!info.hasQuality() && !info.isBodyShape())
+			name = shpname;		// Use default name for these.
+		else {
+			int othermsg = -1; // ++++++++FINISH nminf.getOthermsg();
+			boolean defname = false;
+			String msg;
+			String other;
+			/* +++++++++FINISH
+			if (type >= 3) {	// Special names (in SI, corpse, urn).
+				int npcnum = -1;
+				if (!info.isBodyShape())
+					npcnum = getQuality();
+				else if (qual == 1)
+					npcnum = getLiveNpcNum();
+				Actor npc = gwin.getNpc(npcnum);
+				if (npc && !npc->is_unused() &&
+						(!info.is_body_shape() || npc->get_flag(Obj_flags::met)))
+					{
+					other = npc->get_npc_name_string();
+					if (other.empty())	// No name.
+						defname = true;
+					else
+						msg = misc_names[msgid];
+					}
+				else	// Default name.
+					defname = true;
+			}
+			else */ {
+				msg = ItemNames.misc[msgid];
+				other = (othermsg >= 0 && othermsg < ItemNames.misc.length) ?
+							ItemNames.misc[othermsg] : shpname;
+			}
+			if (defname) {
+				if (othermsg >= 0 && othermsg < ItemNames.misc.length)
+					name = ItemNames.misc[othermsg];
+				else if (othermsg < 0 && othermsg != -255)	// None.
+					return "";
+				else	// Use shape's.
+					name = shpname;
+			} else if ((type & 1) != 0)
+				return other + msg;
+			else
+				return msg + other;
+		}
+		int quantity;
+		String display_name;
+		if (name == null)
+			return "";
+	    if (ShapeID.getInfo(shnum).hasQuantity())
+			quantity = quality & 0x7f;
+		else
+			quantity = 1;
+
+		// If there are no slashes then it is simpler
+		if (name.indexOf('/') == -1) {
+			if(quantity <= 1)
+				display_name = name;
+			else {
+				display_name = String.format("%1$d %2$s", quantity, name);
+			}
+		} else if(quantity <= 1)		// quantity might be zero?
+			display_name = getSingularName(name);
+		else
+			display_name = getPluralName(name, quantity);
+		return display_name;
 	}
 	public String toString() {
 		return "obj:" + getName();

@@ -446,7 +446,7 @@ public final class EffectsManager extends GameSingletons {
 				Gump gump = gumpman.findGump(item);
 				if (gump != null) {
 					gump.getShapeRect(r,item);
-					System.out.println("Text posX = " + r.x);
+					//System.out.println("Text posX = " + r.x);
 				} else  {
 					GameObject outer = item.getOutermost();
 					if (outer.getChunk() == null) {
