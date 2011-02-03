@@ -1,6 +1,7 @@
 package com.exult.android;
 import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.PushbackInputStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -190,7 +191,6 @@ public final class DataUtils {
 				ind = 0;
 			} else {	// Get line# in decimal, hex, or oct.
 				int strlen = s.length();
-				System.out.println("readTextMsgFile: " + s);
 				for (ind = 0; ind < strlen && Character.isDigit(s.charAt(ind)); ++ind)
 					;
 				if (ind == 0) {
@@ -242,7 +242,7 @@ public final class DataUtils {
 				byte ptr[] = strings.elementAt(j);
 				if (ptr == null)
 					continue;
-				DataInputStream strin = new DataInputStream(
+				PushbackInputStream strin = new PushbackInputStream(
 						new ByteArrayInputStream(ptr));
 				System.out.println("parse: " + new String(ptr));
 				readData(strin, j, version, patch, game, false);
@@ -282,7 +282,7 @@ public final class DataUtils {
 	public static class IDReaderFunctor {
 		public int read(InputStream in, int index, int version, 
 				boolean binary)
-			{ return binary ? EUtil.Read2(in) : EUtil.ReadInt((DataInputStream)in); }
+			{ return binary ? EUtil.Read2(in) : EUtil.ReadInt((PushbackInputStream)in); }
 	}
 	public static interface ReaderFunctor {
 		public boolean read(InputStream in, int version, 
@@ -304,7 +304,7 @@ public final class DataUtils {
 		public void readData(InputStream in, int index, int version,
 			boolean patch, int game, boolean binary) {
 			int id = idread.read(in, index, version, binary);
-			System.out.println("Reading entry for shape #" + id);
+			//System.out.println("Reading entry for shape #" + id);
 			if (id >= 0) {
 				ShapeInfo inf = info[id];
 				

@@ -6,9 +6,11 @@ import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.DataInputStream;
+import java.io.PushbackInputStream;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.EOFException;
 import java.util.TreeMap;
 import java.util.Random;
 import java.util.Vector;
@@ -102,20 +104,31 @@ public class EUtil {
 		out.write((v>>16)&0xff);
 		out.write((v>>24)&0xff);
 	}
-	// Read integer from a text file.
-	public static final int ReadInt(DataInputStream in) {
+	// Read integer from a text file, skipping past the '/' after the number.
+	public static final int ReadInt(PushbackInputStream in) {
 		return ReadInt(in, 0);
 	}
-	public static final int ReadInt(DataInputStream in, int def) {
-		byte b = 0;
-		int i = -1;
+	public static final int ReadInt(PushbackInputStream in, int def) {
+		int b;
+		int i = 0;
 		try {
-			i = in.readInt();
+			while (true) {
+				b = (int)in.read()&0xff;
+				if (Character.isDigit(b)) {
+					i = 10*i + (b - (int)'0');
+				} else {
+					if (b != -1)
+						in.unread(b);
+					break;
+				}
+			}
+		} catch (EOFException e) {
+			// Okay.
 		} catch (IOException e) {
 			return def;
 		}
 		try {
-			while ((b = in.readByte()) != '/');
+			while ((b = in.read()) != '/' && b != -1);
 		} catch (IOException e) { }
 		return i;
 	}

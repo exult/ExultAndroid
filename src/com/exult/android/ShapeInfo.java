@@ -2,7 +2,7 @@ package com.exult.android;
 import com.exult.android.shapeinf.*;
 import java.io.RandomAccessFile;
 import java.io.InputStream;
-import java.io.DataInputStream;
+import java.io.PushbackInputStream;
 import java.io.IOException;
 
 public final class ShapeInfo {
@@ -713,7 +713,9 @@ bool quake_on_walk() {
 		}
 		public boolean read(InputStream in, int version, 
 						boolean patch, int game, ShapeInfo info) {	
-			boolean biton = EUtil.ReadInt((DataInputStream)in, 1) != 0;
+			//System.out.println("ShapesFlagReader");
+			boolean biton = EUtil.ReadInt((PushbackInputStream)in, 1) != 0;
+			//System.out.println("ShapesFlagReader: read " + biton);
 			if (biton)
 				info.shapeFlags |= (1 << bit);
 			else
