@@ -42,6 +42,7 @@ public final class DataUtils {
 			InputStream ds = new ByteArrayInputStream(txt);
 			static_version = readTextMsgFileSections(ds,
 					static_strings, sections);
+			txtobj.close();
 		} /* +++++++++FINISH
 		else
 			{
@@ -69,8 +70,12 @@ public final class DataUtils {
 			in.close();
 		}
 		for (int i = 0; i < numsections; i++) {
-			parsers[i].parse(static_strings.elementAt(i), static_version, false, game);
-			parsers[i].parse(patch_strings.elementAt(i), patch_version, true, game);
+			System.out.println("readTextDataFile: parsing " + sections[i]);
+			Vector<byte[]> data = static_strings.elementAt(i);
+			parsers[i].parse(data, static_version, false, game);
+			data = patch_strings.elementAt(i);
+			if (data != null)
+				parsers[i].parse(data, patch_version, true, game);
 		}
 		static_strings.clear();
 		patch_strings.clear();
@@ -104,6 +109,7 @@ public final class DataUtils {
 			in.reset();
 			if (!searchTextMsgSection(in, sections[i]))
 				continue;
+			System.out.println("Calling readTextMsgFile for " + sections[i]);
 			strings.setElementAt(readTextMsgFile(in, null), i);
 		}
 	return version;
@@ -125,6 +131,7 @@ public final class DataUtils {
 			for (ind = 9; ind < strlen && Character.isSpace(s.charAt(ind)); ++ind)
 					;
 			if (s.startsWith(section, ind)) {	
+				System.out.println("searchTextMsgSection: found " + section);
 				return true;
 			}
 		}
@@ -183,9 +190,12 @@ public final class DataUtils {
 				ind = 0;
 			} else {	// Get line# in decimal, hex, or oct.
 				int strlen = s.length();
+				System.out.println("readTextMsgFile: " + s);
 				for (ind = 0; ind < strlen && Character.isDigit(s.charAt(ind)); ++ind)
 					;
 				if (ind == 0) {
+					if (s.charAt(ind) == '#')
+						continue;	// Comment.
 					System.out.println("Line " + linenum + " doesn't start with a number");
 					return null;
 				}
@@ -209,7 +219,7 @@ public final class DataUtils {
 	 */
 	public static class BaseReader {
 		protected boolean haveversion;
-		protected void read_data(InputStream in, int index, int version,
+		protected void readData(InputStream in, int index, int version,
 				boolean patch, int game, boolean binary)
 			{  }
 			// Binary data file.
@@ -221,7 +231,7 @@ public final class DataUtils {
 			int cnt = ReadCount(in);
 			System.out.println("**** cnt = " + cnt);
 			for (int j = 0; j < cnt; j++)
-				read_data(in, j, vers, patch, game, true);
+				readData(in, j, vers, patch, game, true);
 			}
 		public BaseReader(boolean h) {
 			haveversion = h;
@@ -234,7 +244,8 @@ public final class DataUtils {
 					continue;
 				DataInputStream strin = new DataInputStream(
 						new ByteArrayInputStream(ptr));
-				read_data(strin, j, version, patch, game, false);
+				System.out.println("parse: " + new String(ptr));
+				readData(strin, j, version, patch, game, false);
 			}
 			strings.clear();
 		}
@@ -289,10 +300,11 @@ public final class DataUtils {
 		ReaderFunctor reader;
 		PostFunctor postread;
 		IDReaderFunctor idread;
-		public void read_data(InputStream in, int index, int version,
+		@Override
+		public void readData(InputStream in, int index, int version,
 			boolean patch, int game, boolean binary) {
 			int id = idread.read(in, index, version, binary);
-			//System.out.println("Reading entry for shape #" + id);
+			System.out.println("Reading entry for shape #" + id);
 			if (id >= 0) {
 				ShapeInfo inf = info[id];
 				

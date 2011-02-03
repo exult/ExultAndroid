@@ -2,6 +2,7 @@ package com.exult.android;
 import com.exult.android.shapeinf.*;
 import java.io.RandomAccessFile;
 import java.io.InputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 
 public final class ShapeInfo {
@@ -477,6 +478,43 @@ bool quake_on_walk() {
 						// Reflect.  Bit 32==horizontal.
 			return curframe ^ ((quads%2)<<5);
 	}
+	//	Read in Exult text data.
+	private static void readShapeInfoTextDataFile(ShapeInfo info[], 
+						DataUtils.IDReaderFunctor idReader, int game) {
+		final String sections[] = {
+			/* ++++++++ "explosions", "shape_sfx", "animation", */
+			"usecode_events", /*++++ "mountain_tops", "monster_food", "actor_flags",
+			"effective_hps", */ "lightweight_object", /* ++++ "warmth_data", */
+			"quantity_frames", "locked_containers", /* ++++++++ "content_rules", */
+			"volatile_explosive", /*+++++ "framenames", "altready", "barge_type",
+			"frame_powers",*/ "is_jawbone", "is_mirror", /*++++++++"field_type",
+			"frame_usecode" */ };
+		
+		final DataUtils.BaseReader readers[] = {
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(usecode_events), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(lightweight), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(quantity_frames), null, idReader, false),		
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(locked), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(is_volatile), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(jawbone), null, idReader, false),		
+				new DataUtils.FunctorMultidataReader(info, 
+						new ShapeFlagsReader(mirror), null, idReader, false)			
+		};
+		assert(sections.length == readers.length);
+		int flxres = game == EConst.BLACK_GATE ?
+				EFile.EXULT_BG_FLX_SHAPE_INFO_TXT : EFile.EXULT_SI_FLX_SHAPE_INFO_TXT;
+		try {
+			DataUtils.readTextDataFile("shape_info", readers, sections, game, flxres);
+		} catch (IOException e) {
+			ExultActivity.fatal("Failed to read \"shape_info\" data");
+		}
+	}
 	public static void read(VgaFile vgafile, ShapeInfo info[], int game) {
 		int i;
 		int num_shapes = vgafile.getNumShapes();
@@ -625,7 +663,7 @@ bool quake_on_walk() {
 					info, new MonsterInfo(), null, idReader, false);
 		monstinf.read(EFile.MONSTERS, false, game);
 		monstinf.read(EFile.PATCH_MONSTERS, true, game);
-		
+
 		DataUtils.FunctorMultidataReader gump = 
 			new DataUtils.FunctorMultidataReader(
 				info, new GumpReaderFunctor(), null, idReader, true);
@@ -642,7 +680,8 @@ bool quake_on_walk() {
 					info, new ReadyTypeFunctor(), null, idReader, false);
 		ready.read(EFile.READY, false, game);
 		ready.read(EFile.PATCH_READY, true, game);
-		//+++++Read text files?
+		// Text files.
+		readShapeInfoTextDataFile(info, idReader, game);
 		// Ensure valid ready spots for all shapes.
 		byte defready = (byte) (game == EConst.BLACK_GATE
 								? Ready.backpack : Ready.rhand);
@@ -663,6 +702,22 @@ bool quake_on_walk() {
 				info.gumpFont = (short)EUtil.Read2(in);
 			else
 				info.gumpFont = -1;
+			return true;
+		}
+	}
+	// Read in one flag in 'shape_flags'
+	static class ShapeFlagsReader implements DataUtils.ReaderFunctor {
+		int bit;
+		ShapeFlagsReader(int b) {
+			bit = b;
+		}
+		public boolean read(InputStream in, int version, 
+						boolean patch, int game, ShapeInfo info) {	
+			boolean biton = EUtil.ReadInt((DataInputStream)in, 1) != 0;
+			if (biton)
+				info.shapeFlags |= (1 << bit);
+			else
+				info.shapeFlags &= ~(1 << bit);
 			return true;
 		}
 	}
