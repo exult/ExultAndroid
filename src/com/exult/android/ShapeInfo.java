@@ -4,6 +4,7 @@ import java.io.RandomAccessFile;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.io.IOException;
+import java.util.Vector;
 
 public final class ShapeInfo {
 	private byte tfa[] = new byte[3];
@@ -17,22 +18,20 @@ public final class ShapeInfo {
 	private WeaponInfo weapon;		// From weapon.dat, if a weapon.
 	private AmmoInfo ammo;		// From ammo.dat, if ammo.
 	private MonsterInfo monstinf;		// From monster.dat.
-	//+++++++ private SFXInfo sfxinf;
+	private SFXInfo sfxinf;
 	private AnimationInfo aniinf;
-	/*
 	private ExplosionInfo explosion;
 	private BodyInfo body;
-	private PaperdollNpc npcpaperdoll;
+	//+++++++++FINISH private PaperdollNpc npcpaperdoll;
 	// These vectors should be totally ordered by the strict-weak
 	// order operator defined for the classes.
-	private vector<Paperdoll_item> objpaperdoll;
-	private vector<Effective_hp_info> hpinf;
-	private vector<Frame_name_info> nameinf;
-	private vector<Frame_flags_info> frflagsinf;
-	private vector<Frame_usecode_info> frucinf;
-	private vector<Warmth_info> warminf;
-	private vector<Content_rules> cntrules;
-	*/
+	//+++++++FINISH private vector<Paperdoll_item> objpaperdoll;
+	private Vector<EffectiveHpInfo> hpinf;
+	private Vector<FrameNameInfo> nameinf;
+	private Vector<FrameFlagsInfo> frflagsinf;
+	//++++FINISH private Vector<FrameUsecodeInfo> frucinf;
+	//++++FINISH private Vector<WarmthInfo> warminf;
+	private Vector<ContentRules> cntrules;
 	private short gumpShape;		// From container.dat.
 	private short gumpFont;		// From container.dat v2+.
 	private short monsterFood;
@@ -114,14 +113,13 @@ public final class ShapeInfo {
 	public int getArmorImmunity() {
 		return armor != null? armor.getImmune() : 0;
 	}
-	/*
 	public int getExplosionSprite() {
-		return explosion != null ? explosion.sprite : 5;
+		return explosion != null ? explosion.getSprite() : 5;
 	}
-	int getExplosionSfx() {
-		return explosion != null ? explosion.sfxnum : -1;
+	public int getExplosionSfx() {
+		return explosion != null ? explosion.getSfx() : -1;
 	}
-
+/*++++++++
 int get_body_shape() {;
 int get_body_frame() {;
 */
@@ -149,16 +147,6 @@ int get_body_frame() {;
 	public void setArmorInfo(ArmorInfo i) {
 		armor = i;
 	}
-/*++++++++++FINISH
-
-Armor_info *get_armor_info() {
-{ return armor; }
-Armor_info *set_armor_info(bool tf);
-
-bool has_monster_info() {
-{ return monstinf != 0; }
-	public MonsterInfo getMonsterInfoafe()
-*/
 	public MonsterInfo getMonsterInfo() {
 		return monstinf; 
 	}
@@ -166,27 +154,25 @@ bool has_monster_info() {
 		monstinf = m;
 	}
 /*
-Monster_info *set_monster_info(bool tf);
 
 bool has_npc_paperdoll_info() {
 { return npcpaperdoll != 0; }
 Paperdoll_npc *get_npc_paperdoll() {
 { return npcpaperdoll; }
-Paperdoll_npc *set_npc_paperdoll_info(bool tf);
 Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
-
-bool has_sfx_info() {
-{ return sfxinf != 0; }
-SFX_info *get_sfx_info() {
-{ return sfxinf; }
-SFX_info *set_sfx_info(bool tf);
-
-bool has_explosion_info() {
-{ return explosion != 0; }
-Explosion_info *get_explosion_info() {
-{ return explosion; }
-Explosion_info *set_explosion_info(bool tf);
 */
+	public boolean hasSfxInfo() {
+		return sfxinf != null; 
+	}
+	public SFXInfo getSfxInfo() {
+		return sfxinf; 
+	}
+	boolean hasExplosionInfo() {
+		return explosion != null; 
+	}
+	public ExplosionInfo getExplosionInfo() {
+		return explosion; 
+	}
 	public boolean hasAnimationInfo() {
 		return aniinf != null; 
 	}
@@ -198,15 +184,10 @@ Explosion_info *set_explosion_info(bool tf);
 			aniinf = AnimationInfo.createFromTfa(0, nframes);
 		return aniinf; 
 	}
-/*
-Animation_info *set_animation_info(bool tf);
-
-bool has_body_info() {
-{ return body != 0; }
-Body_info *get_body_info() {
-{ return body; }
-Body_info *set_body_info(bool tf);
-
+	public BodyInfo getBodyInfo() {
+		return body; 
+	}
+/*++++++++FINISH
 bool has_paperdoll_info() {;
 private vector<Paperdoll_item>& get_paperdoll_info()
 { return objpaperdoll; }
@@ -219,28 +200,18 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	public final boolean isObjectAllowed(int frame, int spot) {
 		return true;// +++++FINISHreturn get_item_paperdoll(frame, spot) != 0; 
 	}
-/*
-bool has_content_rules() {;
-private vector<Content_rules>& get_content_rules()
-{ return cntrules; }
-private vector<Content_rules>& set_content_rules(bool tf);
-void clean_invalid_content_rules();
-void clear_content_rules();
-void add_content_rule(Content_rules& add);
-*/
+	private Vector<ContentRules> getContentRules()
+		{ return cntrules; }
 	public boolean isShapeAccepted(int shape) {
 		return true;//+++++++FINISH
 	}
-/*
-bool has_effective_hp_info() {;
-private vector<Effective_hp_info>& get_effective_hp_info()
-{ return hpinf; }
-private vector<Effective_hp_info>& set_effective_hp_info(bool tf);
-void clean_invalid_hp_info();
-void clear_effective_hp_info();
-void add_effective_hp_info(Effective_hp_info& add);
-int get_effective_hps(int frame, int quality);
+	private Vector<EffectiveHpInfo> getEffectiveHpInfo()
+		{ return hpinf; }
+	int getEffectiveHps(int frame, int quality) {
+		return 0;	//+++++++++++FINISH
+	}
 
+	/*+++++++FINISH
 bool has_frame_name_info() {;
 private vector<Frame_name_info>& get_frame_name_info()
 { return nameinf; }
