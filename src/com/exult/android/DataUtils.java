@@ -18,6 +18,21 @@ public final class DataUtils {
 			cnt = EUtil.Read2(in);	// Exult extension.
 		return cnt;
 	}
+	public static int readBitFlags(PushbackInputStream in, int cnt) {
+		int bit = 0;
+		int flags = 0;
+		while (bit < cnt) {
+			int val = EUtil.ReadInt(in, -1);
+			if (val == -1)
+				break;
+			else if (val != 0)
+				flags |= (1 << bit);
+			else
+				flags &= ~(1 << bit);
+			bit++;
+			}
+		return flags;
+	}
 	/*
 	 *	Reads text data file and parses it according to passed
 	 *	parser functions.

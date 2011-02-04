@@ -397,6 +397,16 @@ public abstract class GameObject extends ShapeID {
 			return EConst.west;
 		}
 	}
+	public final boolean insideLocked() {
+		GameObject top = this;
+		GameObject above;
+		while ((above = top.getOwner()) != null) {
+			if (above.getInfo().isContainerLocked())
+				return true;
+			top = above;
+		}
+		return false;
+	}
 	public final int getVolume() {
 		return getInfo().getVolume();
 	}

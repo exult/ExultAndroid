@@ -319,51 +319,26 @@ int get_field_type() {
 		return getShapeFlag(jawbone); }
 	public final boolean isMirror() {
 		return getShapeFlag(mirror); }
-/*
-unsigned byte get_actor_flags() {
-{ return actor_flags; }
-void set_actor_flags(byte flags)
-{
-if (actor_flags != flags)
-{
-modified_flags |= actor_flags_flag;
-actor_flags = flags;
-}
-}
-bool get_actor_flag(int tf) {
-{ return (actor_flags & (1 << tf)) != 0; }
-void set_actor_flag(int tf)
-{
-if (!(actor_flags & (1 << tf)))
-{
-modified_flags |= actor_flags_flag;
-actor_flags |= (1U << tf);
-}
-}
-void clear_actor_flag(int tf)
-{
-if (actor_flags & (1 << tf))
-{
-modified_flags |= actor_flags_flag;
-actor_flags &= ~(1U << tf);
-}
-}
-
-bool is_cold_immune() {
-{ return get_actor_flag(cold_immune); }
-bool does_not_eat() {
-{ return get_actor_flag(doesnt_eat); }
-bool can_teleport() {
-{ return get_actor_flag(teleports); }
-bool can_summon() {
-{ return get_actor_flag(summons); }
-bool can_be_invisible() {
-{ return get_actor_flag(turns_invisible); }
-bool survives_armageddon() {
-{ return get_actor_flag(armageddon_safe); }
-bool quake_on_walk() {
-{ return get_actor_flag(quake_walk); }
-*/
+	public final byte getActorFlags() {
+		return actorFlags;
+	}
+	public final boolean getActorFlag(int tf) {
+		return (actorFlags & (1 << tf)) != 0;
+	}
+	public final boolean isColdImmune()
+		{ return getActorFlag(cold_immune); }
+	public final boolean doesNotEat()
+		{ return getActorFlag(doesnt_eat); }
+	public final boolean canTeleport()
+		{ return getActorFlag(teleports); }
+	public final boolean canSummon()
+		{ return getActorFlag(summons); }
+	public final boolean canBeInvisible()
+		{ return getActorFlag(turns_invisible); }
+	public final boolean survivesArmageddon()
+		{ return getActorFlag(armageddon_safe); }
+	public final boolean quakeOnWalk()
+		{ return getActorFlag(quake_walk); }
 	// Get tile dims., flipped for
 	//   reflected (bit 5) frames.
 	public int get3dXtiles(int framenum)
@@ -483,8 +458,8 @@ bool quake_on_walk() {
 						DataUtils.IDReaderFunctor idReader, int game) {
 		final String sections[] = {
 			/* ++++++++ "explosions", "shape_sfx", "animation", */
-			"usecode_events", /*++++ "mountain_tops", "monster_food", "actor_flags",
-			"effective_hps", */ "lightweight_object", /* ++++ "warmth_data", */
+			"usecode_events", /*++++ "mountain_tops", "monster_food",*/ "actor_flags",
+			/*"effective_hps", */ "lightweight_object", /* ++++ "warmth_data", */
 			"quantity_frames", "locked_containers", /* ++++++++ "content_rules", */
 			"volatile_explosive", /*+++++ "framenames", "altready", "barge_type",
 			"frame_powers",*/ "is_jawbone", "is_mirror", /*++++++++"field_type",
@@ -493,6 +468,8 @@ bool quake_on_walk() {
 		final DataUtils.BaseReader readers[] = {
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(usecode_events), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new ActorFlagsFunctor(), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(lightweight), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
@@ -720,6 +697,25 @@ bool quake_on_walk() {
 				info.shapeFlags |= (1 << bit);
 			else
 				info.shapeFlags &= ~(1 << bit);
+			return true;
+		}
+	}
+	static class ActorFlagsFunctor implements DataUtils.ReaderFunctor {
+		public boolean read(InputStream in, int version, 
+						boolean patch, int game, ShapeInfo info) {	
+			info.actorFlags = (byte)DataUtils.readBitFlags((PushbackInputStream)in, 8);
+			//System.out.println("ActorFlagsFunctor: " + info.actorFlags);
+			// We already have monster data by this point.
+			MonsterInfo minf= info.monstinf;
+			if (minf != null) {
+				// Deprecating old Monster_info based flags for these powers:
+				if (minf.canTeleport())
+					info.actorFlags |= ShapeInfo.teleports;
+				if (minf.canSummon())
+					info.actorFlags |= ShapeInfo.summons;
+				if (minf.canBeInvisible())
+					info.actorFlags |= ShapeInfo.turns_invisible;
+			}
 			return true;
 		}
 	}

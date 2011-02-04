@@ -193,16 +193,16 @@ public class MonsterActor extends NpcActor {
 		// Movement flags
 		int mflags = inf.getFlags();
 		if (((mflags >> MonsterInfo.fly)&1) != 0)
-			monster.set_type_flag(Actor.tf_fly);
+			monster.setTypeFlag(Actor.tf_fly);
 
 		if (((mflags >> MonsterInfo.swim)&1) != 0)
-			monster.set_type_flag(Actor.tf_swim);
+			monster.setTypeFlag(Actor.tf_swim);
 
 		if (((mflags >> MonsterInfo.walk)&1) != 0)
-			monster.set_type_flag(Actor.tf_walk);
+			monster.setTypeFlag(Actor.tf_walk);
 
 		if (((mflags >> MonsterInfo.ethereal)&1) != 0)
-			monster.set_type_flag(Actor.tf_ethereal);
+			monster.setTypeFlag(Actor.tf_ethereal);
 
 		if (((mflags >> MonsterInfo.start_invisible)&1) != 0)
 			monster.setFlag(GameObject.invisible);

@@ -224,21 +224,19 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return this;
 	}
 	public final int getProperty(int prop) {
-		/* ++++++FINISH
+		
 		if (prop == Actor.sex_flag)
 			// Correct in BG and SI, but the flag is never normally set
 			// for anyone but avatar in BG.
-			return get_type_flag(Actor.tf_sex);
-		else if (prop == Actor.missile_weapon)
-			{
+			return getTypeFlag(Actor.tf_sex) ? 1 : 0;
+		else if (prop == Actor.missile_weapon) {
 			// Seems to give the same results as in the originals.
-			GameObject weapon = get_readied(lhand);
-			WeaponInfo winf = weapon ? weapon.getInfo().getWeaponInfo() : 0;
-			if (!winf)
+			GameObject weapon = getReadied(Ready.lhand);
+			WeaponInfo winf = weapon != null ? weapon.getInfo().getWeaponInfo() : null;
+			if (winf == null)
 				return 0;
-			return (winf.getUses() >= 2);
-			}
-		*/
+			return (winf.getUses() >= 2 ? 1 : 0);
+		}
 		return (prop >= 0 && prop < Actor.sex_flag) ? properties[prop] : 0;
 	}
 	public final void setProperty(int prop, int val) {
@@ -274,12 +272,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		case sex_flag:
 			// Doesn't seem to be settable in original BG except by hex-editing
 			// the save game, but there is no problem in allowing it in Exult.
-			/*++++++FINISH
 			if (val != 0)
 				setTypeFlag(tf_sex);
 			else
 				clearTypeFlag(tf_sex);
-			*/
 			break;
 		default:
 			if (prop >= 0 && prop < missile_weapon)
@@ -406,16 +402,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			gwin.setAllDirty();
 		setActorShape();
 	}
-	public final void set_type_flag(int flag) {
-		//+++++++++FINISH
-	}
 	public void clearFlag(int flag) {
 		if (flag >= 0 && flag < 32)
 			flags &= ~(1 << flag);
 		else if (flag >= 32 && flag < 64)
 			flags2 &= ~(1 << (flag-32));
 		if (flag == GameObject.invisible)	// Restore normal palette.
-			;// ++++FINISH gclock.set_palette();
+			clock.setPalette();
 		else if (flag == GameObject.asleep) {
 			if (scheduleType == Schedule.sleep)
 				setScheduleType(Schedule.stand);
@@ -429,10 +422,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 			UsecodeScript.terminate(this);
 		}
-		/*++++++++++++
-		else if (flag == GameObject.charmed)
-			set_target(0);			// Need new opponent.
-		*/
+		/* ++++++++FINISH else if (flag == GameObject.charmed)
+			setTarget(null); */			// Need new opponent.
 		else if (flag == GameObject.bg_dont_move || flag == GameObject.dont_move)
 			// Start again after a little while
 			start(1, 1);
@@ -443,23 +434,29 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		
 		setActorShape();
 	}
-	public void clear_type_flag(int flag) {
-		//++++++++FINISH
+	public final void setTypeFlag(int flag) {
+		if (flag >= 0 && flag < 16)
+			typeFlags |= (1 << flag);
+		setActorShape();
+	}
+	public void clearTypeFlag(int flag) {
+		if (flag >= 0 && flag < 16)
+			typeFlags &= ~(1 << flag);
+		setActorShape();
 	}
 	public boolean getTypeFlag(int flag) {
-		//++++++++++++FINISH
-		return false;
+		return (flag >= 0 && flag < 16) ? (typeFlags & (1 << flag)) != 0 : false;
 	}
 	public void setTypeFlags(int tflags) {
 		typeFlags = tflags;
-		/* +++++FINISH set_actor_shape(); */
+		setActorShape();
 	}
 	public int getTypeFlags() {
 		return typeFlags;
 	}
 	public void setSkinColor (int color) { 
 		skinColor = color; 
-		/* +++++ set_actor_shape(); */
+		setActorShape();
 	}
 	public final int getFaceShapeNum() {
 		return faceNum;
@@ -897,13 +894,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (getFlag(GameObject.dont_render) || 
 							getFlag(GameObject.dont_move))
 			return true;
-		/* +++++++++FINISH
 		UsecodeScript scr = null;
 		while ((scr = UsecodeScript.findActive(this, scr)) != null)
 			// no_halt scripts seem not to prevent movement.
 			if (!scr.isNoHalt())
 				return true;
-		*/
 		return false;
 	}
 
@@ -952,7 +947,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		Vector<GameObject> vec = new Vector<GameObject>(50);		// Get list of all possessions.
 		getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, EConst.c_any_framenum);
 		for (GameObject obj : vec) {
-			if (/*++++FINISH obj.insideLocked() || */ !inAmmoFamily(obj.getShapeNum(), family))
+			if (obj.insideLocked() || !inAmmoFamily(obj.getShapeNum(), family))
 				continue;
 			AmmoInfo ainf = obj.getInfo().getAmmoInfo();
 			if (ainf == null)	// E.g., musket ammunition doesn't have it.
@@ -1106,10 +1101,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		GameObject best = null;
 		int best_strength = -20;
 		for (GameObject obj : vec) {
-			/*++++++++FINISH
 			if (obj.insideLocked())
 				continue;
-			*/
 			ShapeInfo info = obj.getInfo();
 				// Only want those that can be readied in hand.
 			int ready = info.getReadyType();
@@ -1163,8 +1156,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int best_strength = -20;
 		int wtype = Ready.backpack;
 		for (GameObject obj : vec) {
-			//+++++++FINISH if (obj.insideLocked())
-			//++++++++	continue;
+			if (obj.insideLocked())
+				continue;
 			ShapeInfo info = obj.getInfo();
 			int ready = info.getReadyType();
 			if (ready != Ready.lhand && ready != Ready.both_hands)
@@ -1635,14 +1628,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 
 		spots[index] = obj;		// Store in correct spot.
-		/* ++++++++++FINISH
 		if (index == Ready.lhand && schedule != null && !noset)
-			schedule.setWeapon();	// Tell combat-schedule about it.
+			schedule.setWeapon(false);	// Tell combat-schedule about it.
 		obj.setShapePos(0, 0);	// Clear coords. (set by gump).
 		if (!dont_check)
 			callReadiedUsecode(index, obj, UsecodeMachine.readied);
 						// (Readied usecode now in drop().)
-		*/
 		ShapeInfo info = obj.getInfo();
 
 		if (info.isLightSource() &&
@@ -1650,9 +1641,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			lightSources++;
 
 		// Refigure granted immunities.
-		/* ++++++FINISH
-		gear_immunities |= info.getArmorImmunity();
-		gear_powers |= info.getObjectFlags(obj.getFrameNum(),
+		
+		gearImmunities |= info.getArmorImmunity();
+		/*+++++++++FINISH
+		gearPowers |= info.getObjectFlags(obj.getFrameNum(),
 					info.hasQuality() ? obj.getQuality() : -1);
 		*/
 		return true;
@@ -1680,9 +1672,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				useScabbard = false;
 			if (index == Ready.amulet || index == Ready.cloak)
 				useNeck = false;
-			/* ++++++++++FINISH
-			if (index == lhand && schedule != null)
+			
+			if (index == Ready.lhand && schedule != null)
 				schedule.setWeapon(true);
+			/* ++++++++++FINISH
 			// Recheck armor immunities and frame powers.
 			refigure_gear();
 			*/
@@ -1744,11 +1737,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public boolean drop(GameObject obj) {
 		if (getFlag(GameObject.in_party)) {	// In party?
 			boolean res = add(obj, false, true, false);// We'll take it, and combine.
-			/* +++++++++FINISH
 			int ind = findReadied(obj);
 			if (ind >= 0)
-				callReadiedUsecode(ind,obj,Usecode_machine.readied);
-			*/
+				callReadiedUsecode(ind, obj, UsecodeMachine.readied);
 			return res;
 		} else
 			return false;
@@ -2277,16 +2268,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			setTypeFlags (1 << tf_walk);
 				// Correct for SI, no problems for BG:
 			if ((tflags & (1 << tf_sex)) != 0)
-				clear_type_flag (tf_sex);
+				clearTypeFlag (tf_sex);
 			else
-				set_type_flag (tf_sex);
+				setTypeFlag (tf_sex);
 		} else
 			setTypeFlags (tflags);
 		/* ++++++++FINISH
 		if (num == 0 && Game.get_avsex() == 0) {
-			clear_type_flag (Actor.tf_sex);
+			clearTypeFlag (Actor.tf_sex);
 		} else if (num == 0 && Game.get_avsex() == 1) {
-			set_type_flag (Actor.tf_sex);
+			setTypeFlag (Actor.tf_sex);
 		}
 		*/
 		out.skip (5);	// Unknown
@@ -2418,18 +2409,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (this == gwin.getMainActor())
 				gwin.setMap(map_num);
 		}
-		/* +++++++++++FINISH
 		// We do this here because we need the NPC's final shape.
 		if (health_val <= 0 && !unused) {
 			// If a monster can't die, force it to have at least 1 hit point,
 			// but only if the monster is used.
 			// Maybe we should restore it to full health?
-			MonsterInfominf = getInfo().get_monsterInfo();
-			if (minf && minf.cant_die())
-				setProperty(Actor.static_cast<int>(Actor.health),
-					getProperty(static_cast<int>(Actor.strength)));
+			MonsterInfo minf = getInfo().getMonsterInfo();
+			if (minf != null && minf.cantDie())
+				setProperty(Actor.health, getProperty(Actor.strength));
 		}
-		*/
 		// Only do ready best weapon if we are in BG, this is the first time
 		// and we are the Avatar or Iolo
 		if (game.isBG() && game.getAvName() != null && (num == 0 || num == 1))
