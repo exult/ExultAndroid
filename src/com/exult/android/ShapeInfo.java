@@ -205,22 +205,21 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	public boolean isShapeAccepted(int shape) {
 		return true;//+++++++FINISH
 	}
-	private Vector<EffectiveHpInfo> getEffectiveHpInfo()
+	public Vector<EffectiveHpInfo> getEffectiveHpInfo()
 		{ return hpinf; }
+	public void setEffectiveHpInfo(Vector<EffectiveHpInfo> i) {
+		hpinf = i;
+	}
 	int getEffectiveHps(int frame, int quality) {
 		return 0;	//+++++++++++FINISH
 	}
-
-	/*+++++++FINISH
-bool has_frame_name_info() {;
-private vector<Frame_name_info>& get_frame_name_info()
-{ return nameinf; }
-private vector<Frame_name_info>& set_frame_name_info(bool tf);
-void clean_invalid_name_info();
-void clear_frame_name_info();
-void add_frame_name_info(Frame_name_info& add);
-Frame_name_info *get_frame_name(int frame, int quality);
-
+	public Vector<FrameNameInfo> getFrameNameInfo()
+		{ return nameinf; }
+	public void setFrameNameInfo(Vector<FrameNameInfo> i) {
+		nameinf = i;
+	}
+//+++++FINISHFrame_name_info *get_frame_name(int frame, int quality);
+/*+++++++FINISH
 bool has_frame_usecode_info() {;
 private vector<Frame_usecode_info>& get_frame_usecode_info()
 { return frucinf; }
@@ -229,14 +228,14 @@ void clean_invalid_usecode_info();
 void clear_frame_usecode_info();
 void add_frame_usecode_info(Frame_usecode_info& add);
 Frame_usecode_info *get_frame_usecode(int frame, int quality);
-/*
-bool has_frame_flags() {;
-private vector<Frame_flags_info>& get_frame_flags()
-{ return frflagsinf; }
-private vector<Frame_flags_info>& set_frame_flags(bool tf);
-void clean_invalid_frame_flags();
-void clear_frame_flags();
-void add_frame_flags(Frame_flags_info& add);
+*/
+
+	public Vector<FrameFlagsInfo> getFrameFlagsInfo()
+		{ return frflagsinf; }
+	public void setFrameFlagsInfo(Vector<FrameFlagsInfo> i) {
+		frflagsinf = i;
+	}
+/*+++++++++
 int get_object_flags(int frame, int qual);
 int has_object_flag(int frame, int qual, int p)
 { return (get_object_flags(frame, qual)&(1 << p)) != 0; }
@@ -432,8 +431,8 @@ int get_field_type() {
 			"usecode_events", /*++++ "mountain_tops", "monster_food",*/ "actor_flags",
 			/*"effective_hps", */ "lightweight_object", /* ++++ "warmth_data", */
 			"quantity_frames", "locked_containers", /* ++++++++ "content_rules", */
-			"volatile_explosive", /*+++++ "framenames", "altready", "barge_type",
-			"frame_powers",*/ "is_jawbone", "is_mirror", /*++++++++"field_type",
+			"volatile_explosive", "framenames", /*+++++ "altready", "barge_type",*/
+			"frame_powers", /* "is_jawbone",*/ "is_mirror", /*++++++++"field_type",
 			"frame_usecode" */ };
 		
 		final DataUtils.BaseReader readers[] = {
@@ -449,6 +448,10 @@ int get_field_type() {
 						new ShapeFlagsReader(locked), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(is_volatile), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new FrameNameInfo(), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new FrameFlagsInfo(), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(jawbone), null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info, 

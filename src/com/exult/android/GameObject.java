@@ -584,7 +584,7 @@ public abstract class GameObject extends ShapeID {
 	public String getName() {
 		ShapeInfo info = getInfo();
 		int qual = info.hasQuality() && !info.isNpc() ? getQuality() : -1;
-		//+++++FINISH FrameName_info nminf = info.getFrameName(getFrameNum(), qual);
+		//FrameNameInfo nminf = info.getFrameName(getFrameNum(), qual);
 		int shnum = getShapeNum();
 		String name;
 		String shpname = shnum >= 0 && shnum < ItemNames.names.length 

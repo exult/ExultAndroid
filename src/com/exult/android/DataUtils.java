@@ -259,7 +259,7 @@ public final class DataUtils {
 					continue;
 				PushbackInputStream strin = new PushbackInputStream(
 						new ByteArrayInputStream(ptr));
-				System.out.println("parse: " + new String(ptr));
+				//System.out.println("parse: " + new String(ptr));
 				readData(strin, j, version, patch, game, false);
 			}
 			strings.clear();

@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Vector;
 
-public abstract class BaseInfo {
+public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 	public final static int //	Flags.
 	nfo_modified = 1,
 	From_patch = 2,
@@ -25,8 +25,6 @@ public abstract class BaseInfo {
 	public void setInvalid(boolean tf) {
 		setFlag(tf, Is_invalid); 
 	}
-	public abstract boolean read(InputStream in, int version, 
-		boolean patch, int game, ShapeInfo info);	
 	
 	public static class FrameInfo extends BaseInfo 
 									implements Comparable<FrameInfo> {
@@ -50,12 +48,17 @@ public abstract class BaseInfo {
 				v = quality - i2.quality;
 			return v;
 		}
-		public static <T extends FrameInfo> void addVectorInfo(T inf, Vector<T> vec) {
+		public static <T extends FrameInfo> Vector<T> addVectorInfo(T inf, Vector<T> vec) {
+			if (vec == null)
+				vec = new Vector<T>(4);
 			int ind = Collections.binarySearch(vec, inf);
-			if (ind < 0)	// Not found?
-				vec.insertElementAt(inf, -ind + 1);
-			else			// Found, so replace.
+			if (ind < 0) {	// Not found?
+				System.out.println("addVectorInfo: ind = " + ind);
+				ind = -ind - 1;
+				vec.insertElementAt(inf, ind);
+			} else			// Found, so replace.
 				vec.setElementAt(inf, ind);
+			return vec;
 		}
 		public static <T extends FrameInfo> T searchDoubleWildCards(Vector<T> vec,
 												int frame, int quality) {
@@ -71,7 +74,7 @@ public abstract class BaseInfo {
 			}
 			int sz = vec.size();
 			if (quality != -1) {
-				ind = -ind + 1;
+				ind = -ind - 1;
 				if (ind < sz) {
 					found = vec.elementAt(-ind + 1);
 					if (found.frame == frame) {

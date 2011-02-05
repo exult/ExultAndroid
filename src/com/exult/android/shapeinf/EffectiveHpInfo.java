@@ -31,6 +31,7 @@ public class EffectiveHpInfo extends BaseInfo.FrameInfo {
 		else
 			quality &= 255;
 		hps = (byte)((int)EUtil.ReadInt(txtin) & 0xff);
+		info.setEffectiveHpInfo(addVectorInfo(this, info.getEffectiveHpInfo()));
 		return true;
 	}
 }

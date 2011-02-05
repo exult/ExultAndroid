@@ -110,11 +110,14 @@ public class EUtil {
 	}
 	public static final int ReadInt(PushbackInputStream in, int def) {
 		int b;
+		boolean neg = false;
 		int i = 0, digits = 0;
 		try {
 			while (true) {
 				b = (int)in.read()&0xff;
-				if (Character.isDigit(b)) {
+				if (b == '-' && digits == 0)
+					neg = !neg;
+				else if (Character.isDigit(b)) {
 					i = 10*i + (b - (int)'0');
 					++digits;
 				} else {
@@ -127,6 +130,8 @@ public class EUtil {
 		try {
 			while ((b = in.read()) != '/' && b != -1);
 		} catch (IOException e) { }
+		if (neg)
+			i = -i;
 		return digits > 0 ? i : def;
 	}
 	private static String baseToUppercase(String str, int count) {

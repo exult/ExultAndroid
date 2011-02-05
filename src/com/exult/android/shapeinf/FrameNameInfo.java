@@ -39,7 +39,9 @@ public class FrameNameInfo extends BaseInfo.FrameInfo {
 		if (type >= 0) {
 			msgid = EUtil.ReadInt(txtin);
 			othermsg = EUtil.ReadInt(txtin, -255);
-			}
+		}		
+		//System.out.println("frameNameInfo for frame " + frame + ", quality = " + quality);
+		info.setFrameNameInfo(addVectorInfo(this, info.getFrameNameInfo()));
 		return true;
 	}
 }

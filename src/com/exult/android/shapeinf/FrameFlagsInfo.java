@@ -35,6 +35,8 @@ public class FrameFlagsInfo extends BaseInfo.FrameInfo {
 			quality &= 0xff;
 		final int size = 32;	// Bit count for m_flags.
 		m_flags = DataUtils.readBitFlags(txtin, size); 
+		//System.out.println("frameFlagsInfo for frame " + frame + ", quality = " + quality);
+		info.setFrameFlagsInfo(addVectorInfo(this, info.getFrameFlagsInfo()));
 		return true;
 	}
 }
