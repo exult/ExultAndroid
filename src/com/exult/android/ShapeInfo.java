@@ -218,7 +218,9 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	public void setFrameNameInfo(Vector<FrameNameInfo> i) {
 		nameinf = i;
 	}
-//+++++FINISHFrame_name_info *get_frame_name(int frame, int quality);
+	public FrameNameInfo getFrameName(int frame, int quality) {
+		return BaseInfo.FrameInfo.searchDoubleWildCards(nameinf, frame, quality);
+	}
 /*+++++++FINISH
 bool has_frame_usecode_info() {;
 private vector<Frame_usecode_info>& get_frame_usecode_info()

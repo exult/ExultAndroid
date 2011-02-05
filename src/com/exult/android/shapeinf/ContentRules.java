@@ -15,8 +15,7 @@ public class ContentRules extends BaseInfo implements Comparable<ContentRules> {
 		{ return shape; }
 	boolean acceptsShape() 
 		{ return accept; }
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream)in;
 		shape = EUtil.ReadInt(txtin);
@@ -24,6 +23,11 @@ public class ContentRules extends BaseInfo implements Comparable<ContentRules> {
 			shape = -1;
 		accept = EUtil.ReadInt(txtin)!= 0;
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new ContentRules()).readNew(in, version, patch, game, info);
 	}
 	@Override
 	public int compareTo(ContentRules i2) {

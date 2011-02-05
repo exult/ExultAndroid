@@ -52,8 +52,9 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 			if (vec == null)
 				vec = new Vector<T>(4);
 			int ind = Collections.binarySearch(vec, inf);
-			if (ind < 0) {	// Not found?
-				System.out.println("addVectorInfo: ind = " + ind);
+			//System.out.println("addVectorInfo: ind = " + ind + ", frame = " + inf.frame
+			//			+ ", qual = " + inf.quality + ", vec.size = " + vec.size());
+			if (ind < 0) {	// Not found?	
 				ind = -ind - 1;
 				vec.insertElementAt(inf, ind);
 			} else			// Found, so replace.
@@ -62,11 +63,15 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 		}
 		public static <T extends FrameInfo> T searchDoubleWildCards(Vector<T> vec,
 												int frame, int quality) {
+			if (vec == null)
+				return null;
+			System.out.println("searchDoubleWildCard: frame " + frame + ", qual = " + quality);
 			T found;
 			if (search == null)
 				search = new FrameInfo();
 			search.frame = frame; search.quality = quality;
 			int ind = Collections.binarySearch(vec, search);
+			System.out.println("searchDoubleWildCard: first try: ind = " + ind);
 			if (ind >= 0) {
 				found = vec.elementAt(ind);
 				if (!found.isInvalid())
@@ -81,6 +86,7 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 						// Maybe quality is to blame. Try wildcard qual.
 						search.quality = -1;
 						ind = Collections.binarySearch(vec, search);
+						System.out.println("searchDoubleWildCard: with qual=-1, ind = " +ind);
 						if (ind >= 0 && !vec.elementAt(ind).isInvalid())
 							return vec.elementAt(ind);
 					}

@@ -42,8 +42,7 @@ public class SFXInfo extends BaseInfo {
 	}
 	public static int getInfoFlag()
 		{ return 0x20; }
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream) in;
 		sfxnum = EUtil.ReadInt(txtin);
@@ -63,5 +62,9 @@ public class SFXInfo extends BaseInfo {
 		}
 		return true;
 	}
-
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new SFXInfo()).readNew(in, version, patch, game, info);
+	}
 }

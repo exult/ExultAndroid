@@ -15,8 +15,7 @@ public class BodyInfo extends BaseInfo {
 		{ return bframe; }
 	public static int getInfoFlag()
 		{ return 0x100; }
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream) in;
 		bshape = EUtil.ReadInt(txtin);
@@ -27,5 +26,9 @@ public class BodyInfo extends BaseInfo {
 		bframe = EUtil.ReadInt(txtin);
 		return true;
 	}
-
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new BodyInfo()).readNew(in, version, patch, game, info);
+	}
 }

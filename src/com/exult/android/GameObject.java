@@ -584,14 +584,17 @@ public abstract class GameObject extends ShapeID {
 	public String getName() {
 		ShapeInfo info = getInfo();
 		int qual = info.hasQuality() && !info.isNpc() ? getQuality() : -1;
-		//FrameNameInfo nminf = info.getFrameName(getFrameNum(), qual);
+		FrameNameInfo nminf = info.getFrameName(getFrameNum(), qual);
+		if (nminf != null)
+			System.out.println("nminf.frame = " + nminf.getFrame() + 
+					", quality = " + nminf.getQuality());
 		int shnum = getShapeNum();
 		String name;
 		String shpname = shnum >= 0 && shnum < ItemNames.names.length 
 					? ItemNames.names[shnum] : null;
-		int type = /* +++++++++FINISH nminf ? nminf->get_type() : */ -255;
+		int type = nminf != null ? nminf.getType() : -255;
 		int msgid = -1;
-		if (type == -255 /* ++++FINISH || (msgid = nminf->get_msgid()) >= num_misc_names */)
+		if (type == -255  || (msgid = nminf.getMsgid()) >= ItemNames.misc.length)
 			name = shpname;
 		else if (type < 0)
 			return "";	// None.
@@ -600,7 +603,8 @@ public abstract class GameObject extends ShapeID {
 		else if (!info.hasQuality() && !info.isBodyShape())
 			name = shpname;		// Use default name for these.
 		else {
-			int othermsg = -1; // ++++++++FINISH nminf.getOthermsg();
+			int othermsg = nminf.getOthermsg();
+			System.out.println("othermsg = " + othermsg);
 			boolean defname = false;
 			String msg;
 			String other;

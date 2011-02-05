@@ -21,8 +21,7 @@ public class FrameNameInfo extends BaseInfo.FrameInfo {
 	public int getOthermsg() {
 		return othermsg;
 	}
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream) in;
 		frame = EUtil.ReadInt(txtin);
@@ -43,5 +42,11 @@ public class FrameNameInfo extends BaseInfo.FrameInfo {
 		//System.out.println("frameNameInfo for frame " + frame + ", quality = " + quality);
 		info.setFrameNameInfo(addVectorInfo(this, info.getFrameNameInfo()));
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new FrameNameInfo()).readNew(in, version, patch, game, info);
+		
 	}
 }

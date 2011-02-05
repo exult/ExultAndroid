@@ -45,7 +45,7 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 	
 	public static final int // enum 
 		is_binary = 1, entry_size = 25;
-	public boolean read(InputStream in, int version, 
+	private boolean readNew(InputStream in, int version, 
 			boolean patch, int game, ShapeInfo info) {
 		byte buf[] = new byte[entry_size-2];		// Entry length.
 		try {
@@ -105,7 +105,12 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		sfx = (short)(buf[ind++] + sfx_delta);	// Byte 17.
 		info.setMonsterInfo(this);
 		return true;
-	}		
+	}
+	@Override
+	public boolean read(InputStream in, int version, 
+			boolean patch, int game, ShapeInfo info) {	
+		return (new MonsterInfo()).readNew(in, version, patch, game, info);
+	}
 	public static MonsterInfo getDefault() {
 		if (default_info == null) {
 			default_info = new MonsterInfo();

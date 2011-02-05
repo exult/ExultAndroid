@@ -203,8 +203,7 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		expval += m_no_blocking ? 1 : 0;
 		return expval;
 	}
-	@Override
-	public boolean read(InputStream in, int version, 
+	private boolean readNew(InputStream in, int version, 
 			boolean patch, int game, ShapeInfo info) {
 		byte buf[] = new byte[entry_size-2];		// Entry length.
 		try {
@@ -264,5 +263,10 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 			hitsfx = 61;		// Sounds more like a weapon.
 		*/
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, 
+			boolean patch, int game, ShapeInfo info) {
+		return (new WeaponInfo()).readNew(in, version, patch, game, info);
 	}
 }

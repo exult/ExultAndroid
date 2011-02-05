@@ -16,8 +16,7 @@ public class EffectiveHpInfo extends BaseInfo.FrameInfo {
 	
 	public int getHps()
 		{ return hps; }
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream)in;
 		frame = EUtil.ReadInt(txtin);
@@ -33,5 +32,10 @@ public class EffectiveHpInfo extends BaseInfo.FrameInfo {
 		hps = (byte)((int)EUtil.ReadInt(txtin) & 0xff);
 		info.setEffectiveHpInfo(addVectorInfo(this, info.getEffectiveHpInfo()));
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new EffectiveHpInfo()).readNew(in, version, patch, game, info);
 	}
 }

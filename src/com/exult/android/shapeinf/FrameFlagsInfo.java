@@ -15,8 +15,7 @@ public class FrameFlagsInfo extends BaseInfo.FrameInfo {
 		{ return (m_flags & (1 << tf)) != 0; }
 	public int get_flags()
 		{ return m_flags; }
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream)in;
 		frame = EUtil.ReadInt(txtin);
@@ -38,5 +37,10 @@ public class FrameFlagsInfo extends BaseInfo.FrameInfo {
 		//System.out.println("frameFlagsInfo for frame " + frame + ", quality = " + quality);
 		info.setFrameFlagsInfo(addVectorInfo(this, info.getFrameFlagsInfo()));
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new FrameFlagsInfo()).readNew(in, version, patch, game, info);
 	}
 }

@@ -26,8 +26,7 @@ public class ArmorInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 	public int getBaseXpValue() {
 		return ((int)prot)&0xff;
 	}
-	@Override
-	public boolean read(InputStream in, int version, 
+	private boolean readNew(InputStream in, int version, 
 			boolean patch, int game, ShapeInfo info) {
 		byte buf[] = new byte[entry_size-2];		// Entry length.
 		try {
@@ -48,5 +47,10 @@ public class ArmorInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		immune = buf[ind++];		// Immunity flags.
 						// Last 5 are unknown/unused.
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, 
+			boolean patch, int game, ShapeInfo info) {
+		return (new ArmorInfo()).readNew(in, version, patch, game, info);
 	}
 }

@@ -87,8 +87,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 			strength *= 2;	// ... and these get picked a lot more often.
 		return strength;
 	}
-	@Override
-	public boolean read(InputStream in, int version, 
+	private boolean readNew(InputStream in, int version, 
 			boolean patch, int game, ShapeInfo info) {
 		byte buf[] = new byte[entry_size-2];		// Entry length.
 		try {
@@ -122,5 +121,10 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		powers = buf[ind++];
 							// Last 2 unknown.
 		return true;
+	}
+	@Override
+	public boolean read(InputStream in, int version, 
+			boolean patch, int game, ShapeInfo info) {
+		return (new AmmoInfo()).readNew(in, version, patch, game, info);
 	}
 }

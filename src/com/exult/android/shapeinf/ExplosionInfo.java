@@ -13,8 +13,7 @@ public class ExplosionInfo extends BaseInfo {
 		{ return sfxnum; }
 	public static int getInfoFlag()
 		{ return 0x10; }
-	@Override
-	public boolean read(InputStream in, int version, boolean patch, int game,
+	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream) in;
 		sprite = EUtil.ReadInt(txtin);
@@ -27,5 +26,9 @@ public class ExplosionInfo extends BaseInfo {
 			sfxnum = -1;
 		return true;
 	}
-
+	@Override
+	public boolean read(InputStream in, int version, boolean patch, int game,
+			ShapeInfo info) {
+		return (new ExplosionInfo()).readNew(in, version, patch, game, info);
+	}
 }
