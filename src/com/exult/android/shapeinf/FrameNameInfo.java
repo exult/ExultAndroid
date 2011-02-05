@@ -7,18 +7,11 @@ import com.exult.android.ShapeInfo;
  *	Information about frame names.
  *	This is meant to be stored in a totally ordered vector.
  */
-public class FrameNameInfo extends BaseInfo implements Comparable<FrameNameInfo> {
-	private short	frame;		// Frame for which this applies or -1 for any.
-	private short	quality;	// Quality for which this applies or -1 for any.
+public class FrameNameInfo extends BaseInfo.FrameInfo {
 	private short	type;		// How the entry is used.
 	private int		msgid;		// Item name index in misc_names.
 	private int		othermsg;	// Suffix/prefix or default message, depending on type
-	public int getFrame() {
-		return frame;
-	}
-	public int getQuality() {
-		return quality;
-	}
+	
 	public int getType() {
 		return type;
 	}
@@ -32,12 +25,12 @@ public class FrameNameInfo extends BaseInfo implements Comparable<FrameNameInfo>
 	public boolean read(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream) in;
-		frame = (short)EUtil.ReadInt(txtin);
+		frame = EUtil.ReadInt(txtin);
 		if (frame < 0)
 			frame = -1;
 		else
 			frame &= 0xff;
-		quality = (short)EUtil.ReadInt(txtin);
+		quality = EUtil.ReadInt(txtin);
 		if (quality < 0)
 			quality = -1;
 		else
@@ -48,12 +41,5 @@ public class FrameNameInfo extends BaseInfo implements Comparable<FrameNameInfo>
 			othermsg = EUtil.ReadInt(txtin, -255);
 			}
 		return true;
-	}
-	@Override
-	public int compareTo(FrameNameInfo i2) {
-		int v = frame - i2.frame;
-		if (v == 0)
-			v = quality - i2.quality;
-		return v;
 	}
 }

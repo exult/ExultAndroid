@@ -8,15 +8,9 @@ import com.exult.android.DataUtils;
  *	Information about frame names.
  *	This is meant to be stored in a totally ordered vector.
  */
-public class FrameFlagsInfo extends BaseInfo implements Comparable<FrameFlagsInfo> {
-	private short			frame;		// Frame for which this applies or -1 for any.
-	private short			quality;	// Quality for which this applies or -1 for any.
+public class FrameFlagsInfo extends BaseInfo.FrameInfo {
 	private int	m_flags;	// Bit field with the relevant flags.
 	
-	int get_frame()
-		{ return frame; }
-	public int get_quality()
-		{ return quality; }
 	public boolean get_flag(int tf)
 		{ return (m_flags & (1 << tf)) != 0; }
 	public int get_flags()
@@ -25,14 +19,14 @@ public class FrameFlagsInfo extends BaseInfo implements Comparable<FrameFlagsInf
 	public boolean read(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream)in;
-		frame = (short)EUtil.ReadInt(txtin);
+		frame = EUtil.ReadInt(txtin);
 		if (frame < 0)
 			frame = -1;
 		else
 			frame &= 0xff;
 
 		if (version >= 6)
-			quality = (short)EUtil.ReadInt(txtin);
+			quality = EUtil.ReadInt(txtin);
 		else
 			quality = -1;
 		if (quality < 0)
@@ -42,12 +36,5 @@ public class FrameFlagsInfo extends BaseInfo implements Comparable<FrameFlagsInf
 		final int size = 32;	// Bit count for m_flags.
 		m_flags = DataUtils.readBitFlags(txtin, size); 
 		return true;
-	}
-	@Override
-	public int compareTo(FrameFlagsInfo i2) {
-		int v = frame - i2.frame;
-		if (v == 0)
-			v = quality - i2.quality;
-		return v;
 	}
 }
