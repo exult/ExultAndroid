@@ -22,6 +22,7 @@ public class ContentRules extends BaseInfo implements Comparable<ContentRules> {
 		if (shape < 0)
 			shape = -1;
 		accept = EUtil.ReadInt(txtin)!= 0;
+		//++++++++FINISH Insert into contentRules vector.
 		return true;
 	}
 	@Override

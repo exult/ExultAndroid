@@ -13,8 +13,7 @@ public class ShapesVgaFile extends VgaFile {
 		) {
 		super(nm, nm2);
 		info = new ShapeInfo[shapes.length];
-		//+++++++FOR NOW, Black Gate.
-		ShapeInfo.read(this, info, EConst.BLACK_GATE);
+		ShapeInfo.read(this, info, GameSingletons.game.getGameType());
 	}
 	public static ShapeInfo getInfo(int shapenum) {
 		ShapeInfo s = info[shapenum];

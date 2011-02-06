@@ -1,4 +1,6 @@
 package com.exult.android.shapeinf;
+import com.exult.android.*;
+import java.io.PushbackInputStream;
 import java.io.InputStream;
 
 import com.exult.android.ShapeInfo;
@@ -101,11 +103,31 @@ public class AnimationInfo extends BaseInfo {
 	/*
 	 *	Read in a animation-cycle-info entry from 'shape_inf.txt'.
 	 */
+	public boolean readnew(InputStream in, int version, boolean patch, int game,
+				ShapeInfo info) {
+		PushbackInputStream txtin = (PushbackInputStream)in;
+		if (version < 5)	// Not compatible with old system.
+			return false;
+		int ty = EUtil.ReadInt(txtin);
+		if (ty == -0xff) {	// means delete entry.
+			setInvalid(true);
+			return true;
+		}
+		set(ty, EUtil.ReadInt(txtin), 0);		// Sensible defaults.
+		if (type != FA_HOURLY) {	// We still have things to read.
+			frameDelay = EUtil.ReadInt(txtin);
+			sfxDelay = EUtil.ReadInt(txtin);
+			if (type == FA_LOOPING) {
+				freezeFirst = EUtil.ReadInt(txtin);
+				recycle = EUtil.ReadInt(txtin);
+			}
+		}
+		return true;
+	}
 	@Override
 	public boolean read(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
-		// TODO Auto-generated method stub
-		return false;
+		return new AnimationInfo().readnew(in, version, patch, game, info);
 	}
 
 }

@@ -36,7 +36,7 @@ public final class ShapeInfo {
 	private short gumpFont;		// From container.dat v2+.
 	private short monsterFood;
 	private short shapeFlags;
-	private byte mountainFop;
+	private byte mountainTop;
 	private byte bargeType;
 	private byte actorFlags;
 	private byte fieldType;
@@ -119,10 +119,6 @@ public final class ShapeInfo {
 	public int getExplosionSfx() {
 		return explosion != null ? explosion.getSfx() : -1;
 	}
-/*++++++++
-int get_body_shape() {;
-int get_body_frame() {;
-*/
 	public boolean hasWeaponInfo() {
 		return weapon != null; 
 	}
@@ -254,17 +250,12 @@ int get_object_warmth(int frame);
 	public int getMonsterFood() {
 		return monsterFood; 
 	}
-/*
-
-int get_mountain_top_type() {
-{ return mountain_top; }
-
-int get_barge_type() {
-{ return barge_type; }
-
-int get_field_type() {
-{ return field_type; }
-*/
+	public int getMountainTopType()
+		{ return mountainTop; }
+	public int get_barge_type()
+		{ return bargeType; }
+	public int getFieldType()
+		{ return fieldType; }
 	public int getGumpShape() { 
 		return gumpShape;
 	}
@@ -429,35 +420,58 @@ int get_field_type() {
 	private static void readShapeInfoTextDataFile(ShapeInfo info[], 
 						DataUtils.IDReaderFunctor idReader, int game) {
 		final String sections[] = {
-			/* ++++++++ "explosions", "shape_sfx", "animation", */
-			"usecode_events", /*++++ "mountain_tops", "monster_food",*/ "actor_flags",
-			/*"effective_hps", */ "lightweight_object", /* ++++ "warmth_data", */
-			"quantity_frames", "locked_containers", /* ++++++++ "content_rules", */
-			"volatile_explosive", "framenames", /*+++++ "altready", "barge_type",*/
-			"frame_powers", /* "is_jawbone",*/ "is_mirror", /*++++++++"field_type",
+			"explosions", "shape_sfx", "animation",
+			"usecode_events", "mountain_tops", "monster_food", "actor_flags",
+			"effective_hps", "lightweight_object", /* ++++ "warmth_data", */
+			"quantity_frames", "locked_containers", "content_rules",
+			"volatile_explosive", "framenames", /*+++++ "altready",*/ "barge_type",
+			"frame_powers", "is_jawbone", "is_mirror", "field_type", /*
 			"frame_usecode" */ };
 		
 		final DataUtils.BaseReader readers[] = {
 				new DataUtils.FunctorMultidataReader(info, 
+						new ExplosionInfo(), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
+						new SFXInfo(), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
+						new AnimationInfo(), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(usecode_events), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info,
+						new IntReaderFunctor(IntReaderFunctor.mountain_tops), 
+								null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new IntReaderFunctor(IntReaderFunctor.monster_food), 
+								null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
 						new ActorFlagsFunctor(), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new EffectiveHpInfo(), null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(lightweight), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(quantity_frames), null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(locked), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+								new ContentRules(), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(is_volatile), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info,
 						new FrameNameInfo(), null, idReader, false),
+				//++++++++alt ready		
+				new DataUtils.FunctorMultidataReader(info,
+						new IntReaderFunctor(IntReaderFunctor.barge_type), 
+								null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info,
 						new FrameFlagsInfo(), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(jawbone), null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info, 
-						new ShapeFlagsReader(mirror), null, idReader, false)			
+						new ShapeFlagsReader(mirror), null, idReader, false),	
+				new DataUtils.FunctorMultidataReader(info,
+						new IntReaderFunctor(IntReaderFunctor.field_type), 
+								null, idReader, false)
 		};
 		assert(sections.length == readers.length);
 		int flxres = game == EConst.BLACK_GATE ?
@@ -591,7 +605,6 @@ int get_field_type() {
 			wihh.close();
 		} catch (IOException e) { }
 		
-		//++++++++++LOTS MORE
 		DataUtils.IDReaderFunctor idReader = new DataUtils.IDReaderFunctor();
 		DataUtils.FunctorMultidataReader armorinf = 
 			new DataUtils.FunctorMultidataReader(
@@ -647,6 +660,26 @@ int get_field_type() {
 	/*
 	 * Readers
 	 */
+	static class IntReaderFunctor implements DataUtils.ReaderFunctor {
+		static final int mountain_tops = 0, monster_food = 1, barge_type = 2,
+						 field_type = 3;
+		int type;
+		IntReaderFunctor(int ty) {
+			type = ty;
+		}
+		public boolean read(InputStream in, int version, 
+							boolean patch, int game, ShapeInfo info) {
+			PushbackInputStream txtin = (PushbackInputStream)in;
+			int val = EUtil.ReadInt(txtin);
+			switch (type) {
+			case mountain_tops:		info.mountainTop = (byte)val; break;
+			case monster_food:	info.monsterFood = (short)val; break;
+			case barge_type:	info.bargeType = (byte)val; break;
+			case field_type:	info.fieldType = (byte)val; break;
+			}
+			return true;
+		}
+	}
 	static class GumpReaderFunctor implements DataUtils.ReaderFunctor {
 		public boolean read(InputStream in, int version, 
 							boolean patch, int game, ShapeInfo info) {
