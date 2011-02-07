@@ -29,8 +29,8 @@ public final class ShapeInfo {
 	private Vector<EffectiveHpInfo> hpinf;
 	private Vector<FrameNameInfo> nameinf;
 	private Vector<FrameFlagsInfo> frflagsinf;
-	//++++FINISH private Vector<FrameUsecodeInfo> frucinf;
-	//++++FINISH private Vector<WarmthInfo> warminf;
+	private Vector<FrameUsecodeInfo> frucinf;
+	private Vector<WarmthInfo> warminf;
 	private Vector<ContentRules> cntrules;
 	private short gumpShape;		// From container.dat.
 	private short gumpFont;		// From container.dat v2+.
@@ -217,14 +217,13 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	public FrameNameInfo getFrameName(int frame, int quality) {
 		return BaseInfo.FrameInfo.searchDoubleWildCards(nameinf, frame, quality);
 	}
-/*+++++++FINISH
-bool has_frame_usecode_info() {;
-private vector<Frame_usecode_info>& get_frame_usecode_info()
-{ return frucinf; }
-private vector<Frame_usecode_info>& set_frame_usecode_info(bool tf);
-void clean_invalid_usecode_info();
-void clear_frame_usecode_info();
-void add_frame_usecode_info(Frame_usecode_info& add);
+	public Vector<FrameUsecodeInfo> getFrameUsecodeInfo() {
+		return frucinf;
+	}
+	public void setFrameUsecodeInfo(Vector<FrameUsecodeInfo> i) {
+		frucinf = i;
+	}
+/*+++++++++FINISH
 Frame_usecode_info *get_frame_usecode(int frame, int quality);
 */
 
@@ -239,12 +238,13 @@ int has_object_flag(int frame, int qual, int p)
 { return (get_object_flags(frame, qual)&(1 << p)) != 0; }
 
 bool has_warmth_info() {;
-private vector<Warmth_info>& get_warmth_info()
-{ return warminf; }
-private vector<Warmth_info>& set_warmth_info(bool tf);
-void clean_invalid_warmth_info();
-void clear_warmth_info();
-void add_warmth_info(Warmth_info& add);
+*/
+	public Vector<WarmthInfo> getWarmthInfo()
+		{ return warminf; }
+	public void setWarmthInfo(Vector<WarmthInfo> i) {
+		warminf = i;
+	}
+/*
 int get_object_warmth(int frame);
 */
 	public int getMonsterFood() {
@@ -422,11 +422,11 @@ int get_object_warmth(int frame);
 		final String sections[] = {
 			"explosions", "shape_sfx", "animation",
 			"usecode_events", "mountain_tops", "monster_food", "actor_flags",
-			"effective_hps", "lightweight_object", /* ++++ "warmth_data", */
+			"effective_hps", "lightweight_object", "warmth_data",
 			"quantity_frames", "locked_containers", "content_rules",
-			"volatile_explosive", "framenames", /*+++++ "altready",*/ "barge_type",
-			"frame_powers", "is_jawbone", "is_mirror", "field_type", /*
-			"frame_usecode" */ };
+			"volatile_explosive", "framenames", "altready", "barge_type",
+			"frame_powers", "is_jawbone", "is_mirror", "field_type", 
+			"frame_usecode" };
 		
 		final DataUtils.BaseReader readers[] = {
 				new DataUtils.FunctorMultidataReader(info, 
@@ -449,6 +449,8 @@ int get_object_warmth(int frame);
 						new EffectiveHpInfo(), null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(lightweight), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,		
+						new WarmthInfo(), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info, 
 						new ShapeFlagsReader(quantity_frames), null, idReader, false),		
 				new DataUtils.FunctorMultidataReader(info, 
@@ -459,7 +461,8 @@ int get_object_warmth(int frame);
 						new ShapeFlagsReader(is_volatile), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info,
 						new FrameNameInfo(), null, idReader, false),
-				//++++++++alt ready		
+				new DataUtils.FunctorMultidataReader(info,
+						new AltReadyFunctor(), null, idReader, false),
 				new DataUtils.FunctorMultidataReader(info,
 						new IntReaderFunctor(IntReaderFunctor.barge_type), 
 								null, idReader, false),		
@@ -471,7 +474,9 @@ int get_object_warmth(int frame);
 						new ShapeFlagsReader(mirror), null, idReader, false),	
 				new DataUtils.FunctorMultidataReader(info,
 						new IntReaderFunctor(IntReaderFunctor.field_type), 
-								null, idReader, false)
+								null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new FrameUsecodeInfo(), null, idReader, false)
 		};
 		assert(sections.length == readers.length);
 		int flxres = game == EConst.BLACK_GATE ?
@@ -677,6 +682,15 @@ int get_object_warmth(int frame);
 			case barge_type:	info.bargeType = (byte)val; break;
 			case field_type:	info.fieldType = (byte)val; break;
 			}
+			return true;
+		}
+	}
+	static class AltReadyFunctor implements DataUtils.ReaderFunctor {
+		public boolean read(InputStream in, int version, 
+				boolean patch, int game, ShapeInfo info) {
+			PushbackInputStream txtin = (PushbackInputStream)in;
+			info.altReady1 = (byte)EUtil.ReadInt(txtin);
+			info.altReady2 = (byte)EUtil.ReadInt(txtin);
 			return true;
 		}
 	}
