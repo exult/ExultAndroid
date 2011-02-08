@@ -11,9 +11,9 @@ import com.exult.android.DataUtils;
 public class FrameFlagsInfo extends BaseInfo.FrameInfo {
 	private int	m_flags;	// Bit field with the relevant flags.
 	
-	public boolean get_flag(int tf)
+	public boolean getFlag(int tf)
 		{ return (m_flags & (1 << tf)) != 0; }
-	public int get_flags()
+	public int getFlags()
 		{ return m_flags; }
 	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {

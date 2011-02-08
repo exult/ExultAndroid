@@ -202,7 +202,8 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 		cntrules = i;
 	}
 	public boolean isShapeAccepted(int shape) {
-		return true;//+++++++FINISH
+		ContentRules inf = BaseInfo.OneKeyInfo.searchSingleWildCard(cntrules, shape);
+		return inf != null && inf.acceptsShape();
 	}
 	public Vector<EffectiveHpInfo> getEffectiveHpInfo()
 		{ return hpinf; }
@@ -210,7 +211,9 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 		hpinf = i;
 	}
 	int getEffectiveHps(int frame, int quality) {
-		return 0;	//+++++++++++FINISH
+		EffectiveHpInfo inf = BaseInfo.FrameInfo.searchDoubleWildCards(hpinf, 
+																frame, quality);
+		return inf != null ? inf.getHps() : 0;	// Default to indesctructible.
 	}
 	public Vector<FrameNameInfo> getFrameNameInfo()
 		{ return nameinf; }
@@ -226,30 +229,28 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	public void setFrameUsecodeInfo(Vector<FrameUsecodeInfo> i) {
 		frucinf = i;
 	}
-/*+++++++++FINISH
-Frame_usecode_info *get_frame_usecode(int frame, int quality);
-*/
-
+	FrameUsecodeInfo getFrameUsecode(int frame, int quality) {
+		return BaseInfo.FrameInfo.searchDoubleWildCards(frucinf, frame, quality);
+	}
 	public Vector<FrameFlagsInfo> getFrameFlagsInfo()
 		{ return frflagsinf; }
 	public void setFrameFlagsInfo(Vector<FrameFlagsInfo> i) {
 		frflagsinf = i;
 	}
-/*+++++++++
-int get_object_flags(int frame, int qual);
-int has_object_flag(int frame, int qual, int p)
-{ return (get_object_flags(frame, qual)&(1 << p)) != 0; }
-
-bool has_warmth_info() {;
-*/
+	public int getObjectFlags(int frame, int qual) {
+		FrameFlagsInfo inf = BaseInfo.FrameInfo.searchDoubleWildCards(frflagsinf,
+				frame, qual);
+		return inf != null ? inf.getFlags() : 0;	// Default to no flags.
+	}
 	public Vector<WarmthInfo> getWarmthInfo()
 		{ return warminf; }
 	public void setWarmthInfo(Vector<WarmthInfo> i) {
 		warminf = i;
 	}
-/*
-int get_object_warmth(int frame);
-*/
+	public int getObjectWarmth(int frame) {
+		WarmthInfo inf = BaseInfo.OneKeyInfo.searchSingleWildCard(warminf, frame);
+		return inf != null ? inf.getWarmth() : 0;	// Default to no warmth.
+	}
 	public int getMonsterFood() {
 		return monsterFood; 
 	}

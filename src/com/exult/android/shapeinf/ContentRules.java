@@ -13,7 +13,7 @@ public class ContentRules extends BaseInfo.OneKeyInfo {
 	
 	public int getShape()
 		{ return keyval; }
-	boolean acceptsShape() 
+	public boolean acceptsShape() 
 		{ return accept; }
 	private boolean readNew(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
