@@ -1763,7 +1763,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			displayRunes(parms[0], parms[1]); break;
 		case 0x33:
 			return clickOnItem(event);
-			//++++++++++++++++++++++0x34: error_message
+			//0x34: error_message
 		case 0x35:
 			return findNearby(parms[0], parms[1], parms[2], parms[3]);
 		case 0x36:
@@ -1772,10 +1772,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 			}
 		case 0x37:
 			return isDead(parms[0]);
-		//++++++++++++++
+		case 0x38:
+			return new UsecodeValue.IntValue(clock.getHour());
+		case 0x39:
+			return new UsecodeValue.IntValue(clock.getMinute());
 		case 0x3a:
 			return getNpcNumber(parms[0]);
-		//+++++++++
+		case 0x3b:
+			// Return 3-hour # (0-7, 0=midnight).
+			return new UsecodeValue.IntValue(clock.getHour()/3);
 		case 0x3c:
 			return getAlignment(parms[0]);
 		case 0x3d:

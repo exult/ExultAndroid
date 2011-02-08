@@ -417,13 +417,10 @@ public abstract class GameObject extends ShapeID {
 	public static int getWeight(int shnum, int quant) {
 		ShapeInfo info = ShapeID.getInfo(shnum);
 		int wt = quant * info.getWeight();
-		/* +++++++++FINISH
-		if (info.isLightweight())
-		{			// Special case:  reagents, coins.
+		if (info.isLightweight()) {	// Special case:  reagents, coins.
 			wt /= 10;
 			if (wt <= 0) wt = 1;
 		}
-		*/
 		if (info.hasQuantity())
 			if (wt <= 0) wt = 1;
 		return wt;
@@ -721,30 +718,29 @@ public abstract class GameObject extends ShapeID {
 	}
 	public int getUsecode() {
 		ShapeInfo inf = getInfo();
-		/* +++++++++FINISH
-		Frame_usecode_info *useinf = inf.get_frame_usecode(
-				getFrameNum(), inf.has_quality() ? get_quality() : -1);
-		if (useinf)
-			{
+		FrameUsecodeInfo useinf = inf.getFrameUsecode(
+				getFrameNum(), inf.hasQuality() ? getQuality() : -1);
+		if (useinf != null) {
 			// Shape has frame- or quality-dependent usecode.
-			std::string ucname = useinf.get_usecode_name();
+			//++++ String ucname = useinf.getUsecodeName();
 			int ucid = -1;
-			if (ucname.length())	// Try by name first.
-				ucid = ucmachine.find_function(ucname.c_str(), true);
+			/* +++++++FINISH
+			if (ucname.length() > 0)	// Try by name first.
+				ucid = ucmachine.findFunction(ucname, true);
+			*/
 			if (ucid == -1)			// Now try usecode number.
-				ucid = useinf.get_usecode();
+				ucid = useinf.getUsecode();
 			if (ucid >= 0)			// Have frame usecode.
 				return ucid;
-			}
-		*/
+		}
 		return ucmachine.getShapeFun(getShapeNum());
 	}
 	public void activate(int event) {
-		/* ++++++++++
+		/* +++++FINISH
 		int gump = getInfo().getGumpShape();
 		// Serpent Isle spell scrolls:
-		if (gump == 65 && Game::get_game_type() == SERPENT_ISLE) {
-			gumpman.add_gump(this, gump);
+		if (gump == 65 && game.isSI()) {
+			gumpman.addGump(this, gump, false);
 			return;
 		}
 		*/

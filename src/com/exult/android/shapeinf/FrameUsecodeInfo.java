@@ -9,7 +9,7 @@ public class FrameUsecodeInfo extends BaseInfo.FrameInfo {
 	private int		usecode;	// Usecode function of the frame/quality at hand,
 	// or -1 for default shape usecode.
 	private String usecodeName;		// Name of usecode fun explicitly assigned.	
-	public int get_usecode()
+	public int getUsecode()
 		{ return usecode; }
 	public String getUsecodeName()
 		{ return usecodeName; }

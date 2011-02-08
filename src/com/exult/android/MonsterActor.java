@@ -5,6 +5,7 @@ import java.util.HashSet;
 public class MonsterActor extends NpcActor {
 	private static HashSet<MonsterActor> inWorld =	// All monsters in the world.
 		new HashSet<MonsterActor>();
+	Animator animator;		// For wounded men.
 	private void equip(MonsterInfo inf, boolean temporary) {
 		// Get equipment.
 		int equip_offset = inf.getEquipOffset();
@@ -23,29 +24,24 @@ public class MonsterActor extends NpcActor {
 			if (frnum < 0)	// Food.
 				frnum = EUtil.rand()%32;
 			ShapeInfo einfo = ShapeID.getInfo(elem.shapenum);
-			/* +++++++++++FINISH
-			Weapon_info *winfo = einfo.get_weapon_info();
-			if (einfo.has_quality() && winfo && winfo.uses_charges())
-				create_quantity(1, elem.shapenum, elem.quantity,
+			WeaponInfo winfo = einfo.getWeaponInfo();
+			if (einfo.hasQuality() && winfo != null && winfo.usesCharges())
+				createQuantity(1, elem.shapenum, elem.quantity,
 					frnum, temporary);
-			else */
+			else
 				createQuantity(elem.quantity,
 					elem.shapenum, EConst.c_any_qual, frnum, temporary);
-			/* +++++++++++
-			int ammo = winfo ? winfo.get_ammo_consumed() : -1;
+			int ammo = winfo != null ? winfo.getAmmoConsumed() : -1;
 			if (ammo >= 0)		// Weapon requires ammo.
-				create_quantity(5 + rand()%25, ammo, EConst.c_any_qual, 0,
+				createQuantity(5 + EUtil.rand()%25, ammo, EConst.c_any_qual, 0,
 							temporary);
-			*/
 			}
 	}
 	public MonsterActor(String nm, int shapenum, int num, int uc) {
 		super(nm, shapenum, num, uc);				// Check for animated shape.
-		/* ++++++++FINISH
 		ShapeInfo info = getInfo();
 		if (info.isAnimated() || info.hasSfx())
-			animator = Animator::create(this);
-		*/
+			animator = Animator.create(this);
 	}
 	public static void deleteAll() {
 		inWorld.clear();
@@ -61,10 +57,8 @@ public class MonsterActor extends NpcActor {
 	 */
 	public void paint() {
 		// Animate first
-		/* ++++++++FINISH
-		if (animator)			// Be sure animation is on.
-			animator.want_animation();
-		*/
+		if (animator != null)			// Be sure animation is on.
+			animator.wantAnimation();
 		super.paint();		// Draw on screen.
 	}
 	/*
