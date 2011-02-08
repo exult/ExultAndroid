@@ -25,7 +25,52 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 	public void setInvalid(boolean tf) {
 		setFlag(tf, Is_invalid); 
 	}
-	
+	public static class OneKeyInfo extends BaseInfo	
+									implements Comparable<OneKeyInfo> {
+		private static OneKeyInfo search; 
+		protected int keyval;		// Shape or frame.
+		@Override
+		public int compareTo(OneKeyInfo i2) {
+			return keyval - i2.keyval;
+		}
+		@Override
+		public boolean read(InputStream in, int version, 
+				boolean patch, int game, ShapeInfo info) {
+			return false;
+		}
+		public static <T extends OneKeyInfo> Vector<T> addVectorInfo(T inf, Vector<T> vec) {
+			if (vec == null)
+				vec = new Vector<T>(4);
+			int ind = Collections.binarySearch(vec, inf);
+			if (ind < 0) 	// Not found?	
+				vec.insertElementAt(inf, -ind - 1);
+			else			// Found, so replace.
+				vec.setElementAt(inf, ind);
+			return vec;
+		}
+		public static <T extends OneKeyInfo> T searchSingleWildCard(Vector<T> vec,
+												int keyval) {
+			if (vec == null)
+				return null;
+			System.out.println("searchSingleWildCard: keyval " + keyval);
+			T found;
+			if (search == null)
+				search = new OneKeyInfo();
+			search.keyval = keyval;
+			int ind = Collections.binarySearch(vec, search);
+			System.out.println("searchDoubleWildCard: first try: ind = " + ind);
+			if (ind >= 0) {
+				found = vec.elementAt(ind);
+				if (!found.isInvalid())
+					return found;
+			}
+			search.keyval = -1;		// Try wildcard.
+			ind = Collections.binarySearch(vec, search);
+			if (ind >= 0 && !vec.elementAt(ind).isInvalid())
+				return vec.elementAt(ind);
+			return null;
+		}
+	}
 	public static class FrameInfo extends BaseInfo 
 									implements Comparable<FrameInfo> {
 		protected int	frame;		// Frame for which this applies or -1 for any.

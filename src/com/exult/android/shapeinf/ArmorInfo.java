@@ -17,7 +17,6 @@ public class ArmorInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		return 4;
 	}
 	public int getBaseStrength() {
-		// ++++The strength values are utter guesses.
 		int strength = prot;
 		if (immune != 0)	// Double strength for any immunities? Give bonus for each?
 			strength *= 2;

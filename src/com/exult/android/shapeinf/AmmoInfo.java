@@ -68,7 +68,6 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 	public static int get_info_flag()
 		{ return 2; }
 	public int getBaseStrength() {
-		// ++++The strength values are utter guesses.
 		int strength = damage;
 			// These 4 get picked with about the same odds.
 		strength += (powers & WeaponInfo.no_damage) != 0 ? 10 : 0;

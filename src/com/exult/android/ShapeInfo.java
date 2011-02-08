@@ -196,8 +196,11 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	public final boolean isObjectAllowed(int frame, int spot) {
 		return true;// +++++FINISHreturn get_item_paperdoll(frame, spot) != 0; 
 	}
-	private Vector<ContentRules> getContentRules()
+	public Vector<ContentRules> getContentRules()
 		{ return cntrules; }
+	public void setContentRules(Vector<ContentRules> i) {
+		cntrules = i;
+	}
 	public boolean isShapeAccepted(int shape) {
 		return true;//+++++++FINISH
 	}

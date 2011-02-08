@@ -145,7 +145,7 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return range; }
 	public int getStrikingTange() 
 		{ return uses < 3 ? range : 0; }
-	public int getProjectileRange() 	// +++Guess for thrown weapons.
+	public int getProjectileRange() 	// Guess for thrown weapons.
 		{ return uses == 3 ? range : -1; }
 	public int getProjectile() 
 		{ return projectile; }
@@ -162,7 +162,6 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 	public static int getInfoFlag()
 		{ return 1; }
 	public int getBaseStrength() {
-		// ++++The strength values are utter guesses.
 		if (m_explodes && uses == melee)
 			return -50;		// Avoid hand-held explosives at all costs.
 		else if (usecode == 0x689)

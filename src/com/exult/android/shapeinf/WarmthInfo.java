@@ -7,24 +7,23 @@ import com.exult.android.EUtil;
  *	Information about shapes accepted/rejected by containers.
  *	This is meant to be stored in a totally ordered vector.
  */
-public class WarmthInfo extends BaseInfo implements Comparable<WarmthInfo> {
-	private short	frame;
+public class WarmthInfo extends BaseInfo.OneKeyInfo {
+	// Key is the frame.
 	private byte	warmth;	
 	public final int getFrame()
-		{ return frame; }
+		{ return keyval; }
 	public int getWarmth()
 		{ return warmth; }
 	private boolean readNew(InputStream in, int version, boolean patch, int game,
 				ShapeInfo info) {
 		PushbackInputStream txtin = (PushbackInputStream)in;	
-		frame = (short) EUtil.ReadInt(txtin);
-		if (frame < 0)
-			frame = -1;
+		keyval = (short) EUtil.ReadInt(txtin);
+		if (keyval < 0)
+			keyval = -1;
 		else
-			frame &= 0xff;
+			keyval &= 0xff;
 		warmth = (byte)(EUtil.ReadInt(txtin) & 0xff);
-		//++++++++FINISH: insert into vector.
-		//+++info.setWarmthInfo(addVectorInfo(this, info.getWarmthInfo()));
+		info.setWarmthInfo(addVectorInfo(this, info.getWarmthInfo()));
 		return true;
 	}
 
@@ -32,9 +31,5 @@ public class WarmthInfo extends BaseInfo implements Comparable<WarmthInfo> {
 	public boolean read(InputStream in, int version, boolean patch, int game,
 			ShapeInfo info) {
 		return new WarmthInfo().readNew(in, version, patch, game, info);
-	}
-	@Override
-	public int compareTo(WarmthInfo i2) {
-		return frame - i2.frame;
 	}
 }
