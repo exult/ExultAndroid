@@ -433,13 +433,15 @@ public final class DraggingInfo extends GameSingletons {
 						// Do 'unreadied' usecode.
 			gump.getContOrActor(x,y).callReadiedUsecode(
 				readied_index, obj, UsecodeMachine.unreadied);
+		*/
 						// On a barge?
-		Barge_object *barge = gwin.get_moving_barge();
-		if (barge)
-			barge.set_to_gather();	// Refigure what's on barge.
+		BargeObject barge = gwin.getMovingBarge();
+		if (barge != null)
+			barge.setToGather();	// Refigure what's on barge.
+		/*+++++++FINISH
 						// Check for theft.
 		if (!okay_to_move && !cheat.inHackMover() && possible_theft &&
-		    !gwin.is_in_dungeon())
+		    !gwin.isInDungeon())
 			gwin.theft();			
 		*/
 		if (to_drop == obj) {		// Whole thing?

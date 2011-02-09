@@ -172,17 +172,15 @@ public class GameWindow extends GameSingletons {
 		return true;
 	}
 	public final void setMovingBarge(BargeObject b) {
-		/* ++++++FINISH
 		if (b != null && b != movingBarge) {
 			b.gather();		// Will 'gather' on next move.
 		if (!b.contains(mainActor))
 			b.setToGather();
 		} else if (b == null && movingBarge != null)
 			movingBarge.done();	// No longer 'barging'.
-		*/
 		movingBarge = b;
 	}
-	public final GameObject getMovingBarge() {
+	public final BargeObject getMovingBarge() {
 		return movingBarge;
 	}
 	public final int getNumNpcs() {
@@ -320,19 +318,14 @@ public class GameWindow extends GameSingletons {
 		// OFFSET HERE
 		scrollBounds.y = scrollty + 
 				((getHeight())/EConst.c_tilesize - scrollBounds.h)/2;
-		/*
-		Barge_object *old_active_barge = moving_barge;
-		*/
+		BargeObject oldActiveBarge = movingBarge;
 		map.readMapData();		// This pulls in objects.
-		/*
 						// Found active barge?
-		if (!old_active_barge && moving_barge)
-			{			// Do it right.
-			Barge_object *b = moving_barge;
-			moving_barge = 0;
-			set_moving_barge(b);
-			}
-		*/
+		if (oldActiveBarge == null && movingBarge != null) {	// Do it right.
+			BargeObject b = movingBarge;
+			movingBarge = null;
+			setMovingBarge(b);
+		}
 						// Set where to skip rendering.
 		int cx = cameraActor.getCx(), cy = cameraActor.getCy();	
 		MapChunk nlist = map.getChunk(cx, cy);
@@ -625,53 +618,44 @@ public class GameWindow extends GameSingletons {
 		if (mainActor.getFlag(GameObject.asleep) ||
 				mainActor.getFlag(GameObject.paralyzed) /* ++++ ||
 				mainActor.in_usecode_control() || 
-				mainActor.get_schedule_type() == Schedule::sleep */)
+				mainActor.get_schedule_type() == Schedule.sleep */)
 			return;			// Zzzzz....
 		
 		if (gumpman.gumpMode())
 			return;
-		/*++++++++++
-		if (moving_barge)
-			{			// Want to move center there.
-			int lift = mainActor.get_lift();
+		if (movingBarge != null) {	// Want to move center there.
+			int lift = mainActor.getLift();
 			int liftpixels = 4*lift;	// Figure abs. tile.
-			int tx = get_scrolltx() + (winx + liftpixels)/c_tilesize,
-		    ty = get_scrollty() + (winy + liftpixels)/c_tilesize;
+			int tx = getScrolltx() + (tox + liftpixels)/EConst.c_tilesize,
+		    ty = getScrollty() + (toy + liftpixels)/EConst.c_tilesize;
 					// Wrap:
-			tx = (tx + c_num_tiles)%c_num_tiles;
-			ty = (ty + c_num_tiles)%c_num_tiles;
-			Tile_coord atile = moving_barge.get_center(),
-			   btile = moving_barge.get_tile();
+			tx = (tx + EConst.c_num_tiles)%EConst.c_num_tiles;
+			ty = (ty + EConst.c_num_tiles)%EConst.c_num_tiles;
+			Tile atile = movingBarge.getCenter();
+			int bx = movingBarge.getTileX(), by = movingBarge.getTileY(),
+				bz = movingBarge.getLift();
 					// Go faster than walking.
-			moving_barge.travel_to_tile(
-				Tile_coord(tx + btile.tx - atile.tx, 
-				   ty + btile.ty - atile.ty, btile.tz), 
-					speed/2);
-		} else
-		*/
-		{
-			/* ++++++++++++
+			tempTile.set(tx + bx - atile.tx, 
+				   ty + by - atile.ty, bz);
+			movingBarge.travelToTile(tempTile, 1);
+		} else {
 			// Set schedule.
-			int sched = mainActor.get_schedule_type();
-			if (sched != Schedule::follow_avatar &&
-					sched != Schedule::combat &&
-					!mainActor.get_flag(GameObject.asleep))
-				mainActor.set_schedule_type(Schedule::follow_avatar);
-			*/
+			int sched = mainActor.getScheduleType();
+			if (sched != Schedule.follow_avatar &&
+					sched != Schedule.combat &&
+					!mainActor.getFlag(GameObject.asleep))
+				mainActor.setScheduleType(Schedule.follow_avatar);
 			startActorSteps(fromx, fromy, tox, toy, speed);
 		}
 	}
 	public final void stopActor() {
-		/* +++++++++++++++
-		if (moving_barge)
-			moving_barge.stop();
-		else
-		*/
-			{
+		if (movingBarge != null)
+			movingBarge.stop();
+		else {
 			mainActor.stop();	// Stop and set resting state.
 			if (!gumpman.gumpMode())
 					mainActor.getFollowers();
-			}
+		}
 	}
 	/*
 	 *	Find the top object that can be selected, dragged, or activated.
@@ -1171,13 +1155,12 @@ public class GameWindow extends GameSingletons {
 		catch(exult_exception &) {
 			Monster_Actor.give_up();
 		}
-		if (moving_barge)		// Gather all NPC's on barge.
-		{
-			Barge_object *b = moving_barge;
-			moving_barge = 0;
-			set_moving_barge(b);
-		}
 		*/
+		if (movingBarge != null) {		// Gather all NPC's on barge.
+			BargeObject b = movingBarge;
+			movingBarge = null;
+			setMovingBarge(b);
+		}
 		readSchedules();		// Now get their schedules.
 		centerView(mainActor.getTileX(), mainActor.getTileY());
 	}
@@ -1343,10 +1326,10 @@ public class GameWindow extends GameSingletons {
 		npcs.setSize(0);			// NPC's already deleted above.
 		/* ++++++FINISH
 		bodies.setSize(0);
-		moving_barge = 0;		// Get out of barge mode.
-		special_light = 0;		// Clear out light spells.
-		ambient_light = false;	// And ambient lighting.
 		*/
+		movingBarge = null;		// Get out of barge mode.
+		specialLight = 0;		// Clear out light spells.
+		ambientLight = false;	// And ambient lighting.
 		effects.removeAllEffects();
 		/* ++++++FINISH
 		Schedule_change::clear();

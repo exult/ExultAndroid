@@ -87,6 +87,9 @@ public class ShapeID extends GameSingletons {
 		else
 			return 0;
 	}
+	public static final byte getSpecialPixel(int pix) {
+		return specialPixels[pix];
+	}
 	public void paintShapeTranslucent(int xoff, int yoff) {
 		ShapeFrame s = getShape();
 		if (s != null) {

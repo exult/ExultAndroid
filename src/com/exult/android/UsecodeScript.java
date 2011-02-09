@@ -635,7 +635,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		int dz
 		) {
 		int frame = obj.getFrameNum();
-		// ++++++FINISH Barge_object *barge;
+		BargeObject barge;
 		Actor act = obj.asActor();
 		if (act != null) {
 			Tile tile = new Tile();
@@ -651,24 +651,19 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			if (tile.tz < 0)
 				tile.tz = 0;
 			obj.step(tile, frame, true);
-			}
-		/* ++++++++++
-		else if ((barge = obj.as_barge()) != 0)
-			{
-			for (int i = 0; i < 4; i++)
-				{
-				Tile_coord t = obj.get_tile();
+		} else if ((barge = obj.asBarge()) != null) {
+			for (int i = 0; i < 4; i++) {
+				Tile t = new Tile();
+				obj.getTile(t);
 				if (dir != -1)
-					t = t.get_neighbor(dir);
-				t.tz += dz/4 + (!i ? dz % 4 : 0);
+					t.getNeighbor(t, dir);
+				t.tz += dz/4 + (i == 0 ? dz % 4 : 0);
 				if (t.tz < 0)
 					t.tz = 0;
 				obj.step(t, 0, true);
-				}
 			}
-		*/
+		}
 	}
-
 	/*
 	/*
 	 * For TimeSensitive

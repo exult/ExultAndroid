@@ -200,15 +200,12 @@ public class UsecodeMachine extends GameSingletons {
 			conv.initFaces();	// Remove them.
 			gwin.setAllDirty();	// Force repaint.
 		}
-		/*
-		if (modifiedMap)
-			{			// On a barge, and we changed the map.
-			Barge_object *barge = gwin.get_moving_barge();
-			if (barge)
-				barge.set_to_gather();	// Refigure what's on barge.
-			modified_map = false;
-			}
-		*/
+		if (modifiedMap) {	// On a barge, and we changed the map.
+			BargeObject barge = gwin.getMovingBarge();
+			if (barge != null)
+				barge.setToGather();	// Refigure what's on barge.
+			modifiedMap = false;
+		}
 		--running;
 		System.out.println("End of myRun");
 		available.release();

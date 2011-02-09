@@ -195,58 +195,51 @@ public final class Mouse extends GameSingletons {
 			cursor = shortCombat_arrows[0];	// Short N red arrow.
 		*/
 		if (cursor == dontchange) {
-			/* ++++++++++FINISH
-			Barge_object *barge = gwin.get_moving_barge();
-			if (barge)
-			{			// Use center of barge.
-				gwin.get_shape_location(barge, ax, ay);
-				ax -= barge.get_xtiles()*(c_tilesize/2);
-				ay -= barge.get_ytiles()*(c_tilesize/2);
-			}
-			else	
-			*/
-			int dy = ay - mousey, dx = mousex - ax;
-			int dir = EUtil.getDirection(dy, dx);
-			int gamew = gwin.getWidth(), gameh = gwin.getHeight();
-			float speed_section = Math.max( Math.max( -(float)dx/ax, (float)dx/(gamew-ax)), 
+			BargeObject barge = gwin.getMovingBarge();
+			if (barge != null) {	// Use center of barge.
+				gwin.getShapeLocation(avLoc, barge);
+				ax = avLoc.x - barge.getXtiles()*(EConst.c_tilesize/2);
+				ay = avLoc.y - barge.getYtiles()*(EConst.c_tilesize/2);
+			} else {
+				int dy = ay - mousey, dx = mousex - ax;
+				int dir = EUtil.getDirection(dy, dx);
+				int gamew = gwin.getWidth(), gameh = gwin.getHeight();
+				float speed_section = Math.max( Math.max( -(float)dx/ax, (float)dx/(gamew-ax)), 
 					Math.max((float)dy/ay, -(float)dy/(gameh-ay)) );
-			boolean nearby_hostile = false; //+++++++ gwin.isHostileNearby();
-			boolean has_active_nohalt_scr = false;
-			UsecodeScript scr = null;
-			Actor act = gwin.getMainActor();
-			while ((scr = UsecodeScript.findActive(act, scr)) != null)
+				boolean nearby_hostile = false; //+++++++ gwin.isHostileNearby();
+				boolean has_active_nohalt_scr = false;
+				UsecodeScript scr = null;
+				Actor act = gwin.getMainActor();
+				while ((scr = UsecodeScript.findActive(act, scr)) != null)
 				// We should only be here is scripts are nohalt, but just
 				// in case...
 				if (scr.isNoHalt()) {
 					has_active_nohalt_scr = true;
 					break;
 				}
-			if(speed_section < 0.4 ) {
-				if( gwin.inCombat() )
-					cursor = getShortCombatArrow( dir );
-				else
-					cursor = getShortArrow( dir );
-				avatarSpeed = slow;
-			}
-			else if( speed_section < 0.8 || gwin.inCombat() || nearby_hostile 
+				if(speed_section < 0.4 ) {
+					if( gwin.inCombat() )
+						cursor = getShortCombatArrow( dir );
+					else
+						cursor = getShortArrow( dir );
+					avatarSpeed = slow;
+				} else if( speed_section < 0.8 || gwin.inCombat() || nearby_hostile 
 						|| has_active_nohalt_scr) {
-				if( gwin.inCombat() )
-					cursor = getMediumCombatArrow( dir );
-				else
-					cursor = getMediumArrow( dir );
-				if( gwin.inCombat() || nearby_hostile )
-					avatarSpeed = mediumCombat;
-				else
-					avatarSpeed = medium;
-			}
-			else /* Fast - NB, we can't get here in combat mode; there is no
-			      * long combat arrow, nor is there a fast combat speed. */
-			{
-			cursor = getLongArrow( dir );
-				avatarSpeed = fast;
+					if( gwin.inCombat() )
+						cursor = getMediumCombatArrow( dir );
+					else
+						cursor = getMediumArrow( dir );
+					if( gwin.inCombat() || nearby_hostile )
+						avatarSpeed = mediumCombat;
+					else
+						avatarSpeed = medium;
+				} else { /* Fast - NB, we can't get here in combat mode; there is no
+			      		* long combat arrow, nor is there a fast combat speed. */
+					cursor = getLongArrow( dir );
+					avatarSpeed = fast;
+				}
 			}
 		}
-		
 		if (cursor != dontchange)
 			setShape(cursor);
 	}

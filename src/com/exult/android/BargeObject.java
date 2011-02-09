@@ -1,6 +1,9 @@
 package com.exult.android;
 import java.util.Vector;
 import android.graphics.Point;
+import java.io.OutputStream;
+import java.io.IOException;
+
 /*
  *	A 'barge', such as a ship or horse-and-cart.  The elements of a barge
  *	are stored in the outside world, so rendering and obstacle detection
@@ -247,7 +250,10 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 		{ return xtiles; }
 	public int getYtiles()
 		{ return ytiles; }
-	public void setToFather()		// Require 'gather' on next move.
+	public Tile getCenter() {
+		return center;		// DON'T MODIFY this!!
+	}
+	public void setToGather()		// Require 'gather' on next move.
 		{ gathered = false; }
 	public void gather() {			// Gather up objects on barge.
 		if (gmap.getChunk(getCx(), getCy()) == null)
@@ -463,6 +469,7 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 		}
 		return true;
 	}
+	@Override
 	public BargeObject asBarge() { return this; }
 	@Override				// Move to new abs. location.
 	public void move(int newtx, int newty, int newlift, int newmap) {
@@ -527,23 +534,116 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	public final boolean contains(GameObject obj) {
 		return objects.contains(obj);
 	}
-	/*++++++++
 	@Override			// Drop another onto this.
-	public int drop(Game_object *obj);
+	public boolean drop(GameObject obj) {
+		return false;
+	}
 	@Override				// Render.
-	public void paint();
+	public void paint() {
+		// DON'T paint barge shape itself.
+		// The objects are in the chunk too.
+		if(gwin.paintEggs) {
+			super.paint();
+			byte pix = ShapeID.getSpecialPixel(ShapeID.CURSED_PIXEL);
+			int rx, by, lx, ty;	// Right, bottom, left, top.
+			gwin.getShapeLocation(loc, this);
+			lx = loc.x - xtiles*EConst.c_tilesize + 1;
+			ty = loc.y - ytiles*EConst.c_tilesize + 1;
+						// Little square at lower-right.
+			gwin.getWin().fill8(pix, 4, 4, loc.x-2, loc.y-2);
+						// Little square at top.
+			gwin.getWin().fill8(pix, 4, 4, lx-1, ty-1);
+						// Horiz. line along top, bottom.
+			gwin.getWin().fill8(pix, xtiles*EConst.c_tilesize, 1, lx, ty);
+			gwin.getWin().fill8(pix, xtiles*EConst.c_tilesize, 1, lx, loc.y);
+						// Vert. line to left, right.
+			gwin.getWin().fill8(pix, 1, ytiles*EConst.c_tilesize, lx, ty);
+			gwin.getWin().fill8(pix, 1, ytiles*EConst.c_tilesize, loc.x, ty);
+			}
+	}
 	@Override
-	public void activate(int event = 1);
-					// Step onto an (adjacent) tile.
+	public void activate(int event) {
+	}
+	/*
+	 *	Step onto an adjacent tile.
+	 *
+	 *	Output:	0 if blocked.
+	 *		Dormant is set if off screen.
+	 */
 	@Override
-	public int step(Tile t, int frame = -1, bool force = false);
+	public boolean step(Tile t, int frame, boolean force) {
+		if (!gathered)			// Happens in SI with turtle.
+			gather();
+		getTile(pos);
+						// Blocked? (Assume ht.=4, for now.)
+		int move_type;
+		if (pos.tz > 0)
+			move_type = EConst.MOVE_LEVITATE;
+		else if (force)
+			move_type = EConst.MOVE_ALL;
+		else if (boat == 1) 
+			move_type = EConst.MOVE_SWIM;
+		else
+			move_type = EConst.MOVE_WALK;
+						// No rising/dropping.
+		if (!MapChunk.areaAvailable(getXtiles(), getYtiles(), 
+							4, pos, t, move_type, 0, 0))
+			return false;		// Done.
+		move(t.tx, t.ty, t.tz);		// Move it & its objects.
+						// Near an egg?
+		MapChunk nlist = gmap.getChunk(getCx(), getCy());
+		nlist.activateEggs(gwin.getMainActor(), t.tx, t.ty, t.tz, 
+							pos.tx, pos.ty, false);
+		return true;			// Add back to queue for next time.
+	}
 	@Override				// Write out to IREG file.
-	public void write_ireg(DataSource* out);
+	public void writeIreg(OutputStream out) throws IOException {
+		byte buf[] = new byte[20];		// 13-byte entry + length-byte.
+		int ind = writeCommonIreg(12, buf);
+						// Write size.
+		buf[ind++] = (byte)xtiles;
+		buf[ind++] = (byte)ytiles;
+		buf[ind++] = 0;			// Unknown.
+						// Flags (quality).  Taking B3 to in-
+						//   dicate barge mode.
+		buf[ind++] = (byte)((dir<<1) | (((gwin.getMovingBarge() == this)?1:0)<<3));
+		buf[ind++] = 0;			// (Quantity).
+		buf[ind++] = (byte)(((int)getLift()&15)<<4);
+		buf[ind++] = 0;			// Data2.
+		buf[ind++] = 0;			// 
+		out.write(buf, 0, ind);
+						// Write permanent objects.
+		for (int i = 0; i < permCount; i++) {
+			GameObject obj = getObject(i);
+			obj.writeIreg(out);
+		}
+		out.write(0x01);			// A 01 terminates the list.
+						// Write scheduled usecode.
+		GameMap.writeScheduled(out, this, false);	
+	}
 	@Override			// Get size of IREG. Returns -1 if can't write to buffer
-	public int get_ireg_size();
+	public int getIregSize() {
+		// These shouldn't ever happen, but you never know
+		/* ++++++FINISH
+		if (gwin.getMovingBarge() == this || UsecodeScript.find(this))
+			return -1;
+		*/
+		int total_size = 8 + getCommonIregSize();
+
+		for (int i = 0; i < permCount; i++) {
+			GameObject obj = getObject(i);
+			int size = obj.getIregSize();
+			if (size < 0) return -1;
+			total_size += size;
+		}
+		total_size += 1;
+		return total_size;
+	}
 	@Override
-	public void elements_read();	// Called when all member items read.	
-	*/
+	public void elementsRead() {	// Called when all member items read.	
+		permCount = 0;			// So we don't get haystack!
+		complete = true;
+	}
 	@Override
 	public void addedToQueue() {
 		++timeQueueCount;

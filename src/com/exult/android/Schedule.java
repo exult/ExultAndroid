@@ -1224,10 +1224,8 @@ public abstract class Schedule extends GameSingletons {
 			if (chair != null && (frnum&0xf) == Actor.sit_frame && 
 			    npc.distance(chair) <= 1) {			// Already sitting.
 							// Seat on barge?
-				/* ++++++++FINISH
 				if (chair.getInfo().getBargeType() != ShapeInfo.barge_seat)
 					return;
-				*/
 				if (did_barge_usecode)
 					return;		// But NOT more than once for party.
 				did_barge_usecode = true;
