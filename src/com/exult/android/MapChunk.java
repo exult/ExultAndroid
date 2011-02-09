@@ -578,6 +578,10 @@ public final class MapChunk extends GameSingletons {
 			;
 		return i;
 	}
+	public int getHighestBlocked(int lift, int tx, int ty) {
+		setTflags(tx, ty, lift);
+		return getHighestBlocked(lift);
+	}
 	/*
 	 *	Get lowest blocked lift above a given level for a given tile.
 	 *

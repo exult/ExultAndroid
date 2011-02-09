@@ -867,6 +867,17 @@ public abstract class GameObject extends ShapeID {
 			ammo[0] = findWeaponAmmo(weapon, need_ammo, recursive);
 		return need_ammo;
 	}
+	/*
+	 *	Get frame if rotated 1, 2, or 3 quadrants clockwise.  This is to
+	 *	support barges (ship, cart, flying carpet).
+	 */
+	public int getRotatedFrame
+		(
+		int quads			// 1=90, 2=180, 3=270.
+		) {
+		int curframe = getFrameNum();
+		return getInfo().getRotatedFrame(curframe, quads);
+	}
 	public int reduceHealth(int delta, int damage_type, GameObject attacker) {
 		//+++++++++++FINISH
 		return delta;

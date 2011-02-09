@@ -87,20 +87,20 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	 *	a point counterclockwise, assuming its 'hot spot' 
 	 *	is at its lower-right corner.
 	 */
-	private static void Rotate90r
+	private Tile Rotate90r
 		(
 		Tile result,
-		GameObject obj,
 		int xtiles, int ytiles,		// Object dimensions.
 		Tile c			// Rotate around this.
 		) {
-		obj.getTile(result);
+		getTile(result);
 						// Rotate hot spot.
 		Rotate90r(result, result, c);
 						// New hotspot is what used to be the
 						//   upper-right corner.
 		result.tx = (short)((result.tx + ytiles + EConst.c_num_tiles)%EConst.c_num_tiles);
 		result.ty = (short)((result.ty + EConst.c_num_tiles)%EConst.c_num_tiles);
+		return result;
 	}
 
 	/*
@@ -108,38 +108,38 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	 *	a point, assuming its 'hot spot' is at its lower-right corner.
 	 */
 
-	private static void Rotate90l
+	private Tile Rotate90l
 		(
 		Tile result,
-		GameObject obj,
 		int xtiles, int ytiles,		// Object dimensions.
 		Tile c			// Rotate around this.
 		) {
-		obj.getTile(result);
+		getTile(result);
 						// Rotate hot spot.
 		Rotate90l(result, result, c);
 						// New hot-spot is old lower-left.
 		result.ty = (short)((result.ty + xtiles + EConst.c_num_tiles)%EConst.c_num_tiles);
 		result.tx = (short)((result.tx + EConst.c_num_tiles)%EConst.c_num_tiles);
+		return result;
 	}
 	/*
 	 *	Figure tile where an object will be if it's rotated 180 degrees around
 	 *	a point, assuming its 'hot spot' is at its lower-right corner.
 	 */
-	private static void Rotate180
+	private Tile Rotate180
 		(
 		Tile result,
-		GameObject obj,
 		int xtiles, int ytiles,		// Object dimensions.
 		Tile c			// Rotate around this.
 		) {
-		obj.getTile(result);
+		getTile(result);
 						// Rotate hot spot.
 		Rotate180(result, result, c);
 						// New hotspot is what used to be the
 						//   upper-left corner.
 		result.tx = (short)((result.tx + xtiles + EConst.c_num_tiles)%EConst.c_num_tiles);
 		result.ty = (short)((result.ty + ytiles + EConst.c_num_tiles)%EConst.c_num_tiles);
+		return result;
 	}
 	private void swapDims() {
 		int tmp = xtiles;		// Swap dims.
@@ -281,10 +281,10 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 					continue;
 				ShapeInfo info = obj.getInfo();
 						// Above barge, within 5-tiles up?
-				boolean isbarge = info.isBargePart() /*+++ || !info.get_weight() */;
+				boolean isbarge = info.isBargePart();
 				if (t.tz + info.get3dHeight() > lift && 
 				    ((isbarge && t.tz >= lift - 1) ||
-					(t.tz < lift + 5 && t.tz >= lift /*+++ + 1 */))) {
+					(t.tz < lift + 5 && t.tz >= lift))) {
 					objects.add(obj);
 					int btype = obj.getInfo().getBargeType();
 					if (btype == ShapeInfo.barge_raft)
@@ -312,21 +312,206 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 		}
 		gathered = true;
 	}
-	/* ++++++FINISH
-	public void faceDirection(int ndir);	// Face dir. (0-7).
+	public void faceDirection(int ndir) {	// Face dir. (0-7).
+		ndir /= 2;			// Convert to 0-3.
+		switch ((4 + ndir - dir)%4) {
+		case 1:				// Rotate 90 degrees right.
+			turnRight();
+			break;
+		case 2:
+			turnAround();		// 180 degrees.
+			break;
+		case 3:
+			turnLeft();
+			break;
+		default:
+			break;
+		}
+	}
 					// Start rolling/sailing.
-	public void travel_to_tile(Tile_coord dest, int speed);
-	public void turn_right();		// Turn 90 degrees right.
-	public void turn_left();
-	public void turn_around();
+	public void travelToTile(Tile dest, int speed) {
+		if (path == null)
+			path = new ZombiePathFinder();
+		Tile t = new Tile();
+		getTile(t);
+						// Set up new path.
+		if (path.NewPath(t, dest)) {
+			frameTime = speed;
+						// Figure new direction.
+			int curtx = getTileX(), curty = getTileY();
+			int dy = Tile.delta(curty, dest.ty),
+			    dx = Tile.delta(curtx, dest.tx);
+			int ndir = EUtil.getDirection4(-dy, dx);
+			if (!iceRaft)		// Ice-raft doesn't rotate.
+				faceDirection(ndir);
+			if (!inQueue())	// Not already in queue?
+				tqueue.add(TimeQueue.ticks, this, null);
+		} else
+			frameTime = 0;		// Not moving.
+	}
+	public void turnRight() {		// Turn 90 degrees right.
+		addDirty();			// Want to repaint old position.
+		// Move the barge itself.
+		Rotate90r(pos, xtiles, ytiles, center);
+		if (!okayToRotate(pos))	// Check for blockage.
+			return;
+		super.move(pos.tx, pos.ty, pos.tz);
+		swapDims();			// Exchange xtiles, ytiles.
+		dir = (dir + 1)%4;		// Increment direction.
+		int cnt = objects.size();	// We'll move each object.
+						// But 1st, remove & save new pos.
+		Tile positions[] = new Tile[cnt];
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = getObject(i);
+			int frame = obj.getFrameNum();
+			ShapeInfo info = obj.getInfo();
+			
+			positions[i] = Rotate90r(new Tile(), info.get3dXtiles(frame),
+						info.get3dYtiles(frame), center);
+			obj.removeThis();	// Remove object from world.
+						// Set to rotated frame.
+			obj.setFrame(obj.getRotatedFrame(1));
+			obj.setInvalid();	// So it gets added back right.
+		}
+		finishMove(positions, -1);		// Add back & del. positions.	
+	}
+	public void turnLeft() {
+		addDirty();			// Want to repaint old position.
+		// Move the barge itself.
+		Rotate90l(pos, xtiles, ytiles, center);
+		if (!okayToRotate(pos))	// Check for blockage.
+			return;
+		super.move(pos.tx, pos.ty, pos.tz);
+		swapDims();			// Exchange xtiles, ytiles.
+		dir = (dir + 3)%4;		// Increment direction.
+		int cnt = objects.size();	// We'll move each object.
+						// But 1st, remove & save new pos.
+		Tile positions[] = new Tile[cnt];
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = getObject(i);
+			int frame = obj.getFrameNum();
+			ShapeInfo info = obj.getInfo();
+			positions[i] = Rotate90l(new Tile(), info.get3dXtiles(frame),
+						info.get3dYtiles(frame), center);
+			obj.removeThis();	// Remove object from world.
+						// Set to rotated frame.
+			obj.setFrame(obj.getRotatedFrame(3));
+			obj.setInvalid();	// So it gets added back right.
+		}
+		finishMove(positions, -1);		// Add back & del. positions.
+	}
+	public void turnAround() {
+		addDirty();			// Want to repaint old position.
+		// Move the barge itself.
+		Rotate180(pos, xtiles, ytiles, center);
+		super.move(pos.tx, pos.ty, pos.tz);
+		dir = (dir + 2)%4;		// Increment direction.
+		int cnt = objects.size();	// We'll move each object.
+						// But 1st, remove & save new pos.
+		Tile positions[] = new Tile[cnt];
+		for (int i = 0; i < cnt; i++) {
+			GameObject obj = getObject(i);
+			int frame = obj.getFrameNum();
+			ShapeInfo info = obj.getInfo();
+			positions[i] = Rotate180(new Tile(), info.get3dXtiles(frame),
+						info.get3dYtiles(frame), center);
+			obj.removeThis();	// Remove object from world.
+						// Set to rotated frame.
+			obj.setFrame(obj.getRotatedFrame(2));
+			obj.setInvalid();	// So it gets added back right.
+		}
+		finishMove(positions, -1);		// Add back & del. positions.
+	}
 	public void stop()			// Stop moving.
-		{ frame_time = 0; first_step = true; }
-	public void done();			// No longer being operated.
-	public int okay_to_land();		// See if clear to land.
-	public Barge_object *as_barge() { return this; }
+		{ frameTime = 0; firstStep = true; }
+	/*
+	 *	Ending 'barge mode'.
+	 */
+	private static int norecurse = 0;// Don't recurse on the code below.
+	public void done() {			// No longer being operated.
+		gathered = false;		// Clear for next time. (needed for SI turtle)
+		if (norecurse > 0)
+			return;
+		norecurse++;
+		if (boat == 1) {			// Look for sails on boat.
+						// Pretend they were clicked on.
+			int cnt = objects.size();	// Look for open sail.
+			for (int i = 0; i < cnt; i++) {
+				GameObject obj = objects.elementAt(i);
+				if (obj.getInfo().getBargeType() == ShapeInfo.barge_sails &&
+					    (obj.getFrameNum()&7) < 4) {
+					obj.activate();
+					break;
+				}
+		}			}
+		norecurse--;
+	}
+	public boolean okayToLand() {		// See if clear to land.
+		Rectangle foot = getTileFootprint();
+		int lift = getLift();		// How high we are.
+						// Go through intersected chunks.
+		MapChunk.ChunkIntersectIterator iter = 
+						new MapChunk.ChunkIntersectIterator(foot);
+		Rectangle tiles = newfoot;
+		MapChunk chunk;
+		while ((chunk = iter.getNext(tiles)) != null) {		// Check each tile.
+			for (int ty = tiles.y; ty < tiles.y + tiles.h; ty++)
+				for (int tx = tiles.x; tx < tiles.x + tiles.w; tx++)
+					if (chunk.getHighestBlocked(lift, tx, ty)
+									!= -1)
+						return false;
+		}
+		return true;
+	}
+	public BargeObject asBarge() { return this; }
 	@Override				// Move to new abs. location.
-	public void move(int newtx, int newty, int newlift, int newmap = -1);
-	*/
+	public void move(int newtx, int newty, int newlift, int newmap) {
+		if (chunk == null) {			// Not currently on map?
+			// UNTIL drag-n-drop does the gather properly.
+			super.move(newtx, newty, newlift, newmap);
+			return;
+		}
+		if (!gathered)			// Happens in SI with turtle.
+			gather();
+						// Want to repaint old position.
+		addDirty();
+						// Get current location.
+		Tile old = pos;
+		if (newmap == -1) newmap = getMapNum();
+						// Move the barge itself.
+		super.move(newtx, newty, newlift, newmap);
+						// Get deltas.
+		int dx = newtx - old.tx, dy = newty - old.ty, dz = newlift - old.tz;
+		int cnt = objects.size();	// We'll move each object.
+						// But 1st, remove & save new pos.
+		Tile positions[] = new Tile[cnt];
+		int i;
+		for (i = 0; i < cnt; i++) {
+			GameObject obj = getObject(i);
+			Tile ot = new Tile();
+			obj.getTile(ot);
+						// Watch for world-wrapping.
+			positions[i] = ot;
+			ot.set((ot.tx + dx + EConst.c_num_tiles)%EConst.c_num_tiles,
+					(ot.ty + dy + EConst.c_num_tiles)%EConst.c_num_tiles, 
+					ot.tz + dz);
+			obj.removeThis();	// Remove object from world.
+			obj.setInvalid();	// So it gets added back right.
+			if (!taking2ndStep)
+				{		// Animate a few shapes.
+				int frame = obj.getFrameNum();
+				switch (obj.getInfo().getBargeType()) {
+				case ShapeInfo.barge_wheel:		// Cart wheel.
+					obj.setFrame(((frame + 1)&3)|(frame&32));
+					break;
+				case ShapeInfo.barge_draftanimal:		// Draft horse.
+					obj.setFrame(((frame + 4)&15)|(frame&32));
+					break;
+				}
+			}
+		}
+		finishMove(positions, newmap);	// Add back & del. positions.
+	}
 					// Remove an object.
 	@Override
 	public void remove(GameObject obj) {
@@ -351,7 +536,7 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	public void activate(int event = 1);
 					// Step onto an (adjacent) tile.
 	@Override
-	public int step(Tile_coord t, int frame = -1, bool force = false);
+	public int step(Tile t, int frame = -1, bool force = false);
 	@Override				// Write out to IREG file.
 	public void write_ireg(DataSource* out);
 	@Override			// Get size of IREG. Returns -1 if can't write to buffer
@@ -363,21 +548,19 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	public void addedToQueue() {
 		++timeQueueCount;
 	}
-
 	@Override
 	public boolean alwaysHandle() {
 		return false;
 	}
-
 	@Override
 	public void handleEvent(int ctime, Object udata) {
 		// TODO Auto-generated method stub
-
 	}
-
 	@Override
 	public void removedFromQueue() {
 		--timeQueueCount;
 	}
-
+	public boolean inQueue() {
+		return timeQueueCount > 0;
+	}
 }
