@@ -39,7 +39,7 @@ public class GameWindow extends GameSingletons {
 	private Actor cameraActor;		// What to center view on.
 	private Vector<Actor> npcs;
 	private int numNpcs1;			// Number of type1 NPC's.
-	private GameObject movingBarge;
+	private BargeObject movingBarge;
 	// Rendering
 	private int scrolltx, scrollty;		// Top-left tile of screen.
 	private Rectangle scrollBounds;	// Walking outside this scrolls.
@@ -136,8 +136,8 @@ public class GameWindow extends GameSingletons {
 		return usecode;
 	}
 	public final boolean isMoving() {
-		return /* ++++++ moving_barge ? moving_barge.is_moving()
-			    : */ mainActor.isMoving();
+		return movingBarge != null ? movingBarge.isMoving()
+			    : mainActor.isMoving();
 	}
 	public final boolean inCombat() {
 		return false;	//++++++FINISH
@@ -170,6 +170,17 @@ public class GameWindow extends GameSingletons {
 			return false;
 		skipAboveActor = lift;
 		return true;
+	}
+	public final void setMovingBarge(BargeObject b) {
+		/* ++++++FINISH
+		if (b != null && b != movingBarge) {
+			b.gather();		// Will 'gather' on next move.
+		if (!b.contains(mainActor))
+			b.setToGather();
+		} else if (b == null && movingBarge != null)
+			movingBarge.done();	// No longer 'barging'.
+		*/
+		movingBarge = b;
 	}
 	public final GameObject getMovingBarge() {
 		return movingBarge;
@@ -340,9 +351,7 @@ public class GameWindow extends GameSingletons {
 		setScrolls(EConst.DECR_TILE(t.tx, tw/2), EConst.DECR_TILE(t.ty, th/2));
 		setAllDirty();
 	}
-	public boolean scrollIfNeeded(Actor a, Tile t) {
-		if (a != cameraActor)
-			return false;
+	public boolean scrollIfNeeded(Tile t) {
 		boolean scrolled = false;
 		// 1 lift = 1/2 tile.
 		int tx = t.tx - t.tz/2, ty = t.ty - t.tz/2;
@@ -361,6 +370,12 @@ public class GameWindow extends GameSingletons {
 			scrolled = true;
 		}
 		return (scrolled);	
+	}
+	public boolean scrollIfNeeded(Actor a, Tile t) {
+		if (a != cameraActor)
+			return false;
+		else
+			return scrollIfNeeded(t);
 	}
 	//	Center around given tile pos.
 	public void centerView(int tx, int ty) {

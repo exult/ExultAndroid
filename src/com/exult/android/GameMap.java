@@ -505,18 +505,16 @@ public class GameMap extends GameSingletons {
 					obj = v;
 					type = 0;
 					}
-				else if (info.get_shape_class() == Shape_info::barge)
-					{
-					Barge_object *b = new Barge_object(
+				else */ if (info.getShapeClass() == ShapeInfo.barge) {
+					BargeObject b = new BargeObject(
 					    shnum, frnum, tilex, tiley, lift,
-						entry[4], entry[5],
-						(quality>>1)&3);
+						entbuf[4], entbuf[5], (quality>>1)&3);
 					obj = b;
-					if (!gwin.get_moving_barge() && 
-								(quality&(1<<3)))
-						gwin.set_moving_barge(b);
+					if (gwin.getMovingBarge() == null && 
+								(quality&(1<<3)) != 0)
+						gwin.setMovingBarge(b);
 					}
-				else if (info.is_jawbone()) // serpent jawbone
+				else /* if (info.is_jawbone()) // serpent jawbone
 					{
 					obj = new Jawbone_object(shnum, frnum,
 						tilex, tiley, lift, entry[10]);

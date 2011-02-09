@@ -256,7 +256,7 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	}
 	public int getMountainTopType()
 		{ return mountainTop; }
-	public int get_barge_type()
+	public int getBargeType()
 		{ return bargeType; }
 	public int getFieldType()
 		{ return fieldType; }
