@@ -84,7 +84,7 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 
 		ind++;				// Byte 7: Unknown.
 		reach = (byte)(buf[ind] & 15);		// Byte 8 - weapon reach.
-		weapon = (byte)((buf[ind]++ >> 4) & 15);
+		weapon = (byte)((buf[ind++] >> 4) & 15);
 		flags = buf[ind++];			// Byte 9.
 		vulnerable = buf[ind++];	// Byte 10.
 		immune = buf[ind++];		// Byte 11.

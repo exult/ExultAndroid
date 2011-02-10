@@ -2084,9 +2084,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (usecode_name_used || (!fix_first && (iflag1&4) != 0))
 			usecodeAssigned = true;
 		boolean extended_skin = !fix_first && (iflag1&16) != 0;
-
 		int schunk = out.read();	// Superchunk #.
-							// For multi-map:
+							// For multi-map:1
 		int map_num = out.read();
 		if (fix_first)
 			map_num = 0;
@@ -2404,6 +2403,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		setShapePos(tilex, tiley);
 		MapChunk olist = npcmap.getChunk(scx + cx, scy + cy);
 		setInvalid();			// Not in world yet.
+		
 		if (olist != null && !isDead() &&	// Valid & alive?  Put into chunk list.
 		    !unused) {
 			move((scx + cx)*EConst.c_tiles_per_chunk + tilex,

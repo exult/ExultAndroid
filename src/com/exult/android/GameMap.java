@@ -334,17 +334,19 @@ public class GameMap extends GameSingletons {
 		int entlen;
 		ireg.mark(4000);
 		while ((entlen = ireg.read()) == IREG_SPECIAL && ireg.available() > 0) {
-			int type = ireg.read();
+			int type = ireg.read();			
+			if (type == IREG_ENDMARK) { // End of list.
+				//System.out.println("readSpecialIreg: found ENDMARK");
+				return;
+			}
 			if (!isValidSpecialIreg(type)) {
 				break;
-			}
-			if (type == IREG_ENDMARK) { // End of list.
-				return;
 			}
 			readOneSpecialIreg(ireg, obj, type);
 			ireg.mark(4000);
 		}
 		ireg.reset();
+		//System.out.println("readSpecialIreg: after reset, entlen = " + entlen);
 	}
 	/*
 	 *	Read a list of ireg objects.  They are either placed in the desired
@@ -412,10 +414,6 @@ public class GameMap extends GameSingletons {
 			} else {
 				shnum = ((int)entbuf[2]&0xff) + 256*((int)entbuf[3]&3);
 				frnum = ((int)entbuf[3]&0xff) >> 2;
-			}
-			if (shnum == 426 && frnum == 0 && container != null) {
-				System.out.println("Found it: " + tilex + ", " + tiley + ", cx = " +
-						cx + ", cy = " + cy + ", container is a " + container.getShapeNum());
 			}
 			ShapeInfo info = ShapeID.getInfo(shnum);
 			int lift, quality = 0, type;
@@ -506,6 +504,9 @@ public class GameMap extends GameSingletons {
 					type = 0;
 					}
 				else */ if (info.getShapeClass() == ShapeInfo.barge) {
+					//System.out.printf(
+					//		"create barge with xtiles = %1$d, ytiles = %2$d, type = %3$x\n",
+					//		entbuf[4], entbuf[5], type);
 					BargeObject b = new BargeObject(
 					    shnum, frnum, tilex, tiley, lift,
 						entbuf[4], entbuf[5], (quality>>1)&3);

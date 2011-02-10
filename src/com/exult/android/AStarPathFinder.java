@@ -4,6 +4,7 @@ import java.util.PriorityQueue;
 import java.util.Comparator;
 
 public class AStarPathFinder extends PathFinder {
+	public static boolean debug = false;
 	private PriorityQueue<SearchNode> open;	// Nodes to be done, by priority.
 	private HashMap<Tile,SearchNode> lookup;		// For finding each tile's node.
 	private Tile ntile = new Tile();		// For going through neighbors.
@@ -82,7 +83,8 @@ public class AStarPathFinder extends PathFinder {
 			if (client.atGoal(curtile, goal)) {
 						// Success.
 				path = node.createPath();
-				System.out.printf("AStar: SUCCESS.  Path.length = %1$d\n", path.length);
+				if (debug)
+					System.out.printf("AStar: SUCCESS.  Path.length = %1$d\n", path.length);
 				return true;
 			}
 			// Go through neighbors.

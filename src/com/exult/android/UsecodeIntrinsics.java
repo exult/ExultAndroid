@@ -1407,6 +1407,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		Vector<GameObject> vec = new Vector<GameObject>();
 		// Find it within 20 tiles (egglike).
 		obj.findNearby(vec, 961, 20, 0x10);
+		System.out.println("getBarge:  found " + vec.size());
 		if (vec.size() > 1)		// Sort right-left, near-far.
 			Collections.sort(vec, new ReverseSorter());
 						// Object must be inside it.
@@ -1414,17 +1415,21 @@ public class UsecodeIntrinsics extends GameSingletons {
 		BargeObject best = null;
 		for (GameObject each : vec) {
 			barge = each.asBarge();
-			if (barge != null && barge.getTileFootprint().hasPoint(
-								tx, ty)) {
-				int lift = barge.getLift();
-				if (best == null || 	// First qualifying?
-						// First beneath obj.?
-				    (best.getLift() > tz && lift <= tz) ||
-						// Highest beneath?
-				    (lift <= tz && lift > best.getLift()))
-					best = barge;
+			if (barge != null) {
+				Rectangle foot = barge.getTileFootprint();
+				System.out.println("barge: footprint is " + foot +
+						", tx = " + tx + ", ty = " + ty);
+				if (foot.hasPoint(tx, ty)) {
+					int lift = barge.getLift();
+					if (best == null || 	// First qualifying?
+							// First beneath obj.?
+							(best.getLift() > tz && lift <= tz) ||
+							// Highest beneath?
+							(lift <= tz && lift > best.getLift()))
+						best = barge;
 				}
 			}
+		}
 		return best;
 	}
 	private final UsecodeValue onBarge() {
