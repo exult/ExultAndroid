@@ -1125,6 +1125,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		add(best, true);			// Should go to the right place.
 		return true;
 	}
+	public final boolean checkGearPowers(int f) {
+		return (gearPowers&f) != 0;
+	}
 	/*
 	 *	Get weapon value.
 	 */

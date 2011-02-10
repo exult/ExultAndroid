@@ -142,6 +142,20 @@ public class GameWindow extends GameSingletons {
 	public final boolean inCombat() {
 		return false;	//++++++FINISH
 	}
+	//	Return party in alist, along with count.  Need room for 9.
+	public int getParty(Actor a_list[], boolean avatar_too) {
+		int n = 0;
+		if (avatar_too && mainActor != null)
+			a_list[n++] = mainActor;
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt; i++) {
+			int party_member = partyman.getMember(i);
+			Actor person = getNpc(party_member);
+			if (person != null)
+				a_list[n++] = person;
+		}
+		return n;			// Return # actually stored.
+	}
 	/*
 	 *	Return delay in ticks to expiration (or 1500 (30secs) if indefinite).
 	 */

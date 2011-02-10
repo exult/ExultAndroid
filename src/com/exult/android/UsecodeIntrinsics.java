@@ -2,6 +2,8 @@ package com.exult.android;
 import com.exult.android.shapeinf.*;
 import java.util.Vector;
 import java.util.LinkedList;
+import java.util.Comparator;
+import java.util.Collections;
 import android.graphics.Point;
 
 public class UsecodeIntrinsics extends GameSingletons {
@@ -1310,6 +1312,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 			gump = new TextGump.Book();
 		ucmachine.setBook(gump);
 	}
+	private final UsecodeValue getBarge(UsecodeValue p0) {
+		// get_barge(obj) - returns barge object is part of or lying on.
+
+		GameObject obj = getItem(p0);
+		if (obj != null)
+			obj = getBarge(obj);
+		return obj == null ? UsecodeValue.getNullObj() :
+					new UsecodeValue.ObjectValue(obj);
+	}
 	private final void earthquake(UsecodeValue p0) {
 		int len = p0.getIntValue();
 		tqueue.add(tqueue.ticks + 1,
@@ -1365,34 +1376,79 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Set entire frame, including rotated bit.
 		setItemFrame(getItem(p0), p1.getIntValue(), false, true);
 	}
-
+	/*
+	 *	For sorting up-to-down, right-to-left, and near-to-far:
+	 */
+	public static class ReverseSorter implements Comparator<GameObject> {
+		Tile t1 = new Tile(), t2 = new Tile();
+		public ReverseSorter() {
+		}
+		public int compare(GameObject o1, GameObject o2) {
+			o1.getTile(t1); o2.getTile(t2);
+			int val = t2.ty - t1.ty;
+			if (val == 0) {
+				val = t2.tx = t1.tx;
+				if (val == 0)
+					val = t2.tz - t1.tz;
+			}
+			return val;
+		}
+	}
+	/*
+	 *	Look for a barge that an object is a part of, or on, using the same
+	 *	sort (right-left, front-back) as ::find_nearby().  If there are more
+	 *	than one beneath 'obj', the highest is returned.
+	 */
+	private static BargeObject getBarge(GameObject obj) {
+		// Check object itself.
+		BargeObject barge = obj.asBarge();
+		if (barge != null)
+			return barge;
+		Vector<GameObject> vec = new Vector<GameObject>();
+		// Find it within 20 tiles (egglike).
+		obj.findNearby(vec, 961, 20, 0x10);
+		if (vec.size() > 1)		// Sort right-left, near-far.
+			Collections.sort(vec, new ReverseSorter());
+						// Object must be inside it.
+		int tx = obj.getTileX(), ty = obj.getTileY(), tz = obj.getLift();
+		BargeObject best = null;
+		for (GameObject each : vec) {
+			barge = each.asBarge();
+			if (barge != null && barge.getTileFootprint().hasPoint(
+								tx, ty)) {
+				int lift = barge.getLift();
+				if (best == null || 	// First qualifying?
+						// First beneath obj.?
+				    (best.getLift() > tz && lift <= tz) ||
+						// Highest beneath?
+				    (lift <= tz && lift > best.getLift()))
+					best = barge;
+				}
+			}
+		return best;
+	}
 	private final UsecodeValue onBarge() {
 		// Only used once for BG, in usecode for magic-carpet.
 		// For SI, used for turtle.
 		// on_barge()
-		/* +++++++FINISH
-		Barge_object barge = Get_barge(gwin.getMainActor());
-		if (barge)
-			{			// See if party is on barge.
-			Rectangle foot = barge.get_tile_footprint();
-			Actor *party[9];
-			int cnt = gwin.get_party(party, 1);
-			for (int i = 0; i < cnt; i++)
-				{
-				Actor *act = party[i];
-				Tile_coord t = act.get_tile();
-				if (!foot.has_point(t.tx, t.ty))
-					return Usecode_value(0);
-				}
+		BargeObject barge = getBarge(gwin.getMainActor());
+		if (barge != null) {			// See if party is on barge.
+			Rectangle foot = barge.getTileFootprint();
+			Actor party[] = new Actor[9];
+			int cnt = gwin.getParty(party, true);
+			for (int i = 0; i < cnt; i++) {
+				Actor act = party[i];
+				int tx = act.getTileX(), ty = act.getTileY();
+				if (!foot.hasPoint(tx, ty))
+					return UsecodeValue.getZero();
+			}
 						// Force 'gather()' for turtle.
-			if (Game.get_game_type() == SERPENT_ISLE)
+			if (game.isSI())
 				barge.done();
-			return Usecode_value(1);
-			} 
-		*/
+			return UsecodeValue.getOne();
+		} 
 		return UsecodeValue.getZero();
 	}
-
 	private final UsecodeValue getContainer(UsecodeValue p0) {
 		// Takes itemref, returns container.
 		GameObject obj = getItem(p0);
@@ -1513,6 +1569,17 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// +++++FINISH new Object_sfx(obj, parms[0].getIntValue());
 		audio.playSfx(sfxnum);	// +++++FOR NOW
 	}
+	private final static boolean isMovingBargeFlag(int fnum) {
+		if (game.isBG()) {
+		return fnum == GameObject.on_moving_barge ||
+			   fnum == GameObject.in_motion;
+		} else {			// SI.
+			return fnum == GameObject.si_on_moving_barge ||
+					// Ice raft needs this one:
+					fnum == GameObject.on_moving_barge ||
+					fnum == GameObject.in_motion;
+		}
+	}
 	private final static UsecodeValue getItemFlag(UsecodeValue p0, UsecodeValue p1) {
 		// Get npc flag(item, flag#).
 		GameObject obj = getItem(p0);
@@ -1520,37 +1587,34 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return UsecodeValue.getZero();
 		int fnum = p1.getIntValue();
 						// Special cases:
-		/* +++++++++FINISH
-		if (Is_moving_barge_flag(fnum))
-			{			// Test for moving barge.
-			Barge_object *barge;
-			if (!gwin.get_moving_barge() || !(barge = Get_barge(obj)))
-				return Usecode_value(0);
-			return Usecode_value(barge == gwin.get_moving_barge());
-			}
-		else if (fnum == (int) GameObject.okay_to_land)
-			{			// Okay to land flying carpet?
-			Barge_object *barge = Get_barge(obj);
-			if (!barge)
-				return Usecode_value(0);
-			return Usecode_value(barge.okay_to_land());
-			}
-		else if (fnum == (int) GameObject.immunities) {
+		if (isMovingBargeFlag(fnum)) {	// Test for moving barge.
+			BargeObject barge;
+			if (gwin.getMovingBarge() == null || (barge = getBarge(obj)) == null)
+				return UsecodeValue.getZero();
+			return (barge == gwin.getMovingBarge()) ? UsecodeValue.getOne()
+													: UsecodeValue.getZero();
+		} else if (fnum == GameObject.okay_to_land) { // Okay to land flying carpet?
+			BargeObject barge = getBarge(obj);
+			if (barge == null)
+				return UsecodeValue.getZero();
+			return barge.okayToLand() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		} else if (fnum == GameObject.immunities) {
 			Actor npc = obj.asActor();
 			MonsterInfo inf = obj.getInfo().getMonsterInfo();
-			return Usecode_value((inf != 0 && inf.power_safe()) ||
-					(npc && npc.check_gear_powers(Frame_flags.power_safe)));
-			}
-		else if (fnum == (int) GameObject.cant_die)
+			return ((inf != null && inf.powerSafe()) ||
+				(npc != null && npc.checkGearPowers(FrameFlagsInfo.power_safe)))
+				? UsecodeValue.getZero() : UsecodeValue.getOne();
+		} else if (fnum == GameObject.cant_die)
 			{
 			Actor npc = obj.asActor();
 			MonsterInfo inf = obj.getInfo().getMonsterInfo();
-			return Usecode_value((inf != 0 && inf.death_safe()) ||
-					(npc && npc.check_gear_powers(Frame_flags.death_safe)));
-			}
+			return ((inf != null && inf.deathSafe()) ||
+					(npc != null && npc.checkGearPowers(FrameFlagsInfo.death_safe)))
+				? UsecodeValue.getZero() : UsecodeValue.getOne();
+		}
 						// +++++0x18 is used in testing for
 						//   blocked gangplank. What is it?????
-		else */ if (fnum == 0x18 && game.isBG())
+		else if (fnum == 0x18 && game.isBG())
 			return UsecodeValue.getOne();
 		/* +++++++FINISH
 		else if (fnum == (int) GameObject.in_dungeon)
@@ -1590,14 +1654,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 			sailor = obj;
 		default:
 			obj.setFlag(flag);
-			/* +++++++FINISH
-			if (Is_moving_barge_flag(flag))
-				{		// Set barge in motion.
-				Barge_object *barge = Get_barge(obj);
-				if (barge)
-					gwin.set_moving_barge(barge);
-				}
-			*/
+			if (isMovingBargeFlag(flag)) {	// Set barge in motion.
+				BargeObject barge = getBarge(obj);
+				if (barge != null)
+					gwin.setMovingBarge(barge);
+			}
 			break;
 		}
 	}
@@ -1611,15 +1672,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 					// Show change in status.
 				ucmachine.show_pending_text();	// Fixes Lydia-tatoo.
 				gwin.setAllDirty();
-			} /* +++++ FINISH else if (Is_moving_barge_flag(flag))
-				{	// Stop barge object is on or part of.
-				Barge_object *barge = Get_barge(obj);
-				if (barge && barge == gwin.get_moving_barge())
-					gwin.set_moving_barge(0);
-				}
+			} else if (isMovingBargeFlag(flag)) {
+					// Stop barge object is on or part of.
+				BargeObject barge = getBarge(obj);
+				if (barge != null && barge == gwin.getMovingBarge())
+					gwin.setMovingBarge(null);
+			}
 			else if (flag == 0x14)		// Handles Ferryman
-				sailor = 0;
-			*/
+				sailor = null;
 		}
 	}
 	private final static UsecodeValue isWater(UsecodeValue p0) {
@@ -1817,6 +1877,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x55:
 			bookMode(parms[0]); break;
 		//++++++++++++
+		case 0x58:
+			return getBarge(parms[0]);
 		case 0x59:			
 			synchronized(gwin.getWin()) {
 				earthquake(parms[0]);
