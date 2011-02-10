@@ -1240,7 +1240,7 @@ public abstract class Schedule extends GameSingletons {
 						return;	// Nope.
 				}
 							// Find barge.
-				GameObject barge = null; //+++++FINISH chair.findClosest(961);
+				GameObject barge = chair.findClosest(961);
 				if (barge == null)
 					return;
 				int usefun = 0x634;	// I hate using constants like this.
