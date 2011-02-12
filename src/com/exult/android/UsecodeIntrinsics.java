@@ -961,11 +961,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 			String str = lval.getStringValue();
 			sign.addText(i, str);
 		}
-		Point p = new Point();			// Paint it, and wait for click.
-		//Get_click(x, y, Mouse.hand, 0, false, sign);
-		ExultActivity.getClick(p);
-		gumpman.closeGump(sign);
-		gwin.setAllDirty();
 	}
 	public final UsecodeValue clickOnItem(int event) {
 		// Doesn't ret. until user single-

@@ -1,6 +1,6 @@
 package com.exult.android;
 
-public class SignGump extends Gump {
+public class SignGump extends Gump.Modal {
 	protected Rectangle textArea = new Rectangle();
 	private String lines[];
 	private boolean serpentine;
