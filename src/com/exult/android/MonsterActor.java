@@ -170,7 +170,7 @@ public class MonsterActor extends NpcActor {
 	public static MonsterActor create
 		(
 		int shnum,			// Shape to use.
-		Tile pos,			// Where to place it.  If pos.tx < 0,
+		Tile pos,			// Where to place it.  If pos is null or pos.tx < 0,
 							//   it's not placed in the world.
 		int sched,			// Schedule type.
 		int align,			// Alignment.
@@ -236,7 +236,7 @@ public class MonsterActor extends NpcActor {
 		if (temporary) 
 			monster.setFlag (GameObject.is_temporary);
 		monster.setInvalid();		// Place in world.
-		if (pos.tx >= 0)
+		if (pos != null && pos.tx >= 0)
 			monster.move(pos.tx, pos.ty, pos.tz);
 		if (equipment) {
 			monster.equip(inf, temporary);	// Get equipment.

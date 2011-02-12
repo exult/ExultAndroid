@@ -587,23 +587,19 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = null;		// Create to be written to Ireg.
 		ShapeInfo info = ShapeID.getInfo(shapenum);
 		ucmachine.setModifiedMap();
-		/* +++++++++FINISH
 						// +++Not sure if 1st test is needed.
-		if (info.getMonsterInfo() || info.isNpc()) {
+		if (info.getMonsterInfo() != null || info.isNpc()) {
 						// (Wait sched. added for FOV.)
 			// don't add equipment (Erethian's transform sequence)
-			/* +++++FINISH
-			Monster_actor *monster = Monster_actor.create(shapenum,
-				Tile_coord(-1, -1, -1), Schedule.wait, 
-						(int) Actor.neutral, true, equip);
+			MonsterActor monster = MonsterActor.create(shapenum,
+				null, Schedule.wait, Actor.neutral, true, equip);
 						// FORCE it to be neutral (dec04,01).
-			monster.set_alignment((int) Actor.neutral);
+			monster.setAlignment((int) Actor.neutral);
 			gwin.addDirty(monster);
-			gwin.add_nearby_npc(monster);
-			gwin.show();
-			last_created.push_back(monster);
+			//+++++++++FINISH gwin.add_nearby_npc(monster);
+			last_created.add(monster);
 			return monster;
-		} else */ {
+		} else  {
 			/* +++++++++++
 			if (info.isBodyShape())
 				obj = new Dead_body(shapenum, 0, 0, 0, 0, -1);
@@ -1127,13 +1123,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (npc != null) {
 			int oldalign = npc.getAlignment();
 			npc.setAlignment(val);
-			/* ++++++++++++FINISH
 			if (oldalign != val)	// Changed?  Force search for new opp.
-				npc.setTarget(0);
+				npc.setTarget(null, false);
 						// For fixing List Field fleeing:
-			if (npc.get_attack_mode() == Actor.flee)
-				npc.set_attack_mode(Actor.nearest);
-			*/
+			if (npc.getAttackMode() == Actor.flee)
+				npc.setAttackMode(Actor.nearest, false);
 		}
 	}
 	private final void moveObject(UsecodeValue p0, UsecodeValue p1,
@@ -1163,8 +1157,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 				if (map != -1)
 					gwin.setMap(map);
 				gwin.centerView(tile.tx, tile.ty);
-				/* +++++++++++
-				MapChunk.try_all_eggs(ava, tile.tx, 
+				/* ++++++++FINISH
+				MapChunk.tryAllEggs(ava, tile.tx, 
 					tile.ty, tile.tz, oldX, oldY);
 				*/
 			// Close?  Add to 'nearby' list.
@@ -1328,6 +1322,30 @@ public class UsecodeIntrinsics extends GameSingletons {
 										game.getShape("sprites/map"), 0);
 		new MapGump(s, cnt > 0);
 	}
+	private UsecodeValue rollToWin(UsecodeValue p0, UsecodeValue p1) {
+		// roll_to_win(attackpts, defendpts)
+		int attack = p0.getIntValue();
+		int defend = p1.getIntValue();
+		boolean win = Actor.rollToWin(attack, defend);
+		return win ? UsecodeValue.getOne() : UsecodeValue.getZero();
+	}
+	private void setAttackMode(UsecodeValue p0, UsecodeValue p1) {
+		// set_attack_mode(npc, mode).
+		Actor npc = asActor(getItem(p0));
+		if (npc != null)
+			npc.setAttackMode(p1.needIntValue(), false);
+	}
+	private void setOppressor(UsecodeValue p0, UsecodeValue p1) {
+		// set_oppressor(npc, opp)
+		Actor npc = asActor(getItem(p0));
+		Actor opp = asActor(getItem(p1));
+		if (npc != null && opp != null && npc != opp) {	// Just in case.
+			if (opp == gwin.getMainActor())
+				npc.setOppressor(0);
+			else
+				npc.setOppressor(opp.getNpcNum());
+		}
+	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
 		TextGump gump;
@@ -1358,7 +1376,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	private final void earthquake(UsecodeValue p0) {
 		int len = p0.getIntValue();
-		tqueue.add(tqueue.ticks + 1,
+		tqueue.add(TimeQueue.ticks + 1,
 			new EffectsManager.Earthquake(len), this);
 	}
 	private final UsecodeValue isPCFemale() {
@@ -1742,6 +1760,21 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getZero();
 	}
+	private UsecodeValue getAttackMode(UsecodeValue p0) {
+		// get_attack_mode(npc).
+		Actor npc = asActor(getItem(p0));
+		if (npc != null)
+			return new UsecodeValue.IntValue(npc.getAttackMode());
+		else
+			return UsecodeValue.getZero();
+	}
+	private void setOpponent(UsecodeValue p0, UsecodeValue p1) {
+		// set_opponent(npc, new_opponent).
+		Actor npc = asActor(getItem(p0));
+		GameObject opponent = getItem(p1);
+		if (npc != null && opponent != null)
+			npc.setTarget(opponent, false);
+	}
 	//	For BlackGate.
 	public UsecodeValue execute(int id, int event, int num_parms, UsecodeValue parms[]) {
 		switch (id) {
@@ -1916,6 +1949,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x48:
 			displayMap(); break;
 		//++++++++++++
+		case 0x4a:
+			return rollToWin(parms[0], parms[1]);
+		case 0x4b:
+			setAttackMode(parms[0], parms[1]); break;
+		case 0x4c:
+			setOppressor(parms[0], parms[1]); break;
+		//+++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
 		//++++++++++++
@@ -1988,6 +2028,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x90:
 			return isWater(parms[0]);
 		//++++++++++++++++
+		case 0xa1:
+			return getAttackMode(parms[0]);
+		case 0xb2:
+			setOpponent(parms[0], parms[1]); break;
 		default:
 			System.out.printf("*** UNHANDLED intrinsic # %1$02x\n", id);
 			break;

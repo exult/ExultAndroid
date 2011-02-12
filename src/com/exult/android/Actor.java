@@ -1131,12 +1131,22 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	/*
 	 *	Get weapon value.
 	 */
-	GameObject getWeapon() {
+	public GameObject getWeapon() {
 		GameObject weapon = spots[Ready.lhand];
 		if (weapon != null && weapon.getInfo().getWeaponInfo() != null) {
 			return weapon;
 		} else
 			return null;
+	}
+	public static boolean rollToWin(int attacker, int defender) {
+		final int sides = 30;
+		int roll = EUtil.rand()%sides;
+		if (roll == 0)			// Always lose.
+			return false;
+		else if (roll == sides - 1)	// High?  Always win.
+			return true;
+		else
+			return roll + attacker - defender >= sides/2 - 1;
 	}
 	/*
 	 *	If no weapon readied, look through all possessions for the best one.
@@ -1222,6 +1232,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			obj.removeThis();
 			addReadied(obj, Ready.belt);
 		}
+	}
+	public final int getAttackMode() {
+		return attackMode;
+	}
+	public final void setAttackMode(int amode, boolean byUser) {
+		attackMode = amode;
+		userSetAttack = byUser;
 	}
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
@@ -1920,8 +1937,29 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		*/
 		return true;
 	}
+	public final int getOppressor() {
+		return oppressor;
+	}
+	public final void setOppressor(int opp) {
+		oppressor = (short)opp;
+	}
 	public final GameObject getTarget() {
 		return target;
+	}
+	public final void setTarget(GameObject obj, boolean startCombat) {
+		target = obj;
+		boolean im_party = getFlag(GameObject.in_party) || this == gwin.getMainActor();
+		if (startCombat && !im_party &&
+				(scheduleType != Schedule.combat || schedule == null))
+			setScheduleType(Schedule.combat);
+		Actor opponent = obj != null ? obj.asActor() : null;
+		if (opponent != null)
+			opponent.setOppressor(getNpcNum());
+			// Pure guess.
+		Actor oppr = oppressor >= 0 ? gwin.getNpc(oppressor) : null;
+		if (oppr != null && (oppr.getTarget() != this ||
+				oppr.getScheduleType() != Schedule.combat))
+			oppressor = -1;
 	}
 	public final boolean canAct() {
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)
