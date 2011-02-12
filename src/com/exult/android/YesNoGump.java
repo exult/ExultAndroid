@@ -35,8 +35,7 @@ public class YesNoGump extends Gump.Modal {
 		{ return answer; }
 					// Paint it and its contents.
 	public void paint() {	
-		paintShape(x, y);
-		paintElems();			// Paint buttons.
+		super.paint();
 		// Paint text.
 		fonts.paintTextBox(gwin.getWin(), font, text, 
 				x + areax, y + areay, areaw, areah, 2, false, false);

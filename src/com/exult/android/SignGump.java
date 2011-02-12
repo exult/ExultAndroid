@@ -1,10 +1,11 @@
 package com.exult.android;
 
-public class SignGump extends Gump.Container {
+public class SignGump extends Gump {
+	protected Rectangle textArea = new Rectangle();
 	private String lines[];
 	private boolean serpentine;
 	public SignGump(int shapenum, int nlines) {
-		super(null, shapenum);
+		super(shapenum);
 		lines = new String[nlines];// THIS IS A HACK, but don't ask me why this is like this,
 		if (game.isSI() && shapenum==49) {
 			// check for avatar read here
@@ -12,26 +13,26 @@ public class SignGump extends Gump.Container {
 			if (!avatar.getFlag(GameObject.read))
 				serpentine = true;
 			shapenum = game.getShape("gumps/goldsign");
-			setShape(shapenum);
+			initShape(shapenum, null);
 			setPos();	// Recenter
 		}
 		if(shapenum==game.getShape("gumps/woodsign"))
 		{
-			setObjectArea(0, 4, 196, 92);
+			textArea.set(0, 4, 196, 92);
 		}
 		else if(shapenum==game.getShape("gumps/tombstone"))
 		{
-			setObjectArea(0, 8, 200, 112);
+			textArea.set(0, 8, 200, 112);
 		}
 		else if(shapenum==game.getShape("gumps/goldsign"))
 		{
 			if (game.isBG())
-				setObjectArea(0, 4, 232, 96);
+				textArea.set(0, 4, 232, 96);
 			else			// SI
-				setObjectArea(4, 4, 312, 96);
+				textArea.set(4, 4, 312, 96);
 		}
 		else if (shapenum==game.getShape("gumps/scroll"))
-			setObjectArea(48, 30, 146, 118);
+			textArea.set(48, 30, 146, 118);
 	}
 	public void addText(int line, String txt) {	
 		if (line < 0 || line >= lines.length)
@@ -82,17 +83,17 @@ public class SignGump extends Gump.Container {
 		int lheight = fonts.getTextHeight(font);
 						// Get space between lines.
 		int num_lines = lines.length;
-		int lspace = (objectArea.h - num_lines*lheight)/(num_lines + 1);
+		int lspace = (textArea.h - num_lines*lheight)/(num_lines + 1);
 						// Paint the gump itself.
-		paintShape(x, y);
-		int ypos = y + objectArea.y;	// Where to paint next line.
+		super.paint();
+		int ypos = y + textArea.y;	// Where to paint next line.
 		for (int i = 0; i < num_lines; i++) {
 			ypos += lspace;
 			if (lines[i] == null)
 				continue;
 			fonts.paintText(font, lines[i],
-				x + objectArea.x + 
-					(objectArea.w - 
+				x + textArea.x + 
+					(textArea.w - 
 				fonts.getTextWidth(font, lines[i]))/2,
 				ypos);
 			ypos += lheight;

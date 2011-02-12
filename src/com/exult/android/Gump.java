@@ -2,29 +2,44 @@ package com.exult.android;
 import java.util.Vector;
 import android.graphics.Point;
 
-public abstract class Gump extends ShapeID {
+public abstract class Gump extends GameSingletons {
+	protected int shapeNum;
+	protected ShapeFrame shape;	// Gump's shape.
 	protected int x, y;			// Location on screen.
 	protected Vector<GumpWidget> elems;	// ie, checkmarks.
 	protected boolean handlesKbd;
 	protected void addElem(GumpWidget w) {
 		elems.add(w);
 	}
+	protected void initShape(int shnum, ShapeFiles file) {
+		if (file == null)
+			file = ShapeFiles.GUMPS_VGA;
+		shape = file.getShape(shnum, 0);
+		shapeNum = shnum;
+	}
 	public Gump(int initx, int inity, int shnum, ShapeFiles file) {
-		super(shnum, 0, file);
+		initShape(shnum, file);
 		elems = new Vector<GumpWidget>();
 		x = initx; y = inity;
 		gumpman.addGump(this);
 	}
 	// Create centered.
 	public Gump(int shnum) {
-		super(shnum, 0, ShapeFiles.GUMPS_VGA);
+		initShape(shnum, ShapeFiles.GUMPS_VGA);
 		elems = new Vector<GumpWidget>();
 		setPos();
 		gumpman.addGump(this);
 	}
 	public Gump(int shnum, ShapeFiles file) {
-		super(shnum, 0, file);
+		initShape(shnum, file);
 		elems = new Vector<GumpWidget>();
+		setPos();
+		gumpman.addGump(this);
+	}
+	// Centered, with given shape and no checkmark.
+	protected Gump(ShapeFrame s) {
+		shape = s;
+		shapeNum = -1;
 		setPos();
 		gumpman.addGump(this);
 	}
@@ -42,28 +57,28 @@ public abstract class Gump extends ShapeID {
 	}
 	// Set centered.
 	public final void setPos() {
-		ShapeFrame shape = getShape();
-		x = (gwin.getWidth() - shape.getWidth())/2;
-		y = (gwin.getHeight() - shape.getHeight())/2;
+		x = (gwin.getWidth() - shape.getWidth())/2 + shape.getXLeft();
+		y = (gwin.getHeight() - shape.getHeight())/2 + shape.getYAbove();
 	}
 	//	Get area covered by gump and its contents.
 	public void getDirty(Rectangle rect) {
-		ShapeFrame s = getShape();
-		if (s == null) 
+		if (shape == null) 
 			rect.set(0,0,0,0);
 		else
-			rect.set(x - s.getXLeft(), 	y - s.getYAbove(),
-				s.getWidth(), s.getHeight());
+			rect.set(x - shape.getXLeft(), 	y - shape.getYAbove(),
+				shape.getWidth(), shape.getHeight());
 	}
 	public void paint() {
-		paintShape(x, y);
+		shape.paint(gwin.getWin(), x, y);
 		gwin.setPainted();
 		paintElems();		// Checkmark, buttons.
 	}
 	public final void paintElems() {
-		int cnt = elems.size();
-		for (int i = 0; i < cnt; ++i)
-			elems.elementAt(i).paint();
+		if (elems != null) {
+			int cnt = elems.size();
+			for (int i = 0; i < cnt; ++i)
+				elems.elementAt(i).paint();
+		}
 	}
 	public final boolean canHandleKbd() {
 		return handlesKbd;
@@ -94,9 +109,11 @@ public abstract class Gump extends ShapeID {
 	public boolean isModal() {
 		return false;
 	}
+	public final int getShapeNum() {
+		return shapeNum;
+	}
 	public boolean hasPoint(int sx, int sy) {
-		ShapeFrame s = getShape();
-		return s != null && s.hasPoint(sx - x, sy - y);
+		return shape != null && shape.hasPoint(sx - x, sy - y);
 	}
 	/*
 	 *	Is a given screen point on the checkmark?
@@ -363,6 +380,9 @@ public abstract class Gump extends ShapeID {
 		// Create centered.
 		public Modal(int shnum, ShapeFiles file) {
 			super(shnum, file);
+		}
+		public Modal (ShapeFrame s) {
+			super(s);
 		}
 		public Modal(int shnum) {
 			super(shnum);

@@ -85,7 +85,7 @@ public class TextGump extends Gump {
 		}
 		public void paint() {
 						// Paint the gump itself.
-			paintShape(x, y);
+			super.paint();
 						// Paint left page.
 			curend = paintPage(36, 10, 122, 130, curtop);
 						// Paint right page.
@@ -100,7 +100,7 @@ public class TextGump extends Gump {
 			super(game.getShape("gumps/scroll"), fontnum);
 		}
 		public void paint() {	
-			paintShape(x, y);	// The gump itself.
+			super.paint();	// The gump itself.
 			curend = paintPage(52, 30, 142, 118, curtop);
 		}
 	}

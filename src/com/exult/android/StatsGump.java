@@ -33,7 +33,7 @@ public class StatsGump extends Gump {
 		}
 		*/
 					// Paint the gump itself.
-		paintShape(x, y);
+		super.paint();
 					// Paint red "checkmark".
 		paintElems();
 					// Show statistics.

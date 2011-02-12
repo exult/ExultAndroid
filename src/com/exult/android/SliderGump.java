@@ -79,7 +79,7 @@ public class SliderGump extends Gump.Modal {
 	public void paint() {
 		final int textx = 128, texty = 7;
 		// Paint the gump itself.
-		paintShape(x, y);
+		super.paint();
 		// Paint red "checkmark".
 		paintElems();
 		// Paint slider diamond.
