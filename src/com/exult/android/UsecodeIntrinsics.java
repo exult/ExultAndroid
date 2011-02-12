@@ -714,6 +714,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (obj != null)
 				total += obj.countObjects(shapenum, qual, framenum);
 		}
+		total += gwin.getMainActor().countObjects(shapenum, qual, framenum);
 		return total;
 	}
 	private final UsecodeValue countObjects(
@@ -1292,6 +1293,45 @@ public class UsecodeIntrinsics extends GameSingletons {
 		MonsterActor monst = MonsterActor.create(shapenum, dest,
 						Schedule.combat, align);
 		return new UsecodeValue.ObjectValue(monst);
+	}
+	private static class MapGump extends Gump.Modal {
+		int tx, ty;		// Avatar position.
+		public MapGump(ShapeFrame s, boolean loc) {
+			super(s);
+			if (loc) {
+				Actor a = gwin.getMainActor();
+				tx = a.getTileX(); ty = a.getTileY();;
+			} else
+				tx = -1;
+		}
+		@Override
+		public void paint() {
+			super.paint();
+			if (tx != -1) {		// mark location
+				int xx, yy;
+				if (game.isBG()) {
+					xx = (int)(tx/16.05 + 5 + 0.5);
+					yy = (int)(ty/15.95 + 4 + 0.5);
+				} else if (game.isSI()) {
+					xx = (int)(tx/16.0 + 18 + 0.5);
+					yy = (int)(ty/16.0 + 9.4 + 0.5);
+				} else {
+					xx = (int)(tx/16.0 + 5 + 0.5);
+					yy = (int)(ty/16.0 + 5 + 0.5);
+				}
+				xx += x - shape.getXLeft();
+				yy += y - shape.getYAbove();
+				gwin.getWin().fill8((byte)255, 1, 5, xx, yy - 2);
+				gwin.getWin().fill8((byte)255, 5, 1, xx - 2, yy);
+			}
+		}
+	}
+	private void displayMap() {
+		// Count all sextants in party.
+		int cnt = countPartyObjects(650, EConst.c_any_framenum, EConst.c_any_qual);
+		ShapeFrame s = ShapeFiles.SPRITES_VGA.getShape(
+										game.getShape("sprites/map"), 0);
+		new MapGump(s, cnt > 0);
 	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
@@ -1878,6 +1918,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			sitDown(parms[0], parms[1]); break;
 		case 0x47:
 			return summon(parms[0]);
+		case 0x48:
+			displayMap(); break;
 		//++++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;

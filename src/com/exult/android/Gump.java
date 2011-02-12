@@ -391,8 +391,13 @@ public abstract class Gump extends GameSingletons {
 			return done;
 		}
 		// Handle events:
-		public abstract boolean mouseDown(int mx, int my, int button);
-		public abstract boolean mouseUp(int mx, int my, int button);
+		public boolean mouseDown(int mx, int my, int button) {
+			return false;
+		}
+		public boolean mouseUp(int mx, int my, int button) {
+			close();
+			return true;
+		}
 		public void mouseDrag(int mx, int my)
 			{  }
 		public void keyDown(int chr) // Key pressed
