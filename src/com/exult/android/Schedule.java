@@ -1163,12 +1163,8 @@ public abstract class Schedule extends GameSingletons {
 				return false;	// We're standing there.
 						// See if spot is blocked.
 			pos.set(sitloc);// Careful, .tz gets updated.
-			MapChunk nlist = gmap.getChunk(pos.tx/EConst.c_tiles_per_chunk, 
-										   pos.ty/EConst.c_tiles_per_chunk);
-			if (nlist.spotAvailable(actor.getInfo().get3dHeight(), 
-					pos.tx%EConst.c_tiles_per_chunk, 
-					pos.ty%EConst.c_tiles_per_chunk, pos.tz, 
-					EConst.MOVE_WALK, 0, -1) < 0)
+			if (gmap.spotAvailable(actor.getInfo().get3dHeight(), 
+					pos.tx, pos.ty, pos.tz, EConst.MOVE_WALK, 0, -1) < 0)
 				return true;
 			return false;
 		}

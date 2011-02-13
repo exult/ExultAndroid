@@ -38,6 +38,7 @@ public class GameWindow extends GameSingletons {
 	private MainActor mainActor;
 	private Actor cameraActor;		// What to center view on.
 	private Vector<Actor> npcs;
+	private Vector<Actor.DeadBody> bodies;
 	private int numNpcs1;			// Number of type1 NPC's.
 	private BargeObject movingBarge;
 	// Rendering
@@ -95,7 +96,6 @@ public class GameWindow extends GameSingletons {
 		GameSingletons.init(this);
 		skipLift = 16;
 		skipAboveActor = 31;
-		
 	}
 	/*
 	 *	Read any map.  (This is for "multimap" games, not U7.)
@@ -202,6 +202,17 @@ public class GameWindow extends GameSingletons {
 	}
 	public final Actor getNpc(int n) {
 		return n >= 0 && n < npcs.size() ? npcs.elementAt(n) : null;
+	}
+	public void setBody(int npcNum, Actor.DeadBody body) {
+		if (bodies == null)
+			bodies = new Vector<Actor.DeadBody>(npcNum + 1);
+		else if (npcNum >= bodies.size())
+			bodies.setSize(npcNum + 1);
+		bodies.setElementAt(body, npcNum);
+	}
+	public Actor.DeadBody getBody(int npcNum) {
+		return bodies != null && bodies.size() > npcNum ? bodies.elementAt(npcNum)
+				: null;
 	}
 	public final int getRenderSkipLift()	{	// Skip rendering here.
 		return skipAboveActor < skipLift ?
@@ -670,6 +681,15 @@ public class GameWindow extends GameSingletons {
 			if (!gumpman.gumpMode())
 					mainActor.getFollowers();
 		}
+	}
+	/*
+	 *	Have nearby residents attack the Avatar.
+	 */
+	public void attackAvatar
+		(
+		int create_guards		// # of extra guards to create.
+		) {
+		//++++++++++FINISH
 	}
 	/*
 	 *	Find the top object that can be selected, dragged, or activated.

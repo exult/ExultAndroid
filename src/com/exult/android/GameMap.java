@@ -851,4 +851,26 @@ public class GameMap extends GameSingletons {
 		return chunk.isTileOccupied(tx%EConst.c_tiles_per_chunk,
 				ty%EConst.c_tiles_per_chunk, tz);
 	}
+	/*
+	 *	Is a given square available at a given lift?
+	 *
+	 *	Output: lift that's free if so, else -1.
+	 *		If >=0 (tile is free), returns the new height that
+	 *		   an actor will be at if he walks onto the tile.
+	 */
+	public int spotAvailable
+		(
+		int height,			// Height (in tiles) of obj. being
+							//   tested.
+		int tx, int ty, int lift,			// Square to test.
+		int move_flags,
+		int max_drop,			// Max. drop/rise allowed.
+		int max_rise			// Max. rise, or -1 to use old beha-
+								//   viour (max_drop if FLY, else 1).
+		) {
+		MapChunk olist = getChunk(tx/EConst.c_tiles_per_chunk, 
+				   					   ty/EConst.c_tiles_per_chunk);
+		return olist.spotAvailable(height, tx%EConst.c_tiles_per_chunk, 
+				ty%EConst.c_tiles_per_chunk, lift, move_flags, max_drop, max_rise);
+	}
 }

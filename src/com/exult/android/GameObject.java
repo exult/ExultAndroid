@@ -511,7 +511,17 @@ public abstract class GameObject extends ShapeID {
 		int shnum = getShapeNum();
 		if (hasHitpoints(shnum))
 			setQuality(hp);
-	}/*
+	}
+	public int getEffectiveObjHp(int weapon_shape) {
+	 	int hps = getObjHp();
+		if (hps == 0) {
+			ShapeInfo inf = getInfo();
+			int qual = inf.hasQuality() ? getQuality() : -1;
+			hps = inf.getEffectiveHps(getFrameNum(), qual);
+		}
+		return hps;
+	}
+	/*
 	 *	For objects that can have a quantity, the name is in the format:
 	 *		%1/%2/%3/%4
 	 *	Where
@@ -868,6 +878,126 @@ public abstract class GameObject extends ShapeID {
 		return need_ammo;
 	}
 	/*
+	 *	Being attacked.
+	 *
+	 *	Output:	Hits taken or < 0 for explosion.
+	 */
+	public int figureHitPoints
+		(
+		GameObject attacker,
+		int weapon_shape,		// < 0 for readied weapon.
+		int ammo_shape,			// < 0 for no ammo shape.
+		boolean explosion			// If this is an explosion attacking.
+		) {
+		return 0; /*++++++++++++FINISH
+		WeaponInfo winf;
+		AmmoAnfo ainf;
+
+		int wpoints = 0;
+		if (weapon_shape >= 0)
+			winf = ShapeID::get_info(weapon_shape).get_weapon_info();
+		else
+			winf = 0;
+		if (ammo_shape >= 0)
+			ainf = ShapeID::get_info(ammo_shape).get_ammo_info();
+		else
+			ainf = 0;
+		if (!winf && weapon_shape < 0)
+			{
+			Actor *npc = attacker ? attacker->as_actor() : 0;
+			winf = npc ? npc->get_weapon(wpoints) : 0;
+			}
+
+		int usefun = -1;
+		int type = Weapon_data::normal_damage;
+		bool explodes = false;
+
+		if (winf)
+			{
+			wpoints = winf->get_damage();
+			usefun = winf->get_usecode();
+			type = winf->get_damage_type();
+			explodes = winf->explodes();
+			}
+		else
+			wpoints = 1;	// Give at least one, but only if there's no weapon
+		if (ainf)
+			{
+			wpoints += ainf->get_damage();
+				// Replace damage type.
+			if (ainf->get_damage_type() != Weapon_data::normal_damage)
+				type = ainf->get_damage_type();
+			explodes = explodes || ainf->explodes();
+			}
+
+		if (explodes && !explosion)	// Explosions shouldn't explode again.
+			{	// Time to explode.
+			Tile_coord offset(0, 0, get_info().get_3d_height()/2);
+			eman->add_effect(new Explosion_effect(get_tile() + offset,
+					0, 0, weapon_shape, ammo_shape, attacker));
+			return -1;
+			}
+
+		int delta = 0;
+		int effstr = attacker && attacker->as_actor()
+			? attacker->as_actor()->get_effective_prop(Actor::strength) : 0;
+		if (winf && (winf->get_powers() & Weapon_data::no_damage) == 0)
+			delta = apply_damage(attacker, effstr, wpoints, type);
+			
+			// Objects are not affected by weapon powers.
+
+			// Object may be in the remove list by this point.
+		if (usefun >= 0)
+			ucmachine->call_usecode(usefun, this,
+						Usecode_machine::weapon);
+		return delta;
+		*/
+	}
+	/*
+	 *	Being attacked.
+	 *
+	 *	Output:	0 if destroyed, else object itself.
+	 */
+	public GameObject attacked(GameObject attacker, int weapon_shape,
+			int ammo_shape, boolean explosion) {
+		int shnum = getShapeNum();
+
+		if (shnum == 735 && ammo_shape == 722) {
+				// Arrows hitting archery practice target.
+			int frnum = getFrameNum();
+			int newframe = frnum == 0 ? (3*(EUtil.rand()%8) + 1)
+					: ((frnum%3) != 0 ? frnum + 1 : frnum);
+			changeFrame(newframe);
+		}
+		int oldhp = getEffectiveObjHp(0);
+		int delta = figureHitPoints(attacker, weapon_shape, ammo_shape, explosion);
+		int newhp = getEffectiveObjHp(0);
+		/*+++++++FINISH
+		if (CombatSchedule.combatTrace) {
+			String name = "<trap>";
+			if (attacker != null)
+				name = attacker.getName();
+			cout << name << " attacks " << get_name();
+			if (oldhp < delta)
+				{
+				cout << ", destroying it." << endl;
+				return 0;
+				}
+			else if (!delta || oldhp == newhp)
+				{	// undamaged/indestructible
+				cout << " to no effect." << endl;
+				return this;
+				}
+			else if (delta < 0)
+				cout << " causing an explosion." << endl;
+			else
+				cout << " for " << delta << " hit points, leaving "
+					<< newhp << " remaining." << endl;
+		}
+		*/
+		return this;
+	}
+	/*
 	 *	Get frame if rotated 1, 2, or 3 quadrants clockwise.  This is to
 	 *	support barges (ship, cart, flying carpet).
 	 */
@@ -992,6 +1122,9 @@ public abstract class GameObject extends ShapeID {
 	} 
 	public GameObject findItem(int shapenum, int qual, int framenum) {
 		return null; 
+	}
+	public int getLiveNpcNum() {
+		return -1;
 	}
 	public void deleteContents() {
 	}

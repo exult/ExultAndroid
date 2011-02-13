@@ -11,7 +11,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected int usecode;			// # of usecode function.
 	protected boolean usecodeAssigned;		// Usecode # explicitly assigned.
 	protected String usecodeName;
-	protected boolean unused;			// If npc_num > 0, this NPC is unused in the game.
+	protected boolean unused;			// If npcNum > 0, this NPC is unused in the game.
 	protected short npcNum;			// # in Game_window.npcs list, or -1.
 	protected short faceNum;			// Which shape for conversations.
 	protected short partyId;			// Index in party, or -1.
@@ -242,7 +242,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setProperty(int prop, int val) {
 		/* ++++++++++
 		if (prop == health && ((partyId != -1) || (npcNum == 0)) && 
-				cheat.in_god_mode() && val < properties[prop])
+				cheat.inGodMode() && val < properties[prop])
 			return;
 		*/
 		switch (prop) {
@@ -375,7 +375,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// set_polymorph needs this, and there are no problems
 			// in setting this twice.
 			flags2 |= ((uint32) 1 << (flag-32));
-			if (get_npc_num() != 0)	// Ignore for all but avatar.
+			if (get_npcNum() != 0)	// Ignore for all but avatar.
 				break;
 			int sn;
 			int female = getTypeFlag(tf_sex)?1:0;
@@ -1138,16 +1138,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		} else
 			return null;
 	}
-	public static boolean rollToWin(int attacker, int defender) {
-		final int sides = 30;
-		int roll = EUtil.rand()%sides;
-		if (roll == 0)			// Always lose.
-			return false;
-		else if (roll == sides - 1)	// High?  Always win.
-			return true;
-		else
-			return roll + attacker - defender >= sides/2 - 1;
-	}
 	/*
 	 *	If no weapon readied, look through all possessions for the best one.
 	 */
@@ -1240,6 +1230,593 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		attackMode = amode;
 		userSetAttack = byUser;
 	}
+	public static boolean rollToWin(int attacker, int defender) {
+		final int sides = 30;
+		int roll = EUtil.rand()%sides;
+		if (roll == 0)			// Always lose.
+			return false;
+		else if (roll == sides - 1)	// High?  Always win.
+			return true;
+		else
+			return roll + attacker - defender >= sides/2 - 1;
+	}
+	/*
+	 *	Get effective property, or default value.
+	 */
+	static final int getEffectiveProp
+		(
+		Actor npc,			// ...or NULL.
+		int prop,	// Property #.
+		int defval			// Default val if npc==0.
+		) {
+		return npc != null ? npc.getEffectiveProp(prop) : defval;
+	}
+	/*
+	 *	Figure hit points lost from an attack, and subtract from total.
+	 *
+	 *	Output:	Hits taken or < 0 for explosion.
+	 */
+	public int figureHitPoints
+		(
+		GameObject attacker,
+		int weapon_shape,		// < 0 for readied weapon.
+		int ammo_shape,			// < 0 for no ammo shape.
+		boolean explosion			// If this is an explosion attacking.
+		) {
+		boolean were_party = partyId != -1 || npcNum == 0;
+		// godmode effects:
+		if (were_party && cheat.inGodMode())
+			return 0;
+		Actor npc = attacker != null ? attacker.asActor() : null;
+		boolean theyre_party = npc != null &&
+				(npc.partyId != -1 || npc.npcNum == 0);
+		boolean instant_death = (cheat.inGodMode() && theyre_party);
+						// Modify using combat difficulty.
+		int bias = were_party ? CombatSchedule.difficulty :
+				(theyre_party ? -CombatSchedule.difficulty : 0);
+		WeaponInfo winf;
+		AmmoInfo ainf;
+
+		int wpoints = 0;
+		if (weapon_shape >= 0)
+			winf = ShapeID.getInfo(weapon_shape).getWeaponInfo();
+		else
+			winf = null;
+		if (ammo_shape >= 0)
+			ainf = ShapeID.getInfo(ammo_shape).getAmmoInfo();
+		else
+			ainf = null;
+		if (winf == null && weapon_shape < 0 && npc != null) {
+			GameObject weapon = npc.getWeapon();
+			if (weapon != null) {
+				winf = weapon.getInfo().getWeaponInfo();
+				if (winf != null)
+					wpoints = winf.getDamage();
+			}
+		}
+		int usefun = -1, powers = 0;
+		int type = WeaponInfo.normal_damage;
+		boolean explodes = false;
+		if (winf != null) {
+			wpoints = winf.getDamage();
+			usefun = winf.getUsecode();
+			type = winf.getDamageType();
+			powers = winf.getPowers();
+			explodes = winf.explodes();
+		} else
+			wpoints = 1;	// Give at least one, but only if there's no weapon
+		if (ainf != null) {
+			wpoints += ainf.getDamage();
+				// Replace damage type.
+			if (ainf.getDamageType() != WeaponInfo.normal_damage)
+				type = ainf.getDamageType();
+			powers |= ainf.getPowers();
+			explodes = explodes || ainf.explodes();
+			}
+
+		if (explodes && !explosion) {	// Explosions shouldn't explode again.
+				// Time to explode.
+			/*++++++++++FINISH
+			Tile_coord offset(0, 0, getInfo().get_3d_height()/2);
+			eman.add_effect(new Explosion_effect(get_tile() + offset,
+					0, 0, weapon_shape, ammo_shape, attacker));
+			*/
+				// The explosion will handle the damage.
+			return -1;
+		}
+		int expval = 0, hits = 0;
+		boolean nodamage = (powers & (WeaponInfo.no_damage)) != 0;
+		if (wpoints != 0 && instant_death)
+			wpoints = 127;
+		if (wpoints != 0 && !nodamage)
+			// This may kill the NPC; this comes before powers because no
+			// damage means no powers -- except for the no_damage flag.
+			/*+++++++++FINISH
+			hits = applyDamage(attacker, getEffectiveProp(npc, Actor.strength, 0),
+					wpoints, type, bias, &expval);
+			*/
+			// Apply weapon powers if needed.
+			// wpoints == 0 ==> some spells that don't hurt (but need to apply powers).
+		if (powers != 0 && (hits != 0 || wpoints == 0 || nodamage)) {
+				// Protection prevents powers.
+			if (!getFlag(GameObject.protection))
+				{
+				int attint = getEffectiveProp(npc, Actor.intelligence, 16),
+					defstr = getEffectiveProp(this, Actor.strength, 0),
+					defint = getEffectiveProp(this, Actor.intelligence, 0);
+
+					// These rolls are bourne from statistical analisys and are,
+					// as far as I can tell, how the game works.
+				if ((powers & WeaponInfo.poison) != 0 && rollToWin(attint, defstr))
+					setFlag(GameObject.poisoned);
+				if ((powers & WeaponInfo.curse) != 0 && rollToWin(attint, defint))
+					setFlag(GameObject.cursed);
+				if ((powers & WeaponInfo.charm) != 0 && rollToWin(attint, defint))
+					setFlag(GameObject.charmed);
+				if ((powers & WeaponInfo.sleep) != 0 && rollToWin(attint, defint))
+					setFlag(GameObject.asleep);
+				if ((powers & WeaponInfo.paralyze) != 0 && rollToWin(attint, defstr))
+					setFlag(GameObject.paralyzed);
+				if ((powers & WeaponInfo.magebane) != 0) {
+						// Magebane weapons (magebane sword, death scythe).
+						// Take away all mana.
+					setProperty(Actor.mana, 0);
+					int num_spells = 0;
+					Vector<GameObject> vec = new Vector<GameObject>(50);
+					getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, 
+														EConst.c_any_framenum);
+						// Gather all spells... and take them away.
+					for (GameObject obj : vec) {
+						if (obj.getInfo().isSpell()) {	// Seems to be right.
+							++num_spells;
+							obj.removeThis();
+						}
+					}
+					vec.clear();
+					if (num_spells != 0) {
+							// Display magebane struck string and set
+							// no_spell_casting flag. This is only done
+							// to prevent monsters from teleporting or
+							// doing other such things.
+						setFlag(GameObject.no_spell_casting);
+						if (game.isSI()) {
+							eman.removeTextEffect(this);
+							say(ItemNames.first_magebane_struck, 
+								ItemNames.last_magebane_struck);
+						}
+							// Tell schedule we need a new weapon.
+						if (schedule != null && spots[Ready.lhand] == null)
+							schedule.setWeapon(false);
+					}
+				}
+			}
+			if (nodamage && ammo_shape == 568) {
+					// This is *only* done for SI sleep arrows, and all other
+					// powers have had their effect by now (as can be verified
+					// by using the called usecode function).
+				if (npc != null)	// Just to be sure.
+					setOppressor(npc.getNpcNum());
+				// Allowing for BG too, as it doesn't have a function 0x7e1.
+				ucmachine.callUsecode(0x7e1, this,UsecodeMachine.weapon);
+			}
+		}
+		if (expval > 0 && npc != null)	// Give experience.
+			npc.setProperty(exp, npc.getProperty(exp) + expval);
+
+			// Weapon usecode comes last of all.
+		if (usefun > 0) {
+			if (npc != null)	// Just to be sure.
+				setOppressor(npc.getNpcNum());
+			ucmachine.callUsecode(usefun, this,
+						UsecodeMachine.weapon);
+		}
+		return hits;
+	}
+	/*
+	 *	Trying to hit NPC with an attack.
+	 *
+	 *	Output:	true if attack hit, false otherwise.
+	 */
+	public boolean tryToHit
+		(
+		GameObject attacker,
+		int attval
+		)
+		{
+		int defval = getEffectiveProp(combat) +
+				(getFlag(GameObject.protection) ? 3 : 0);
+		if (CombatSchedule.combatTrace) {
+			String name = "<trap>";
+			if (attacker != null)
+				name = attacker.getName();
+			int prob = 30 - (15 + defval - attval) + 1;
+			if (prob >= 30)
+				prob = 29;	// 1 always misses.
+			else if (prob <= 1)
+				prob = 1;	// 30 always hits.
+			prob *= 100;
+			System.out.println(name + " is attacking " + getName()
+				+ " with hit probability " + (float)prob/30 + "%");
+			}
+
+		return Actor.rollToWin(attval, defval);
+		}
+
+	/*
+	 *	Being attacked.
+	 *
+	 *	Output:	0 if defeated, else object itself.
+	 */
+	public GameObject attacked
+		(
+		GameObject attacker,
+		int weapon_shape,		// < 0 for readied weapon.
+		int ammo_shape,			// < 0 for no ammo shape.
+		boolean explosion			// If this is an explosion attacking.
+		) {
+		if (isDead() ||		// Already dead?
+						// Or party member of dead Avatar?
+		    (partyId >= 0 && gwin.getMainActor().isDead()))
+			return null;
+		Actor npc = attacker != null ? attacker.asActor() : null;
+		if (npc != null)
+			setOppressor(npc.getNpcNum());
+		if (npc != null && npc.getScheduleType() == Schedule.duel)
+			return this;	// Just play-fighting.
+
+		int oldhp = properties[health];
+		int delta = figureHitPoints(attacker, weapon_shape, ammo_shape, explosion);
+
+		if (CombatSchedule.showHits && !isDead() && delta >= 0) {
+			eman.removeTextEffect(this);
+			String hpmsg = String.format("-%1$d(%2$d)", delta, oldhp - delta);
+			eman.addText(hpmsg, this);
+		}
+		if (CombatSchedule.combatTrace) {
+			String name = "<trap>";
+			if (attacker != null)
+				name = attacker.getName();
+			System.out.print(name + " hits " + getName());
+			if (delta > 0)
+				{
+				System.out.print(" for " + delta + " hit points; ");
+				if (oldhp > 0 && oldhp < delta)
+					System.out.println(getName() + " is defeated.");
+				else
+					System.out.println(oldhp - delta + " hit points are left.");
+				}
+			else if (delta == 0)
+				System.out.println(" to no damage.");
+			else
+				System.out.println(" causing an explosion.");
+			}
+
+		if (attacker != null && (isDead() || properties[health] < 0))
+			return null;
+		return this;
+	}
+	/*
+	 *	There's probably a smarter way to do this, but this routine checks
+	 *	for the dragon Draco.
+	 */
+
+	static boolean isDraco(Actor dragon){
+		Vector<GameObject> vec = new Vector<GameObject>();		// Gets list.
+							// Should have a special scroll.
+		int cnt = dragon.getObjects(vec, 797, 241, 4);
+		return cnt > 0;
+	}
+	/*
+	 *	We're dead.  We're removed from the world, but not deleted.
+	 */
+
+	public void die(GameObject attacker) {
+		// If the actor is already dead, we shouldn't do anything
+		//(fixes a resurrection bug).
+		if (isDead())
+			return;
+		setAction(null);
+		schedule = null;
+		tqueue.remove(this);// Remove from time queue.
+		setFlag(GameObject.dead);// IMPORTANT:  Set this before moving
+						//   objs. so Usecode(eventid=6) isn't called.
+		int shnum = getShapeNum();
+						// Special case:  Hook, Dracothraxus.
+		if (((shnum == 0x1fa || (shnum == 0x1f8 && isDraco(this))) && 
+		    game.isBG())) {
+						// Exec. usecode before dying.
+			ucmachine.callUsecode(shnum, this, 
+						UsecodeMachine.internal_exec);
+			if (isPosInvalid())	// Invalid now?
+				return;
+		}
+						// Get location.
+		Tile pos = new Tile();
+		getTile(pos);
+		//properties[static_cast<int>(health)] = -50;
+		ShapeInfo info = getInfo();
+		MonsterInfo minfo = info.getMonsterInfo();
+		boolean frost_serp = game.isSI() && getShapeNum() == 832;
+		if ((frost_serp && (getFrameNum() & 0xf) == Actor.sit_frame)
+			|| (getFrameNum() & 0xf) == Actor.sleep_frame) {
+			UsecodeScript scr = new UsecodeScript(this);
+			scr.add(UsecodeScript.delay_ticks, 4, UsecodeScript.remove);
+			scr.start();
+		} else	// Laying down to die.
+			layDown(true);
+
+		DeadBody body;		// See if we need a body.
+		if (minfo == null || !minfo.hasNoBody()) {
+					// Get body shape/frame.
+			shnum = info.getBodyShape();		// Default 400.
+			int frnum = info.getBodyFrame();	// Default 3.
+						// Reflect if NPC reflected.
+			frnum |= (getFrameNum()&32);
+			body = new DeadBody(shnum, 0, 0, 0, 0, 
+						npcNum > 0 ? npcNum : -1);
+			UsecodeScript scr = new UsecodeScript(body);
+			scr.add(UsecodeScript.delay_ticks, 4, UsecodeScript.frame, frnum);
+			scr.start();
+			if (npcNum > 0) {
+					// Originals would use body.set_quality(2) instead
+					// for bodies of dead monsters. What we must do for
+					// backwards compatibility...
+				body.setQuality(1);	// Flag for dead body of NPC.
+				gwin.setBody(npcNum, body);
+			}
+						// Tmp. monster => tmp. body.
+			if (getFlag(GameObject.is_temporary))
+				body.setFlag(GameObject.is_temporary);
+						// Okay to take its contents.
+			body.setFlagRecursively(GameObject.okay_to_take);
+						// Find a spot within 1 tile.
+			if (!MapChunk.findSpot(pos, 1, shnum, frnum, 2))
+				getTile(pos);	// Default to NPC pos, even if blocked.
+			body.move(pos);
+		} else
+			body = null;
+		GameObject item;		// Move/remove all the items.
+		// Some shouldn't be moved.
+		Vector<GameObject> tooheavy = new Vector<GameObject>();	
+		Tile pos2 = new Tile();
+		while ((item = objects.getFirst()) != null) {
+			remove(item);
+			item.setInvalid();
+			// Guessing it is spells that get deleted.
+			if (item.getInfo().isSpell()) {
+				tooheavy.add(item);
+				continue;
+			}
+			if (body != null)
+				body.add(item, true);// Always succeed at adding.
+			else {			// No body?  Drop on ground.
+				item.setFlagRecursively(GameObject.okay_to_take);
+				pos2.set(pos);
+				if (MapChunk.findSpot(pos2, 5, item.getShapeNum(), 
+															item.getFrameNum(), 1))
+					item.move(pos2);
+				else		// No room anywhere.
+					tooheavy.add(item);
+			}
+		}
+						// Put the heavy ones back.
+		for (GameObject obj : tooheavy) {
+			add(obj, true);
+		}
+		if (body != null)
+			gwin.addDirty(body);
+		addDirty();			// Want to repaint area.
+		deleteContents();		// remove what's left of inventory
+		Actor npc = attacker != null ? attacker.asActor() : null;
+		if (npc != null) {
+				// Set oppressor and cause nearby NPCs to attack attacker.
+			fightBack(attacker);
+			setTarget(null, false);
+			setScheduleType(Schedule.wander);
+					// Is this a bad guy?
+					// Party defeated an evil monster?
+			/*+++++++FINISH
+			if (npc.getFlag(GameObject.in_party) && !getFlag(GameObject.in_party) && 
+					alignment != neutral && alignment != friendly)
+				CombatSchedule.monsterDied();
+			*/
+		}
+			// Move party member to 'dead' list.
+		partyman.updatePartyStatus(this);
+	}
+	private static int lastcall = 0;	// Last time yelled.
+	public void fightBack (GameObject attacker) {
+		// ++++ TODO: I think that nearby NPCs will help NPCs (or party members,
+		// as the case may be) of the same alignment when attacked by other NPCs,
+		// not just when the avatar & party attack. Although this is tricky to
+		// test (except, maybe, by exploiting the agressive U7 & SI duel schedule.
+		Actor npc = attacker != null ? attacker.asActor() : null;
+		if (npc == null)
+			return;
+		if (target == null && !getFlag(GameObject.in_party))
+			setTarget(npc, npc.getScheduleType() != Schedule.duel);
+		// Being a bully?
+		if (npc.getFlag(GameObject.in_party) &&
+				npcNum > 0 &&
+				(alignment == Actor.friendly || alignment == Actor.neutral) &&
+				(flags & (1<<GameObject.charmed)) == 0 && 
+				!getFlag(GameObject.in_party) &&
+				getInfo().getShapeClass() == ShapeInfo.human) {
+			
+			int curtime = TimeQueue.ticks;
+			int delta = curtime - lastcall;
+			if (delta > 10000) {	// Call if 10 secs. has passed.
+				eman.removeTextEffect(this);
+				say(ItemNames.first_call_police, ItemNames.last_call_police);
+				lastcall = curtime;
+				gwin.attackAvatar(1 + EUtil.rand()%2);
+			} else if (EUtil.rand()%20 == 0) {
+				gwin.attackAvatar(1 + EUtil.rand()%2);
+				// To reduce the guard pile-up.
+				lastcall = curtime;
+			}
+		}
+	}
+	/*
+	 *	Causes the actor to fall to the ground and take damage.
+	 */
+	public void fallDown() {
+		if (!getTypeFlag(tf_fly))
+			return;
+		int tx = getTileX(), ty = getTileY(), tz = getLift();
+		//+++Tile_coord start = get_tile();
+		int newz;
+		if ((newz = gmap.spotAvailable(1, tx, ty, tz, 
+								EConst.MOVE_WALK, 100, -1)) >= 0 && 
+				newz < tz) {
+			move(tx, ty, newz);
+			/*+++++++++FINISH
+			reduceHealth(1 + EUtil.rand()%5, WeaponInfo.normal_damage);
+			*/
+		}
+	}
+	/*
+	 *	Causes the actor to lie down to sleep (or die).
+	 */
+	public void layDown(boolean die) {
+		if (!die && getFlag(GameObject.asleep))
+			return;
+			// Fall to the ground.
+		fallDown();
+		boolean frost_serp = game.isSI() && getShapeNum() == 832;
+			// Don't do it if already in sleeping frame.
+		if (frost_serp && (getFrameNum() & 0xf) == Actor.sit_frame)
+			return;		// SI Frost serpents are weird.
+		else if ((getFrameNum() & 0xf) == Actor.sleep_frame)
+			return;
+
+		setAction(null);
+		UsecodeScript scr = new UsecodeScript(this);
+		scr.add(UsecodeScript.finish, (UsecodeScript.npc_frame + Actor.standing));
+		if (game.isSI() && getShapeNum() == 832) {	// SI Frost serpent
+					// Frames are in reversed order. This results in a
+					// strangeanimation in the original, which we fix here.
+			scr.add((UsecodeScript.npc_frame + Actor.sleep_frame),
+					(UsecodeScript.npc_frame + Actor.kneel_frame),
+					(UsecodeScript.npc_frame + Actor.bow_frame),
+					(UsecodeScript.npc_frame + Actor.sit_frame));
+		} else if (game.isBG() && getShapeNum() == 525) {	// BG Sea serpent
+			scr.add((UsecodeScript.npc_frame + Actor.bow_frame),
+					(UsecodeScript.npc_frame + Actor.kneel_frame),
+					(UsecodeScript.npc_frame + Actor.sleep_frame));
+		} else {	// Slimes are done elsewhere.
+			scr.add((UsecodeScript.npc_frame + Actor.kneel_frame),
+					UsecodeScript.sfx, Audio.gameSfx(86));
+			if (!die)
+				scr.add(UsecodeScript.npc_frame + Actor.sleep_frame);
+		}
+		if (die)	// If dying, remove.
+			scr.add(UsecodeScript.remove);
+		scr.start();
+	}
+	/*
+	 *	Create another monster of the same type as this, and adjacent.
+	 *
+	 *	Output:	monster, or 0 if failed.
+	 */
+	public MonsterActor clone() {
+		ShapeInfo info = getInfo();
+						// Base distance on greater dim.
+		int frame = getFrameNum();
+		int xs = info.get3dXtiles(frame), ys = info.get3dYtiles(frame);
+		Tile pos = new Tile();				// Find spot.
+		getTile(pos);
+		if (!MapChunk.findSpot(pos, xs > ys ? xs : ys, getShapeNum(), 0, 1))
+			return null;		// Failed.
+						// Create, temporary & with equip.
+		MonsterActor monst = MonsterActor.create(
+				getShapeNum(), pos, getScheduleType(),
+				getAlignment(), true, true);
+		return monst;
+	}
+	/*
+	 *	Restore HP's on the hour.
+	 */
+	public void mendHourly() {
+		if (isDead())
+			return;
+		int maxhp = properties[strength];
+		int hp = properties[health];
+		if (maxhp > 0 && hp < maxhp) {
+			if (maxhp >= 3)  
+				hp += 1 + EUtil.rand()%(maxhp/3);
+			else
+				hp += 1;
+			if (hp > maxhp)
+				hp = maxhp;
+			properties[health] = hp;
+						// ??If asleep & hps now >= 0, should
+						//   we awaken?
+		}
+						// Restore some mana also.
+		int maxmana = properties[magic];
+		int curmana = properties[mana];
+		clearFlag(GameObject.no_spell_casting);
+		if (maxmana > 0 && curmana < maxmana) {
+			if (maxmana >= 3)	
+				curmana += 1 + EUtil.rand()%(maxmana/3);
+			else
+				curmana += 1;
+			properties[mana] = curmana <= maxmana ? curmana : maxmana;
+		}
+	}
+	/*
+	 *	Restore from body.  It must not be owned by anyone.
+	 *
+	 *	Output:	actor if successful, else 0.
+	 */
+	public Actor resurrect
+		(
+		DeadBody body			// Must be this actor's body.
+		)
+		{
+		Tile pos = new Tile();
+		if (body != null) {
+			if (body.getOwner() != null ||	// Must be on ground.
+				npcNum <= 0 || gwin.getBody(npcNum) != body)
+				return null;
+			gwin.setBody(npcNum, null);	// Clear from gwin's list.
+			GameObject item;		// Get back all the items.
+			ObjectList.ObjectIterator iter = body.getIterator();
+			while ((item = iter.next()) != null) {
+				body.remove(item);
+				add(item, true);		// Always succeed at adding.
+			}
+			gwin.addDirty(body);		// Need to repaint here.
+			body.getTile(pos);
+			body.removeThis();		// Remove and delete body.
+		} else
+			pos.set(-1, -1, 0);
+		move(pos);			// Move back to life.
+						// Restore health to max.
+		properties[health] = properties[strength];
+		clearFlag(GameObject.dead);
+		clearFlag(GameObject.poisoned);
+		clearFlag(GameObject.paralyzed);
+		clearFlag(GameObject.asleep);
+		clearFlag(GameObject.protection);
+		clearFlag(GameObject.cursed);
+		clearFlag(GameObject.charmed);
+						// Restore to party if possible.
+		partyman.updatePartyStatus(this);
+						// Give a reasonable schedule.
+		setScheduleType(getFlag(Actor.in_party) ? Schedule.follow_avatar
+						: Schedule.loiter);
+						// Stand up.
+		if (body == null)
+			return (this);
+		UsecodeScript scr = new UsecodeScript(this);
+		scr.add((UsecodeScript.npc_frame + Actor.sleep_frame),
+				(UsecodeScript.npc_frame + Actor.kneel_frame),
+				(UsecodeScript.npc_frame + Actor.standing));
+		scr.start(1);
+		return (this);
+	}
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
 			return false;
@@ -1278,7 +1855,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 */
 	private int getEffectiveWeaponShape() {
 		/*+++++++FINISH
-		if (get_casting_mode() == Actor::show_casting_frames)
+		if (get_casting_mode() == Actor.show_casting_frames)
 			// Casting frames
 			return casting_shape;
 		else */
@@ -2061,17 +2638,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int ztiles = info.get3dHeight();
 		t.fixme();
 		if (xtiles == 1 && ytiles == 1) {	// Simple case?
-			MapChunk nlist = gmap.getChunk(
-				t.tx/EConst.c_tiles_per_chunk, t.ty/EConst.c_tiles_per_chunk);
-			int new_lift = nlist.spotAvailable(ztiles, 
-					t.tx%EConst.c_tiles_per_chunk, t.ty%EConst.c_tiles_per_chunk, t.tz,
-					move_flags | getTypeFlags(), 1, -1);
+			int new_lift = gmap.spotAvailable(ztiles, 
+					t.tx, t.ty, t.tz, move_flags | getTypeFlags(), 1, -1);
 			if (new_lift >= 0) {
 				t.tz = (short)new_lift;
 				return true;
 			} else
 				return false;
-			}
+		}
 		if (f == null) {
 			f = new Tile();
 			getTile(f);
@@ -2738,6 +3312,55 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				if (((frame ^ frames[i])&0xf) == 0)
 					return i;
 			return 0;
+		}
+	}
+	/*
+	 *	An actor's dead body:
+	 */
+	public static class DeadBody extends ContainerGameObject {
+		private int npcNum;			// # of NPC it came from, or -1.
+		public DeadBody(int shapenum, int framenum, int tilex, 
+				int tiley, int lft, int n) {
+			super(shapenum, framenum, tilex, tiley, lft, 0);
+			npcNum = n;
+		}
+		@Override
+		public int getLiveNpcNum() {
+			return npcNum;
+		}
+		@Override				// Under attack.
+		public GameObject attacked(GameObject attacker, int weapon_shape,
+						int ammo_shape, boolean explosion)
+			{ return this; }	// Not affected.
+		@Override
+		public void writeIreg(OutputStream out) {
+			/*++++++++++++FINISH
+			unsigned char buf[21];		// 13-byte entry - Exult extension.
+			uint8 *ptr = write_common_ireg(13, buf);
+			Game_object *first = objects.get_first(); // Guessing: +++++
+			unsigned short tword = first ? first.get_prev().getShapeNum() 
+											: 0;
+			Write2(ptr, tword);
+			*ptr++ = 0;			// Unknown.
+			*ptr++ = get_quality();
+			int npc = get_live_npcNum();	// If body, get source.
+				// Here, store NPC # more simply.
+			Write2(ptr, npc);	// Allowing larger range of NPC bodies.
+			*ptr++ = (get_lift()&15)<<4;	// Lift 
+			*ptr++ = (unsigned char)get_obj_hp();		// Resistance.
+							// Flags:  B0=invis. B3=okay_to_take.
+			*ptr++ = (get_flag(GameObject.invisible) != 0) +
+				 ((get_flag(GameObject.okay_to_take) != 0) << 3);
+			out.write((char*)buf, ptr - buf);
+			write_contents(out);		// Write what's contained within.
+							// Write scheduled usecode.
+			GameMap::writeScheduled(out, this);	
+			*/
+		}
+		@Override
+		public int getIregSize() {
+			int size = super.getIregSize();
+			return size < 0 ? size : size + 1;
 		}
 	}
 }

@@ -49,7 +49,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return damage; }
 	public int getDamageType()
 		{ return damageType; }
-	public byte get_powers()
+	public byte getPowers()
 		{ return powers; }
 	public boolean no_blocking()
 		{ return m_no_blocking; }

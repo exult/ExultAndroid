@@ -119,6 +119,12 @@ public final class ShapeInfo {
 	public int getExplosionSfx() {
 		return explosion != null ? explosion.getSfx() : -1;
 	}
+	public int getBodyShape() {
+		return body != null ? body.getBodyShape() : 400;
+	}
+	public int getBodyFrame() {
+		return body != null ? body.getBodyFrame() : 3;
+	}
 	public boolean hasWeaponInfo() {
 		return weapon != null; 
 	}

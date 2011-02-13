@@ -2,12 +2,16 @@ package com.exult.android;
 
 public final class Cheat extends GameSingletons {
 	private boolean hackMover;
+	private boolean godMode;
 	public boolean inHackMover() {
 		return hackMover;
 	}
 	public void toggleHackMover() {
 		hackMover = !hackMover;
 		ExultActivity.showToast(hackMover?"HackMover Mode":"Ending HackMover");
+	}
+	public boolean inGodMode() {
+		return godMode;
 	}
 	public void mapTeleport() {
 		ShapeFrame map;
