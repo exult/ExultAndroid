@@ -1322,6 +1322,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 										game.getShape("sprites/map"), 0);
 		new MapGump(s, cnt > 0);
 	}
+	private void killNpc(UsecodeValue p0) {
+		GameObject item = getItem(p0);
+		Actor npc = asActor(item);
+		if (npc != null)
+			npc.die(null);		
+		ucmachine.setModifiedMap();
+	}
 	private UsecodeValue rollToWin(UsecodeValue p0, UsecodeValue p1) {
 		// roll_to_win(attackpts, defendpts)
 		int attack = p0.getIntValue();
@@ -1345,6 +1352,18 @@ public class UsecodeIntrinsics extends GameSingletons {
 			else
 				npc.setOppressor(opp.getNpcNum());
 		}
+	}
+	private UsecodeValue clone(UsecodeValue p0) {
+		// clone(npc)
+		Actor npc = asActor(getItem(p0));
+		if (npc != null) {
+			ucmachine.setModifiedMap();
+			Actor clonednpc = npc.clone();
+			clonednpc.setAlignment(Actor.friendly);
+			clonednpc.setScheduleType(Schedule.combat);
+			return new UsecodeValue.ObjectValue(clonednpc);
+		}
+		return UsecodeValue.getNullObj();
 	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
@@ -1398,6 +1417,83 @@ public class UsecodeIntrinsics extends GameSingletons {
 			cnt = 1;
 		return new UsecodeValue.IntValue(cnt);
 	}
+	private void setOrrery(UsecodeValue p0, UsecodeValue p1) {
+		// set_orrery(pos, state(0-9)).
+		/*
+		 *	This code is based on the Planets.txt document written
+		 *	by Marzo Sette Torres Junior.
+		 *
+		 *	The table below contains the (x,y) offsets for each of the
+		 *	8 planet frames in each possible state.
+		 */
+		final short offsets[][][] = {
+		/* S0 */{{ 2,-3},{ 3,-3},{ 1,-6},{ 6,-2},
+			 { 7,-1},{ 8, 1},{-4, 8},{ 9,-2}},
+		/* S1 */{{ 3,-1},{ 4,-1},{-5,-3},{ 3, 6},
+			 { 7, 2},{ 4, 7},{-8, 4},{ 8, 5}},
+		/* S2 */{{ 3, 1},{ 3, 2},{-3, 4},{-5, 4},
+			 { 2, 7},{-2, 8},{-9, 1},{ 2, 9}},
+		/* S3 */{{ 1, 3},{ 1, 4},{ 4, 3},{-5,-3},
+			 {-4, 6},{-7, 4},{-9,-1},{-4, 9}},
+		/* S4 */{{-2, 3},{-2, 4},{ 5,-2},{ 5,-4},
+			 {-7, 2},{-8, 1},{-8,-4},{-8, 6}},
+		/* S5 */{{-4, 1},{-5, 1},{-5,-3},{ 6, 3},
+			 {-7,-2},{-7,-4},{-7,-6},{-10, 1}},
+		/* S6 */{{-4, 9},{-5,-1},{-3, 4},{-3, 6},
+			 {-6,-4},{-5,-6},{-7,-6},{-10,-2}},
+		/* S7 */{{-4, 2},{-4,-3},{ 4, 3},{-6, 1},
+			 {-5,-5},{-3,-7},{-4,-8},{-8,-6}},
+		/* S8 */{{-3,-3},{-3,-4},{ 5,-2},{-3,-5},
+			 {-1,-7},{ 0,-8},{-1,-9},{-5,-9}},
+		/* S9 */{{ 0,-4},{ 0,-5},{ 1,-6},{ 1,-6},
+			 { 1,-7},{ 1,-8},{ 1,-9},{-1,-10}}};
+
+		Tile pos  = tempTile;
+		pos.set(p0.getElem(0).getIntValue(),
+				p0.getElem(1).getIntValue(),
+				p0.getElem(2).getIntValue());
+		int state = p1.getIntValue();
+						// Find Planet Britania.
+		GameObject brit = GameObject.findClosest(pos, 765, 24);
+		if (brit != null && state >= 0 && state <= 9) {
+			Vector<GameObject> planets = new Vector<GameObject>();	
+			// Remove existing planets.
+			brit.findNearby(planets, 988, 24, 0);
+			for (GameObject p : planets) {
+				if (p.getFrameNum() <= 7)	// Leave the sun.
+					p.removeThis();
+			}
+			for (int frame = 0; frame <= 7; ++frame) {
+				GameObject p = IregGameObject.create(988, frame);
+				p.move(pos.tx + offsets[state][frame][0],
+					pos.ty + offsets[state][frame][1], pos.tz);
+				}
+			}
+		gwin.setAllDirty();
+	}
+	private final UsecodeValue getTimer(UsecodeValue p0) {
+		int tnum = p0.getIntValue();
+		Integer val = ucmachine.getTimer(tnum);
+		int ret;
+		if (val != null && val.intValue() > 0)
+			ret = clock.getTotalHours() - val.intValue();
+		else
+						// Return random amount (up to half a day) if not set.
+			ret = EUtil.rand()%13;
+		return new UsecodeValue.IntValue(ret);
+	}
+	private final void setTimer(UsecodeValue p0) {
+		int tnum = p0.getIntValue();
+		ucmachine.setTimer(tnum, clock.getTotalHours());
+	}
+	private final UsecodeValue wearingFellowship() {
+		GameObject obj = gwin.getMainActor().getReadied(Ready.amulet);
+		if (obj != null && obj.getShapeNum() == 955 && obj.getFrameNum() == 1)
+			return UsecodeValue.getOne();
+		else
+			return UsecodeValue.getZero();
+	}
+	
 	private final void flashMouse(UsecodeValue p0) {
 		int shape;
 		switch (p0.needIntValue()) {
@@ -1624,7 +1720,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Play music(songnum, item).
 		GameObject obj = getItem(p1);
 		int sfxnum = p0.getIntValue();
-		// +++++FINISH new Object_sfx(obj, parms[0].getIntValue());
+		// +++++FINISH new Object_sfx(obj, p0.getIntValue());
 		audio.playSfx(sfxnum);	// +++++FOR NOW
 	}
 	private final static boolean isMovingBargeFlag(int fnum) {
@@ -1948,13 +2044,18 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return summon(parms[0]);
 		case 0x48:
 			displayMap(); break;
-		//++++++++++++
+		case 0x49:
+			killNpc(parms[0]); break;
 		case 0x4a:
 			return rollToWin(parms[0], parms[1]);
 		case 0x4b:
 			setAttackMode(parms[0], parms[1]); break;
 		case 0x4c:
 			setOppressor(parms[0], parms[1]); break;
+		case 0x4d:
+			return clone(parms[0]);
+		case 0x4e:	// UNUSED
+			break;
 		//+++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
@@ -1973,7 +2074,20 @@ public class UsecodeIntrinsics extends GameSingletons {
 			haltScheduled(parms[0]); break;
 		case 0x5e:
 			return getArraySize(parms[0]);
-		//+++++++++++++++
+		//++++++++++
+		case 0x62:
+			return gwin.isMainActorInside() ? UsecodeValue.getOne()
+								: UsecodeValue.getZero();
+		case 0x63:
+			setOrrery(parms[0], parms[1]); break;
+		case 0x64:
+			break; // UNUSED
+		case 0x65:
+			return getTimer(parms[0]);
+		case 0x66:
+			setTimer(parms[0]); break;
+		case 0x67:
+			return wearingFellowship();
 		case 0x68:
 			return UsecodeValue.getOne();	// MouseExists().
 		//++++++++++++++
@@ -1992,6 +2106,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getContainer(parms[0]);
 		case 0x6f:
 			removeItem(parms[0]); break;
+		case 0x70:
+			break;	// UNKNOWN
 		//++++++++++++++
 		case 0x7d:
 			return pathRunUsecode(gwin.getMainActor(), parms[0], parms[1], parms[2],

@@ -91,6 +91,12 @@ public class UsecodeMachine extends GameSingletons {
 	public final void setModifiedMap() {
 		modifiedMap = true;
 	}
+	public Integer getTimer(int tnum) {
+		return timers.get(tnum);
+	}
+	public void setTimer(int tnum, int val) {
+		timers.put(tnum, val);
+	}
 	public final void setBook(TextGump b) {
 		gumpman.closeGump(book);
 		book = b;
