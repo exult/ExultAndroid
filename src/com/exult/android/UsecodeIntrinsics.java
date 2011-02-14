@@ -36,9 +36,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 														int delay) {
 			GameObject obj = getItem(objval);
 							// Pure kludge for SI wells:
-			/* ++++++++++FINISH
 			if (objval.getArraySize() == 2 && 
-					Game.get_game_type() == SERPENT_ISLE &&
+					game.isSI() &&
 					obj != null && obj.getShapeNum() == 470 && 
 					obj.getLift() == 0) {
 							// We want the TOP of the well.
@@ -49,7 +48,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 					obj = o2;
 				}
 			}
-			*/
 			if (obj == null) {
 				System.out.println("Can't create script for NULL object");
 				return;
@@ -859,7 +857,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 								shapenum, framenum, 2);
 			if (pos.tx == -1)	// Hope this rarely happens.
 					break;
-			ShapeInfo info = ShapeID.get_info(shapenum);
+			ShapeInfo info = ShapeID.getInfo(shapenum);
 			// Create and place.
 			GameObject newobj = gmap.create_ireg_object(
 								info, shapenum, framenum, 0, 0, 0);
@@ -1416,6 +1414,40 @@ public class UsecodeIntrinsics extends GameSingletons {
 		else				// Not an array?  Usecode wants a 1.
 			cnt = 1;
 		return new UsecodeValue.IntValue(cnt);
+	}
+	private final void markVirtueStone(UsecodeValue p0) {
+		GameObject obj = getItem(p0);
+		if (obj.getInfo().getShapeClass() == ShapeInfo.virtue_stone) {
+			VirtueStoneObject vs = (VirtueStoneObject ) (obj);
+			GameObject owner = obj.getOutermost();
+			owner.getTile(tempTile);
+			vs.setTargetPos(tempTile);
+			vs.setTargetMap(owner.getMapNum());
+		}
+	}
+	private final void recallVirtueStone(UsecodeValue p0) {
+		GameObject obj = getItem(p0);
+		if (obj.getInfo().getShapeClass() == ShapeInfo.virtue_stone) {
+			VirtueStoneObject vs = (VirtueStoneObject ) (obj);
+			gumpman.closeAllGumps(false);
+						// Pick it up if necessary.
+			if (obj.getOwner() == null) {		// Go through whole party.
+				obj.removeThis();
+				if (!gwin.getMainActor().add(obj, false)) {
+					int i, cnt = partyman.getCount();
+					for (i = 0; i < cnt; ++i) {
+						Actor npc = gwin.getNpc(partyman.getMember(i));
+						if (npc.add(obj, false))
+							break;
+					}
+					if (i == cnt)	// Failed?  Force it on Avatar.
+						gwin.getMainActor().add(obj, true);
+				}
+			}
+			Tile t = vs.getTargetPos();
+			if (t.tx > 0 || t.ty > 0)
+				gwin.teleportParty(t, false, vs.getTargetMap());
+		}
 	}
 	private void setOrrery(UsecodeValue p0, UsecodeValue p1) {
 		// set_orrery(pos, state(0-9)).
@@ -2074,7 +2106,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			haltScheduled(parms[0]); break;
 		case 0x5e:
 			return getArraySize(parms[0]);
-		//++++++++++
+		case 0x5f:
+			markVirtueStone(parms[0]); break;
+		case 0x60:
+			recallVirtueStone(parms[0]); break;
 		case 0x62:
 			return gwin.isMainActorInside() ? UsecodeValue.getOne()
 								: UsecodeValue.getZero();

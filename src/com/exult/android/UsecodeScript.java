@@ -118,6 +118,14 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			add(v);
 		return this;
 	}
+	//	Find one for a given item.
+	public static UsecodeScript find(GameObject srch) {
+		for (UsecodeScript s : scripts) {
+			if (s.obj == srch)
+				return s;
+		}
+		return null;
+	}
 	private void finish() {
 		code = new UsecodeValue.ArrayValue(building);
 		cnt = code.getArraySize();

@@ -491,19 +491,17 @@ public class GameMap extends GameSingletons {
 				quality = (int)entbuf[7]&0xff;
 				oflags =	// Override flags (I think).
 				 	getQualityFlags(entbuf[11]);
-				/* +++++++++++++
-				if (info.getShapeClass() == Shape_info::virtue_stone)
-					{	// Virtue stone?
-					Virtue_stone_object *v = 
-					   new Virtue_stone_object(shnum, frnum, tilex,
+				if (info.getShapeClass() == ShapeInfo.virtue_stone) {
+					// Virtue stone?
+					VirtueStoneObject v = 
+					   new VirtueStoneObject(shnum, frnum, tilex,
 							tiley, lift);
-					v.set_target_pos(entry[4], entry[5], entry[6],
-									entry[7]);
-					v.set_target_map(entry[10]);
+					v.setTargetPos(entbuf[4], entbuf[5], entbuf[6],
+									entbuf[7]);
+					v.setTargetMap(entbuf[10]);
 					obj = v;
 					type = 0;
-					}
-				else */ if (info.getShapeClass() == ShapeInfo.barge) {
+				} else if (info.getShapeClass() == ShapeInfo.barge) {
 					//System.out.printf(
 					//		"create barge with xtiles = %1$d, ytiles = %2$d, type = %3$x\n",
 					//		entbuf[4], entbuf[5], type);
@@ -514,8 +512,7 @@ public class GameMap extends GameSingletons {
 					if (gwin.getMovingBarge() == null && 
 								(quality&(1<<3)) != 0)
 						gwin.setMovingBarge(b);
-					}
-				else /* if (info.is_jawbone()) // serpent jawbone
+				} else /* if (info.is_jawbone()) // serpent jawbone
 					{
 					obj = new Jawbone_object(shnum, frnum,
 						tilex, tiley, lift, entry[10]);
