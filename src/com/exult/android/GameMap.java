@@ -453,38 +453,33 @@ public class GameMap extends GameSingletons {
 					oflags = getQualityFlags((byte)quality);
 					quality = 0;
 				}
-			}
-			/*
-			else if (info.is_body_shape())
-				{	// NPC's body.
+			} else if (info.isBodyShape()) {	// NPC's body.
 				int extbody = testlen == 13 ? 1 : 0;
-				type = entry[4] + 256*entry[5];
-				lift = entry[9 + extbody] >> 4;
-				quality = entry[7];
+				type = entbuf[4] + 256*entbuf[5];
+				lift = entbuf[9 + extbody] >> 4;
+				quality = entbuf[7];
 				oflags =	// Override flags (I think).
-					Get_quality_flags(entry[11 + extbody]);
+					getQualityFlags(entbuf[11 + extbody]);
 				int npc_num;
-				if (quality == 1 && (extbody || (entry[8] >= 0x80 || 	 
-						Game::get_game_type() == SERPENT_ISLE)))
-					npc_num = extbody ? (entry[8] + 256*entry[9]) :
-							((entry[8] - 0x80) & 0xFF);
+				if (quality == 1 && (extbody != 0 || (entbuf[8] >= 0x80 || game.isSI())))
+					npc_num = extbody != 0 ? (entbuf[8] + 256*entbuf[9]) :
+							((entbuf[8] - 0x80) & 0xFF);
 				else
 					npc_num = -1;
-				if (!npc_num)	// Avatar has no body.
+				if (npc_num == 0)	// Avatar has no body.
 					npc_num = -1;
-				Dead_body *b = new Dead_body(shnum, frnum, 
+				Actor.DeadBody b = new Actor.DeadBody(shnum, frnum, 
 						tilex, tiley, lift, npc_num);
 				obj = b;
 				if (npc_num > 0)
-					gwin.set_body(npc_num, b);
-				if (type)	// (0 if empty.)
-					{	// Don't pass along invisibility!
-					read_ireg_objects(ireg, scx, scy, obj, 
-						oflags & ~(1<<Obj_flags::invisible));
-					obj.elements_read();
-					}
+					gwin.setBody(npc_num, b);
+				if (type != 0) {	// (0 if empty.)
+						// Don't pass along invisibility!
+					readIregObjects(ireg, scx, scy, obj, 
+						oflags & ~(1<<GameObject.invisible));
+					obj.elementsRead();
 				}
-			*/
+			}
 			else if (testlen == 12) {	// Container?
 				type = ((int)entbuf[4]&0xff) + 256*((int)entbuf[5]&0xff);
 				lift = ((int)entbuf[9] >> 4)&0xf;
@@ -515,7 +510,7 @@ public class GameMap extends GameSingletons {
 				} else /* if (info.is_jawbone()) // serpent jawbone
 					{
 					obj = new Jawbone_object(shnum, frnum,
-						tilex, tiley, lift, entry[10]);
+						tilex, tiley, lift, entbuf[10]);
 					}
 				
 				else */
@@ -535,10 +530,10 @@ public class GameMap extends GameSingletons {
 						// Get all 9 spell bytes.
 				quality = 0;
 				unsigned char circles[9];
-				memcpy(&circles[0], &entry[4], 5);
-				lift = entry[9] >> 4;
-				memcpy(&circles[5], &entry[10], 4);
-				uint8 *ptr = &entry[14];
+				memcpy(&circles[0], &entbuf[4], 5);
+				lift = entbuf[9] >> 4;
+				memcpy(&circles[5], &entbuf[10], 4);
+				uint8 *ptr = &entbuf[14];
 						// 3 unknowns, then bookmark.
 				unsigned char bmark = ptr[3];
 				obj = new Spellbook_object(

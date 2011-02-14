@@ -1363,6 +1363,23 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getNullObj();
 	}
+	private final UsecodeValue resurrect(UsecodeValue p0) {
+		// resurrect(body).  Returns actor if successful.
+		GameObject body = getItem(p0);
+		int npc_num = body != null ? body.getLiveNpcNum() : -1;
+		if (npc_num < 0)
+			return UsecodeValue.getNullObj();
+		Actor actor = gwin.getNpc(npc_num);
+		if (actor != null) {
+			// Want to resurrect after returning.
+			UsecodeScript scr = new UsecodeScript(body);
+			scr.add(UsecodeScript.resurrect);
+			scr.start();
+			ucmachine.setModifiedMap();
+			return new UsecodeValue.ObjectValue(actor);
+		} else
+			return UsecodeValue.getNullObj();
+	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
 		TextGump gump;
@@ -1868,6 +1885,23 @@ public class UsecodeIntrinsics extends GameSingletons {
 				sailor = null;
 		}
 	}
+	private final void setPathFailure(UsecodeValue p0, UsecodeValue p1,
+												UsecodeValue p2) {
+		// set_path_failure(fun, itemref, eventid) for the last NPC in
+		//  a path_run_usecode() call.
+
+		int fun = p0.getIntValue(),
+		    eventid = p2.getIntValue();
+		GameObject item = getItem(p1);
+		if (pathNpc != null && item != null) {		// Set in path_run_usecode().
+			ActorAction.IfElsePath action = 
+				pathNpc.getAction() != null ?
+				pathNpc.getAction().asUsecodePath() : null;
+			if (action != null)		// Set in in path action.
+				action.setFailure(
+					new ActorAction.Usecode(fun, item, eventid));
+		}
+	}
 	private final static UsecodeValue isWater(UsecodeValue p0) {
 		// Is_water(pos).
 		int size = p0.getArraySize();
@@ -2088,6 +2122,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return clone(parms[0]);
 		case 0x4e:	// UNUSED
 			break;
+		//++++++++
+		case 0x51:
+			return resurrect(parms[0]); 
 		//+++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
@@ -2170,7 +2207,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			setItemFlag(parms[0], parms[1]); break;
 		case 0x8a:
 			clearItemFlag(parms[0], parms[1]); break;
-		//+++++++++++++
+		case 0x8b:
+			setPathFailure(parms[0], parms[1], parms[2]); break;
 		case 0x8d:
 			return getPartyList();	// get_party_list2.  Seems the same.
 		case 0x8e:

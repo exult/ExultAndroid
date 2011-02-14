@@ -607,12 +607,10 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				}
 			case resurrect:
 				{
-				/*+++++++++++
-				Dead_body *body = (Dead_body *) obj;
-				Actor act = gwin.getNpc(body.get_live_npc_num());
-				if (act)
+				Actor.DeadBody body = (Actor.DeadBody) obj;
+				Actor act = gwin.getNpc(body.getLiveNpcNum());
+				if (act != null)
 					act.resurrect(body);
-				*/
 				break;
 				}
 			default:
