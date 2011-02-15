@@ -348,7 +348,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					(gear_powers&(Frame_flags.power_safe|Frame_flags.charm_safe)))
 				return;		// Don't do anything.
 			need_timers().start_charm();
-			set_target(0);		// Need new opponent if in combat.
+			setTarget(0);		// Need new opponent if in combat.
 			break;
 		case GameObject.paralyzed:
 			if (minf.paralysis_safe() || minf.power_safe() ||
@@ -1666,6 +1666,302 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 		}
 	}
+	/*
+	 *	This method should be called to cause damage from traps, attacks.
+	 *
+	 *	Output:	Hits taken. If exp is nonzero, experience value if defeated.
+	 */
+	public int applyDamage
+		(
+		GameObject attacker,	// Attacker, or null.
+		int str,		// Attack strength.
+		int wpoints,	// Weapon bonus.
+		int type,		// Damage type.
+		int bias,		// Different combat difficulty.
+		int exp[]
+		)
+		{
+		if (exp != null)
+			exp[0] = 0;
+		int damage = bias;
+		str /= 3;
+
+			// In the original, wpoints == 127 does fixed 127 damage.
+			// Allowing for >= 127 in Exult, as the original seems to
+			// use only a byte for damage/health.
+		if (wpoints >= 127)
+			damage = 127;
+		else {
+				// Lightning damage ignores strength.
+			if (type != WeaponInfo.lightning_damage && str > 0)
+				damage += (1 + EUtil.rand()%str);
+			if (wpoints > 0)
+				damage += (1 + EUtil.rand()%wpoints);
+		}
+		int armor = -bias;
+		MonsterInfo minf = getInfo().getMonsterInfo();
+			// Monster armor protects only in UI_apply_damage.
+		if (minf != null)
+			armor += minf.getArmor();
+
+			// Armor defense and immunities only affect UI_apply_damage.
+		final int num_spots = spots.length;
+		for (int i = 0; i < num_spots; i++) {
+			GameObject obj = spots[i];
+			if (obj != null) {
+				ShapeInfo info = obj.getInfo();
+				armor += info.getArmor();
+				if ((info.getArmorImmunity() & (1 << type)) != 0) {
+						// Armor gives immunity.
+						// Metal clang.
+					int sfx = Audio.gameSfx(5);
+					//++++++++++FINISH new ObjectSfx(this, sfx);
+						// Attack back anyway.
+					fightBack(attacker);
+					return 0;	// No damage == no powers.
+					}
+				}
+			}
+
+			// Some attacks ignore armor (unless the armor gives immunity).
+		if (wpoints == 127 || type == WeaponInfo.lightning_damage ||
+				type == WeaponInfo.ethereal_damage ||
+				type == WeaponInfo.sonic_damage ||
+				armor < 0)	// Armor should never help the attacker.
+			armor = 0;
+
+		if (armor != 0)
+			damage -= (1 + EUtil.rand()%armor);
+
+			// Paralyzed/defenseless foes may take damage even if
+			// the armor protects them. This code is guesswork,
+			// but it matches statistical tests.
+		if (damage <= 0 && !canAct()) {
+			if (str > 0)
+				damage = 1 + EUtil.rand()%str;
+			else
+				damage = 0;
+		}
+		if (damage <= 0) {	// No damage caused.
+			int sfx = Audio.gameSfx(5);
+			//++++++FINISH new ObjectSfx(this, sfx);
+
+				// Flash red outline.
+			hit = true;
+			addDirty();
+			/*++++++FINISH
+			Clear_hit *c = new Clear_hit();
+			tqueue.add(TimeQueue.ticks + 1, c, this);
+			*/
+				// Attack back.
+			fightBack(attacker);
+			return 0;	// No damage == no powers (usually).
+		}
+
+		return reduceHealth(damage, type, attacker, exp);
+	}
+	/*
+	 *	This method should be called to decrement health directly.
+	 *
+	 *	Output:	Hits taken. If exp is nonzero, experience value if defeated.
+	 */
+	public int reduceHealth
+		(
+		int delta,			// # points to lose.
+		int type,		// Type of damage
+		GameObject attacker,		// Attacker, or null.
+		int exp[]
+		)
+		{
+		if (exp != null)
+			exp[0] = 0;
+			// Cheater, cheater.
+		if (isDead() || (cheat.inGodMode() && ((partyId != -1) || (npcNum == 0))))
+			return 0;
+
+		MonsterInfo minf = getInfo().getMonsterInfoSafe();
+		Actor npc = attacker != null ? attacker.asActor() : null;
+
+			// Monster immunities DO affect UI_reduce_health, unlike
+			// armor immunities.
+		if (isDead() || minf.cantDie() ||
+			(minf.getImmune() & (1 << type)) != 0) {
+				// Monster data gives immunity to damage.
+				// Attack back.
+			fightBack(attacker);
+			return 0;
+		}
+			// Monsters vulnerable to a damage type take 2x the damage.
+			// The originals seem to limit damage to 127 points; we
+			// set a lower bound on final health below.
+		if ((minf.getVulnerable() & (1 << type)) != 0)
+			delta *= 2;
+
+		int oldhp = properties[health];
+		int maxhp = properties[strength];
+		int val = oldhp - delta;
+		if (val < -50) {	// Limit how low it goes for safety.
+			val = -50;
+			delta = oldhp + 50;
+		}
+			// Don't set health yet!! (see tournament below for why)
+			// The following thresholds are exact.
+		if (this == gwin.getMainActor() &&
+						// Flash red if Avatar badly hurt.
+				(delta >= maxhp/3 || oldhp < maxhp/4 ||
+						// Or if lightning damage.
+				type == WeaponInfo.lightning_damage))
+			; //+++++++++FINISH gwin.getPal().flashRed();
+		else {
+			hit = true;		// Flash red outline.
+			addDirty();
+			/*++++++++FINISH 
+			Clear_hit *c = new Clear_hit();
+			tqueue.add(TimeQueue.ticks + 1, c, this);
+			*/
+		}
+		if (oldhp >= maxhp/2 && val < maxhp/2 && EUtil.rand()%2 != 0) {
+						// A little oomph.
+						// Goblin?
+			if (game.isSI() &&
+				 (getShapeNum() == 0x1de ||
+				  getShapeNum() == 0x2b3 ||
+				  getShapeNum() == 0x2d5 ||
+				  getShapeNum() == 0x2e8))
+				say(0x4d2, 0x4da);	// ++++ TODO: Not sure they use all these.
+			else if (minf == null || !minf.cantYell())
+				say(ItemNames.first_ouch, ItemNames.last_ouch);
+		}
+		Vector<GameObject> bvec;		// Create blood.
+		int blood = 912;		// ++++TAG for future de-hard-coding.
+				// Bleed only for normal damage.
+		if (type == WeaponInfo.normal_damage && !minf.cantBleed()
+			// Trying something new. Seems to match originals better, but
+			// it is hard to judge accurately (although 10 or more hits
+			// *always* cause bleeding).
+			&& EUtil.rand()%10 < delta
+			&& findNearby(bvec=new Vector<GameObject>(), blood, 1, 0) < 2) {
+						// Create blood where actor stands.
+			GameObject bobj = IregGameObject.create(blood, 0);
+			bobj.setFlag(GameObject.is_temporary);
+			bobj.move(getTileX(), getTileY(), getLift());
+		}
+		if (val <= 0 && oldhp > 0 && getFlag(GameObject.tournament)) {
+				// HPs are never reduced before tournament usecode
+				// (this can be checked on weapon usecode, tournament
+				// usecode or even UI_reduce_health directly followed
+				// by UI_get_npc_prop).
+				// THIS is why we haven't reduced health yet.
+				// This makes foes with tournament flag EXTREMELLY
+				// tough, particularly if they have high hit points
+				// to begin with!
+				// No more pushover banes!
+			if (npc != null)	// Just to be sure.
+				setOppressor(npc.getNpcNum());
+			ucmachine.callUsecode(getUsecode(), this, UsecodeMachine.died);
+			return 0;	// If needed, NPC usecode does the killing (possibly
+						// by calling this function again).
+		}
+
+			// We do slimes here; they DO split through reduce_health intrinsic.
+			// They also do *not* split if hit by damage they are vulnerable to.
+		if (minf.splits() && val > 0 && 
+			(minf.getVulnerable() & (1 << type)) == 0 && EUtil.rand()%2 == 0)
+			clone();
+		
+			// Doing this here simplifies the tournament code, above.
+		properties[health] = val;
+		boolean defeated = isDying() || (val <= 0 && oldhp > 0);
+		
+		if (defeated && exp != null) {
+				// Verified: No experience for killing sleeping people.
+			if (!getFlag(GameObject.asleep)) {
+				int expval = 0;
+					// Except for 2 details mentioned below, this formula
+					// is an exact match to what the originals give.
+					// We also have to do this *here*, before we kill the
+					// NPC, because the equipment is deleted (spells) or
+					// transferred to the dead body it leaves.
+				int combval = properties[combat];
+				expval = properties[strength] + combval + 
+						(properties[dexterity]+1)/3 + 
+						properties[intelligence]/5;
+				minf = getInfo().getMonsterInfo();
+				int immune = minf != null ? minf.getImmune() : 0;
+				int vuln = minf != null ? minf.getVulnerable() : 0;
+				if (minf != null)
+					expval += minf.getBaseXpValue();
+
+				if (!objects.isEmpty()) {
+							// Get list of all possessions.
+					Vector<GameObject> vec = new Vector<GameObject>(50);
+					getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, 
+							EConst.c_any_framenum);
+					for (GameObject obj : vec) {
+							// This matches the original, but maybe
+							// we should iterate through all items.
+							// After all, a death bolt in the backpack
+							// can still be dangerous...
+						if (obj.getOwner() != this)
+							continue;
+						ShapeInfo inf = obj.getInfo();
+						expval += inf.getArmor();
+							// Strictly speaking, the original does not give
+							// XP for armor immunities; but I guess this is
+							// mostly because very few armors give immunities
+							// (ethereal ring, cadellite helm) and no monsters
+							// use them anyway.
+							// I decided to have them give a (non-cumulative)
+							// increase in experience.
+						immune |= inf.getArmorImmunity();
+						WeaponInfo winf = inf.getWeaponInfo();
+						if (winf == null)
+							continue;
+						expval += winf.getBaseXpValue();
+							// This was tough to figure out, but figured out it was;
+							// it is a perfect match to what the original does.
+						switch (winf.getUses()) {
+						case WeaponInfo.melee:
+							{
+							int range = winf.getRange();
+							expval += range > 5 ? 2 : (range > 3 ? 1 : 0);
+							break;
+							}
+						case WeaponInfo.poor_thrown:
+							expval += combval/5; break;
+						case WeaponInfo.good_thrown:
+							expval += combval/3; break;
+						case WeaponInfo.ranged:
+							expval += winf.getRange()/2; break;
+						}
+					}
+					}
+					// Originals don't do this, but hey... they *should*.
+					// Also, being vulnerable to something you are immune
+					// should not matter because immunities are checked first;
+					// the originals don't do this check, but neither do they
+					// have a monster vulnerable and immune to the same thing.
+				vuln &= ~immune;
+				expval += EUtil.bitcount((byte)immune);
+				expval -= EUtil.bitcount((byte)vuln);
+					// And the final touch (verified).
+				expval /= 2;
+				exp[0] = expval;
+				}
+			}
+
+		if (isDying())
+			die(attacker);
+		else if (val <= 0 && !getFlag(GameObject.asleep)) {
+			//++++++++FINISH CombatSchedule.stopAttackingNpc(this);
+			setFlag(GameObject.asleep);
+		} else if (npc != null && target == null  && !getFlag(GameObject.in_party)) {
+			setTarget(npc, npc.getScheduleType() != Schedule.duel);
+			setOppressor(npc.getNpcNum());
+		}
+		fightBack(attacker);
+		return delta;
+	}	
 	/*
 	 *	Causes the actor to fall to the ground and take damage.
 	 */
@@ -3344,7 +3640,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			/*++++++++++++FINISH
 			unsigned char buf[21];		// 13-byte entry - Exult extension.
 			uint8 *ptr = write_common_ireg(13, buf);
-			Game_object *first = objects.get_first(); // Guessing: +++++
+			GameObject first = objects.get_first(); // Guessing:
 			unsigned short tword = first ? first.get_prev().getShapeNum() 
 											: 0;
 			Write2(ptr, tword);
@@ -3356,8 +3652,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			*ptr++ = (get_lift()&15)<<4;	// Lift 
 			*ptr++ = (unsigned char)get_obj_hp();		// Resistance.
 							// Flags:  B0=invis. B3=okay_to_take.
-			*ptr++ = (get_flag(GameObject.invisible) != 0) +
-				 ((get_flag(GameObject.okay_to_take) != 0) << 3);
+			*ptr++ = (getFlag(GameObject.invisible) != 0) +
+				 ((getFlag(GameObject.okay_to_take) != 0) << 3);
 			out.write((char*)buf, ptr - buf);
 			write_contents(out);		// Write what's contained within.
 							// Write scheduled usecode.

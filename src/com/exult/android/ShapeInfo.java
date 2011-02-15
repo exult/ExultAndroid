@@ -152,6 +152,10 @@ public final class ShapeInfo {
 	public MonsterInfo getMonsterInfo() {
 		return monstinf; 
 	}
+	public MonsterInfo getMonsterInfoSafe() {
+		return monstinf != null ? monstinf
+				: MonsterInfo.getDefault();
+	}
 	public void setMonsterInfo(MonsterInfo m) {
 		monstinf = m;
 	}
