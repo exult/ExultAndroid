@@ -523,24 +523,20 @@ public class GameMap extends GameSingletons {
 						oflags & ~(1<<GameObject.invisible) );
 					obj.elementsRead();
 				}
-			}
-			/* ++++++++++++
-			else if (info.get_shape_class() == Shape_info::spellbook)
-				{		// Length 18 means it's a spellbook.
+			} else if (info.getShapeClass() == ShapeInfo.spellbook) {
+						// Length 18 means it's a spellbook.
 						// Get all 9 spell bytes.
 				quality = 0;
-				unsigned char circles[9];
-				memcpy(&circles[0], &entbuf[4], 5);
+				byte circles[] = new byte[9];
+				System.arraycopy(entbuf, 4, circles, 0, 5);
 				lift = entbuf[9] >> 4;
-				memcpy(&circles[5], &entbuf[10], 4);
-				uint8 *ptr = &entbuf[14];
+				System.arraycopy(entbuf, 10, circles, 5, 4);
 						// 3 unknowns, then bookmark.
-				unsigned char bmark = ptr[3];
-				obj = new Spellbook_object(
+				byte bmark = entbuf[14 + 3];
+				obj = new SpellbookObject(
 					shnum, frnum, tilex, tiley, lift,
-					&circles[0], bmark);
-				}
-			*/
+					circles, bmark);
+			}
 			
 			last_obj = obj;		// Save as last read.
 			if (obj == null)

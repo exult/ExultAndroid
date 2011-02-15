@@ -3,6 +3,7 @@ package com.exult.android;
 public final class Cheat extends GameSingletons {
 	private boolean hackMover;
 	private boolean godMode;
+	private boolean wizardMode;
 	public boolean inHackMover() {
 		return hackMover;
 	}
@@ -12,6 +13,17 @@ public final class Cheat extends GameSingletons {
 	}
 	public boolean inGodMode() {
 		return godMode;
+	}
+	public void toggleGodMode() {
+		ExultActivity.showToast(godMode?"GodMode Mode":"Ending GodMode");
+		godMode = !godMode;
+	}
+	public boolean inWizardMode() {
+		return wizardMode;
+	}
+	public void toggleWizardMode() {
+		ExultActivity.showToast(wizardMode?"WizardMode Mode":"Ending WizardMode");
+		wizardMode = !wizardMode;
 	}
 	public void mapTeleport() {
 		ShapeFrame map;

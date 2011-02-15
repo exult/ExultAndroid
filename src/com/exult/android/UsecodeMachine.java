@@ -14,7 +14,6 @@ import android.graphics.Point;
 public class UsecodeMachine extends GameSingletons {
 	public boolean debug = false;
 	private byte gflags[];	// Global flags.
-	// ++++ protected Conversation conv;		// Handles conversations.
 	// Functions: I'th entry contains funs for ID's 256*i + n.
 	private Vector<Vector<UsecodeFunction>> funs = 
 				new Vector<Vector<UsecodeFunction>>();
@@ -1759,6 +1758,20 @@ public class UsecodeMachine extends GameSingletons {
 		*/
 		EUtil.Write4(out, 0xffffffff);	// End with -1.
 		out.close();
+	}
+	public void interceptClickOnItem(GameObject obj) {
+		intrinsics.interceptClickOnItem(obj);
+	} 
+	public GameObject getInterceptClickOnItem()
+		{ return intrinsics.getInterceptClickOnItem(); }
+	public void interceptClickOnTile(Tile t) {
+		intrinsics.interceptClickOnTile(t);
+	}
+	public Tile getInterceptClickOnTile() {
+		return intrinsics.getInterceptClickOnTile();
+	}
+	public void restoreIntercept(GameObject obj, Tile t) {
+		intrinsics.restoreIntercept(obj, t);
 	}
 	/*
 	 * One Usecode function.

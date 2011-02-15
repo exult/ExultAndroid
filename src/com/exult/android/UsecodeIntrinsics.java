@@ -2227,4 +2227,21 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getZero();
 	}
+	public void interceptClickOnItem(GameObject obj) {
+		interceptItem = obj;
+		interceptTile = null;
+	} 
+	public GameObject getInterceptClickOnItem()
+		{ return interceptItem; }
+	public void interceptClickOnTile(Tile t) {
+		interceptItem = null;
+		interceptTile = t;
+	}
+	public Tile getInterceptClickOnTile() {
+		return interceptTile; 
+	}
+	public void restoreIntercept(GameObject obj, Tile t) {
+		interceptItem = obj;
+		interceptTile = t;
+	}
 }

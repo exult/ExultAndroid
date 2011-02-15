@@ -85,12 +85,11 @@ public class IregGameObject extends GameObject {
 		else if (info.getShapeClass() == ShapeInfo.virtue_stone)
 			return new VirtueStoneObject(
 					shnum, frnum, tilex, tiley, lift);
-		/* else if (info.get_shape_class() == ShapeInfo.spellbook) {
-			static unsigned char circles[9] = {0};
-			return new Spellbook_object(
-				shnum, frnum, tilex, tiley, lift,
-				&circles[0], 0);
-		} */ else if (info.getShapeClass() == ShapeInfo.container) {
+		else if (info.getShapeClass() == ShapeInfo.spellbook) {
+			final byte circles[] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
+			return new SpellbookObject(
+				shnum, frnum, tilex, tiley, lift, circles, (byte)0);
+		} else if (info.getShapeClass() == ShapeInfo.container) {
 			/*
 			if (info.is_jawbone())
 				return new Jawbone_object(shnum, frnum, tilex, tiley,

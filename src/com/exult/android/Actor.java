@@ -453,7 +453,18 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public int getTypeFlags() {
 		return typeFlags;
+	}	
+	public final short getCastingMode ()  { return castingMode; }
+	public final void endCastingMode (int delay) {
+		//+++++++FINISH
 	}
+	public final int getCasting_shape () { return castingShape; }
+	public final void beginCasting (int s)
+		{ castingMode = init_casting; castingShape = s; }
+	public final void displayCastingFrames () 
+		{ castingMode = show_casting_frames; }
+	public final void hideCasting_frames () 
+		{ castingMode = not_casting; }
 	public void setSkinColor (int color) { 
 		skinColor = color; 
 		setActorShape();
@@ -1147,10 +1158,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		// Check for spellbook.
 		GameObject robj = getReadied(Ready.lhand);
 		if (robj != null && robj.getInfo().getShapeClass() == ShapeInfo.spellbook) {
-			/*++++++++FINISH
-			if ((static_cast<Spellbook_object*> (robj)).can_do_spell(this))
+			if (((SpellbookObject)robj).canDoSpell(this))
 				return true;
-			*/
 		}
 		Vector<GameObject> vec = new Vector<GameObject>(50);		// Get list of all possessions.
 		getObjects(vec, EConst.c_any_shapenum, EConst.c_any_qual, EConst.c_any_framenum);
@@ -1854,12 +1863,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *	Get effective weapon shape, taking casting frames in consideration.
 	 */
 	private int getEffectiveWeaponShape() {
-		/*+++++++FINISH
-		if (get_casting_mode() == Actor.show_casting_frames)
+		if (getCastingMode() == Actor.show_casting_frames)
 			// Casting frames
-			return casting_shape;
-		else */
-			{
+			return castingShape;
+		else {
 			GameObject weapon = spots[Ready.lhand];
 			return weapon.getShapeNum();
 		}

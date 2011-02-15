@@ -519,6 +519,12 @@ public class ExultActivity extends Activity {
 			        		GameSingletons.ucmachine.debug = !
 			        					GameSingletons.ucmachine.debug;
 			        	return true;
+		        	case KeyEvent.KEYCODE_W:
+		        		if (event.isAltPressed()) {
+		        			GameSingletons.cheat.toggleWizardMode();
+		        			return true;
+		        		} else
+		        			return false;
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {
 		        			ExultActivity.instance.finish();
