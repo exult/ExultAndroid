@@ -1,7 +1,9 @@
 package com.exult.android;
+import java.util.Collections;
 import java.util.Vector;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Iterator;
 
 public final class MapChunk extends GameSingletons {
@@ -20,7 +22,7 @@ public final class MapChunk extends GameSingletons {
 	// Each member of 'blocked' is 16x16 tiles, with each short value using 2
 	// bits for each bit level for #objs blocking there.
 	private Vector<short[]> blocked;	// Each element represents the chunk for 8 lifts.
-	private HashSet<GameObject> doors;
+	private Set<GameObject> doors;
 	private Vector<EggObject> eggObjects;
 	private short eggs[];				// Eggs which influence this chunk.
 	// Mask gives low bits (b0) for a given # of ztiles:
@@ -496,7 +498,7 @@ public final class MapChunk extends GameSingletons {
 		ShapeInfo info = obj.getInfo();
 		if (info.isDoor()) {		// Special door list.
 			if (doors == null)
-				doors = new HashSet<GameObject>();
+				doors = Collections.synchronizedSet(new HashSet<GameObject>());
 			doors.add(obj);
 		}
 		int ztiles = info.get3dHeight(); 

@@ -209,7 +209,8 @@ public class SpellbookObject extends IregGameObject {
 	}
 	@Override				// Run usecode function.
 	public void activate(int event) {
-		//+++++FINISH gumpman.addGump(this, getInfo().getGumpShape(), false);
+		SpellbookGump g = new SpellbookGump(this);
+		gumpman.addGump(g);
 	}
 	@Override				// Write out to IREG file.
 	public void writeIreg(OutputStream out) throws IOException {

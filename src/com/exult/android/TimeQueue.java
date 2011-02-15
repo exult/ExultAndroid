@@ -35,20 +35,22 @@ public class TimeQueue {
 						// Messy, but we need to fix time.
 			t -= ticks - pauseTime;
 		newent.set(t, obj, ud);
-		if (entries.isEmpty()) {
-			entries.addFirst(newent);
-			return;
-		}
-		ListIterator<QueueEntry> it = entries.listIterator();
-		while (it.hasNext()) {
-			QueueEntry ent = it.next();
-			if (newent.time < ent.time) {
-				if (ent != it.previous()) {	// 
-					System.out.println("TimeQueue.add:  ERROR INSERTING!!!");
-				} else 
-					it.add(newent);
+		synchronized (entries) {
+			if (entries.isEmpty()) {
+				entries.addFirst(newent);
 				return;
+			}
+			ListIterator<QueueEntry> it = entries.listIterator();
+			while (it.hasNext()) {
+				QueueEntry ent = it.next();
+				if (newent.time < ent.time) {
+					if (ent != it.previous()) {	// 
+						System.out.println("TimeQueue.add:  ERROR INSERTING!!!");
+					} else 
+						it.add(newent);
+					return;
 				}
+			}
 		}
 		entries.addLast(newent);
 	}
@@ -60,7 +62,7 @@ public class TimeQueue {
 			return;
 		
 		boolean tryAgain = true;
-		while (tryAgain) {
+		while (tryAgain) synchronized (entries) {
 			ListIterator<QueueEntry> it = entries.listIterator();
 			tryAgain = false;
 			while (it.hasNext()) {
@@ -85,7 +87,7 @@ public class TimeQueue {
 	public final void activate(int ctime) {
 		if (paused > 0) {
 			activateAlways(ctime);
-		} else {
+		} else synchronized(entries) {
 			while (!entries.isEmpty() && ctime >= entries.getFirst().time) {
 				QueueEntry ent = entries.removeFirst();
 				TimeSensitive obj = ent.handler;
@@ -106,11 +108,13 @@ public class TimeQueue {
 		pauseTime = 0;
 		if (diff < 0)			// Should not happen.
 			return;
-		ListIterator<QueueEntry> it = entries.listIterator();
-		while (it.hasNext()) {
-			QueueEntry ent = it.next();
-			if (ent.handler.alwaysHandle())
-				ent.time += diff;	// Push entries ahead.
+		synchronized(entries) {
+			ListIterator<QueueEntry> it = entries.listIterator();
+			while (it.hasNext()) {
+				QueueEntry ent = it.next();
+				if (ent.handler.alwaysHandle())
+					ent.time += diff;	// Push entries ahead.
+			}
 		}
 	}
 	/*
@@ -119,13 +123,15 @@ public class TimeQueue {
 	public boolean remove(TimeSensitive obj) {
 		if (entries.isEmpty())
 			return false;
-		ListIterator<QueueEntry> it = entries.listIterator();
-		while (it.hasNext()) {
-			QueueEntry ent = it.next();
-			if (ent.handler == obj) {
-				obj.removedFromQueue();
-				it.remove();
-				return true;
+		synchronized(entries) {
+			ListIterator<QueueEntry> it = entries.listIterator();
+			while (it.hasNext()) {
+				QueueEntry ent = it.next();
+				if (ent.handler == obj) {
+					obj.removedFromQueue();
+					it.remove();
+					return true;
+				}
 			}
 		}
 		return false;			// Not found.

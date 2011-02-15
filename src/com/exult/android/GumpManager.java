@@ -180,11 +180,6 @@ public final class GumpManager extends GameSingletons {
 		else if (npc != null && shapenum == game.getShape("gumps/statsdisplay"))
 			new_gump = StatsGump.create(npc, x, y);
 		/*
-		else if (shapenum == game.getShape("gumps/spellbook"))
-			new_gump = new Spellbook_gump((Spellbook_object *) obj);
-		else if (Game.get_game_type() == SERPENT_ISLE) {
-			if (shapenum == game.getShape("gumps/spell_scroll"))
-				new_gump = new Spellscroll_gump(obj);
 			else if (shapenum >= game.getShape("gumps/cstats/1")&&
 					 shapenum <= game.getShape("gumps/cstats/6"))
 				new_gump = new CombatStats_gump(x, y);
