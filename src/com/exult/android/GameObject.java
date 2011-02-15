@@ -1016,7 +1016,8 @@ public abstract class GameObject extends ShapeID {
 		int curframe = getFrameNum();
 		return getInfo().getRotatedFrame(curframe, quads);
 	}
-	public int reduceHealth(int delta, int damage_type, GameObject attacker) {
+	public int reduceHealth(int delta, int damage_type, GameObject attacker,
+			int exp[]) {
 		//+++++++++++FINISH
 		return delta;
 	}

@@ -593,7 +593,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				{
 				UsecodeValue hps = code.getElem(++i);
 				UsecodeValue type = code.getElem(++i);
-				obj.reduceHealth(hps.getIntValue(), type.getIntValue(), null);
+				obj.reduceHealth(hps.getIntValue(), type.getIntValue(), null, null);
 				break;
 				}
 			case attack:		// Finish 'set_to_attack()'.

@@ -69,6 +69,9 @@ public abstract class UsecodeValue {
 	public static final UsecodeValue getOne() {
 		return oneVal;
 	}
+	public static final UsecodeValue getBoolean(boolean tf) {
+		return tf ? getOne() : getZero();
+	}
 	public static final UsecodeValue getNullObj() {
 		return nullObj;
 	}	

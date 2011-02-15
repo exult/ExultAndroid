@@ -1765,6 +1765,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *
 	 *	Output:	Hits taken. If exp is nonzero, experience value if defeated.
 	 */
+	@Override
 	public int reduceHealth
 		(
 		int delta,			// # points to lose.
@@ -1975,9 +1976,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 								EConst.MOVE_WALK, 100, -1)) >= 0 && 
 				newz < tz) {
 			move(tx, ty, newz);
-			/*+++++++++FINISH
-			reduceHealth(1 + EUtil.rand()%5, WeaponInfo.normal_damage);
-			*/
+			reduceHealth(1 + EUtil.rand()%5, WeaponInfo.normal_damage, null, null);
 		}
 	}
 	/*
@@ -3636,29 +3635,28 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						int ammo_shape, boolean explosion)
 			{ return this; }	// Not affected.
 		@Override
-		public void writeIreg(OutputStream out) {
-			/*++++++++++++FINISH
-			unsigned char buf[21];		// 13-byte entry - Exult extension.
-			uint8 *ptr = write_common_ireg(13, buf);
-			GameObject first = objects.get_first(); // Guessing:
-			unsigned short tword = first ? first.get_prev().getShapeNum() 
-											: 0;
-			Write2(ptr, tword);
-			*ptr++ = 0;			// Unknown.
-			*ptr++ = get_quality();
-			int npc = get_live_npcNum();	// If body, get source.
+		public void writeIreg(OutputStream out) throws IOException {
+			byte buf[] = new byte[21];		// 13-byte entry - Exult extension.
+			int ind = writeCommonIreg(13, buf);
+			GameObject first = objects.getFirst(); // Guessing:
+			short tword = (short)(first != null ? first.getPrev().getShapeNum() : 0);
+			EUtil.Write2(buf, ind, tword);
+			ind += 2;
+			buf[ind++] = 0;			// Unknown.
+			buf[ind++] = (byte)getQuality();
+			int npc = getLiveNpcNum();	// If body, get source.
 				// Here, store NPC # more simply.
-			Write2(ptr, npc);	// Allowing larger range of NPC bodies.
-			*ptr++ = (get_lift()&15)<<4;	// Lift 
-			*ptr++ = (unsigned char)get_obj_hp();		// Resistance.
+			EUtil.Write2(buf, ind, npc);	// Allowing larger range of NPC bodies.
+			ind += 2;
+			buf[ind++] = (byte)((getLift()&15)<<4);	// Lift 
+			buf[ind++] = (byte)getObjHp();		// Resistance.
 							// Flags:  B0=invis. B3=okay_to_take.
-			*ptr++ = (getFlag(GameObject.invisible) != 0) +
-				 ((getFlag(GameObject.okay_to_take) != 0) << 3);
-			out.write((char*)buf, ptr - buf);
-			write_contents(out);		// Write what's contained within.
+			buf[ind++] = (byte)((getFlag(GameObject.invisible)?1:0) +
+							((getFlag(GameObject.okay_to_take)?1:0) << 3));
+			out.write(buf, 0, ind);
+			writeContents(out);		// Write what's contained within.
 							// Write scheduled usecode.
-			GameMap::writeScheduled(out, this);	
-			*/
+			GameMap.writeScheduled(out, this, false);	
 		}
 		@Override
 		public int getIregSize() {

@@ -821,7 +821,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 				quantity = obj.removeQuantity(quantity, shapenum,
 								quality, framenum);
 			}
-		return (quantity == 0) ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(quantity == 0);
 	}
 	public final UsecodeValue addPartyItems(UsecodeValue p0, UsecodeValue p1,
 			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4) {
@@ -928,7 +928,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		boolean is_near = tempRect.hasPoint(tx, ty) &&
 			// Guessing: true if non-NPC, false if NPC is dead, asleep or paralyzed.
 			((npc = obj.asActor()) == null || npc.canAct());
-		return is_near ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(is_near);
 	}
 	private final UsecodeValue findNearbyAvatar(UsecodeValue p0) {
 		UsecodeValue av = new UsecodeValue.ObjectValue(gwin.getMainActor());
@@ -938,10 +938,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	public final UsecodeValue isNpc(UsecodeValue p0) {
 		GameObject obj = getItem(p0);
-		if (obj != null && obj.asActor() != null)
-			return UsecodeValue.getOne();
-		else
-			return UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(obj != null && obj.asActor() != null);
 	}
 	public final void displayRunes(UsecodeValue p0, UsecodeValue p1) {	
 		// Render text into runes for signs, tombstones, plaques and the like
@@ -1091,12 +1088,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 						//   tooth bug in SI.
 				last_created.removeLast();
 			}
-		return ret ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(ret);
 	}
 	private final UsecodeValue isDead(UsecodeValue p0) {
 		Actor npc = getItem(p0).asActor();
-		return (npc != null && npc.isDead()) ? UsecodeValue.getOne()
-				: UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(npc != null && npc.isDead());
 	}
 	private final UsecodeValue getNpcNumber(UsecodeValue p0) {
 		// Returns NPC# of item. (-356 = avatar).
@@ -1332,7 +1328,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		int attack = p0.getIntValue();
 		int defend = p1.getIntValue();
 		boolean win = Actor.rollToWin(attack, defend);
-		return win ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(win);
 	}
 	private void setAttackMode(UsecodeValue p0, UsecodeValue p1) {
 		// set_attack_mode(npc, mode).
@@ -1380,6 +1376,20 @@ public class UsecodeIntrinsics extends GameSingletons {
 		} else
 			return UsecodeValue.getNullObj();
 	}
+	private final UsecodeValue addSpell(UsecodeValue p0, UsecodeValue p1,
+													UsecodeValue p2) {
+		// add_spell(spell# (0-71), ??, spellbook).
+		// Returns 0 if book already has that spell.
+		GameObject obj = getItem(p2);
+		if (obj == null || obj.getInfo().getShapeClass() != ShapeInfo.spellbook)
+			return UsecodeValue.getZero();
+		SpellbookObject book = (SpellbookObject) (obj);
+		if (book == null) {
+			System.out.println("Add_spell - Not a spellbook!");
+			return UsecodeValue.getZero();
+		}
+		return UsecodeValue.getBoolean(book.addSpell(p0.getIntValue()));
+	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
 		TextGump gump;
@@ -1415,8 +1425,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	private final UsecodeValue isPCFemale() {
 		// Is player female?
-		return gwin.getMainActor().getTypeFlag(Actor.tf_sex) ?
-				UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(gwin.getMainActor().getTypeFlag(Actor.tf_sex));
 	}
 	private final void haltScheduled(UsecodeValue p0) {
 		// Halt_scheduled(item)
@@ -1674,6 +1683,52 @@ public class UsecodeIntrinsics extends GameSingletons {
 		removeItem(getItem(p0));
 		ucmachine.setModifiedMap();
 	}
+	private final void reduceHealth(UsecodeValue p0, UsecodeValue p1, 
+													UsecodeValue p2) {
+		// Reduce_health(obj, amount, type).
+		GameObject obj = getItem(p0);
+		int type = p2.getIntValue();
+		if (obj != null)			// Dies if health goes too low.
+			obj.reduceHealth(p1.getIntValue(), type, null, null);
+	}
+	private final UsecodeValue isReadied(UsecodeValue p0, UsecodeValue p1, 
+										UsecodeValue p2, UsecodeValue p3) {
+		// is_readied(npc, where, itemshape, frame (-359=any)).
+		// Where:
+		//   0=back,
+		//   1=weapon hand, 
+		//   2=other hand,
+		//   3=belt,
+		//   4=neck,
+		//   5=torso,
+		//   6=one finger, 
+		//   7=other finger,
+		//   8=quiver,
+		//   9=head,
+		//  10=legs,
+		//  11=feet
+		//  20=???
+		// Appears to be the same for BG and SI; SI's get_readied
+		// is far better in any case, and should be used instead.
+
+		Actor npc = asActor(getItem(p0));
+		if (npc == null)
+			return UsecodeValue.getZero();
+		int where = p1.getIntValue();
+		int shnum = p2.getIntValue();
+		int frnum = p3.getIntValue();
+						// Spot defined in Actor class.
+		int spot = game.isBG() ? Ready.spotFromBG(where) : Ready.spotFromSI(where);
+		if (spot >= 0 && spot <= Ready.ucont) {			// See if it's the right one.
+			GameObject obj = npc.getReadied(spot);
+			if (obj != null && obj.getShapeNum() == shnum &&
+			    (frnum == EConst.c_any_framenum || obj.getFrameNum() == frnum))
+				return UsecodeValue.getOne();
+			}
+		else if (spot < 0)
+			System.out.println("Readied: invalid spot #: " + spot);
+		return UsecodeValue.getZero();
+	}
 	private final UsecodeValue pathRunUsecode(Actor npc, UsecodeValue locval,
 			UsecodeValue useval, UsecodeValue itemval, UsecodeValue eventval,
 			boolean find_free, boolean always, boolean companions) {
@@ -1711,7 +1766,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			boolean res = npc.walkPathToTile(dest, 1, 0, 0);
 			if (res && companions && npc.getAction() != null)
 				npc.getAction().setGetParty(true);
-			return res ? UsecodeValue.getOne() : UsecodeValue.getZero();
+			return UsecodeValue.getBoolean(res);
 			}
 						// Walk there and execute.
 		ActorAction.IfElsePath action = 
@@ -1726,7 +1781,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 							eventval.getIntValue()));
 		npc.setAction(action);	// Get into time queue.
 		npc.start(1, 0);
-		return !action.doneAndFailed() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(!action.doneAndFailed());
 	}
 	private final static void closeGump(UsecodeValue p0) {
 		/* if (!gwin.isDragging())	// NOT while dragging stuff. */
@@ -1794,13 +1849,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			BargeObject barge;
 			if (gwin.getMovingBarge() == null || (barge = getBarge(obj)) == null)
 				return UsecodeValue.getZero();
-			return (barge == gwin.getMovingBarge()) ? UsecodeValue.getOne()
-													: UsecodeValue.getZero();
+			return UsecodeValue.getBoolean(barge == gwin.getMovingBarge());
 		} else if (fnum == GameObject.okay_to_land) { // Okay to land flying carpet?
 			BargeObject barge = getBarge(obj);
 			if (barge == null)
 				return UsecodeValue.getZero();
-			return barge.okayToLand() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+			return UsecodeValue.getBoolean(barge.okayToLand());
 		} else if (fnum == GameObject.immunities) {
 			Actor npc = obj.asActor();
 			MonsterInfo inf = obj.getInfo().getMonsterInfo();
@@ -1827,7 +1881,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		else if (fnum == 0x14)		// Must be the sailor, as this is used
 						//   to check for Ferryman.
 			return new UsecodeValue.ObjectValue(sailor);
-		return obj.getFlag(fnum) ? UsecodeValue.getOne() : UsecodeValue.getZero();
+		return UsecodeValue.getBoolean(obj.getFlag(fnum));
 	}
 
 	private final static void setItemFlag(UsecodeValue p0, UsecodeValue p1) {
@@ -1918,7 +1972,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (sid.isInvalid())
 				return UsecodeValue.getZero();
 			ShapeInfo info = sid.getInfo();
-			return info.isWater() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+			return UsecodeValue.getBoolean(info.isWater());
 		}
 		return UsecodeValue.getZero();
 	}
@@ -2125,6 +2179,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 		//++++++++
 		case 0x51:
 			return resurrect(parms[0]); 
+		case 0x52:
+			return addSpell(parms[0], parms[1], parms[2]);
 		//+++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
@@ -2148,8 +2204,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x60:
 			recallVirtueStone(parms[0]); break;
 		case 0x62:
-			return gwin.isMainActorInside() ? UsecodeValue.getOne()
-								: UsecodeValue.getZero();
+			return UsecodeValue.getBoolean(gwin.isMainActorInside());
 		case 0x63:
 			setOrrery(parms[0], parms[1]); break;
 		case 0x64:
@@ -2180,6 +2235,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			removeItem(parms[0]); break;
 		case 0x70:
 			break;	// UNKNOWN
+		case 0x71:
+			reduceHealth(parms[0], parms[1], parms[2]); break;
+		case 0x72:
+			return isReadied(parms[0], parms[1], parms[2], parms[3]);
 		//++++++++++++++
 		case 0x7d:
 			return pathRunUsecode(gwin.getMainActor(), parms[0], parms[1], parms[2],
@@ -2192,8 +2251,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x80:
 			closeGump(parms[0]); break;
 		case 0x81:
-			return gumpman.showingGumps(true) ? UsecodeValue.getZero()
-					: UsecodeValue.getOne();
+			return UsecodeValue.getBoolean(gumpman.showingGumps(true));
 		//++++++++++++++
 		case 0x85:
 			return isNotBlocked(parms[0], parms[1], parms[2]);
@@ -2212,7 +2270,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x8d:
 			return getPartyList();	// get_party_list2.  Seems the same.
 		case 0x8e:
-			return gwin.inCombat() ? UsecodeValue.getOne() : UsecodeValue.getZero();
+			return UsecodeValue.getBoolean(gwin.inCombat());
 		//+++++++++++++++
 		case 0x90:
 			return isWater(parms[0]);
