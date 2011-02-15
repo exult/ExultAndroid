@@ -2709,7 +2709,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			final int xoffs[] = {-1, 1, -2, 2, -3, 3, -4, 4, -5, 5},
 				   	   yoffs[] = {1, -1, 2, -2, 3, -3, 4, -4, 5, -5};
 			if (partyId < 0 || partyId >= xoffs.length) {
-				System.out.println("Actor.follow: partyId = " + partyId);
+				System.out.println("Actor.follow: partyId = " + partyId +
+						", Npc # = " + npcNum);
 				return;
 			}
 			goal.tx += xoffs[partyId] + 1 - EUtil.rand()%3;
