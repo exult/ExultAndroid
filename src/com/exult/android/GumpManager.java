@@ -321,7 +321,7 @@ public final class GumpManager extends GameSingletons {
 		GameObject obj = gump.findObject(x, y);
 		if (obj == null) {		// Maybe it's a spell.
 		 	GumpWidget.Button btn = gump.onButton(x, y);
-			if (btn != null) btn.double_clicked(x, y);
+			if (btn != null) btn.doubleClicked(x, y);
 			/* ++++++++++++
 			else if (gwin.get_double_click_closes_gumps())
 				{

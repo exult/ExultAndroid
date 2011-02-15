@@ -50,7 +50,7 @@ public class GumpWidget extends ShapeID {
 		}				// What to do when 'clicked':
 		public abstract boolean activate(boolean button);
 		// Or double-clicked.
-		public void double_clicked(int x, int y) {
+		public void doubleClicked(int x, int y) {
 		}
 		public boolean push(boolean button) {	// Redisplay as pushed.
 			if (button) {

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class SpellbookObject extends IregGameObject { 
-	private static final int REAGENTS = 842;		// Shape #.
+	public static final int REAGENTS = 842;		// Shape #.
 	public static final int NREAGENTS = 11;		// Total # reagents.
 	/*
 	 *	Flags for required reagents.  Bits match frame #.
@@ -83,6 +83,18 @@ public class SpellbookObject extends IregGameObject {
 		bookmark = bmark == 255 ? -1 : bmark;
 		System.arraycopy(c, 0, circles, 0, circles.length);
 		reagents = game.isSI() ? si_reagents : bg_reagents;
+	}
+	public final int getBookmark() {
+		return bookmark;
+	}
+	public final void setBookmark(int s) {
+		bookmark = s;
+	}
+	public final int getCircle(int c) {
+		return (int)circles[c]&0xffff;
+	}
+	public final int getReagents(int i) {
+		return (int)reagents[i]&0xffff;
 	}
 	public boolean hasSpell(int spell) {	// Has a spell.
 		int circle = spell/8;
