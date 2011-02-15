@@ -1,5 +1,6 @@
 package com.exult.android;
 import android.graphics.Point;
+import java.util.Vector;
 
 public final class EffectsManager extends GameSingletons {
 	private SpecialEffect effects;	// Sprite effects, projectiles, etc.
@@ -400,7 +401,151 @@ public final class EffectsManager extends GameSingletons {
 					clouds[i].paint();
 		}
 	}
-	
+	/*
+	 *	An animation from 'sprites.vga':
+	 */
+	public static class SpritesEffect extends SpecialEffect {
+		protected ShapeID sprite;
+		protected Rectangle area = new Rectangle();
+		protected int frames;			// # frames.
+		protected GameObject item;		// Follows this around if not null.
+		protected Tile pos;			// Position within world.
+		protected int xoff, yoff;			// Offset from position in pixels.
+		protected int deltax, deltay;		// Add to xoff, yoff on each frame.
+		protected int reps;			// Repetitions, or -1.
+		protected void addDirty(int frnum) {
+			if (pos.tx == -1 || frnum == -1)
+				return;			// Already at destination.
+			ShapeFrame shape = sprite.getShape();
+			int lp = pos.tz/2;
+			gwin.getShapeRect(area, shape,
+					xoff + (pos.tx - lp - gwin.getScrolltx())*EConst.c_tilesize,
+					yoff + (pos.ty - lp - gwin.getScrollty())*EConst.c_tilesize);
+			area.enlarge((3*EConst.c_tilesize)/2);
+			gwin.clipToWin(area);
+			gwin.addDirty(area);
+		}
+		private void init(int num, int frm, int dx, int dy, int rps) {
+			//System.out.printf("SpritesEffect.init: num = %1$d, dx = %2$d, dy = %3$d, rps = %4$d\n",
+			//		num, dx, dy, rps);
+			//System.out.printf("pos = %1$s\n", pos);
+			deltax = dx; deltay = dy;
+			reps = rps;
+			sprite = new ShapeID(num, frm, ShapeFiles.SPRITES_VGA);
+			frames = sprite.getNumFrames();
+			tqueue.add(TimeQueue.ticks, this, null);
+		}
+		public SpritesEffect(int num, Tile p, int dx, int dy, 
+				int delay, int frm, int rps) {
+			pos = new Tile(p);
+			init(num, frm, dx, dy, rps);
+		}
+		public SpritesEffect(int num, GameObject it, 
+				int xf, int yf, int dx, int dy, int frm, int rps) {
+			it.getTile(pos = new Tile());
+			xoff = xf; yoff = yf;
+			item = it;
+			init(num, frm, dx, dy, rps);
+		}
+		@Override		// For Time_sensitive:
+		public void handleEvent(int time, Object udata) {
+			int frame_num = sprite.getFrameNum();
+							;// Delay between frames.  Needs to
+							//   match usecode animations.
+			if (reps == 0 || (reps < 0 && frame_num == frames)) {	// At end?
+							// Remove & delete this.
+				eman.removeEffect(this);
+				gwin.setAllDirty();
+				return;
+			}
+			addDirty(frame_num);		// Clear out old.
+			gwin.setPainted();
+			if (item != null)			// Following actor?
+				item.getTile(pos=new Tile());
+			xoff += deltax;			// Add deltas.
+			yoff += deltay;
+			frame_num++;			// Next frame.
+			if (reps > 0) {			// Given a count?
+				--reps;
+				frame_num %= frames;
+			}
+			addDirty(frame_num);		// Want to paint new frame.
+			sprite.setFrame(frame_num);
+							// Add back to queue for next time.
+			tqueue.add(time + 1, this, udata);
+		}
+		@Override		// Render.
+		public void paint() {
+			
+			if (sprite.getFrameNum() >= frames)
+				return;
+			int lp = pos.tz/2;		// Account for lift.
+			int x = xoff + (pos.tx - lp - gwin.getScrolltx())*EConst.c_tilesize;
+			int y = yoff + (pos.ty - lp - gwin.getScrollty())*EConst.c_tilesize;
+			//System.out.printf("SpritesEffect.paint: frnum = %1$d, frames = %2$d, x = %3$d, y = %4$d\n",
+			//		sprite.getFrameNum(), frames, x, y);
+			sprite.paintShape(x, y);
+		}
+	}
+	/*
+	 *	An explosion.
+	 */
+	public static class ExplosionEffect extends SpritesEffect	{
+		private GameObject explode;		// What's exploding, or 0.
+		private int weapon;			// Weapon to use for attack values.
+		private int projectile;		// The projectile, for e.g., burst arrows
+		private int expSfx;		// Explosion SFX.
+		private GameObject attacker;	//Who is responsible for the explosion;
+								//otherwise, explosion and delayed blast spells
+								//would not trigger a response from target
+		private static int getExplosionShape(int weap, int proj) {
+			int shp = proj >= 0 ? proj : (weap >= 0 ? weap : 704);
+			return ShapeID.getInfo(shp).getExplosionSprite();
+		}
+		private static int getExplosionSfx(int weap, int proj) {
+			int shp = proj >= 0 ? proj : (weap >= 0 ? weap : 704);
+			return ShapeID.getInfo(shp).getExplosionSfx();
+		}
+		public ExplosionEffect(Tile p, GameObject exp, int delay, int weap,
+				int proj, GameObject att) {
+			super(getExplosionShape(weap, proj), p, 0, 0, delay, 0, -1);
+			explode = exp;
+			weapon = weap >= 0 ? weap : (proj >= 0 ? proj : 704);
+			projectile = proj;
+			expSfx = getExplosionSfx(weap, proj);
+			attacker = att;
+			if (exp != null && exp.getInfo().isExplosive())  // powderkeg
+				exp.setQuality(1); // mark as detonating
+
+			if (attacker == null || attacker.asActor() == null)
+					// Blame avatar: if we have no living attacker.
+				attacker = gwin.getMainActor();
+		}
+		@Override		// For Time_sensitive:
+		public void handleEvent(int time, Object udata) {
+			int frnum = sprite.getFrameNum();
+			if (frnum == 0) {			// Max. volume, with stereo position.
+				; //++++++FINISH Audio::get_ptr().play_sound_effect(exp_sfx, pos, AUDIO_MAX_VOLUME);
+			}
+			if (frnum == frames/4) {
+				// this was in ~Explosion_effect before
+				if (explode != null && !explode.isPosInvalid()) {
+					gwin.addDirty(explode);
+					explode.removeThis();
+					explode = null;
+				}
+				ShapeFrame shape = sprite.getShape();
+				int width = shape.getWidth();		//Get the sprite's width
+				Vector<GameObject> vec = new Vector<GameObject>();	// Find objects near explosion.
+				gmap.findNearby(vec, pos, EConst.c_any_shapenum,
+						width/(2*EConst.c_tilesize), 0);
+				for (GameObject obj : vec) {
+					obj.attacked(attacker, weapon, projectile, true);
+				}
+			}
+			super.handleEvent(time, udata);
+		}
+	}
 	/*
 	 *	A text object is a message that stays on the screen for just a couple
 	 *	of seconds.  These are all kept in a single list, and managed by

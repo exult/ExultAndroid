@@ -1390,6 +1390,17 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getBoolean(book.addSpell(p0.getIntValue()));
 	}
+	private final void spriteEffect(UsecodeValue p0, UsecodeValue p1,
+			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4,
+			UsecodeValue p5, UsecodeValue p6) {
+		// Display animation from sprites.vga.
+		// show_sprite(sprite#, tx, ty, dx, dy, frame, length??);
+		tempTile.set(p1.getIntValue(), p2.getIntValue(), 0);
+		eman.addEffect(
+			new EffectsManager.SpritesEffect(p0.getIntValue(), tempTile,
+				p3.getIntValue(), p4.getIntValue(), 0,
+				p5.getIntValue(), p6.getIntValue()));
+	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
 		TextGump gump;
@@ -2181,6 +2192,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return resurrect(parms[0]); 
 		case 0x52:
 			return addSpell(parms[0], parms[1], parms[2]);
+		case 0x53:
+			spriteEffect(parms[0], parms[1], parms[2],
+					parms[3], parms[4], parms[5], parms[6]); break;
 		//+++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
