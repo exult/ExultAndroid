@@ -17,7 +17,51 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	private int timeQueueCount;
 	//+++++private Palette_transition *transition;	// For smooth palette transitions.
 	private int timeRate;
-	
+	private static int getTimePalette(int hour, boolean dungeon) {
+		if (dungeon || hour < 6)
+			return Palette.PALETTE_NIGHT;
+		else if (hour == 6)
+			return Palette.PALETTE_DAWN;
+		else if (hour == 7)
+			return Palette.PALETTE_DAY;
+		else if (hour < 20)
+			return Palette.PALETTE_DAY;
+		else if (hour == 20)
+			return Palette.PALETTE_DUSK;
+		else
+			return Palette.PALETTE_NIGHT;
+	}
+	/* UNUSED
+	private static boolean isLightPalette(int pal) {
+		return (pal == Palette.PALETTE_SINGLE_LIGHT || pal == Palette.PALETTE_MANY_LIGHTS);
+	}*/
+	private static boolean isDarkPalette(int pal) {
+		return (pal == Palette.PALETTE_DUSK || pal == Palette.PALETTE_NIGHT);
+	}
+	/* UNUSED
+	private static boolean isWeatherPalette(int pal) {
+		return (pal == Palette.PALETTE_OVERCAST || pal == Palette.PALETTE_FOG);
+	}*/
+	private static boolean isDayPalette(int pal) {
+		return (pal == Palette.PALETTE_DAWN || pal == Palette.PALETTE_DAY);
+	}
+	private static int getFinalPalette(int pal, boolean cloudy, boolean foggy,
+									int light, boolean special) {
+		if ((light != 0 || special) && isDarkPalette(pal)) {
+			int light_palette = Palette.PALETTE_SINGLE_LIGHT;
+						// Gump mode, or light spell?
+			if (special || (light > 1))
+				light_palette = Palette.PALETTE_MANY_LIGHTS;
+			return light_palette;
+		} else if (isDayPalette(pal)) {
+			if (foggy)
+				return Palette.PALETTE_FOG;
+			else if (cloudy)
+				return Palette.PALETTE_OVERCAST;
+		}
+		return pal;
+	}
+
 	public GameClock() {
 		hour = 6;
 		dungeon = 255;
@@ -48,7 +92,102 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		setPalette();
 	}
 	public void setPalette() {
-		//+++++++++++++FINISH
+		Actor main_actor = gwin.getMainActor();
+		boolean invis = main_actor != null && main_actor.getFlag(GameObject.invisible);
+		if (invis && !oldInvisible) {
+			/* +++FINISH
+			if (transition != null) {
+				transition = null;
+			} */
+			gwin.getPal().set(Palette.PALETTE_INVISIBLE);
+			if (!gwin.getPal().isFadedOut())
+				gwin.getPal().apply();
+			return;
+		}
+		oldInvisible = invis;
+
+		if (main_actor == null || cheat.inInfravision() && !oldInfravision) {
+			/*++++FINISH
+			if (transition) {
+				transition = null;
+			} */
+			gwin.getPal().set(Palette.PALETTE_DAY);
+			if (!gwin.getPal().isFadedOut())
+				gwin.getPal().apply();
+			return;
+		}
+		oldInfravision = cheat.inInfravision();
+
+		int new_dungeon = gwin.isInDungeon();
+		int new_palette = getTimePalette(hour+1, new_dungeon != 0),
+		    old_palette = getTimePalette(hour, (dungeon!=255 ? dungeon : new_dungeon) != 0);
+		boolean cloudy = overcast > 0;
+		boolean foggy = fog > 0;
+		boolean weather_change = (cloudy != wasOvercast) || (foggy != wasFoggy);
+		boolean light_sensitive = isDarkPalette(new_palette) &&
+					isDarkPalette(old_palette);
+		boolean light_change = light_sensitive &&
+					((lightSourceLevel != oldLightLevel) ||
+					 (gwin.isSpecialLight() != oldSpecialLight));
+
+		new_palette = getFinalPalette(new_palette, cloudy, foggy,
+					lightSourceLevel, gwin.isSpecialLight());
+		old_palette = getFinalPalette(old_palette, wasOvercast, wasFoggy,
+					oldLightLevel, oldSpecialLight);
+
+		if (gwin.getPal().isFadedOut()) {
+			/* +++++++FINISH
+			if (transition) {
+				transition = null;
+			} */
+			gwin.getPal().set(old_palette);
+			if (!gwin.getPal().isFadedOut()) {
+				gwin.getPal().apply();
+				gwin.setAllDirty();
+			}
+			return;
+		}
+		wasOvercast = cloudy;
+		wasFoggy = foggy;
+		oldLightLevel = lightSourceLevel;
+		oldSpecialLight = gwin.isSpecialLight();
+		dungeon = new_dungeon;
+
+		if (weather_change) {
+				// TODO: Maybe implement smoother transition from
+				// weather to/from dawn/sunrise/sundown/dusk.
+				// Right now, it works like the original.
+			/*++++FINISH transition = new Palette_transition(old_palette, new_palette,
+								hour, minute, 1, 4, hour, minute); */
+			return;
+		} else if (light_change) {
+			/* ++++++FINISH
+			if (transition) {
+				transition = null;
+			} */
+			gwin.getPal().set(new_palette);
+			if (!gwin.getPal().isFadedOut()) {
+				gwin.getPal().apply();
+				gwin.setAllDirty();
+			}
+			return;
+			}
+		/* ++++FINISH
+		if (transition) {
+			if (transition.set_step(hour, minute))
+				return;
+			transition = null;
+		} */
+		if (old_palette != new_palette) {	// Do we have a transition?
+			//++++FINISH transition = new Palette_transition(old_palette, new_palette,
+						//+++		hour, minute, 4, 15, hour, 0);
+			return;
+		}
+		gwin.getPal().set(new_palette);
+		if (!gwin.getPal().isFadedOut()) {
+			gwin.getPal().apply();
+			gwin.setAllDirty();
+		}
 	}
 	public void reset() {
 		overcast = fog = 0;

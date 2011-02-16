@@ -4,6 +4,8 @@ public final class Cheat extends GameSingletons {
 	private boolean hackMover;
 	private boolean godMode;
 	private boolean wizardMode;
+	private boolean infravision;
+	
 	public boolean inHackMover() {
 		return hackMover;
 	}
@@ -15,15 +17,18 @@ public final class Cheat extends GameSingletons {
 		return godMode;
 	}
 	public void toggleGodMode() {
-		ExultActivity.showToast(godMode?"GodMode Mode":"Ending GodMode");
 		godMode = !godMode;
+		ExultActivity.showToast(godMode?"GodMode Mode":"Ending GodMode");
 	}
 	public boolean inWizardMode() {
 		return wizardMode;
 	}
 	public void toggleWizardMode() {
-		ExultActivity.showToast(wizardMode?"WizardMode Mode":"Ending WizardMode");
 		wizardMode = !wizardMode;
+		ExultActivity.showToast(wizardMode?"WizardMode Mode":"Ending WizardMode");
+	}
+	public boolean inInfravision() {
+		return infravision;
 	}
 	public void mapTeleport() {
 		ShapeFrame map;

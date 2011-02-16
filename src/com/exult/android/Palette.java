@@ -27,18 +27,21 @@ public class Palette {
 	private int palette;		// Palette #.
 	private int brightness;
 	private int max_val;
-	private boolean faded_out;		// true if faded palette to black.
-	private boolean fades_enabled;	
+	private boolean fadedOut;		// true if faded palette to black.
+	private boolean fadesEnabled;	
 
 	public Palette(ImageBuf w) {
 		win = w;
 		palette = -1;
 		brightness = 100;
 		max_val = 63;
-		faded_out = false;
-		fades_enabled = false;
+		fadedOut = false;
+		fadesEnabled = false;
 		pal1 = new byte[768];
 		pal2 = new byte[768];
+	}
+	public boolean isFadedOut() {
+		return fadedOut;
 	}
 	/*
 	 * Read in a palette.
@@ -57,16 +60,22 @@ public class Palette {
 			palette = pal_num;	// Store #.
 		if (new_brightness > 0)
 			brightness = new_brightness;
-		if (faded_out)
+		if (fadedOut)
 			return;			// In the black.
 			// could throw!
 		load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, palette, null, -1);
 		apply(c);
 	}
+	public void set(int pal_num) {
+		set(pal_num, -1, null);
+	}
 	public void apply(Canvas c) {
 		win.setPalette(pal1, max_val, brightness);
 		if (c != null)
 			win.show(c);
+	}
+	public void apply() {
+		apply(null);
 	}
 	public void load(String fname0, String fname1, int index, String xfname, int xindex) {
 		byte buf[] = EFileManager.instanceOf().retrieve(fname0, fname1, index);
