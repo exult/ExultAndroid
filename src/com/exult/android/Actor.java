@@ -758,6 +758,21 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setAlignment(int a) {
 		alignment = (short)a;
 	}
+	public final int getEffectiveAlignment() {
+		if ((flags&(1<<GameObject.charmed)) == 0)
+			return alignment;
+		else switch(alignment) {
+		case neutral:
+			return unknown_align;
+		case friendly:
+			return hostile;
+		case hostile:
+			return friendly;
+		case unknown_align:
+			return neutral;
+		}
+		return neutral;
+	}
 	public String getName() {
 		return !getFlag(GameObject.met)?super.getName():getNpcName();
 	}
@@ -1241,6 +1256,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setAttackMode(int amode, boolean byUser) {
 		attackMode = amode;
 		userSetAttack = byUser;
+	}
+	public final boolean isCombatProtected() {
+		return combatProtected;
 	}
 	public static boolean rollToWin(int attacker, int defender) {
 		final int sides = 30;

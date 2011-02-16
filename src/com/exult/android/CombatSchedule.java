@@ -1,5 +1,8 @@
 package com.exult.android;
+import com.exult.android.shapeinf.*;
 import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.Vector;
 
 public class CombatSchedule extends Schedule {
 	//	Combat options:
@@ -36,7 +39,9 @@ public class CombatSchedule extends Schedule {
 	protected static int battleEndTime;	// And when it ended.
 	protected int state;
 	protected int prevSchedule;	// Before going into combat.
-	protected LinkedList<Actor> opponents;	// Possible opponents.
+	protected Vector<Actor> opponents;	// Possible opponents.
+	protected Vector<GameObject> nearby;			// For searching for opponents.
+	protected Rectangle winRect;			// Temp.
 	protected GameObject practiceTarget;	// Only for duel schedule.
 	protected GameObject weapon;
 	protected int weapon_shape;		// Weapon's shape in shapes.vga.
@@ -44,7 +49,7 @@ public class CombatSchedule extends Schedule {
 					// Ranges in tiles.  
 					//   0 means not applicable.
 	protected boolean noBlocking;		// Weapon/ammo goes through walls.
-	protected int yelled;		// Yell when first opponent targeted.
+	protected boolean yelled;		// Yell when first opponent targeted.
 	protected boolean startedBattle;		// 1st opponent targeted.
 	protected int fleed;		// Incremented when fleeing.
 	protected boolean canYell;
@@ -131,7 +136,207 @@ public class CombatSchedule extends Schedule {
 		npc.start(1, 1);		// Back into queue.
 		return true;
 	}
-//+++++++++++++++findOpponents
+	/*
+	 *	Off-screen?
+	 */
+
+	private boolean offScreen(GameObject npc) {
+						// See if off screen.
+		gwin.getWinTileRect(winRect);
+		winRect.enlarge(2);
+		return (!winRect.hasPoint(npc.getTileX(), npc.getTileY()));
+	}
+	private static boolean isEnemy(int align, int other){
+		switch (align) {
+		case NpcActor.friendly:
+			return other == NpcActor.hostile || other == NpcActor.unknown_align; 
+		case NpcActor.hostile:
+			return other == NpcActor.friendly || other == NpcActor.unknown_align; 
+		case NpcActor.neutral:
+			return false; 
+		case NpcActor.unknown_align:
+			return other == NpcActor.hostile || other == NpcActor.friendly; 
+		}
+		return true;	// This should never happen.
+	}
+	/*
+	 *	Find nearby opponents in the 9 surrounding chunks.
+	 */
+	protected void findOpponents() {
+		opponents.clear();
+		nearby.clear();	// Get all nearby NPC's
+		Actor avatar = gwin.getMainActor();
+		npc.findNearbyActors(nearby, EConst.c_any_shapenum, 
+										2*EConst.c_tiles_per_chunk);
+		nearby.add(avatar);	// Incl. Avatar!
+						// See if we're a party member.
+		boolean in_party = npc.getFlag(GameObject.in_party) || npc == avatar;
+		int npc_align = npc.getEffectiveAlignment();
+		boolean attack_avatar = isEnemy(npc_align, NpcActor.friendly);
+		MonsterInfo minf = npc.getInfo().getMonsterInfo();
+		boolean see_invisible = minf != null ?
+			(minf.getFlags() & (1<<MonsterInfo.see_invisible))!=0 : false;
+		for (GameObject each : nearby) {
+			Actor actor = (Actor) each;
+			if (actor.isDead() || actor.getFlag(GameObject.asleep) ||
+			    (!see_invisible && actor.getFlag(GameObject.invisible)))
+				continue;	// Dead, sleeping or invisible.
+			if (isEnemy(npc_align, actor.getEffectiveAlignment()))
+				opponents.add(actor);
+			else if (attack_avatar && actor == avatar)
+				opponents.add(actor);
+			else if (in_party) {	// Attacking party member?
+				GameObject t = actor.getTarget();
+				if (t == null)
+					continue;
+				if (t.getFlag(GameObject.in_party) || t == avatar)
+					opponents.add(actor);
+				int oppressor = actor.getOppressor();
+				if (oppressor < 0)
+					continue;
+				Actor oppr = gwin.getNpc(oppressor);
+				if (oppr.getFlag(GameObject.in_party) || oppr == avatar)
+					opponents.add(actor);
+			}
+		}
+						// None found?  Use Avatar's.
+		if (opponents.isEmpty() && in_party) {
+			GameObject opp = avatar.getTarget();
+			Actor oppnpc = opp != null ? opp.asActor() : null;
+			if (oppnpc != null && oppnpc != npc
+					&& oppnpc.getScheduleType()==Schedule.combat)
+				opponents.add(oppnpc);
+		}
+	}
+	/*
+	 *	Find 'protected' party member's attackers.
+	 *
+	 *	Output:	Index of attacker in 'opponents', or -1 if none.
+	 */
+	protected int findProtectedAttacker() {
+		if (!npc.getFlag(GameObject.in_party))	// Not in party?
+			return -1;
+		Actor prot_actor = null;// Look through party.
+		if (gwin.getMainActor().isCombatProtected())
+			prot_actor = gwin.getMainActor();
+		else {
+			int cnt = partyman.getCount();
+			for (int i = 0; prot_actor == null && i < cnt; ++i) {
+				Actor n = gwin.getNpc(partyman.getMember(i));
+				if (n.isCombatProtected())
+					prot_actor = n;
+			}
+		}
+		if (prot_actor == null)		// Not found?
+			return -1;
+						// Find closest attacker.
+		int dist, best_dist = 4*EConst.c_tiles_per_chunk, ind = 0, best_ind = -1;
+		ListIterator<Actor> iter = opponents.listIterator();
+		while (iter.hasNext()) {
+			Actor opp = iter.next();
+			if (opp.getTarget() == prot_actor &&
+			    (dist = npc.distance(opp)) < best_dist) {
+				best_dist = dist;
+				best_ind = ind;
+			}
+			++ind;
+		}
+		if (best_ind == -1)
+			return -1;
+		if (failures < 5 && yelled && EUtil.rand()%2 != 0 && npc != prot_actor)
+			npc.say(ItemNames.first_will_help, ItemNames.last_will_help);
+		return best_ind;
+	}
+	/*
+	 *	Find a foe.
+	 *
+	 *	Output:	Opponent that was found.
+	 */
+	protected GameObject findFoe(int mode) {
+		if (combatTrace) {
+			System.out.println("'" + npc.getName() + "' is looking for a foe"); 
+		}
+		int new_align = npc.getEffectiveAlignment();
+		if (new_align != alignment) {	// Alignment changed.
+			opponents.clear();
+			alignment = new_align;
+		}
+						// Remove any that died.
+		ListIterator<Actor> it = opponents.listIterator();
+		while (it.hasNext()) {
+			Actor a = it.next();
+			if (a.isDead())
+				it.remove();
+			}
+		if (opponents.isEmpty()) {	// No more from last scan?
+			findOpponents();	// Find all nearby.
+			if (practiceTarget != null)	// For dueling.
+				return practiceTarget;
+		}
+		int str, ind, new_opp_ind = -1;
+		switch (mode) {
+		case Actor.weakest:
+			int least_str = 100, least_ind = -1;
+			ind = 0;
+			for (Actor opp : opponents) {
+				str = opp.getProperty(Actor.strength);
+				if (str < least_str) {
+					least_str = str;
+					new_opp_ind = ind;
+				}
+				++ind;
+			}
+			break;
+		case Actor.strongest:
+			int best_str = -100;
+			ind = 0;
+			for (Actor opp : opponents) {
+				str = opp.getProperty(Actor.strength);
+				if (str > best_str) {
+					best_str = str;
+					new_opp_ind = ind;
+				}
+				++ind;
+			}
+			break;
+		case Actor.nearest:
+			int best_dist = 4*EConst.c_tiles_per_chunk;
+			ind = 0;
+			for (Actor opp : opponents) {
+				int dist = npc.distance(opp);
+				if (opp.getAttackMode() == Actor.flee)
+					dist += 16;	// Avoid fleeing.
+				if (dist < best_dist) {
+					best_dist = dist;
+					new_opp_ind = ind;
+				}
+				++ind;
+			}
+			break;
+		case Actor.protect:
+			new_opp_ind = findProtectedAttacker();
+			if (new_opp_ind != -1)
+				break;		// Found one.
+						// FALL THROUGH to 'random'.
+		case Actor.random:
+		default:			// Default to random.
+			if (!opponents.isEmpty())
+				new_opp_ind = 0;
+			break;
+		}
+		Actor new_opponent;
+		if (new_opp_ind == -1)
+			new_opponent = null;
+		else
+			new_opponent = opponents.remove(new_opp_ind);
+		return new_opponent;
+	} 
+	protected GameObject findFoe() {
+	if (npc.getAttackMode() == Actor.manual)
+		return null;		// Find it yourself.
+	return findFoe(npc.getAttackMode());
+	}
+//+++++++++++++++\\
 	public CombatSchedule(Actor n, int prev_schedule) {
 		super(n);
 		//+++++++++FINISH
