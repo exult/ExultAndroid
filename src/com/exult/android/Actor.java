@@ -127,6 +127,16 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					// A frame sequence for each dir.:
 	protected static FramesSequence avatarFrames[] = new FramesSequence[4];
 	protected static FramesSequence npcFrames[] = new FramesSequence[4];
+	private static final byte sea_serpent_attack_frames[] = 
+			{13, 12, 11, 0, 1, 2, 3, 11, 12, 13, 14};
+	private static final byte reach_attack_frames1[] = {3, 6};
+	private static final byte raise_attack_frames1[] = {3, 4, 6};
+	private static final byte fast_swing_attack_frames1[] = {3, 5, 6};
+	private static final byte slow_swing_attack_frames1[] = {3, 4, 5, 6};
+	private static final byte reach_attack_frames2[] = {3, 9};
+	private static final byte raise_attack_frames2[] = {3, 7, 9};
+	private static final byte fast_swing_attack_frames2[] = {3, 8, 9};
+	private static final byte slow_swing_attack_frames2[] = {3, 7, 8, 9};
 	protected FramesSequence frames[];
 	protected byte scheduleType;	// Schedule type (scheduleType).	
 	// Location (x,y) of Shedule
@@ -940,7 +950,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *
 	 *	@return Weapon's effective range.
 	 */
-	private int getEffectiveRange(WeaponInfo winf, int reach) {
+	public int getEffectiveRange(WeaponInfo winf, int reach) {
 		if (reach < 0) {
 			if (winf == null) {
 				MonsterInfo minf = getInfo().getMonsterInfo();
@@ -2175,6 +2185,78 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setStepIndex(int i) {
 		stepIndex = i;
 	}
+	// Get attack frames.  'frames' should have room for 12.
+	public int getAttackFrames(int weapon, boolean projectile,
+				int dir, byte frames[]) {
+		final byte baseframes[] = {0, 0, 0, 0};
+		byte which[] = baseframes;
+		int cnt = 4;
+		switch (getShapeNum()) {		// Special cases.
+		case 525:			// Sea serpent.
+			which = sea_serpent_attack_frames;
+			cnt = sea_serpent_attack_frames.length;
+			break;
+		case 529:			// Slimes.
+			return 0;		// None, I believe.
+		default:
+			byte[] reach_attack_frames;
+			byte[] raise_attack_frames;
+			byte[] fast_swing_attack_frames;
+			byte[] slow_swing_attack_frames;
+			if (twoHanded) {
+				reach_attack_frames = reach_attack_frames2;
+				raise_attack_frames = raise_attack_frames2;
+				fast_swing_attack_frames = fast_swing_attack_frames2;
+				slow_swing_attack_frames = slow_swing_attack_frames2;
+			} else {
+				reach_attack_frames = reach_attack_frames1;
+				raise_attack_frames = raise_attack_frames1;
+				fast_swing_attack_frames = fast_swing_attack_frames1;
+				slow_swing_attack_frames = slow_swing_attack_frames1;
+			}
+			int frame_flags;	// Get Actor_frame flags.
+			WeaponInfo winfo;
+			if (weapon >= 0 && 
+			    (winfo = ShapeID.getInfo(weapon).getWeaponInfo()) != null)
+				frame_flags = winfo.getActorFrames(projectile);
+			else				// Default to normal swing.
+				frame_flags = projectile ? WeaponInfo.reach : WeaponInfo.fast_swing;
+			switch (frame_flags) {
+				case WeaponInfo.reach:
+					which = reach_attack_frames;
+					cnt = reach_attack_frames1.length;
+					break;
+				case WeaponInfo.raise:
+					which = raise_attack_frames;
+					cnt = raise_attack_frames1.length;
+					break;
+				case WeaponInfo.fast_swing:
+					which = fast_swing_attack_frames;
+					cnt = fast_swing_attack_frames1.length;
+					break;
+				case WeaponInfo.slow_swing:
+					which = slow_swing_attack_frames;
+					cnt = slow_swing_attack_frames1.length;
+					break;
+			}
+			break;
+		}
+		for (int i = 0; i < cnt; i++) {	// Copy frames with correct dir.
+			int frame = getDirFramenum(dir, which[i]);
+						// Check for empty shape.
+			int shnum = getShapeNum();
+			ShapeFrame shape = getShapeFile().getShape(shnum, frame);
+			if (shape == null || shape.isEmpty()) {
+						// Swap 1hand <=> 2hand frames.
+				frame = getDirFramenum(dir,visibleFrames[frame&15]);
+				shape = getShapeFile().getShape(shnum, frame);
+				if (shape == null || shape.isEmpty())
+					frame = getDirFramenum(dir, Actor.standing);
+			}
+			frames[i] = (byte)frame;
+		}
+		return (cnt);
+	}
 	public final boolean hasLightSource() 	// Carrying a torch?
 		{ return lightSources > 0; }
 	public final void addLightSource()	// Add a torch
@@ -2871,6 +2953,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (oppr != null && (oppr.getTarget() != this ||
 				oppr.getScheduleType() != Schedule.combat))
 			oppressor = -1;
+	}
+	public final void setTarget(GameObject obj) {
+		setTarget(obj, false);
 	}
 	public final boolean canAct() {
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)

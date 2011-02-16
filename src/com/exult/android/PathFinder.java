@@ -280,4 +280,118 @@ public abstract class PathFinder {
 			return !screen.hasPoint(tile.tx - tile.tz/2, tile.ty - tile.tz/2);
 		}
 	}
+	/*
+	 *	This client is supposed to fail quickly, so that it can be used to
+	 *	test for when an object can be grabbed.
+	 */
+	public static class FastClient extends Client {
+		private int dist;			// Succeeds at this distance from goal.
+		public FastClient(int d, int mf) {
+			dist = d;
+			setMoveFlags(mf); 
+		}
+		public FastClient(int d) {
+			dist = d;
+			setMoveFlags( 1 << 5);
+		}
+		@Override			// Figure when to give up.
+		public int getMaxCost(int cost_to_goal) {
+			int max_cost = 2*cost_to_goal;	// Don't try too hard.
+			if (max_cost < 8)
+				max_cost = 8;
+			else if (max_cost > 64)
+				max_cost = 64;
+			return max_cost;
+		}
+		@Override				// Figure cost for a single step.
+		public int getStepCost(Tile from, Tile to) {
+			int new_lift;			// Might climb/descend.
+							// For now, look at 1 tile's height,
+							//   and step up/down 2 (needed for SI
+							//   Crystal Ball).
+			new_lift = gmap.spotAvailable(1, to.tx, to.ty, to.tz, getMoveFlags(), 2, 2);
+			if (new_lift < 0)
+				return -1;
+			to.tz = (short)new_lift;		// (I don't think we should do this
+							//    above...)
+			return 1;
+		}
+		@Override				// Estimate cost between two points.
+		public int estimateCost(Tile from, Tile to) {
+			return from.distance2d(to);	// Distance() does world-wrapping.
+		}
+		@Override				// Is tile at the goal?
+		public boolean atGoal(Tile tile, Tile goal) {
+			if (tile.distance2d(goal) > dist)
+				return false;		// Not close enough.
+			int dz = tile.tz - goal.tz;	// Want to be within 1 story.
+			return dz <= 5 && dz >= -5;
+		}
+		/* ++++++++++FINISH
+		static int is_grabable(Tile_coord from, Tile_coord to);
+		static int is_grabable(Game_object *from, Game_object *to);
+		static int is_grabable(Game_object *from, Tile_coord to);
+						// Check for unblocked straight path.
+		static int is_straight_path(Tile_coord from, Tile_coord to);
+		static int is_straight_path(Game_object *from, Game_object *to);
+		*/
+	}
+	public static class MonsterClient extends FastClient {	
+		private Rectangle destbox = new Rectangle();// Got to intersect this box.
+		private Rectangle abox = new Rectangle();	// Temp.
+		private int intelligence;		// NPC's intelligence.
+		private int axtiles, aytiles, aztiles;	// NPC's dims. in tiles.
+		// For combat:
+		public MonsterClient(Actor attacker, int reach, GameObject opponent) {
+			super(reach);
+			intelligence = attacker.getProperty(Actor.intelligence);
+			ShapeInfo info1 = attacker.getInfo();
+			int frame1 = attacker.getFrameNum();
+			axtiles = info1.get3dXtiles(frame1);
+			aytiles = info1.get3dYtiles(frame1);
+			aztiles = info1.get3dHeight();
+			if (opponent == null)
+				return;			// Means this isn't usable.
+			setMoveFlags(attacker.getTypeFlags());
+			ShapeInfo info2 = opponent.getInfo();
+			int opptx = opponent.getTileX(), oppty = opponent.getTileY();
+			int frame2 = opponent.getFrameNum();
+			int oxtiles = info2.get3dXtiles(frame2), 
+				oytiles = info2.get3dYtiles(frame2);
+			destbox.set(opptx - oxtiles + 1, oppty - oytiles + 1,
+									oxtiles, oytiles);
+			destbox.enlarge(reach);		// This is how close we need to get.
+		}
+		@Override			// Figure when to give up.
+		public int getMaxCost(int cost_to_goal) {
+			int max_cost = 2*cost_to_goal;	// Don't try to hard.
+			// Use intelligence.
+			max_cost += intelligence/2;
+			// Limit to 3/4 screen width.
+			int scost = ((3*gwin.getWidth())/4)/EConst.c_tilesize;
+			if (max_cost > scost)
+				max_cost = scost;
+			if (max_cost < 18)		// But not too small.
+				max_cost = 18;
+			return max_cost;
+		}
+		@Override				// Is tile at the goal?
+		public boolean atGoal(Tile tile, Tile goal) {
+			int dz = tile.tz - goal.tz;	// Got to be on same floor.
+			if (dz/5 != 0)
+				return false;
+			abox.set(tile.tx - axtiles + 1, tile.ty - aytiles + 1,
+								axtiles, aytiles);
+			return abox.intersects(destbox);
+		}
+		@Override				// Figure cost for a single step.
+		public int getStepCost(Tile from, Tile to) {
+			// NOTE: the 'to.tz' field may be modified.
+			if (!MapChunk.areaAvailable(axtiles, aytiles, aztiles,
+					from, to, getMoveFlags(), 1, -1))
+				return -1;
+			else
+				return 1;
+		}
+	}
 }

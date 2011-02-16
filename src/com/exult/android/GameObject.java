@@ -852,7 +852,7 @@ public abstract class GameObject extends ShapeID {
 			{ return null; }
 	/*
 	 *	Checks to see if the object has ammo for a weapon.
-	 *	Output is ammount of ammo needed and . to ammo
+	 *	Output is ammount of ammo needed and ptr. to ammo
 	 *	object, if the argument is not null.
 	 */
 	public final int getWeaponAmmo(int weapon, int family, int proj, boolean ranged,

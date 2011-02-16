@@ -202,7 +202,7 @@ public class MonsterInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return reach; }
 	public int getEquipOffset()
 		{ return equip_offset; }
-	short getHitsfx()
+	public short getHitsfx()
 		{ return sfx; }
 	public static int getInfoFlag()
 		{ return 8; }
