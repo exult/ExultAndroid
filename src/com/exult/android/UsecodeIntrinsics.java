@@ -19,6 +19,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static Tile interceptTile;
 	private static GameObject sailor;	// Current barge captain.
 	private Actor pathNpc;		// Last NPC in path_run_usecode()
+	private int speechTrack = -1;	// Set/read by some intrinsics.
 
 	private static final Actor asActor(GameObject obj) {
 		return obj == null ? null : obj.asActor();
@@ -133,7 +134,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (shape < 0)
 			return;
 	
-		if (true /* +++++ Game.get_game_type() == BLACK_GATE*/ && npc != null) {
+		if (game.isBG() && npc != null) {
 			// Only do this if the NPC is the caller item.
 			if (npc.getNpcNum() != -1) 
 				npc.setFlag (GameObject.met);
@@ -458,18 +459,16 @@ public class UsecodeIntrinsics extends GameSingletons {
 		Actor npc = asActor(getItem(p0));
 		if (npc == null)
 			return UsecodeValue.getZero();
-		// +++++ FINISH Schedule *schedule = npc.get_schedule();
-		int sched = /* +++++ schedule ? schedule.get_actual_type(npc) 
-				     : */ npc.getScheduleType();
+		Schedule schedule = npc.getSchedule();
+		int sched = schedule != null ? schedule.getActualType(npc) 
+				     : npc.getScheduleType();
 						// Path_run_usecode?  (This is to fix
 						//   a bug in the Fawn Trial.)
 						//+++++Should be a better way to check.
-		/* +++++++++FINISH
-		if (Game.get_game_type() == SERPENT_ISLE &&
-		    npc.get_action() && npc.get_action().as_usecode_path())
+		if (game.isSI() &&
+		    npc.getAction() != null && npc.getAction().asUsecodePath() != null)
 						// Give a 'fake' schedule.
 			sched = Schedule.walk_to_schedule;
-		*/
 		return new UsecodeValue.IntValue(sched);
 	}
 	private final void setScheduleType(UsecodeValue p0, 
@@ -481,16 +480,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (npc != null) {
 			int newsched = p1.getIntValue();
 			npc.setScheduleType(newsched);
-			/* ++++++++++FINISH
 						// Taking Avatar out of combat?
-			if (npc == gwin.getMainActor() && gwin.in_combat() &&
-			    newsched != Schedule.combat)
+			if (npc == gwin.getMainActor() && gwin.inCombat() &&
+			    newsched != Schedule.combat) {
 						// End combat mode (for L.Field).
-				{
-				Audio.get_ptr().stop_music();
-				gwin.toggle_combat();
-				}
-			*/
+				/*+++++FINISH
+				audio.stopMusic();
+				gwin.toggleCombat();
+				*/
+			}
 		}
 	}
 
@@ -598,10 +596,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			last_created.add(monster);
 			return monster;
 		} else  {
-			/* +++++++++++
 			if (info.isBodyShape())
-				obj = new Dead_body(shapenum, 0, 0, 0, 0, -1);
-			else */ {
+				obj = new Actor.DeadBody(shapenum, 0, 0, 0, 0, -1);
+			else  {
 				obj = IregGameObject.create(ShapeID.getInfo(shapenum), shapenum, 0);
 						// Be liberal about taking stuff.
 				obj.setFlag(GameObject.okay_to_take);
@@ -763,7 +760,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return vec.isEmpty() ? UsecodeValue.getNullObj()
 				   : new UsecodeValue.ObjectValue(vec.firstElement());
 		}
-		/* +++++++++FINISH
 		if (oval != -357) {		// Not the whole party? Find inside owner.
 			GameObject obj = getItem(p0);
 			if (obj == null)
@@ -771,17 +767,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 			GameObject f = obj.findItem(shnum, qual, frnum);
 			return new UsecodeValue.ObjectValue(f);
 		}
-		 */
 					// Look through whole party.
 		int cnt = partyman.getCount();
 		for (int i = 0; i < cnt; i++) {
 			GameObject obj = gwin.getNpc(partyman.getMember(i));
 			if (obj != null) {
-				/* ++++++++FINISH
 				GameObject f = obj.findItem(shnum, qual, frnum);
 				if (f != null)
 					return new UsecodeValue.ObjectValue(f);
-				 */
 			}
 		}
 		return UsecodeValue.getNullObj();
@@ -909,12 +902,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 
 			// Show notes.
 			GameObject obj = getItem(p1);
-			/* +++++++FINISH
 			if (obj != null && !obj.isPosInvalid())
-				gwin.get_effects().add_effect(
-					new Sprites_effect(24, obj, 0, 0, -2, -2));
-			}
-			*/
+				eman.addEffect(
+					new EffectsManager.SpritesEffect(24, obj, 0, 0, -2, -2, 0, -1));
 		}
 	}
 	private final UsecodeValue npcNearby(UsecodeValue p0) {
@@ -1065,11 +1055,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			obj.getTile(tempTile);
 			gmap.findNearby(foundVec, tempTile, shapenum, distVal.getIntValue(), mval);
 		}
-		/* +++++++FINISH 
 		if (foundVec.size() > 1)		// Sort right-left, near-far to fix
 						//   SI/SS cask bug.
-			std.sort(vec.begin(), vec.end(), Object_reverse_sorter());
-		*/
+			Collections.sort(foundVec, new ReverseSorter());
 		UsecodeValue nearby = UsecodeValue.ArrayValue.createObjectsList(foundVec);
 		return (nearby);
 	}
@@ -1171,7 +1159,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (npc != null) {
 			ucmachine.setModifiedMap();
 						// Don't want him/her coming back!
-			//+++++++ npc.set_schedule_type(Schedule.wait);
+			npc.setScheduleType(Schedule.wait);
 			gwin.addDirty(npc);
 			npc.removeThis();	// Remove, but don't delete.
 		}
@@ -1199,36 +1187,30 @@ public class UsecodeIntrinsics extends GameSingletons {
 		int shnum = p2.getIntValue();
 		if (shnum < 0)
 			return UsecodeValue.getZero();
-		/* ++++++FINISH
-		Weapon_info *winf = ShapeID.getInfo(shnum).get_weapon_info();
-		if (!winf)
-			return Usecode_value(0);
+		/* ++++++++FINISH
+		WeaponInfo winf = ShapeID.getInfo(shnum).getWeaponInfo();
+		if (winf == null)
+			return UsecodeValue.getZero();
 
-		Usecode_value& tval = parms[1];
+		UsecodeValue tval = p1;
 		GameObject to = getItem(tval.getElem0());
 		int nelems;
-		if (to)
-			{
+		if (to != null) {
 			// It is an object.
-			from.set_attack_target(to, shnum);
-			return Usecode_value(1);
-			}
-		else if (tval.is_array() && (nelems = tval.getArraySize()) >= 3)
-			{
+			from.setAttackTarget(to, shnum);
+			return UsecodeValue.getOne();
+		} else if (tval.isArray() && (nelems = tval.getArraySize()) >= 3) {
 			// Tile return of click_on_item. Allowing size to be < 4 for safety.
-			Tile_coord trg = Tile_coord(
+			Tile trg = = new Tile(
 					tval.getElem(1).getIntValue(),
 					tval.getElem(2).getIntValue(),
 					nelems >= 4 ? tval.getElem(3).getIntValue() : 0);
-			from.set_attack_target(trg, shnum);
-			return Usecode_value(1);
-			}
+			from.setAttackTarget(trg, shnum);
+			return UsecodeValue.getOne();;
+		}
 		*/
 		return UsecodeValue.getZero();	// Failure.
 	}
-
-	
-	
 	private final UsecodeValue getLift(UsecodeValue p0) {
 		GameObject obj = getItem(p0);
 		return obj == null ? UsecodeValue.getZero() :
@@ -1419,6 +1401,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 		else
 			gump = new TextGump.Book();
 		ucmachine.setBook(gump);
+	}
+	private final void stopTime(UsecodeValue p0) {
+		// stop_time(.25 secs ie, ticks).
+		int length = p0.getIntValue();
+		gwin.setTimeStopped(length);
+	}
+	private final void causeLight(UsecodeValue p0) {
+		// Cause_light(game_minutes??)
+		gwin.addSpecialLight(p0.getIntValue());
 	}
 	private final UsecodeValue getBarge(UsecodeValue p0) {
 		// get_barge(obj) - returns barge object is part of or lying on.
@@ -1740,6 +1731,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 			System.out.println("Readied: invalid spot #: " + spot);
 		return UsecodeValue.getZero();
 	}
+	private final void advanceTime(UsecodeValue p0) {
+		// Incr. clock by (parm[0]*.04min.).
+		clock.increment(p0.getIntValue()/GameClock.ticksPerMinute);
+	}
+	private final UsecodeValue inUsecode(UsecodeValue p0) {
+		// in_usecode(item):  Return 1 if executing usecode on parms[0].
+		GameObject obj = getItem(p0);
+		return UsecodeValue.getBoolean(obj != null && UsecodeScript.find(obj) != null);
+	}
 	private final UsecodeValue pathRunUsecode(Actor npc, UsecodeValue locval,
 			UsecodeValue useval, UsecodeValue itemval, UsecodeValue eventval,
 			boolean find_free, boolean always, boolean companions) {
@@ -1880,15 +1880,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 					(npc != null && npc.checkGearPowers(FrameFlagsInfo.death_safe)))
 				? UsecodeValue.getZero() : UsecodeValue.getOne();
 		}
-						// +++++0x18 is used in testing for
+						// ++0x18 is used in testing for
 						//   blocked gangplank. What is it?????
 		else if (fnum == 0x18 && game.isBG())
 			return UsecodeValue.getOne();
-		/* +++++++FINISH
-		else if (fnum == (int) GameObject.in_dungeon)
-			return Usecode_value(obj == gwin.getMainActor() &&
-						gwin.isInDungeon());
-		*/
+		else if (fnum == GameObject.in_dungeon)
+			return UsecodeValue.getBoolean(obj == gwin.getMainActor() &&
+						gwin.isInDungeon() != 0);
 		else if (fnum == 0x14)		// Must be the sailor, as this is used
 						//   to check for Ferryman.
 			return new UsecodeValue.ObjectValue(sailor);
@@ -2198,7 +2196,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		//+++++++++++
 		case 0x55:
 			bookMode(parms[0]); break;
-		//++++++++++++
+		case 0x56:
+			stopTime(parms[0]); break;
+		case 0x57:
+			causeLight(parms[0]); break;
 		case 0x58:
 			return getBarge(parms[0]);
 		case 0x59:			
@@ -2231,7 +2232,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return wearingFellowship();
 		case 0x68:
 			return UsecodeValue.getOne();	// MouseExists().
-		//++++++++++++++
+		case 0x69:
+			return new UsecodeValue.IntValue(speechTrack);
 		case 0x6a:
 			flashMouse(parms[0]); break;
 		case 0x6b:
@@ -2254,6 +2256,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x72:
 			return isReadied(parms[0], parms[1], parms[2], parms[3]);
 		//++++++++++++++
+		case 0x78:
+			advanceTime(parms[0]); break;
+		case 0x79:
+			return inUsecode(parms[0]);
+		//+++++++++
 		case 0x7d:
 			return pathRunUsecode(gwin.getMainActor(), parms[0], parms[1], parms[2],
 					parms[3], false, false, false);

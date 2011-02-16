@@ -51,6 +51,8 @@ public class GameWindow extends GameSingletons {
 	//	Game state values.
 	private boolean combat;			// True if in combat.
 	private int skipAboveActor;		// Level above actor to skip rendering.
+	private int inDungeon;
+	private boolean iceDungeon;
 	private boolean ambientLight;	// Permanent version of special_light.
 	private int specialLight;		// Game minute when light spell ends.
 	private int timeStopped;		// For 'stop time' spell.
@@ -170,6 +172,18 @@ public class GameWindow extends GameSingletons {
 		timeStopped = 0;	// Done.
 		return 0;
 	}
+	// Delay in ticks, -1 to stop indefinitely, or 0 to end.
+	public final void setTimeStopped(int delay) {
+		if (delay == -1)
+			timeStopped = -1;
+		else if (delay == 0)
+			timeStopped = 0;
+		else {
+			int new_expire = TimeQueue.ticks + delay;
+			if (new_expire > timeStopped)	// Set expiration time.
+				timeStopped = new_expire;
+		}
+	}
 	public final MainActor getMainActor() {
 		return mainActor;
 	}
@@ -185,6 +199,28 @@ public class GameWindow extends GameSingletons {
 		skipAboveActor = lift;
 		return true;
 	}
+	public boolean setInDungeon(int lift) { 
+		if (inDungeon == lift)
+			return false;
+		inDungeon = lift;
+		return true;
+	}
+	public void setIceDungeon(boolean ice) { iceDungeon = ice; }
+	public int isInDungeon()
+		{ return inDungeon; }
+	public boolean isSpecialLight()	// Light spell in effect?
+		{ return ambientLight || specialLight != 0; }
+				// Light spell.	Light=500, GreatLight=5000.
+	void addSpecialLight(int units) {
+		if (specialLight == 0) {		// Nothing in effect now?
+			specialLight = clock.getTotalMinutes();
+			clock.setPalette();
+		}
+		specialLight += units/20;	// Figure ending time.
+	}
+	public void toggleAmbientLight(boolean state)
+		{ ambientLight = state; }
+	
 	public final void setMovingBarge(BargeObject b) {
 		if (b != null && b != movingBarge) {
 			b.gather();		// Will 'gather' on next move.
@@ -952,28 +988,26 @@ public class GameWindow extends GameSingletons {
 			if (conv != null)
 				conv.paint();		// Conversation.
 			paintBusy();			// 'busyMessage'.
-			/*
 					// Complete repaint?
-			if (!gx && !gy && gw == get_width() && gh == get_height() && mainActor)
-			{			// Look for lights.
-			Actor *party[9];	// Get party, including Avatar.
-			int cnt = get_party(party, 1);
-			int carried_light = 0;
-			for (int i = 0; !carried_light && i < cnt; i++)
-				carried_light = party[i].has_light_source();
-			*/
+			if (gx == 0 && gy == 0 && gw == getWidth() && gh == getHeight() && 
+										mainActor != null) {	// Look for lights.
+				int cnt = partyman.getCount();
+				boolean carried_light = mainActor.hasLightSource();
+				for (int i = 0; !carried_light && i < cnt; i++) {
+					Actor npc = npcs.elementAt(partyman.getMember(i));
+					if (npc != null)
+						carried_light = npc.hasLightSource();
+				}
 					// Also check light spell.
-			if (specialLight != 0 && clock.getTotalMinutes() > specialLight) {
+				if (specialLight != 0 && clock.getTotalMinutes() > specialLight) {
 						// Just expired.
-				specialLight = 0;
-				clock.setPalette();
-			}
-			/* +++++++++FINISH
+					specialLight = 0;
+					clock.setPalette();
+				}
 					// Set palette for lights.
-			clock.setLightSource(carried_light + (light_sources > 0),
-								in_dungeon);
+			clock.setLightSource((carried_light?1:0) + ((light_sources > 0)?1:0),
+								inDungeon);
 			}
-			 */
 		win.clearClip();
 		} // End 'synchronized'.
 	}	
@@ -1358,9 +1392,7 @@ public class GameWindow extends GameSingletons {
 		//++++++FINISH theftCx = theftCy = -1;
 		combat = false;
 		npcs.setSize(0);			// NPC's already deleted above.
-		/* ++++++FINISH
 		bodies.setSize(0);
-		*/
 		movingBarge = null;		// Get out of barge mode.
 		specialLight = 0;		// Clear out light spells.
 		ambientLight = false;	// And ambient lighting.

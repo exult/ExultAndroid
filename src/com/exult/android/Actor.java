@@ -145,7 +145,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected boolean twoFingered;		// Carrying gauntlets (both fingers)
 	protected boolean useScabbard;		// Carrying an item in scabbard (belt, back 2h, shield).
 	protected boolean useNeck;			// Carrying cloak (amulet, cloak)
-	protected byte lightSources;	// # of light sources readied.
+	protected int lightSources;	// # of light sources readied.
 	protected byte usecodeDir;	// Direction (0-7) for usecode anim.
 	protected int typeFlags;	// 32 flags used in movement among other things
 	protected byte gearImmunities;	// Damage immunities granted by gear.
@@ -524,6 +524,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			else
 				setScheduleType(scheduleType);
 			}
+	}
+	public final Schedule getSchedule() {
+		return schedule;
 	}
 	public final int getScheduleType() {
 		return scheduleType;
@@ -2154,6 +2157,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final void setStepIndex(int i) {
 		stepIndex = i;
 	}
+	public final boolean hasLightSource() 	// Carrying a torch?
+		{ return lightSources > 0; }
+	public final void addLightSource()	// Add a torch
+		{ lightSources++; }
+	public final void removeLightSource() {	// Remove a torch
+		if (lightSources > 0)
+			lightSources--;
+	}
 	/*
 	 *	Get effective weapon shape, taking casting frames in consideration.
 	 */
@@ -2542,10 +2553,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		// Refigure granted immunities.
 		
 		gearImmunities |= info.getArmorImmunity();
-		/*+++++++++FINISH
 		gearPowers |= info.getObjectFlags(obj.getFrameNum(),
 					info.hasQuality() ? obj.getQuality() : -1);
-		*/
 		return true;
 	}
 	public void remove(GameObject obj) {
