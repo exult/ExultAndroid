@@ -29,7 +29,15 @@ public class Palette {
 	private int max_val;
 	private boolean fadedOut;		// true if faded palette to black.
 	private boolean fadesEnabled;	
-
+	private boolean border255;
+	private void take(Palette pal) {
+		palette = pal.palette;
+		brightness = pal.brightness;
+		fadedOut = pal.fadedOut;
+		fadesEnabled = pal.fadesEnabled;
+		System.arraycopy(pal.pal1, 0, pal1, 0, 768);
+		System.arraycopy(pal.pal2, 0, pal2, 0, 768);
+	}
 	public Palette(ImageBuf w) {
 		win = w;
 		palette = -1;
@@ -40,18 +48,24 @@ public class Palette {
 		pal1 = new byte[768];
 		pal2 = new byte[768];
 	}
+	public Palette(Palette pal) {
+		take(pal);
+	}
 	public boolean isFadedOut() {
 		return fadedOut;
+	}
+	public void setBrightness(int b) {
+		brightness = b;
 	}
 	/*
 	 * Read in a palette.
 	 */
 	public void set
-	(
-	int pal_num,			// 0-11, or -1 to leave unchanged.
-	int new_brightness,		// New percentage, or -1.
-	Canvas c				// Repaint if not null.
-	) {
+		(
+		int pal_num,			// 0-11, or -1 to leave unchanged.
+		int new_brightness,		// New percentage, or -1.
+		Canvas c				// Repaint if not null.
+		) {
 		if ((palette == pal_num || pal_num == -1) &&
 				(brightness == new_brightness || new_brightness == -1))
 					// Already set.
@@ -68,6 +82,22 @@ public class Palette {
 	}
 	public void set(int pal_num) {
 		set(pal_num, -1, null);
+	}
+	public void set(byte palnew[], int new_brightness, boolean repaint, 
+								boolean border255) {
+		this.border255 = border255;
+		System.arraycopy(palnew, 0, pal1, 0, 768);
+		Arrays.fill(pal2, (byte)0);
+		palette = -1;
+		if (new_brightness > 0)
+			brightness = new_brightness;
+		if (fadedOut)
+			return;			// In the black.
+		
+		setBrightness(brightness);
+		apply();
+		if (repaint)
+			GameWindow.instanceOf().setAllDirty();
 	}
 	public void apply(Canvas c) {
 		win.setPalette(pal1, max_val, brightness);
@@ -136,5 +166,86 @@ public class Palette {
 	}
 	public int findColor(int r, int g, int b) {
 		return findColor(r, g, b, 0xe0);
+	}
+	/*
+	 *	Creates a palette in-between two palettes.
+	 */
+	public Palette createIntermediate(Palette to, int nsteps, int pos) {
+		byte palnew[] = new byte[768];
+		if (fadesEnabled) {
+			for (int c=0; c < 768; c++)
+				palnew[c] = (byte)(((to.pal1[c]-pal1[c])*pos)/nsteps+pal1[c]);
+		} else {
+			byte palold[];
+			if (2*pos >= nsteps)
+				palold = to.pal1;
+			else
+				palold = pal1;
+			System.arraycopy(palold, 0, palnew, 0, 768);
+		}
+		Palette ret = new Palette(GameWindow.instanceOf().getWin());
+		ret.set(palnew,-1,true,true);
+		return ret;
+	}
+	/*
+	 *	Smooth palette transition.
+	 */
+	public static class Transition extends GameSingletons {
+		private Palette start, end, current;
+		private int step, maxSteps;
+		private int startHour, startMinute, rate;
+		public Transition(int from, int to, int ch, int cm, int r,
+					int nsteps, int sh, int smin) {
+			startHour = sh; startMinute = smin; rate = r;
+			maxSteps = nsteps;
+			start = new Palette(gwin.getWin());
+			start.load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, from);
+			end = new Palette(gwin.getWin());
+			end.load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, to);
+			setStep(ch, cm);
+		}
+		
+		public Transition(Palette from, int to, int ch, int cm,
+					int r, int nsteps, int sh, int smin) {
+			startHour = sh; startMinute = smin; rate = r;
+			maxSteps = nsteps;
+			start = new Palette(from);
+			end = new Palette(gwin.getWin());
+			end.load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, to);
+			setStep(ch, cm);
+		}
+		public Transition(Palette from, Palette to, int ch, int cm,
+				int r, int nsteps, int sh, int smin) {
+			startHour = sh; startMinute = smin; rate = r;
+			maxSteps = nsteps;
+			start = new Palette(from);
+			end = new Palette(to);
+			setStep(ch, cm);
+		}
+		public int getStep()
+			{ return step; }
+		boolean setStep(int hour, int min) {
+			int new_step = 60 * (hour - startHour) + min - startMinute;
+			while (new_step < 0)
+				new_step += 60;
+			new_step /= rate;
+			if (gwin.getPal().isFadedOut())
+				return false;
+
+			if (current == null || new_step != step) {
+				step = new_step;
+				current = start.createIntermediate(end, maxSteps, step);
+			}
+			if (current != null) {
+				current.apply();
+				gwin.setAllDirty();
+			}
+			if (step >= maxSteps)
+				return false;
+			else
+				return true;
+		}
+		Palette getCurrentPalette()
+			{ return current; }
 	}
 }

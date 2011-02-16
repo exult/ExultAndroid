@@ -15,7 +15,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	private int fog;			// >0 if there is fog.
 	private boolean wasFoggy;
 	private int timeQueueCount;
-	//+++++private Palette_transition *transition;	// For smooth palette transitions.
+	private Palette.Transition transition;	// For smooth palette transitions.
 	private int timeRate;
 	private static int getTimePalette(int hour, boolean dungeon) {
 		if (dungeon || hour < 6)
@@ -95,10 +95,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		Actor main_actor = gwin.getMainActor();
 		boolean invis = main_actor != null && main_actor.getFlag(GameObject.invisible);
 		if (invis && !oldInvisible) {
-			/* +++FINISH
-			if (transition != null) {
-				transition = null;
-			} */
+			transition = null;
 			gwin.getPal().set(Palette.PALETTE_INVISIBLE);
 			if (!gwin.getPal().isFadedOut())
 				gwin.getPal().apply();
@@ -107,10 +104,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		oldInvisible = invis;
 
 		if (main_actor == null || cheat.inInfravision() && !oldInfravision) {
-			/*++++FINISH
-			if (transition) {
-				transition = null;
-			} */
+			transition = null;
 			gwin.getPal().set(Palette.PALETTE_DAY);
 			if (!gwin.getPal().isFadedOut())
 				gwin.getPal().apply();
@@ -136,10 +130,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 					oldLightLevel, oldSpecialLight);
 
 		if (gwin.getPal().isFadedOut()) {
-			/* +++++++FINISH
-			if (transition) {
-				transition = null;
-			} */
+			transition = null;
 			gwin.getPal().set(old_palette);
 			if (!gwin.getPal().isFadedOut()) {
 				gwin.getPal().apply();
@@ -157,30 +148,26 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 				// TODO: Maybe implement smoother transition from
 				// weather to/from dawn/sunrise/sundown/dusk.
 				// Right now, it works like the original.
-			/*++++FINISH transition = new Palette_transition(old_palette, new_palette,
-								hour, minute, 1, 4, hour, minute); */
+			transition = new Palette.Transition(old_palette, new_palette,
+								hour, minute, 1, 4, hour, minute);
 			return;
 		} else if (light_change) {
-			/* ++++++FINISH
-			if (transition) {
-				transition = null;
-			} */
+			transition = null;
 			gwin.getPal().set(new_palette);
 			if (!gwin.getPal().isFadedOut()) {
 				gwin.getPal().apply();
 				gwin.setAllDirty();
 			}
 			return;
-			}
-		/* ++++FINISH
-		if (transition) {
-			if (transition.set_step(hour, minute))
+		}
+		if (transition != null) {
+			if (transition.setStep(hour, minute))
 				return;
 			transition = null;
-		} */
+		}
 		if (old_palette != new_palette) {	// Do we have a transition?
-			//++++FINISH transition = new Palette_transition(old_palette, new_palette,
-						//+++		hour, minute, 4, 15, hour, 0);
+			transition = new Palette.Transition(old_palette, new_palette,
+								hour, minute, 4, 15, hour, 0);
 			return;
 		}
 		gwin.getPal().set(new_palette);
@@ -196,7 +183,7 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		oldInfravision = false;
 		oldInvisible = false;
 		dungeon = 255;
-		//+++++++++transition = null;
+		transition = null;
 	}
 	public void increment(int numMinutes) {
 		int oldHour;
@@ -250,14 +237,10 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 			gwin.scheduleNpcs(hour);
 			*/
 		}
-		/* ++++++++FINISH
-		if (transition && !transition.set_step(hour, minute))
-			{
-			delete transition;
-			transition = 0;
-			set_time_palette();
-			}
-		else */ if (hour != hourOld)
+		if (transition != null && !transition.setStep(hour, minute)) {
+			transition = null;
+			setPalette();
+		} else  if (hour != hourOld)
 			setPalette();
 
 		if ((hour != hourOld) || (minute/15 != minOld/15))
