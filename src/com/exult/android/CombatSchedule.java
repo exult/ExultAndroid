@@ -47,7 +47,7 @@ public class CombatSchedule extends Schedule {
 	protected GameObject ammoTemp[];		// Temp.
 	protected GameObject practiceTarget;	// Only for duel schedule.
 	protected GameObject weapon;
-	protected int weapon_shape;		// Weapon's shape in shapes.vga.
+	protected int weaponShape;		// Weapon's shape in shapes.vga.
 	protected SpellbookObject spellbook;	// If readied.
 					// Ranges in tiles.  
 					//   0 means not applicable.
@@ -359,6 +359,21 @@ public class CombatSchedule extends Schedule {
 	return findFoe(npc.getAttackMode());
 	}
 	/*
+	 * Get npc's weapon and set 'weapon', 'weaponShape'.
+	 */
+	private WeaponInfo getWeapon() {
+		WeaponInfo winf;
+		weapon = npc.getWeapon();
+		if (weapon != null) {
+			weaponShape = weapon.getShapeNum();
+			winf = weapon.getInfo().getWeaponInfo();
+		} else {
+			weaponShape = -1;
+			winf = null;
+		}
+		return winf;
+	}
+	/*
 	 *	Handle the 'approach' state.
 	 */
 	protected void approachFoe
@@ -367,16 +382,7 @@ public class CombatSchedule extends Schedule {
 								// FOR NOW:  Called as last resort,
 								//  and we try to reach target.
 		) {
-		int points = 0;
-		WeaponInfo winf = null;
-		weapon = npc.getWeapon();
-		if (weapon != null) {
-			weapon_shape = weapon.getShapeNum();
-			winf = weapon.getInfo().getWeaponInfo();
-			if (winf != null)
-				points = winf.getDamage();
-		} else
-			weapon_shape = -1;
+		WeaponInfo winf = getWeapon();	// Set 'weapon', 'weaponShape'.
 		int dist = for_projectile ? 1 : winf != null ? winf.getRange() : 3;
 		GameObject opponent = npc.getTarget();
 						// Find opponent.
@@ -549,8 +555,8 @@ public class CombatSchedule extends Schedule {
 		GameObject opponent = npc.getTarget();
 		boolean check_lof = !noBlocking;
 						// Get difference in lift.
-		WeaponInfo winf = weapon_shape >= 0 ?
-				ShapeID.getInfo(weapon_shape).getWeaponInfo() : null;
+		WeaponInfo winf = weaponShape >= 0 ?
+				ShapeID.getInfo(weaponShape).getWeaponInfo() : null;
 		int dist = npc.distance(opponent);
 		int reach;
 		if (winf == null) {
@@ -571,7 +577,7 @@ public class CombatSchedule extends Schedule {
 				weapon_dead = !spellbook.canDoSpell(npc);
 			else if (winf != null) {
 						// See if we can fire spell/projectile.
-				int need_ammo = npc.getWeaponAmmo(weapon_shape,
+				int need_ammo = npc.getWeaponAmmo(weaponShape,
 						winf.getAmmoConsumed(), winf.getProjectile(),
 						ranged, ammoTemp, false);
 				if (need_ammo != 0 && ammoTemp[0] == null && !npc.readyAmmo())
@@ -615,7 +621,7 @@ public class CombatSchedule extends Schedule {
 		int dir = npc.getDirection(opponent);
 		byte frames[] = new byte[12];
 		//++++signed char frames[12];		// Get frames to show.
-		int cnt = npc.getAttackFrames(weapon_shape, ranged, dir, frames);
+		int cnt = npc.getAttackFrames(weaponShape, ranged, dir, frames);
 		if (cnt != 0)
 			npc.setAction(new ActorAction.Frames(frames, cnt, 1, null));
 		npc.start(1, 0);			// Get back into time queue.
@@ -675,15 +681,47 @@ public class CombatSchedule extends Schedule {
 		}
 		return null;
 	}
-	public CombatSchedule(Actor n, int prev_schedule) {
+	public CombatSchedule(Actor n, int prev_sched) {
 		super(n);
-		//+++++++++FINISH
+		state = initial;
+		prevSchedule = prev_sched;
+		weaponShape = -1;
+		alignment = npc.getEffectiveAlignment();
+		setWeapon();
+		// Cache some data.
+		MonsterInfo minf = npc.getInfo().getMonsterInfo();
+		canYell = minf == null || !minf.cantYell();
+		int curtime = TimeQueue.ticks;
+		summonTime = curtime + 4000/TimeQueue.tickMsecs;
+		invisibleTime = curtime + 4500/TimeQueue.tickMsecs;
 	}
+	// ++++monster_died
+	// ++++stop_attacking_npc
+	//++++stop_attacking_invisible
 	/*
 	 *	Set weapon 'max_range' and 'ammo'.  Ready a new weapon if needed.
 	 */
 	public final void setWeapon(boolean removed) {
-		//++++++++++FINISH
+		WeaponInfo info = getWeapon();	// Set 'weapon', 'weaponShape'.
+		if (info == null && !removed &&	// No weapon?
+		    (spellbook = readiedSpellbook()) == null &&	// No spellbook?
+						// Not dragging?
+		    /* +++++NEEDED? !gwin.isDragging() && */
+						// And not dueling?
+		    npc.getScheduleType() != Schedule.duel &&
+		    state != wait_return) {	// And not waiting for boomerang.
+			npc.readyBestWeapon();
+			info = getWeapon();
+		}
+		if (info == null) {			// Still nothing.
+			if (spellbook != null)		// Did we find a spellbook?
+				noBlocking = true;
+			else	// Don't do this if using spellbook.
+				setHandToHand();
+		} else {
+			noBlocking = false;
+		}
+		state = approach;	// Got to restart attack.
 	}
 	public final void setWeapon() {
 		setWeapon(false);
@@ -692,12 +730,28 @@ public class CombatSchedule extends Schedule {
 	 *	Set for hand-to-hand combat (no weapon).
 	 */
 	public final void setHandToHand() {
-		//++++++++++FINISH
+		weapon = null;
+		weaponShape = -1;
+		noBlocking = false;
+					// Put aside weapon.
+		GameObject weapon = npc.getReadied(Ready.lhand);
+		if (weapon != null) {
+			npc.remove(weapon);
+			if (!npc.addReadied(weapon, Ready.belt, true, false, false) &&
+					!npc.addReadied(weapon, Ready.back_2h, true, false, false) &&
+					!npc.addReadied(weapon, Ready.back_shield, true, false, false) &&
+					!npc.addReadied(weapon, Ready.rhand, true, false, false) &&
+					!npc.addReadied(weapon, Ready.backpack, true, false, false))
+				npc.add(weapon, false, false, true);
+		}
 	}
 	@Override
 	public void nowWhat() {
 		// TODO Auto-generated method stub
 
 	}
-
+	//+++++virtual void im_dormant();	// Npc calls this when it goes dormant.
+	//++++++virtual void ending(int newtype);// Switching to another schedule.
+	//+++++static bool attack_target(Game_object *attacker,
+	//++++++Game_object *target, Tile_coord tile, int weapon, bool combat = false);
 }
