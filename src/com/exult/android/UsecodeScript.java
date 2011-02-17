@@ -8,7 +8,6 @@ import java.io.IOException;
 
 public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	public static boolean debug = false;
-	private static int count;		// Total # of these around.
 	private static LinkedList<UsecodeScript> scripts =
 						new LinkedList<UsecodeScript>();
 	private GameObject obj;		// From objval.
@@ -118,6 +117,9 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			add(v);
 		return this;
 	}
+	public static int getCount() {
+		return scripts.size();
+	}
 	//	Find one for a given item.
 	public static UsecodeScript find(GameObject srch) {
 		for (UsecodeScript s : scripts) {
@@ -164,7 +166,6 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 						// Remove other entries that aren't
 						//   'no_halt'.
 			terminate(obj);
-		count++;			// Keep track of total.
 		scripts.addFirst(this);	// Put in chain.
 		tqueue.add(d + TimeQueue.ticks, this, ucmachine);
 	}

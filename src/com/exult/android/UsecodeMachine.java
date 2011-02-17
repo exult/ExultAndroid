@@ -83,6 +83,9 @@ public class UsecodeMachine extends GameSingletons {
 			file.close();
 		} catch (IOException e) { }
 	}
+	public boolean inUsecode() {
+		return running > 0;
+	}
 	public final boolean getGlobalFlag(int i)	// Get/set ith flag.
 		{ return gflags[i] != 0; }
 	public final void setGlobalFlag(int i, int val)

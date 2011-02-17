@@ -28,7 +28,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	private ZombiePathFinder zombiePath;
 	// These 2 are set by the Usecode function 'set_to_attack':
 	protected GameObject targetObject;
-	protected int target_tile_tx, target_tile_ty, target_tile_tz;
+	protected Tile targetTile;
 	protected int attackWeapon;
 	public static final int		// Attack mode setting from gump.
 		nearest = 0,
@@ -185,7 +185,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		shapeSave = -1;
 		oppressor = -1;
 		castingShape = -1;
-		target_tile_tx = target_tile_ty = -1;
+		targetTile = null;
 		attackWeapon = -1;
 		attackMode = nearest;
 		scheduleType = Schedule.loiter;
@@ -509,6 +509,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public final boolean isDormant() {
 		return dormant;
+	}
+	public final void setDormant() {
+		dormant = true;
 	}
 	public void setAttribute(String nm, int val) {
 		//++++++++++LATER
@@ -950,6 +953,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *
 	 *	@return Weapon's effective range.
 	 */
+	@Override
 	public int getEffectiveRange(WeaponInfo winf, int reach) {
 		if (reach < 0) {
 			if (winf == null) {
@@ -1696,6 +1700,17 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				lastcall = curtime;
 			}
 		}
+	}
+	public void setAttackTarget(GameObject t, int w) {
+		targetTile = null;
+		targetObject = t;
+		attackWeapon = w;
+	}
+	public void setAttackTarget(Tile t, int w) {
+		targetObject = null;
+		targetTile = t;
+		t.fixme();
+		attackWeapon = w;
 	}
 	/*
 	 *	This method should be called to cause damage from traps, attacks.

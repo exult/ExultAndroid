@@ -1187,7 +1187,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 		int shnum = p2.getIntValue();
 		if (shnum < 0)
 			return UsecodeValue.getZero();
-		/* ++++++++FINISH
 		WeaponInfo winf = ShapeID.getInfo(shnum).getWeaponInfo();
 		if (winf == null)
 			return UsecodeValue.getZero();
@@ -1201,14 +1200,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return UsecodeValue.getOne();
 		} else if (tval.isArray() && (nelems = tval.getArraySize()) >= 3) {
 			// Tile return of click_on_item. Allowing size to be < 4 for safety.
-			Tile trg = = new Tile(
+			Tile trg = new Tile(
 					tval.getElem(1).getIntValue(),
 					tval.getElem(2).getIntValue(),
 					nelems >= 4 ? tval.getElem(3).getIntValue() : 0);
 			from.setAttackTarget(trg, shnum);
-			return UsecodeValue.getOne();;
+			return UsecodeValue.getOne();
 		}
-		*/
 		return UsecodeValue.getZero();	// Failure.
 	}
 	private final UsecodeValue getLift(UsecodeValue p0) {
@@ -1382,6 +1380,18 @@ public class UsecodeIntrinsics extends GameSingletons {
 			new EffectsManager.SpritesEffect(p0.getIntValue(), tempTile,
 				p3.getIntValue(), p4.getIntValue(), 0,
 				p5.getIntValue(), p6.getIntValue()));
+	}
+	private final UsecodeValue attackObject(UsecodeValue p0, UsecodeValue p1,
+											UsecodeValue p2) {
+		// attack_object(attacker, target, wshape).
+		GameObject att = getItem(p0);
+		GameObject trg = getItem(p1);
+		int wshape = p2.getIntValue();
+		
+		if (att == null || trg == null)
+			return UsecodeValue.getZero();
+		boolean ok = CombatSchedule.attackTarget(att, trg, null, wshape, false, null);
+		return UsecodeValue.getBoolean(ok);
 	}
 	private final void bookMode(UsecodeValue p0) {
 		// Display book or scroll.
@@ -2193,7 +2203,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x53:
 			spriteEffect(parms[0], parms[1], parms[2],
 					parms[3], parms[4], parms[5], parms[6]); break;
-		//+++++++++++
+		case 0x54:
+			return attackObject(parms[0], parms[1], parms[2]);
 		case 0x55:
 			bookMode(parms[0]); break;
 		case 0x56:

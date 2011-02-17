@@ -91,12 +91,12 @@ public class CombatSchedule extends Schedule {
 			return false;
 		return npc.getInfo().canTeleport();
 	}
-	private static boolean Can_summon(Actor npc) {
+	private static boolean canSummon(Actor npc) {
 		if (npc.getFlag(GameObject.no_spell_casting))
 			return false;
 		return npc.getInfo().canSummon();
 	}
-	private static boolean Can_be_invisible(Actor npc) {
+	private static boolean canBeInvisible(Actor npc) {
 		if (npc.getFlag(GameObject.no_spell_casting))
 			return false;
 		return npc.getInfo().canBeInvisible();
@@ -158,6 +158,25 @@ public class CombatSchedule extends Schedule {
 		return true;
 	}
 	/*
+	 *	See if we need a new opponent.
+	 */
+	private boolean needNewOpponent(Actor npc) {
+		GameObject opponent = npc.getTarget();
+		Actor act;
+		MonsterInfo minf = npc.getInfo().getMonsterInfo();
+		boolean see_invisible = minf != null ?
+			(minf.getFlags() & (1<<MonsterInfo.see_invisible))!=0 : false;
+						// Nonexistent or dead?
+		if (opponent == null || 
+		    ((act = opponent.asActor()) != null && act.isDead()) ||
+						// Or invisible?
+		    (!see_invisible && opponent.getFlag(GameObject.invisible)
+				&& EUtil.rand()%4 == 0))
+			return true;
+						// See if off screen.
+		return offScreen(opponent) && !offScreen(npc);
+	}
+	/*
 	 *	Off-screen?
 	 */
 	private boolean offScreen(GameObject npc) {
@@ -166,8 +185,6 @@ public class CombatSchedule extends Schedule {
 		winRect.enlarge(2);
 		return (!winRect.hasPoint(npc.getTileX(), npc.getTileY()));
 	}
-	
-	
 	private static boolean isEnemy(int align, int other){
 		switch (align) {
 		case NpcActor.friendly:
@@ -607,7 +624,7 @@ public class CombatSchedule extends Schedule {
 		// At this point, we're within range, with state set.
 		/*++++++++FINISH
 		if (check_lof &&
-		    !Fast_pathfinder_client::is_straight_path(npc, opponent)) {
+		    !Fast_pathfinder_client.is_straight_path(npc, opponent)) {
 			state = approach;
 			approach_foe(true);	// Try to get adjacent.
 			return;
@@ -694,14 +711,74 @@ public class CombatSchedule extends Schedule {
 		int curtime = TimeQueue.ticks;
 		summonTime = curtime + 4000/TimeQueue.tickMsecs;
 		invisibleTime = curtime + 4500/TimeQueue.tickMsecs;
+		opponents = new Vector<Actor>();
+		nearby = new Vector<GameObject>();
+		winRect = new Rectangle();
+		npcPos = new Tile(); oppPos = new Tile();
+		ammoTemp = new GameObject[1];
 	}
-	// ++++monster_died
-	// ++++stop_attacking_npc
-	//++++stop_attacking_invisible
+	/*
+	 *	This (static) method is called when a monster dies.  It checks to
+	 *	see if there are still hostile NPC's around.  If not, it plays
+	 *	'victory' music.
+	 */
+	public static void monsterDied() {
+		if (battleEndTime >= battleTime)// Battle raging?
+			return;			// No, it's over.
+		Vector<GameObject> nearby = new Vector<GameObject>();// Get all nearby NPC's.
+		gwin.getMainActor().findNearbyActors(nearby, EConst.c_any_shapenum, 
+				2*EConst.c_tiles_per_chunk);
+		for (GameObject obj : nearby) {
+			Actor actor = (Actor)obj;
+			if (!actor.isDead() && 
+				actor.getAttackMode() != Actor.flee &&
+				actor.getEffectiveAlignment() >= NpcActor.hostile)
+				return;		// Still possible enemies.
+		}
+		battleEndTime = TimeQueue.ticks;
+						// Figure #seconds battle lasted.
+		int len = ((battleEndTime - battleTime)*TimeQueue.tickMsecs)/1000;
+		boolean hard = len > 15 && (EUtil.rand()%60 < len);
+		//+++++FINISH audio.startMusicCombat (hard ? CSBattle_Over : CSVictory, 0);
+	}
+	/*
+	 *	This (static) method is called to stop attacking a given NPC.
+	 *	This can happen because the NPC died, fell asleep or became
+	 *	invisible.
+	 */
+	public static void stopAttackingNpc(GameObject npc) {
+		Vector<GameObject> nearby = new Vector<GameObject>();// Get all nearby NPC's.
+		npc.findNearbyActors(nearby, EConst.c_any_shapenum, 
+									2*EConst.c_tiles_per_chunk);
+		for (GameObject obj : nearby) {
+			Actor actor = (Actor) obj;
+			if (actor.getTarget() == npc)
+				actor.setTarget(null);	
+		}		
+	}
+	/*
+	 *	This (static) method is called to stop attacking a given NPC.
+	 *	This can happen because the NPC died or fell asleep.
+	 */
+	private static void stopAttackingInvisible(GameObject npc) {
+		Vector<GameObject> nearby = new Vector<GameObject>();// Get all nearby NPC's.
+		npc.findNearbyActors(nearby, EConst.c_any_shapenum, 
+											2*EConst.c_tiles_per_chunk);
+		for (GameObject obj : nearby) {
+			Actor actor = (Actor)obj;
+			if (actor.getTarget() == npc) {
+				MonsterInfo minf = actor.getInfo().getMonsterInfo();
+				if (minf != null && 
+						(minf.getFlags() & (1<<MonsterInfo.see_invisible))==0)
+					actor.setTarget(null);
+			}
+		}
+	}
 	/*
 	 *	Set weapon 'max_range' and 'ammo'.  Ready a new weapon if needed.
 	 */
-	public final void setWeapon(boolean removed) {
+	@Override
+	public void setWeapon(boolean removed) {
 		WeaponInfo info = getWeapon();	// Set 'weapon', 'weaponShape'.
 		if (info == null && !removed &&	// No weapon?
 		    (spellbook = readiedSpellbook()) == null &&	// No spellbook?
@@ -747,11 +824,390 @@ public class CombatSchedule extends Schedule {
 	}
 	@Override
 	public void nowWhat() {
-		// TODO Auto-generated method stub
+		if (state == initial) {		// Do NOTHING in initial state so
+						//   usecode can, e.g., set opponent.
+						// Way far away (50 tiles)?
+			if (npc.distance(gwin.getCameraActor()) > 50) {
+				npc.setDormant();
+				return;		// Just go dormant.
+			}
+			state = approach;
+			npc.start(1, 1);
+			return;
+		}
+		if (npc.getFlag(GameObject.asleep)) {
+			npc.start(1, 5);	// Check again in a second.
+			return;
+		}
+						// Running away?
+		if (npc.getAttackMode() == Actor.flee) {
+						// If not in combat, stop running.
+			MonsterInfo minf = npc.getInfo().getMonsterInfo();
+			if (minf != null && minf.cantDie())
+				npc.setAttackMode(Actor.nearest, false);
+			else if (fleed > 2 && !gwin.inCombat() && 
+							npc.getPartyId() >= 0)
+						// WARNING:  Destroys ourself.
+				npc.setScheduleType(Schedule.follow_avatar);
+			else
+				runAway();
+			return;
+		}
+						// Check if opponent still breathes.
+		if (needNewOpponent(npc)) {
+			npc.setTarget(null);
+			state = approach;
+		}
+		GameObject opponent = npc.getTarget();
+		switch (state) {			// Note:  state's action has finished.
+		case approach:
+			if (opponent == null)
+				approachFoe(false);
+			else if (dexPoints >= dexToAttack) {
+				int effint = npc.getEffectiveProp(Actor.intelligence);
+				if (!npc.getFlag(GameObject.invisible) &&
+				    canBeInvisible(npc) && EUtil.rand()%300 < effint) {
+					beInvisible();
+					dexPoints -= dexToAttack;
+				} else if (canSummon(npc) && EUtil.rand()%600 < effint && 
+									summon())
+					dexPoints -= dexToAttack;
+				else
+					startStrike();
+			} else {
+				dexPoints += npc.getProperty(Actor.dexterity);
+				npc.start(1, 1);
+			}
+			break;
+		case strike:			// He hasn't moved away?
+			state = approach;
+						// Back into queue.
+			npc.start(1, 1);
+			Actor safenpc = npc;
+				// Change back to ready frame.
+			byte frame[] = new byte[1];
+			frame[0] = (byte)npc.getDirFramenum(Actor.ready_frame);
+			npc.setAction(new ActorAction.Frames(frame, 1, 1, null));
+			npc.start(1, 1);
+			if (attackTarget(npc, opponent, null, 
+								weaponShape, true, ammoTemp)) {
+						// Strike but once at objects.
+				GameObject newtarg = safenpc.getTarget();
+				if (newtarg != null && newtarg.asActor() == null)
+					safenpc.setTarget(null);
+				return;		// We may no longer exist!
+			}
+			break;
+		case fire:			// Range weapon.
+			failures = 0;
+			state = approach;
+			if (spellbook != null) {		// Cast the spell.
+				if (!spellbook.doSpell(npc, true))
+					setWeapon();
+			} else
+				attackTarget(npc, opponent, null, weaponShape, true, ammoTemp);
+			
+			int delay = 1;
+			if (spellbook != null) {
+				UsecodeScript scr = UsecodeScript.find(npc);
+				// Warning: assuming that the most recent script for the
+				// actor is the spellcasting script.
+				delay += (scr != null ? scr.getCount() : 0) + 2;
+			}
+				// Change back to ready frame.
+			byte frame2[] = new byte[1];
+			frame2[0] = (byte) npc.getDirFramenum(Actor.ready_frame);
+			npc.setAction(new ActorAction.Frames(frame2, 1, delay, null));
+			npc.start(1, delay);
 
+			// Strike but once at objects.
+			GameObject newtarg = npc.getTarget();
+			if (newtarg != null && newtarg.asActor() == null) {
+				npc.setTarget(null);
+				return;		// We may no longer exist!
+			}
+			break;
+		case wait_return:		// Boomerang should have returned.
+			state = approach;
+			dexPoints += npc.getProperty(Actor.dexterity);
+			npc.start(1, 1);
+			break;
+		default:
+			break;
+			}
+		if (failures > 5 && npc != gwin.getCameraActor()) {
+					// Too many failures.  Give up for now.
+			if (combatTrace) {
+				System.out.println(npc.getName() + " is giving up");
+			}
+			if (npc.getPartyId() >= 0) {		// Party member.
+				gwin.getMainActor().getTile(npcPos);
+				npc.walkToTile(npcPos, 1, 1);
+						// WARNING:  Destroys ourself.
+				npc.setScheduleType(Schedule.follow_avatar);
+			} else if (offScreen(npc)) {
+						// Off screen?  Stop trying.
+				tqueue.remove(npc);
+				npc.setDormant();
+			} else if (npc.getAlignment() == NpcActor.friendly &&
+					prevSchedule != Schedule.combat) {
+						// Return to normal schedule.
+				npc.updateSchedule(clock.getHour()/3, 7, -1);
+				if (npc.getScheduleType() == Schedule.combat)
+					npc.setScheduleType(prevSchedule);
+			} else {		// Wander randomly.
+				npc.getTile(npcPos);
+				int dist = 2+EUtil.rand()%3;
+				npcPos.tx = (short)(npcPos.tx - dist + EUtil.rand()%(2*dist));
+				npcPos.ty = (short)(npcPos.ty - dist + EUtil.rand()%(2*dist));
+						// Wait a bit.
+				
+				npc.walkToTile(npcPos, 2, (EUtil.rand()%1000)/TimeQueue.tickMsecs);
+			}
+		}
 	}
-	//+++++virtual void im_dormant();	// Npc calls this when it goes dormant.
-	//++++++virtual void ending(int newtype);// Switching to another schedule.
-	//+++++static bool attack_target(Game_object *attacker,
-	//++++++Game_object *target, Tile_coord tile, int weapon, bool combat = false);
+	@Override	// Npc calls this when it goes dormant.
+	public void imDormant() {
+		if (npc.getEffectiveAlignment() == NpcActor.friendly && 
+				prevSchedule != npc.getScheduleType() && 
+									(npc instanceof MonsterActor))
+							// Friendly, so end combat.
+				npc.setScheduleType(prevSchedule);
+	}
+	@Override 	// Switching to another schedule.
+	public void ending(int newtype) {
+		if (gwin.getMainActor() == npc && 
+				// Not if called from usecode.
+				!ucmachine.inUsecode()) { // See if being a coward.
+		findOpponents();
+		boolean found = false;	// Find a close-by enemy.
+		npc.getTile(npcPos);
+		for (Actor opp : opponents) {
+			if (opp.distance(npc) < (EConst.c_screen_tile_size/2 - 2) /* ++++FINISH &&
+					Fast_pathfinder_client.is_grabable(npc, opp) */) {
+				found = true;
+				break;
+			}
+		}
+		if (found)
+			;//+++++FINISH audio.start_music_combat(CSRun_Away, false);
+		}
+	}
+	public void setState(int s) {
+		state = s;
+	}
+	/*
+	 *	This static method causes the NPC to attack a given target/tile
+	 *	using the given weapon shape as weapon. This does not add
+	 *	an attack animation; rather, it is the actual strike attempt.
+	 *
+	 *	This function is called from (a) an intrinsic, (b) a script opcode
+	 *	or (c) the combat schedule.
+	 *
+	 *	Output:	Returns false the attack cannot be realized (no ammo,
+	 *	out of range, etc.) or if a melee attack misses, true otherwise.
+	 */
+	public static boolean attackTarget
+		(
+		GameObject attacker,		// Who/what is attacking.
+		GameObject target,		// Who/what is being attacked.
+		Tile tile,				// What tile is under fire, if no target.
+		int weapon,					// What is being used as weapon.
+									// or < 0 for none.
+		boolean combat,				// We got here from combat schedule.
+		GameObject ammoTemp[]		// Use this, or create if null.
+		) {
+		// Bail out if no attacker or if no target and no valid tile.
+		if (attacker == null || (target == null && (tile == null || tile.tx == -1)))
+			return false;
+
+		// Do not proceed if target is dead.
+		Actor att = attacker.asActor();
+		if (att != null && att.isDead())
+			return false;
+		boolean flash_mouse = !combat && att != null && gwin.getMainActor() == att
+				&& att.getAttackMode() != Actor.manual;
+
+		ShapeInfo info = ShapeID.getInfo(weapon);
+		WeaponInfo winf = weapon >= 0 ? info.getWeaponInfo() : null;
+
+		int reach;
+		int family = -1;	// Ammo, is needed, is the weapon itself.
+		int proj = -1;	// This is what we will use as projectile sprite.
+		if (winf == null) {
+			MonsterInfo minf = attacker.getInfo().getMonsterInfo();
+			reach = minf != null ? minf.getReach() 
+					: MonsterInfo.getDefault().getReach();
+		} else {
+			reach = winf.getRange();
+			proj = winf.getProjectile();
+			family = winf.getAmmoConsumed();
+		}
+		int dist = target != null ? attacker.distance(target) 
+								  : attacker.distance(tile);
+		boolean ranged = notInMeleeRange(winf, dist, reach);
+			// Out of range?
+		if (attacker.getEffectiveRange(winf, reach) < dist) {
+			// We are out of range.
+			if (flash_mouse)
+				Mouse.mouse.flashShape(Mouse.outofrange);
+			return false;
+		}
+			// See if we need ammo.
+		if (ammoTemp == null)
+			ammoTemp = new GameObject[1];
+		int need_ammo = attacker.getWeaponAmmo(weapon, family,
+				proj, ranged, ammoTemp, false);
+		GameObject ammo = ammoTemp[0];
+		if (need_ammo != 0 && ammo == null) {
+			if (flash_mouse)
+				Mouse.mouse.flashShape(Mouse.outofammo);
+			// We don't have ammo, so bail out.
+			return false;
+		}
+			// proj == -3 means use weapon shape for projectile sprite.
+		if (proj == -3)
+			proj = weapon;
+		AmmoInfo ainf;
+		int basesprite;
+		if (need_ammo != 0 && family >= 0) {
+				// ammo should be nonzero here.
+			ainf = ammo.getInfo().getAmmoInfo();
+			basesprite = ammo.getShapeNum();
+		} else {
+			ainf = info.getAmmoInfo();
+			basesprite = weapon;
+		}
+		if (ainf != null) {
+			int sprite = ainf.getSpriteShape();
+			if (sprite == -3)
+				proj = basesprite;
+			else if (sprite != -1 && sprite != ainf.getFamilyShape())
+				proj = sprite;
+		} else 
+			ainf = AmmoInfo.getDefault();	// So we don't need to keep checking.
+
+			// By now, proj should be >=0 or -1 for none.
+		assert(proj >= -1);
+		if (winf == null)	// So we don't have to keep checking.
+			winf = WeaponInfo.getDefault();
+		if (need_ammo != 0) {
+			// We should only ever get here for containers and NPCs.
+			// Also, ammo should never be zero in this branch.
+			boolean need_new_weapon = false;
+			boolean ready = att != null ? att.findReadied(ammo) >= 0 : false;
+
+			// Time to use up ammo.
+			if (winf.usesCharges()) {
+				if (ammo.getInfo().hasQuality())
+					ammo.setQuality(ammo.getQuality() - need_ammo);
+				if (winf.deleteDepleted() &&
+						(ammo.getQuality() == 0 || !ammo.getInfo().hasQuality())) {
+					// Call unready usecode if needed.
+					if (att != null)
+						att.remove(ammo);
+					ammo.removeThis();
+					need_new_weapon = true;
+				}
+			} else {
+				int quant = ammo.getQuantity();
+					// Call unready usecode if needed.
+				if (att != null && quant == need_ammo)
+					att.remove(ammo);
+				ammo.modifyQuantity(-need_ammo);
+				need_new_weapon = ammo.getQuantity() == 0;
+			}
+			if (att != null && need_new_weapon && ready) {
+				// Readied weapon was depleted; we need a new one.
+				if (winf.returns() || ainf.returns()) {
+						// Weapon will return, so wait for it.
+					if (combat) {	// We got here due to combat schedule.
+						Schedule s = att.getSchedule();
+						if (s instanceof CombatSchedule) 
+							((CombatSchedule)s).setState(wait_return);
+					}
+				} else if (att != null && !att.readyAmmo()) { // Try readying ammo first.
+					// Need new weapon.
+					att.readyBestWeapon();
+						// Tell schedule about it.
+					att.getSchedule().setWeapon(true);
+				}
+			}
+		}
+		Actor trg = target != null ? target.asActor() : null;
+		boolean trg_party = trg != null ? trg.getFlag(GameObject.in_party) : false;
+		boolean att_party = att != null ? att.getFlag(GameObject.in_party) : false;
+		int attval = att != null ? att.getEffectiveProp(Actor.combat) : 0;
+		// These two give the correct statistics:
+		attval += (winf.lucky() ? 3 : 0);
+		attval += (ainf.lucky() ? 3 : 0);
+		int bias = trg_party ? difficulty :
+				(att_party ? -difficulty : 0);
+		attval += 2*bias;	// Apply all bias to the attack value.
+		if (ranged) {
+			int uses = winf.getUses();
+			attval += 6;
+			// This seems reasonably close to how the originals do it,
+			// although the error bands of the statistics are too wide here.
+			if (uses == WeaponInfo.poor_thrown)
+				attval -= dist;
+			else if (uses == WeaponInfo.good_thrown)
+				attval -= dist/2;
+			// We need to pass the attack value here to guard against
+			// the possibility of the attacker's combat be lowered
+			// (e.g., due to being paralyzed) while the projectile is
+			// in flight and before it hits.
+			/* +++++FINISH
+			EffectsManager.Projectile projectile;
+			if (target != null)
+				projectile = new EffectsManager.Projectile(attacker, target, weapon,
+						ammo != null ? ammo.getShapeNum() : proj, proj, attval);
+			else
+				projectile = new EffectsManager.Projectile(attacker, tile, weapon,
+						ammo != null ? ammo.getShapeNum() : proj, proj, attval);
+			eman.addEffect(projectile);
+			*/
+			return true;
+		} else if (target != null) {
+			// Do nothing when attacking tiles in melee.
+			boolean autohit = winf.autohits() || ainf.autohits();
+			// godmode effects:
+			if (cheat.inGodMode())
+				autohit = trg_party ? false : (att_party ? true : autohit);
+			/* ++++++FINISH
+			if (!autohit && !target.tryToHit(attacker, attval))
+				return false;	// Missed.
+			*/
+			//++++++FINISH target.playHitSfx(weapon, false);
+			if (info.isExplosive()) {	// Powder keg.
+				// Blow up *instead*.
+				Tile pos = new Tile();
+				target.getTile(pos);
+				pos.tz += target.getInfo().get3dHeight()/2;
+				eman.addEffect(new EffectsManager.ExplosionEffect(pos,
+						target, 0, weapon, -1, attacker));
+			} else
+				target.attacked(attacker, weapon,
+						ammo != null ? ammo.getShapeNum() : -1, false);
+			return true;
+		}
+		return false;
+	}	
+	public static class Duel extends CombatSchedule {
+		private Tile start;		// Starting position.
+		private int attacks;			// Count strikes.
+		@Override
+		protected void findOpponents() {
+			//+++++++++FINISH
+		}
+		public Duel(Actor n) {
+			super(n, Schedule.duel);
+			n.getTile(start=new Tile());
+			startedBattle = true;		// Avoid playing music.
+		}
+		@Override
+		public void nowWhat() {
+			//+++++++++++++FINISH
+		}
+	}
 }

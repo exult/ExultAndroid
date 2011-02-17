@@ -23,7 +23,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		always_drop = 2
 		;	
 	public static final int is_binary = 1, entry_size = 13; 
-	public AmmoInfo getDefault() {
+	public static AmmoInfo getDefault() {
 		if (defaultInfo == null) {
 			defaultInfo = new AmmoInfo();
 			defaultInfo.familyShape =

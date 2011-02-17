@@ -479,9 +479,10 @@ public abstract class GameObject extends ShapeID {
 				newquant = MAX_QUANTITY;
 			}
 		else if (newquant <= 0) {		// Subtracting.
+			quality = (short)0;	// So caller knows.
 			removeThis();		// We're done for.
 			return (newquant);
-			}
+		}
 		int oldvol = getVolume();	// Get old volume used.
 		quality = (short) newquant;	// Store new value.
 		
@@ -502,6 +503,21 @@ public abstract class GameObject extends ShapeID {
 			owner.modifyVolumeUsed(getVolume() - oldvol);
 		*/
 		return (delta - (newquant - quant));
+	}
+	/*
+	 *	Get effective maximum range for weapon.
+	 */
+	public int getEffectiveRange(WeaponInfo winf, int reach) {
+		if (reach < 0) {
+			if (winf == null)
+				return 3;
+			reach = winf.getRange();
+		}
+		int uses = winf != null ? winf.getUses() : WeaponInfo.melee;
+		if (uses == 0 || uses == WeaponInfo.ranged)
+			return reach;
+		else
+			return 31;
 	}
 	static boolean hasHitpoints(int shnum) {
 		ShapeInfo info = ShapeID.getInfo(shnum);

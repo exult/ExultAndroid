@@ -80,7 +80,7 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 	public WeaponInfo() {
 	}
 	public static final int is_binary = 1, entry_size = 21;
-	static  WeaponInfo getDefault() {
+	public static  WeaponInfo getDefault() {
 		if (defaultInfo == null) {
 			defaultInfo = new WeaponInfo();
 		defaultInfo.missileSpeed = 1;
