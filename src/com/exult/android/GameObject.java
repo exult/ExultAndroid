@@ -647,10 +647,10 @@ public abstract class GameObject extends ShapeID {
 				else if (qual == 1)
 					npcnum = getLiveNpcNum();
 				Actor npc = gwin.getNpc(npcnum);
-				if (npc && !npc->is_unused() &&
-						(!info.is_body_shape() || npc->get_flag(Obj_flags::met)))
+				if (npc && !npc.is_unused() &&
+						(!info.is_body_shape() || npc.get_flag(Obj_flags.met)))
 					{
-					other = npc->get_npc_name_string();
+					other = npc.get_npc_name_string();
 					if (other.empty())	// No name.
 						defname = true;
 					else
@@ -913,69 +913,117 @@ public abstract class GameObject extends ShapeID {
 		int ammo_shape,			// < 0 for no ammo shape.
 		boolean explosion			// If this is an explosion attacking.
 		) {
-		return 0; /*++++++++++++FINISH
 		WeaponInfo winf;
-		AmmoAnfo ainf;
+		AmmoInfo ainf;
 
 		int wpoints = 0;
 		if (weapon_shape >= 0)
-			winf = ShapeID::get_info(weapon_shape).get_weapon_info();
+			winf = ShapeID.getInfo(weapon_shape).getWeaponInfo();
 		else
-			winf = 0;
+			winf = null;
 		if (ammo_shape >= 0)
-			ainf = ShapeID::get_info(ammo_shape).get_ammo_info();
+			ainf = ShapeID.getInfo(ammo_shape).getAmmoInfo();
 		else
-			ainf = 0;
-		if (!winf && weapon_shape < 0)
-			{
-			Actor *npc = attacker ? attacker->as_actor() : 0;
-			winf = npc ? npc->get_weapon(wpoints) : 0;
+			ainf = null;
+		if (winf == null && weapon_shape < 0) {
+			Actor npc = attacker != null ? attacker.asActor() : null;
+			GameObject w = npc != null ? npc.getWeapon() : null;
+			if (w != null) {
+				winf = w.getInfo().getWeaponInfo();
+				wpoints = winf.getDamage();
+			} else {
+				winf = null;
+				wpoints = 1;
 			}
-
+		}
 		int usefun = -1;
-		int type = Weapon_data::normal_damage;
-		bool explodes = false;
+		int type = WeaponInfo.normal_damage;
+		boolean explodes = false;
 
-		if (winf)
-			{
-			wpoints = winf->get_damage();
-			usefun = winf->get_usecode();
-			type = winf->get_damage_type();
-			explodes = winf->explodes();
-			}
-		else
+		if (winf != null) {
+			wpoints = winf.getDamage();
+			usefun = winf.getUsecode();
+			type = winf.getDamageType();
+			explodes = winf.explodes();
+		} else
 			wpoints = 1;	// Give at least one, but only if there's no weapon
-		if (ainf)
-			{
-			wpoints += ainf->get_damage();
+		if (ainf != null) {
+			wpoints += ainf.getDamage();
 				// Replace damage type.
-			if (ainf->get_damage_type() != Weapon_data::normal_damage)
-				type = ainf->get_damage_type();
-			explodes = explodes || ainf->explodes();
-			}
-
-		if (explodes && !explosion)	// Explosions shouldn't explode again.
-			{	// Time to explode.
-			Tile_coord offset(0, 0, get_info().get_3d_height()/2);
-			eman->add_effect(new Explosion_effect(get_tile() + offset,
+			if (ainf.getDamageType() != WeaponInfo.normal_damage)
+				type = ainf.getDamageType();
+			explodes = explodes || ainf.explodes();
+		}
+		if (explodes && !explosion) {	// Explosions shouldn't explode again.
+				// Time to explode.
+			/*+++++++FINISH
+			Tile_coord offset(0, 0, getInfo().get_3d_height()/2);
+			eman.add_effect(new Explosion_effect(get_tile() + offset,
 					0, 0, weapon_shape, ammo_shape, attacker));
+			*/
 			return -1;
-			}
-
+		}
 		int delta = 0;
-		int effstr = attacker && attacker->as_actor()
-			? attacker->as_actor()->get_effective_prop(Actor::strength) : 0;
-		if (winf && (winf->get_powers() & Weapon_data::no_damage) == 0)
-			delta = apply_damage(attacker, effstr, wpoints, type);
+		int effstr = (attacker != null && attacker.asActor() != null)
+			? attacker.asActor().getEffectiveProp(Actor.strength) : 0;
+		if (winf != null && (winf.getPowers() & WeaponInfo.no_damage) == 0)
+			delta = applyDamage(attacker, effstr, wpoints, type, 0, null);
 			
 			// Objects are not affected by weapon powers.
 
 			// Object may be in the remove list by this point.
 		if (usefun >= 0)
-			ucmachine->call_usecode(usefun, this,
-						Usecode_machine::weapon);
+			ucmachine.callUsecode(usefun, this,
+						UsecodeMachine.weapon);
 		return delta;
-		*/
+	}
+	/*
+	 *	This method should be called to cause damage from traps, attacks.
+	 *
+	 *	Output:	Hits taken. If exp is nonzero, experience value if defeated.
+	 */
+	public int applyDamage
+		(
+		GameObject attacker,	// Attacker, or null.
+		int str,		// Attack strength.
+		int wpoints,	// Weapon bonus.
+		int type,		// Damage type.
+		int bias,		// Different combat difficulty.
+		int exp[]
+		) {
+		if (exp != null)
+			exp[0] = 0;
+		int damage = 0;
+		if (wpoints == 127)
+			damage = 127;
+		else {
+			if (type != WeaponInfo.lightning_damage && str > 0) {
+				int base = str/3;
+				damage = base != 0 ? 1 + EUtil.rand()%base : 0;
+			}
+			if (wpoints > 0)
+				damage += (1 + EUtil.rand()%wpoints);
+		}
+		if (damage <= 0) {
+			int sfx = Audio.gameSfx(5);
+			new Animator.ObjectSfx(this, sfx, 0);
+			return 0;
+		}
+		return reduceHealth(damage, type, attacker, exp);
+	}
+	public void playHitSfx(int weapon, boolean ranged) {
+		WeaponInfo winf = weapon >= 0 ?
+			ShapeID.getInfo(weapon).getWeaponInfo() : null;
+		if (winf != null && winf.getDamage() != 0) {
+			int sfx;
+			if (ranged)
+				sfx = Audio.gameSfx(1);
+			else if (weapon == 604)	// Glass sword.
+				sfx = Audio.gameSfx(37);
+			else
+				sfx = Audio.gameSfx(4);
+			new Animator.ObjectSfx(this, sfx, 0);
+		}
 	}
 	/*
 	 *	Being attacked.

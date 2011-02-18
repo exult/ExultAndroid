@@ -1,5 +1,4 @@
 package com.exult.android;
-import java.util.LinkedList;
 import android.media.MediaPlayer;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -7,6 +6,8 @@ import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnCompletionListener;
 
 public final class Audio extends GameSingletons {
+	public static final int MIXER_CHANNELS = 32;	// Max. # channels.
+	public static final int MAX_VOLUME = 256, MAX_SOUND_FALLOFF = 24;
 	public final static int // enum Combat_song
 		CSBattle_Over = 0,
 		CSAttacked1 = 1,
@@ -16,15 +17,43 @@ public final class Audio extends GameSingletons {
 		CSDanger = 5,
 		CSHidden_Danger = 6;
 	public boolean debug = true;
-	private LinkedList<MediaPlayer> players = new LinkedList<MediaPlayer>();
-	private int currentTrack = -1;
+	private MediaPlayer players[] = new MediaPlayer[MIXER_CHANNELS];
+	private int currentTrack = -1, currentTrackInd = -1;
 	private errorListener err = new errorListener();
 	private completionListener completion = new completionListener();
 	private FlexFile sfxFile;
 	private static int bg2siSfxs[];
+	//	Find player index, or return -1;
+	private int findPlayer(MediaPlayer player) {
+		int cnt = players.length;
+		for (int i = 0; i < cnt; ++i)
+			if (players[i] == player)
+				return i;
+		return -1;
+	}
+	private MediaPlayer getPlayer(int ind) {
+		return (ind >= 0 && ind < players.length) ? players[ind] : null; 
+	}
+	private int addPlayer(MediaPlayer p) {
+		int cnt = players.length;
+		for (int i = 0; i < cnt; ++i) {
+			if (players[i] == null) {
+				players[i] = p;
+				return i;
+			} else if (!players[i].isPlaying()) {
+				players[i].release();
+				players[i] = p;
+				return i;
+			}
+		}
+		return -1;
+	}
 	private void release(MediaPlayer player) {
 		player.release();
-		players.remove(player);
+		int i = findPlayer(player);
+		if (i >= 0) {
+			players[i] = null;
+		}
 	}
 	public static Audio instanceOf() {
 		return audio;
@@ -60,21 +89,42 @@ public final class Audio extends GameSingletons {
 		bg2siSfxs = game.isSI() ? bgconv : null;
 	}
 	//	Play positioned at a given tile.
-	public void playSfx(int num, Tile t) {
+	public int playSfx(int num, Tile t) {
 		//++++++FINISH
-		playSfx(num);
+		return playSfx(num);
 	}
-	//	Play positioned at a given object..
-	public void playSfx(int num, GameObject obj) {
-		//++++++FINISH
-		playSfx(num);
+	//	Play positioned at a given object.
+	public int playSfx(int num, GameObject obj, int volume, int repeat) {
+		System.out.println("playSfx: " + num + ", vol = " + volume 
+				+ ", repeat = " + repeat);
+		//+++++++++FINISH
+		return playSfx(num);
 	}
-	public void playSfx(int num) {
+	public int playSfx(int num, GameObject obj) {
+		return playSfx(num, obj, MAX_VOLUME, 0);
+	}
+	// Return 'ind', or -1 if too far away.
+	public int updateSfx(int ind, GameObject obj) {
+		return ind; //++++++FINISH
+	}
+	public boolean isPlaying(int ind) {
+		return ind >= 0 && ind < players.length && players[ind] != null &&
+					players[ind].isPlaying();
+	}
+	public void stopSfx(int ind) {
+		MediaPlayer p = getPlayer(ind);
+		if (p != null) {
+			p.release();
+			players[ind] = null;
+		}
+	}
+	//	Returns channel/index or -1 if failed.
+	public int playSfx(int num) {
 		if (sfxFile == null)
-			return;
+			return -1;
 		byte data[] = sfxFile.retrieve(num);
 		String nm = null;
-		boolean failed = false;
+		int ind = -1;
 		if (data != null) 
 			try {
 				nm = EUtil.getSystemPath("<DATA>/tempsfx.wav");
@@ -82,19 +132,23 @@ public final class Audio extends GameSingletons {
 				out.write(data);
 				out.close();
 				if (debug) System.out.println("Audio: playing SFX #" + num);
-				playFile(nm, false);
+				ind = playFile(nm, false);
 			} catch (IOException e) {
 				System.out.println("Audio: Failed to play track: " + nm);
 			}
+		return ind;
 	}
 	public static int gameSfx(int sfx) {
 		return bg2siSfxs != null ? bg2siSfxs[sfx] : sfx;
 	}
 	// Stop all tracks.
 	public void stop() {
-		while (!players.isEmpty()) {
-			MediaPlayer player = players.remove();
-			player.release();
+		int cnt = players.length;
+		for (int i = 0; i < cnt; ++i) {
+			if (players[i] != null) {
+				players[i].release();
+				players[i] = null;
+			}
 		}
 		currentTrack = -1;
 	}
@@ -153,33 +207,39 @@ public final class Audio extends GameSingletons {
 			}
 		}
 		startMusic(num, continuous);
-	}
-	public void startMusic(int num, boolean repeat, String flex) {
+	}	
+	//	Returns channel/player index, or -1 if unsuccessful.
+	public int startMusic(int num, boolean repeat, String flex) {
 		if (debug)
 			System.out.println("Audio:  startMusic " + num + ", repeat = " + repeat);
 		// -1 and 255 are stop tracks
 		if (num == -1 || num == 255) {
 			stop();
-			return;
+			return -1;
 		}
 		// Already playing it??
-		if (currentTrack == num) {
+		if (currentTrack == num && currentTrackInd >= 0) {
 			// OGG is playing?
-			MediaPlayer player = players.getLast();
-			if (player.isPlaying())
-				return;
+			MediaPlayer player = players[currentTrackInd];
+			if (player != null && player.isPlaying())
+				return -1;
 		}
 		// Work around Usecode bug where track 0 is played at Intro Earthquake
 		if (num == 0 && flex == EFile.MAINMUS && game.isBG())
-			return;	
+			return -1;	
 		stop();
-		if (oggPlay(flex, num, repeat))
+		int ind = oggPlay(flex, num, repeat);
+		if (ind >= 0) {
+			currentTrackInd = ind;
 			currentTrack = num;
+		}
+		return ind;
 	}
-	public void	startMusic(int num, boolean repeat) {
-		startMusic(num, repeat, EFile.MAINMUS);
+	public int	startMusic(int num, boolean repeat) {
+		return startMusic(num, repeat, EFile.MAINMUS);
 	}
-	private boolean oggPlay(String filename, int num, boolean repeat) {
+	//	Returns channel/player index, or -1 if unsuccessful.
+	private int oggPlay(String filename, int num, boolean repeat) {
 		String ogg_name = "";
 		String basepath = "<MUSIC>/";
 
@@ -232,7 +292,8 @@ public final class Audio extends GameSingletons {
 			ogg_name = String.format("%1$02dmus.ogg", num);
 			basepath = "<STATIC>/music/";
 		}
-		if (ogg_name == "") return false;
+		if (ogg_name == "") 
+			return -1;
 		String nm = EUtil.U7exists("<PATCH>/music/" + ogg_name);
 		if (nm != null)
 			ogg_name = nm;
@@ -241,13 +302,15 @@ public final class Audio extends GameSingletons {
 		}
 		return playFile(ogg_name, repeat);
 	}
-	private boolean playFile(String fname, boolean repeat) {
+	//	Returns player/channel index, or -1 if failed.
+	private int playFile(String fname, boolean repeat) {
 		MediaPlayer player = null;
+		int ind = -1;
 		if (debug)
 			System.out.println("Audio: Music track " + fname);
 		try {
 			player = new MediaPlayer();
-			players.addLast(player);
+			ind = addPlayer(player);
 			player.setOnErrorListener(err);
 			player.setOnCompletionListener(completion);
 			player.setDataSource(fname);
@@ -260,9 +323,9 @@ public final class Audio extends GameSingletons {
 			if (player != null) {
 				release(player);
 			}
-			return false;
+			return -1;
 		}
-		return  true;
+		return  ind;
 	}
 	private static class errorListener implements android.media.MediaPlayer.OnErrorListener {
 		public boolean onError(MediaPlayer mp, int what, int extra) {

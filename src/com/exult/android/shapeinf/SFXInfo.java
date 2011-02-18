@@ -25,9 +25,9 @@ public class SFXInfo extends BaseInfo {
 		{ return extra > -1; }
 	public int getExtraSfx() 
 		{ return extra; }
-	public int get_sfx_range() 
+	public int getSfxRange() 
 		{ return range; }
-	public boolean time_to_play() 
+	public boolean timeToPlay() 
 		{ return EUtil.rand()%100 < chance; }
 	public int getNextSfx(int last) {	//++++NOTE: SB int& last
 		if (range > 1) {

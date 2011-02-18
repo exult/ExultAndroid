@@ -1845,7 +1845,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Play music(songnum, item).
 		GameObject obj = getItem(p1);
 		int sfxnum = p0.getIntValue();
-		// +++++FINISH new Object_sfx(obj, p0.getIntValue());
+		new Animator.ObjectSfx(obj, p0.getIntValue(), 0);
 		audio.playSfx(sfxnum);	// +++++FOR NOW
 	}
 	private final static boolean isMovingBargeFlag(int fnum) {

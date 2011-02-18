@@ -194,7 +194,7 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 				else
 					// Continuous.
 					play = true;
-				//++++++++FINISH objsfx.update(play);
+				objsfx.update(play);
 			}
 			// Add back to queue for next time.
 			if (animating)
@@ -209,12 +209,27 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 	 *	Just play SFX.
 	 */
 	public static class Sfx extends Animator {
+		private Rectangle rect = new Rectangle();
 		public Sfx(GameObject o) {
 			super(o);
 		}
 						// For Time_sensitive:
 		public void handleEvent(int time, Object udata) {
-			//++++++FINISH
+			final int delay = 1;		// Guessing this will be enough.
+			gwin.getShapeRect(rect, obj);
+			gwin.clipToWin(rect);
+			if (rect.w <= 0 || rect.h <= 0) {	// No longer on screen.
+				animating = false;
+				// Stop playing sound.
+				if (objsfx != null)
+					objsfx.stop();
+				return;
+			}
+			if (objsfx != null)		// Sound effect?
+				objsfx.update(true);
+							// Add back to queue for next time.
+			if (animating)
+				tqueue.add(time + delay, this, udata);
 		}
 	}
 	/*
@@ -264,40 +279,176 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 	/*
 	 *	A class for playing sound effects when certain objects are nearby.
 	 */
-	public static class ShapeSfx extends GameSingletons
-		{
-		GameObject obj;		// Object that caused the sound.
-		/* ++++++++FINISH
-		SFX_info *sfxinf;
-		int channel[2];			// ID of sound effect being played.
-		int distance;			// Distance in tiles from Avatar.
-		int dir;			// Direction (0-15) from Avatar.
-		int last_sfx;		// For playing sequential sfx ranges.
-		bool looping;		// If the SFX should loop until stopped.
-		*/
-						// Create & start playing sound.
+	public static class ShapeSfx extends GameSingletons {
+		private static Rectangle rangeRect = new Rectangle();	// Temp.
+		private static Tile pos = new Tile(), cent = new Tile();// Temps.
+		private GameObject obj;		// Object that caused the sound.
+		private SFXInfo sfxinf;
+		private int channel[] = new int[2];			// ID of sound effect being played.
+		private int distance;			// Distance in tiles from Avatar.
+		//UNUSED private int dir;			// Direction (0-15) from Avatar.
+		private int lastSfx;		// For playing sequential sfx ranges.
+		private boolean looping;		// If the SFX should loop until stopped.
+		public static boolean getSfxOutOfRange(GameObject obj) {
+			gwin.getWinTileRect(rangeRect);
+			Rectangle size = rangeRect;
+			pos.set(size.x+size.w/2,size.y+size.h/2,
+					gwin.getCameraActor().getLift());
+			obj.getCenterTile(cent);
+			return pos.squareDistanceScreenSpace(cent) > 
+			(Audio.MAX_SOUND_FALLOFF*Audio.MAX_SOUND_FALLOFF);
+		}
+										// Create & start playing sound.
 		public ShapeSfx(GameObject o) {
 			obj = o;
-		}
-			/* +++++++FINISH
-			: obj(o), distance(0), last_sfx(-1)
-			{
+			lastSfx = -1;
 			channel[0] = channel[1] = -1;
-			sfxinf = obj.get_info().get_sfx_info();
-			if (sfxinf)
-				last_sfx = 0;
-			set_looping();	// To avoid including sfxinf.h.
-			}
+			sfxinf = obj.getInfo().getSfxInfo();
+			if (sfxinf != null)
+				lastSfx = 0;
+			setLooping();	// To avoid including sfxinf.h.
+		}
 		int getSfxnum()
 			{ return lastSfx; }
-		int get_distance()
+		int getDistance()
 			{ return distance; }
-		void update(boolean play);	// Set to new object.
-		void set_looping();
-		*/
+		void update(boolean play) {	// Set to new object.
+			if (obj.isPosInvalid()) { 			// Not on map.
+				stop();
+				return;
+			}
+			if (sfxinf == null)
+				return;
+			if (looping)
+				play = true;
+			boolean active[] = {false, false};
+			for (int i = 0; i < channel.length; i++) {
+				if (channel[i] != -1)
+					active[i] = audio.isPlaying(channel[i]);
+				if (active[i] && channel[i] != -1) {
+					audio.stopSfx(channel[i]);
+					channel[i] = -1;
+				}
+			}
+			// If neither channel is playing, and we are not going to
+			// play anything now, we have nothing to do.
+			if (!play && channel[0] == -1 && channel[1] == -1)
+				return;
+			int sfxnum[] = {-1, -1};
+			if (play && channel[0] == -1) {
+				if (!sfxinf.timeToPlay())
+					return;
+				sfxnum[0] = sfxinf.getNextSfx(lastSfx);
+			}
+			System.out.println("ShapeSfx.update: play = " + sfxnum[0] +
+					", " + sfxnum[1]);
+
+			int rep[] = {looping ? -1 : 0, 0};
+			if (play && channel[1] == -1 && sfxinf.playHourlyTicks()) {
+			if (clock.getMinute() == 0) {
+					// Play sfx.extra every hour for reps = hour
+				int reps = clock.getHour()%12;
+				rep[1] = (reps != 0 ? reps : 12) - 1;
+				sfxnum[1] = sfxinf.getExtraSfx();
+				}
+			}
+			//UNUSED dir = 0;
+			int volume = Audio.MAX_VOLUME;	// Set volume based on distance.
+			boolean halt = getSfxOutOfRange(obj);
+			if (play && halt)
+				play = false;
+
+			for (int i = 0; i < channel.length; i++) {
+				if (play && channel[i] == -1 && sfxnum[i] > -1)		// First time?
+							// Start playing.
+					channel[i] = audio.playSfx(sfxnum[i], obj, volume, rep[i]);
+				else if (channel[i] != -1) {
+					if(halt) {
+						audio.stopSfx(channel[i]);
+						channel[i] = -1;
+					} else {
+						channel[i] = audio.updateSfx(channel[i], obj);
+					}
+				}
+			}
+		}
+		void setLooping() {
+			looping = sfxinf != null ? (sfxinf.getSfxRange() == 1
+                    && sfxinf.getChance() == 100
+                    && !sfxinf.playHourlyTicks())
+                 : false;
+		}
 		void stop() {
-			//+++++++FINISH
+			for (int i = 0; i < channel.length; i++) {
+			if(channel[i] >= 0) {
+				audio.stopSfx(channel[i]);
+				channel[i] = -1;
+				}
+			}
 		}
 	}
+	/*
+	 *	A class for playing sound effects that get updated by position
+	 *	and distance. Adds itself to time-queue, deletes itself when done.
+	 */
+	public static class ObjectSfx 
+				extends GameSingletons implements TimeSensitive {
+		private GameObject obj;	// Object that caused the sound.
+		private int timeQueueCount;
+		private int sfx;			// ID of sound effect being played.
+		private int channel;		// Channel of sfx being played.
+		public ObjectSfx(GameObject o, int sx, int delay) {
+			obj = o; sfx = sx; channel = -1;
+			tqueue.add(TimeQueue.ticks + delay, this, gwin);
+		}
+		public void stop() {
+			while (tqueue.remove(this))
+				;
+			if (channel >= 0) {
+				audio.stopSfx(channel);
+				channel = -1;
+			}
+		}
+		public int getSfxnum()
+			{ return sfx; }
+		public void handleEvent(int curtime, Object udata) {
+			final int delay = 1;		// Guessing this will be enough.
+			boolean active = channel != -1 ? audio.isPlaying(channel) : false;
 
+			if (obj.isPosInvalid()) { // || (distance >= 0 && !active))
+				stop();// Quitting time.
+				return;
+			}
+			int volume = Audio.MAX_VOLUME;	// Set volume based on distance.
+			boolean halt = ShapeSfx.getSfxOutOfRange(obj);
+
+			if (!halt && channel == -1 && sfx > -1)		// First time?
+							// Start playing.
+				channel = audio.playSfx(sfx, obj, volume, 0);
+			else if (channel != -1) {
+				if (halt) {
+					audio.stopSfx(channel);
+					channel = -1;
+				} else {
+					channel = audio.updateSfx(channel,obj);
+				}
+			}
+			if (channel != -1)
+				tqueue.add(curtime + delay, this, udata);
+			else
+				stop();
+		}
+		@Override
+		public void addedToQueue() {
+			++timeQueueCount;
+		}
+		@Override
+		public boolean alwaysHandle() {
+			return false;
+		}
+		@Override
+		public void removedFromQueue() {
+			--timeQueueCount;
+		}
+	}
 }

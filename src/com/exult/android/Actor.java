@@ -1336,7 +1336,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				winf = weapon.getInfo().getWeaponInfo();
 				if (winf != null)
 					wpoints = winf.getDamage();
-			}
+			} else
+				wpoints = 1;	// Bare hands.
 		}
 		int usefun = -1, powers = 0;
 		int type = WeaponInfo.normal_damage;
@@ -1717,6 +1718,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *
 	 *	Output:	Hits taken. If exp is nonzero, experience value if defeated.
 	 */
+	@Override
 	public int applyDamage
 		(
 		GameObject attacker,	// Attacker, or null.
@@ -1761,7 +1763,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// Armor gives immunity.
 						// Metal clang.
 					int sfx = Audio.gameSfx(5);
-					//++++++++++FINISH new ObjectSfx(this, sfx);
+					new Animator.ObjectSfx(this, sfx, 0);
 						// Attack back anyway.
 					fightBack(attacker);
 					return 0;	// No damage == no powers.
@@ -1790,7 +1792,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		if (damage <= 0) {	// No damage caused.
 			int sfx = Audio.gameSfx(5);
-			//++++++FINISH new ObjectSfx(this, sfx);
+			new Animator.ObjectSfx(this, sfx, 0);
 
 				// Flash red outline.
 			hit = true;

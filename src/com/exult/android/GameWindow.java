@@ -1179,7 +1179,8 @@ public class GameWindow extends GameSingletons {
 		numNpcs = numNpcs1 + EUtil.Read2(nfile);
 		mainActor.read(nfile, 0, false);
 		npcs.setSize(numNpcs);
-		// ++++++bodies.resize(num_npcs);
+		if (bodies != null)
+			bodies.setSize(numNpcs);
 		int i;
 		centerView(mainActor.getTileX(), mainActor.getTileY());
 		for (i = 1; i < numNpcs; i++) {	// Create the rest.
@@ -1392,7 +1393,8 @@ public class GameWindow extends GameSingletons {
 		//++++++FINISH theftCx = theftCy = -1;
 		combat = false;
 		npcs.setSize(0);			// NPC's already deleted above.
-		bodies.setSize(0);
+		if (bodies != null)
+			bodies.setSize(0);
 		movingBarge = null;		// Get out of barge mode.
 		specialLight = 0;		// Clear out light spells.
 		ambientLight = false;	// And ambient lighting.

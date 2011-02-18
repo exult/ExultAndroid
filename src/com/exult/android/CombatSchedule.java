@@ -147,7 +147,7 @@ public class CombatSchedule extends Schedule {
 	 *	Some can turn invisible.
 	 */
 	protected boolean beInvisible() {
-		//+++++FINISH new ObjectSfx(npc, Audio.gameSfx(44));
+		new Animator.ObjectSfx(npc, Audio.gameSfx(44), 0);
 		eman.addEffect(
 			new EffectsManager.SpritesEffect(12, npc, 0, 0, 0, 0, 0, -1));
 		npc.setFlag(GameObject.invisible);
@@ -650,7 +650,7 @@ public class CombatSchedule extends Schedule {
 		}
 		if (sfx >= 0) {
 			int delay = ranged ? cnt : cnt/2;
-			//+++++++FINISH new Object_sfx(npc, sfx, delay);
+			new Animator.ObjectSfx(npc, sfx, delay);
 		}
 		dexPoints -= dexToAttack;
 	}
