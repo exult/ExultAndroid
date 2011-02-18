@@ -24,6 +24,7 @@ public class BodyInfo extends BaseInfo {
 		return true;
 		}
 		bframe = EUtil.ReadInt(txtin);
+		//System.out.println("BodyInfo: shape = " + bshape + ", frame = " + bframe);
 		return true;
 	}
 	@Override

@@ -430,6 +430,25 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 						// Reflect.  Bit 32==horizontal.
 			return curframe ^ ((quads%2)<<5);
 	}
+	//	Read Exult text data for bodies.
+	private static void readBodiesTextDataFile(ShapeInfo info[], 
+						DataUtils.IDReaderFunctor idReader, int game) {
+		final String sections[] = {"bodyshapes", "bodylist"};
+		final DataUtils.BaseReader readers[] = {
+				new DataUtils.FunctorMultidataReader(info,
+						new ShapeFlagsReader(is_body), null, idReader, false),
+				new DataUtils.FunctorMultidataReader(info,
+						new BodyInfo(), null, idReader, false)
+		};
+		assert(sections.length == readers.length);
+		int flxres = game == EConst.BLACK_GATE ?
+				EFile.EXULT_BG_FLX_BODIES_TXT : EFile.EXULT_SI_FLX_BODIES_TXT;
+		try {
+			DataUtils.readTextDataFile("bodies", readers, sections, game, flxres);
+		} catch (IOException e) {
+			ExultActivity.fatal("Failed to read \"bodies\" data");
+		}
+	}
 	//	Read in Exult text data.
 	private static void readShapeInfoTextDataFile(ShapeInfo info[], 
 						DataUtils.IDReaderFunctor idReader, int game) {
@@ -667,6 +686,7 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 		ready.read(EFile.PATCH_READY, true, game);
 		// Text files.
 		readShapeInfoTextDataFile(info, idReader, game);
+		readBodiesTextDataFile(info, idReader, game);
 		// Ensure valid ready spots for all shapes.
 		byte defready = (byte) (game == EConst.BLACK_GATE
 								? Ready.backpack : Ready.rhand);
