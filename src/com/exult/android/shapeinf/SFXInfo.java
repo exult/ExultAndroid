@@ -27,15 +27,19 @@ public class SFXInfo extends BaseInfo {
 		{ return extra; }
 	public int getSfxRange() 
 		{ return range; }
-	public boolean timeToPlay() 
-		{ return EUtil.rand()%100 < chance; }
-	public int getNextSfx(int last) {	//++++NOTE: SB int& last
+	public boolean timeToPlay()  { 
+		return EUtil.rand()%100 < chance; 
+	}
+	//	Get next.  If prev == -1, we get the first.
+	public int getNextSfx(int prev) {
 		if (range > 1) {
 			if (random)
 				return sfxnum + (EUtil.rand() % range);
 			else {
-				last = (last + 1) % range;
-				return sfxnum + last;
+				if (prev == -1)
+					return sfxnum;
+				int ind = (prev - sfxnum + 1) % range; 
+				return sfxnum + ind;
 			}
 		}
 		return sfxnum;
@@ -59,7 +63,9 @@ public class SFXInfo extends BaseInfo {
 				range = 1;		// Sensible default.
 			random = EUtil.ReadInt(txtin, 0) != 0;
 			extra = EUtil.ReadInt(txtin, -1);
-		}
+		}			
+		//System.out.printf("SFXInfo: chance = %1$d, range = %2$d\n", chance, range);
+		info.setSfxInfo(this);
 		return true;
 	}
 	@Override

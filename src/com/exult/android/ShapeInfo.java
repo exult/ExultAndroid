@@ -173,6 +173,9 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 	public SFXInfo getSfxInfo() {
 		return sfxinf; 
 	}
+	public void setSfxInfo(SFXInfo i) {
+		sfxinf = i;
+	}
 	boolean hasExplosionInfo() {
 		return explosion != null; 
 	}
@@ -192,6 +195,9 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 	}
 	public BodyInfo getBodyInfo() {
 		return body; 
+	}
+	public void setBodyInfo(BodyInfo i) {
+		body = i;
 	}
 /*++++++++FINISH
 bool has_paperdoll_info() {;

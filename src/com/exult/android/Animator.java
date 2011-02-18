@@ -280,6 +280,7 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 	 *	A class for playing sound effects when certain objects are nearby.
 	 */
 	public static class ShapeSfx extends GameSingletons {
+		public static boolean off = true;
 		private static Rectangle rangeRect = new Rectangle();	// Temp.
 		private static Tile pos = new Tile(), cent = new Tile();// Temps.
 		private GameObject obj;		// Object that caused the sound.
@@ -287,7 +288,7 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 		private int channel[] = new int[2];			// ID of sound effect being played.
 		private int distance;			// Distance in tiles from Avatar.
 		//UNUSED private int dir;			// Direction (0-15) from Avatar.
-		private int lastSfx;		// For playing sequential sfx ranges.
+		private int curSfx;		// For playing sequential sfx ranges.
 		private boolean looping;		// If the SFX should loop until stopped.
 		public static boolean getSfxOutOfRange(GameObject obj) {
 			gwin.getWinTileRect(rangeRect);
@@ -301,15 +302,11 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 										// Create & start playing sound.
 		public ShapeSfx(GameObject o) {
 			obj = o;
-			lastSfx = -1;
+			curSfx = -1;
 			channel[0] = channel[1] = -1;
 			sfxinf = obj.getInfo().getSfxInfo();
-			if (sfxinf != null)
-				lastSfx = 0;
 			setLooping();	// To avoid including sfxinf.h.
 		}
-		int getSfxnum()
-			{ return lastSfx; }
 		int getDistance()
 			{ return distance; }
 		void update(boolean play) {	// Set to new object.
@@ -317,7 +314,7 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 				stop();
 				return;
 			}
-			if (sfxinf == null)
+			if (off || sfxinf == null)
 				return;
 			if (looping)
 				play = true;
@@ -338,10 +335,10 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 			if (play && channel[0] == -1) {
 				if (!sfxinf.timeToPlay())
 					return;
-				sfxnum[0] = sfxinf.getNextSfx(lastSfx);
+				sfxnum[0] = curSfx = sfxinf.getNextSfx(curSfx);
 			}
-			System.out.println("ShapeSfx.update: play = " + sfxnum[0] +
-					", " + sfxnum[1]);
+			//System.out.println("ShapeSfx.update: play = " + sfxnum[0] +
+			//		", " + sfxnum[1]);
 
 			int rep[] = {looping ? -1 : 0, 0};
 			if (play && channel[1] == -1 && sfxinf.playHourlyTicks()) {
