@@ -74,10 +74,8 @@ public class CombatSchedule extends Schedule {
 		int curtime = TimeQueue.ticks;
 						// .5 minute since last start?
 		if (curtime - battleTime >= 30000/TimeQueue.tickMsecs) {
-			/* +++++FINISH
-			audio.startMusicCombat(EUtil.rand()%2 ? 
-						CSAttacked1 : CSAttacked2, 0);
-			*/
+			audio.startMusicCombat(EUtil.rand()%2 != 0 ? 
+						Audio.CSAttacked1 : Audio.CSAttacked2, false);
 			battleTime = curtime;
 			battleEndTime = curtime - 1;
 		}
@@ -130,7 +128,7 @@ public class CombatSchedule extends Schedule {
 			src.tz = 0;
 		//+++++ FINISH eman.add_effect(new FireFieldEffect(src));
 		int sfx = audio.gameSfx(43);
-		audio.playSfx(sfx /* ++++FINISH, npc */);	// The weird noise.
+		audio.playSfx(sfx, npc);	// The weird noise.
 		npc.move(dest.tx, dest.ty, dest.tz);
 						// Show the stars.
 		eman.addEffect(new EffectsManager.SpritesEffect(7, npc, 0, 0, 0, 0, 0, -1));
@@ -637,7 +635,6 @@ public class CombatSchedule extends Schedule {
 		}
 		int dir = npc.getDirection(opponent);
 		byte frames[] = new byte[12];
-		//++++signed char frames[12];		// Get frames to show.
 		int cnt = npc.getAttackFrames(weaponShape, ranged, dir, frames);
 		if (cnt != 0)
 			npc.setAction(new ActorAction.Frames(frames, cnt, 1, null));
@@ -739,7 +736,8 @@ public class CombatSchedule extends Schedule {
 						// Figure #seconds battle lasted.
 		int len = ((battleEndTime - battleTime)*TimeQueue.tickMsecs)/1000;
 		boolean hard = len > 15 && (EUtil.rand()%60 < len);
-		//+++++FINISH audio.startMusicCombat (hard ? CSBattle_Over : CSVictory, 0);
+		audio.startMusicCombat (hard ? Audio.CSBattle_Over : Audio.CSVictory, 
+				false);
 	}
 	/*
 	 *	This (static) method is called to stop attacking a given NPC.
@@ -979,18 +977,18 @@ public class CombatSchedule extends Schedule {
 		if (gwin.getMainActor() == npc && 
 				// Not if called from usecode.
 				!ucmachine.inUsecode()) { // See if being a coward.
-		findOpponents();
-		boolean found = false;	// Find a close-by enemy.
-		npc.getTile(npcPos);
-		for (Actor opp : opponents) {
-			if (opp.distance(npc) < (EConst.c_screen_tile_size/2 - 2) /* ++++FINISH &&
+			findOpponents();
+			boolean found = false;	// Find a close-by enemy.
+			npc.getTile(npcPos);
+			for (Actor opp : opponents) {
+				if (opp.distance(npc) < (EConst.c_screen_tile_size/2 - 2) /* ++++FINISH &&
 					Fast_pathfinder_client.is_grabable(npc, opp) */) {
 				found = true;
 				break;
+				}
 			}
-		}
 		if (found)
-			;//+++++FINISH audio.start_music_combat(CSRun_Away, false);
+			audio.startMusicCombat(Audio.CSRun_Away, false);
 		}
 	}
 	public void setState(int s) {

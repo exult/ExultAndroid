@@ -7,6 +7,14 @@ import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnCompletionListener;
 
 public final class Audio extends GameSingletons {
+	public final static int // enum Combat_song
+		CSBattle_Over = 0,
+		CSAttacked1 = 1,
+		CSAttacked2 = 2,
+		CSVictory = 3,
+		CSRun_Away = 4,
+		CSDanger = 5,
+		CSHidden_Danger = 6;
 	public boolean debug = true;
 	private LinkedList<MediaPlayer> players = new LinkedList<MediaPlayer>();
 	private int currentTrack = -1;
@@ -51,6 +59,16 @@ public final class Audio extends GameSingletons {
 		}
 		bg2siSfxs = game.isSI() ? bgconv : null;
 	}
+	//	Play positioned at a given tile.
+	public void playSfx(int num, Tile t) {
+		//++++++FINISH
+		playSfx(num);
+	}
+	//	Play positioned at a given object..
+	public void playSfx(int num, GameObject obj) {
+		//++++++FINISH
+		playSfx(num);
+	}
 	public void playSfx(int num) {
 		if (sfxFile == null)
 			return;
@@ -85,6 +103,56 @@ public final class Audio extends GameSingletons {
 	}
 	public int getCurrentTrack() {
 		return currentTrack;
+	}
+	//	Play from the 'Combat_song' list above.
+	public void startMusicCombat(int song, boolean continuous) {
+		int num = -1;
+		if (!game.isSI()) {
+			switch (song){
+			case CSBattle_Over:
+				num = 9; break;
+			case CSAttacked1:
+				num = 11; break;
+			case CSAttacked2:
+				num = 12; break;
+			case CSVictory:
+				num = 15; break;
+			case CSRun_Away:
+				num = 16; break;
+			case CSDanger:
+				num = 10;
+				break;
+			case CSHidden_Danger:
+				num = 18;
+				break;
+			default:
+				System.out.println(
+					"Error: Unable to Find combat track for song " + song + ".");
+				break;
+			}
+		} else  {
+			switch (song) {
+			case CSBattle_Over:
+				num = 0; break;
+			case CSAttacked1:
+				num = 2; break;
+			case CSAttacked2:
+				num = 3; break;
+			case CSVictory:
+				num = 6; break;
+			case CSRun_Away:
+				num = 7; break;
+			case CSDanger:
+				num = 1; break;
+			case CSHidden_Danger:
+				num = 9; break;
+			default:
+				System.out.println(
+						"Error: Unable to Find combat track for song " + song + ".");
+				break;
+			}
+		}
+		startMusic(num, continuous);
 	}
 	public void startMusic(int num, boolean repeat, String flex) {
 		if (debug)
