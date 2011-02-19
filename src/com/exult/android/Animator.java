@@ -280,7 +280,7 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 	 *	A class for playing sound effects when certain objects are nearby.
 	 */
 	public static class ShapeSfx extends GameSingletons {
-		public static boolean off = true;
+		public static boolean off = false;
 		private static Rectangle rangeRect = new Rectangle();	// Temp.
 		private static Tile pos = new Tile(), cent = new Tile();// Temps.
 		private GameObject obj;		// Object that caused the sound.
@@ -322,11 +322,12 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 			for (int i = 0; i < channel.length; i++) {
 				if (channel[i] != -1)
 					active[i] = audio.isPlaying(channel[i]);
-				if (active[i] && channel[i] != -1) {
+				if (!active[i] && channel[i] != -1) {
 					audio.stopSfx(channel[i]);
 					channel[i] = -1;
 				}
 			}
+			//System.out.println("channel[0] = " + channel[0] + ", active: " + active[0]);
 			// If neither channel is playing, and we are not going to
 			// play anything now, we have nothing to do.
 			if (!play && channel[0] == -1 && channel[1] == -1)
@@ -342,11 +343,11 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 
 			int rep[] = {looping ? -1 : 0, 0};
 			if (play && channel[1] == -1 && sfxinf.playHourlyTicks()) {
-			if (clock.getMinute() == 0) {
+				if (clock.getMinute() == 0) {
 					// Play sfx.extra every hour for reps = hour
-				int reps = clock.getHour()%12;
-				rep[1] = (reps != 0 ? reps : 12) - 1;
-				sfxnum[1] = sfxinf.getExtraSfx();
+					int reps = clock.getHour()%12;
+					rep[1] = (reps != 0 ? reps : 12) - 1;
+					sfxnum[1] = sfxinf.getExtraSfx();
 				}
 			}
 			//UNUSED dir = 0;
@@ -356,14 +357,16 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 				play = false;
 
 			for (int i = 0; i < channel.length; i++) {
-				if (play && channel[i] == -1 && sfxnum[i] > -1)		// First time?
+				if (play && channel[i] == -1 && sfxnum[i] > -1) {	// First time?
 							// Start playing.
+					// System.out.println("channel " + i + ", sfx = " + sfxnum[i]);
 					channel[i] = audio.playSfx(sfxnum[i], obj, volume, rep[i]);
-				else if (channel[i] != -1) {
+				} else if (channel[i] != -1) {
 					if(halt) {
 						audio.stopSfx(channel[i]);
 						channel[i] = -1;
 					} else {
+						// System.out.println("Update channel " + i);
 						channel[i] = audio.updateSfx(channel[i], obj);
 					}
 				}
@@ -409,7 +412,7 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 		public int getSfxnum()
 			{ return sfx; }
 		public void handleEvent(int curtime, Object udata) {
-			final int delay = 1;		// Guessing this will be enough.
+			final int delay = 3;		// Guessing this will be enough.
 			boolean active = channel != -1 ? audio.isPlaying(channel) : false;
 
 			if (obj.isPosInvalid()) { // || (distance >= 0 && !active))

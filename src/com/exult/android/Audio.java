@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnCompletionListener;
+import android.media.AudioTrack;
+import android.media.AudioManager;
+import android.media.AudioFormat;
 
 public final class Audio extends GameSingletons {
 	public static final int MIXER_CHANNELS = 32;	// Max. # channels.
@@ -91,14 +94,14 @@ public final class Audio extends GameSingletons {
 	//	Play positioned at a given tile.
 	public int playSfx(int num, Tile t) {
 		//++++++FINISH
-		return playSfx(num);
+		return playSfx(num, 0);
 	}
 	//	Play positioned at a given object.
 	public int playSfx(int num, GameObject obj, int volume, int repeat) {
 		System.out.println("playSfx: " + num + ", vol = " + volume 
 				+ ", repeat = " + repeat);
 		//+++++++++FINISH
-		return playSfx(num);
+		return playSfx(num, repeat);
 	}
 	public int playSfx(int num, GameObject obj) {
 		return playSfx(num, obj, MAX_VOLUME, 0);
@@ -119,20 +122,41 @@ public final class Audio extends GameSingletons {
 		}
 	}
 	//	Returns channel/index or -1 if failed.
+	//	repeat == -1 means loop continuously.
 	public int playSfx(int num) {
+		return playSfx(num, 0); 
+	}
+	public int playSfx(int num, int repeat) {
 		if (sfxFile == null)
 			return -1;
-		byte data[] = sfxFile.retrieve(num);
+		/* ++++++++EXPERIMENTING
+		int size = AudioTrack.getMinBufferSize(22050, AudioFormat.CHANNEL_OUT_STEREO,
+				AudioFormat.ENCODING_PCM_16BIT);
+		if (data.length > size)
+			size = data.length;
+		System.out.println("size = " + size);
+		AudioTrack player = new AudioTrack(AudioManager.STREAM_MUSIC, 22050,
+				AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
+				32000, AudioTrack.MODE_STATIC);
+		player.write(data, 0, data.length);
+		player.play();
+		return 0;
+		*/
 		String nm = null;
+		nm = EUtil.getSystemPath(
+				String.format("<DATA>/tempsfx%1$d.wav", num));
+		if (debug) System.out.println("Audio: playing SFX #" + num);
+		if (EUtil.U7exists(nm) != null) {
+			return playFile(nm, repeat == -1);
+		}
+		byte data[] = sfxFile.retrieve(num);
 		int ind = -1;
 		if (data != null) 
 			try {
-				nm = EUtil.getSystemPath("<DATA>/tempsfx.wav");
 				OutputStream out = EUtil.U7create(nm);
 				out.write(data);
 				out.close();
-				if (debug) System.out.println("Audio: playing SFX #" + num);
-				ind = playFile(nm, false);
+				ind = playFile(nm, repeat == -1);
 			} catch (IOException e) {
 				System.out.println("Audio: Failed to play track: " + nm);
 			}
