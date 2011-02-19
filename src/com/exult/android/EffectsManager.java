@@ -1,4 +1,5 @@
 package com.exult.android;
+import com.exult.android.shapeinf.*;
 import android.graphics.Point;
 import java.util.Vector;
 
@@ -384,12 +385,7 @@ public final class EffectsManager extends GameSingletons {
 		public CloudsEffect(int duration, int delay, GameObject egg, int n) {
 			super(duration, delay, egg, n);
 			overcast = (n != 6);
-			/* ++++++++FINISH
-			if (overcast)
-				gclock.set_overcast(true);
-			else
-				gclock.set_overcast(false);
-			*/
+			clock.setOvercast(overcast);
 			int num_clouds = 2 + EUtil.rand()%5;	// Pick #.
 			if (overcast)
 				num_clouds += EUtil.rand()%2;
@@ -555,7 +551,7 @@ public final class EffectsManager extends GameSingletons {
 		public void handleEvent(int time, Object udata) {
 			int frnum = sprite.getFrameNum();
 			if (frnum == 0) {			// Max. volume, with stereo position.
-				; //++++++FINISH Audio::get_ptr().play_sound_effect(exp_sfx, pos, AUDIO_MAX_VOLUME);
+				audio.playSfx(expSfx, pos, Audio.MAX_VOLUME, 0);
 			}
 			if (frnum == frames/4) {
 				// this was in ~Explosion_effect before
@@ -574,6 +570,303 @@ public final class EffectsManager extends GameSingletons {
 				}
 			}
 			super.handleEvent(time, udata);
+		}
+	}
+	/*
+	 *	A moving animation, followed by an 'attack' at the end, to
+	 *	implement Usecode intrinsic 0x41:
+	 */
+	public static class Projectile extends SpecialEffect {
+		private Tile tempSrc = new Tile(), tempDest = new Tile();
+		private Rectangle dirtyRect = new Rectangle();
+		private GameObject attacker;		// Source of attack/spell.
+		private GameObject target;		// Target of path.
+		private int weapon;			// Shape # of firing weapon.
+		private int projectileShape;		// Shape # of projectile/spell.
+		private ShapeID sprite;			// Sprite shape to display.
+		private int frames;			// # frames.
+		private PathFinder path;		// Determines path.
+		private Tile pos = new Tile();		// Current position.
+		private boolean returnPath;		// Returning a boomerang.
+		private boolean noBlocking;		// Don't get blocked by things.
+		private boolean skipRender;	// For delayed blast.
+						// Add dirty rectangle.
+		private int speed;			// Missile speed.
+		private int attval;			// Attack value of projectile.
+		private boolean autohit;
+		private static final int getDir16(Tile t1, Tile t2) {
+			return EUtil.getDirection16(t1.ty - t2.ty, t2.tx - t1.tx);
+		}
+		//	Return target hit, or null.
+		private GameObject findTarget(Tile pos) {
+			if (pos.tz%5 == 0)		// On floor?
+				pos.tz++;		// Look up 1 tile.
+			int newz;
+			if ((newz = gmap.spotAvailable(1, pos.tx, pos.ty, pos.tz, 
+										EConst.MOVE_FLY, 0, -1)) >= 0 &&
+											newz == pos.tz)
+				return null;
+			return GameObject.findBlocking(pos);
+		}
+		private void addDirty() {
+			if (skipRender)
+				return;
+			ShapeFrame shape = sprite.getShape();
+							// Force repaint of prev. position.
+			int liftpix = pos.tz*EConst.c_tilesize/2;
+			gwin.getShapeRect(dirtyRect, shape, 
+					(pos.tx - gwin.getScrolltx())*EConst.c_tilesize - liftpix,
+					(pos.ty - gwin.getScrollty())*EConst.c_tilesize - liftpix
+				);
+			dirtyRect.enlarge(EConst.c_tilesize/2);
+			gwin.addDirty(dirtyRect);
+		}
+		private void init(Tile s, Tile d) {
+			noBlocking = false;		// We'll check the ammo & weapon.
+			WeaponInfo winfo = ShapeID.getInfo(weapon).getWeaponInfo();
+			if (winfo != null) {
+				noBlocking = noBlocking || winfo.noBlocking();
+				if (speed < 0)
+					speed = winfo.getMissileSpeed();
+				autohit = winfo.autohits();
+				}
+			if (speed < 0)
+				speed = 4;
+			AmmoInfo ainfo = ShapeID.getInfo(projectileShape).getAmmoInfo();
+			if (ainfo != null) {
+				noBlocking = noBlocking || ainfo.no_blocking();
+				autohit = autohit || ainfo.autohits();
+			}
+			if (attacker != null) {			// Try to set start better.
+				int dir = target != null ?
+						attacker.getDirection(target) :
+						attacker.getDirection(d);
+				attacker.getMissileTile(pos, dir);
+			} else
+				pos.set(s);			// Get starting position.
+			tempDest.set(d);
+			d = tempDest;
+			if (target != null)			// Try to set end better.
+				target.getCenterTile(d);
+			else
+				d.tz = pos.tz;
+			path = new ZombiePathFinder();		// Create simple pathfinder.
+							// Find path.  Should never fail.
+			boolean explodes = (winfo != null && winfo.explodes()) || 
+							   (ainfo != null && ainfo.explodes());
+			if (explodes && ainfo != null && ainfo.isHoming())
+				path.NewPath(pos, pos, null);	//A bit of a hack, I know...
+			else
+				path.NewPath(pos, d, null);
+			int sprite_shape = sprite.getShapeNum();
+			setSpriteShape(sprite_shape);
+							// Start after a slight delay.
+			tqueue.add(TimeQueue.ticks, this, 1);
+		}
+		/*
+		 *	Create a projectile animation.
+		 */
+		public Projectile
+			(
+			GameObject att,		// Source of spell/attack.
+			GameObject to,		// End here, 'attack' it with shape.
+			int weap,			// Weapon (bow, gun, etc.) shape.
+			int proj,			// Projectile shape # in 'shapes.vga'.
+			int spr,			// Shape to render on-screen or -1 for none.
+			int attpts,			// Attack points of projectile.
+			int spd				// Projectile speed, or -1 to use default.
+			) {
+			attacker = att; target = to; weapon = weap; projectileShape = proj;
+			sprite = new ShapeID(spr, 0);
+			skipRender = spr < 0; speed = spd;
+			attval = attpts;
+			att.getTile(tempSrc);
+			to.getTile(tempDest);
+			init(tempSrc, tempDest);
+		}
+		/*
+		 *	Constructor used by missile eggs & fire_projectile intrinsic.
+		 */
+		public Projectile
+			(
+			GameObject att,		// Source of spell/attack.
+			Tile d,			// End here.
+			int weap,			// Weapon (bow, gun, etc.) shape.
+			int proj,			// Projectile shape # in 'shapes.vga'.
+			int spr,			// Shape to render on-screen or -1 for none.
+			int attpts,			// Attack points of projectile.
+			int spd,			// Projectile speed, or -1 to use default.
+			boolean retpath		// Return of a boomerang.
+			) {
+			attacker = att; weapon = weap; projectileShape = proj;
+			sprite = new ShapeID(spr, 0);
+			returnPath = retpath; skipRender = spr < 0; speed = spd;
+			attval = attpts;
+			att.getTile(tempSrc);
+			init(tempSrc, d);
+		}
+		/* 
+		 *	Used by missile eggs and for 'boomerangs'.
+		 */
+		public Projectile
+			(
+			Tile s,				// Start here.
+			GameObject to,		// End here, 'attack' it with shape.
+			int weap,			// Weapon (bow, gun, etc.) shape.
+			int proj,			// Projectile shape # in 'shapes.vga'.
+			int spr,			// Shape to render on-screen or -1 for none.
+			int attpts,			// Attack points of projectile.
+			int spd,			// Projectile speed, or -1 to use default.
+			boolean retpath			// Return of a boomerang.
+			) {
+			target = to; weapon = weap; projectileShape = proj;
+			sprite = new ShapeID(spr, 0);
+			returnPath = retpath; skipRender = spr < 0; speed = spd;
+			attval = attpts;
+			to.getTile(tempDest);
+			init(s, tempDest);
+		}
+		@Override
+		public void handleEvent(int curtime, Object udata) {
+			int delay = 1;
+			addDirty();			// Force repaint of old pos.
+			tempSrc.set(pos);		// Save pos.
+			Tile epos = tempSrc;
+			WeaponInfo winf = ShapeID.getInfo(weapon).getWeaponInfo();
+			if (winf != null && winf.getRotationSpeed() != 0) {
+					// The missile rotates (such as axes/boomerangs)
+				int new_frame = sprite.getFrameNum() + winf.getRotationSpeed();
+				sprite.setFrame(new_frame > 23 ? ((new_frame - 8)%16) + 8 
+												: new_frame);
+			}
+			boolean path_finished = false;
+			for (int i = 0; i < speed; i++) {
+					// This speeds up the missile.
+				path_finished = (!path.getNextStep(pos)) ||	// Get next spot.
+						// If missile egg, detect target.
+					(target == null && !noBlocking && 
+								(target = findTarget(pos)) != null);
+				if (path_finished)
+					break;
+				}
+			AmmoInfo ainf = ShapeID.getInfo(projectileShape).getAmmoInfo();
+			if (path_finished) {			// Done?
+				boolean explodes = (winf != null && winf.explodes()) || 
+								   (ainf != null && ainf.explodes());
+				if (returnPath) {	// Returned a boomerang?
+					IregGameObject obj = IregGameObject.create(
+												sprite.getShapeNum(), 0);
+					if (target == null || !target.add(obj, false)) {
+						obj.setFlag(GameObject.okay_to_take);
+						obj.setFlag(GameObject.is_temporary);
+						obj.move(epos.tx, epos.ty, epos.tz, -1);
+					}
+				} else if (explodes) {	// Do this here (don't want to explode
+										// returning weapon).
+					int offz = 0;
+					if (target != null)
+						offz = target.getInfo().get3dHeight()/2;
+					tempDest.set(pos.tx, pos.ty, pos.tz + offz);
+					/* +++++++++FINISH
+					if (ainf != null && ainf.isHoming())
+						;
+						eman.addEffect(new HomingProjectile(weapon,
+								attacker, target, pos, tempDest));
+					else */
+						eman.addEffect(new ExplosionEffect(tempDest,
+								null, 0, weapon, projectileShape, attacker));
+					target = null;	// Takes care of attack.
+				} else {		// Not teleported away ?
+					boolean returns = (winf != null && winf.returns()) || 
+									  (ainf != null && ainf.returns());
+					boolean hit = false;
+					if (target != null && attacker != target && 
+											target.distance(epos) < 3) {
+						hit = autohit || target.tryToHit(attacker, attval);
+						if (hit) {
+							target.playHitSfx(weapon, true);
+							target.attacked(attacker, weapon, projectileShape, false);
+						}
+					} else {
+						// Hack warning: this exists solely to make Mind Blast (SI)
+						// work as it does in the original when you target the
+						// avatar with the spell.
+						if (winf != null && winf.getUsecode() > 0)
+							ucmachine.callUsecode(winf.getUsecode(), null,
+										UsecodeMachine.weapon);
+					}
+					if (returns && attacker != null &&	// boomerangs
+							attacker.distance(epos) < 50) {
+						 					// not teleported away
+						Projectile proj = new Projectile(
+									pos, attacker, weapon, projectileShape,
+									sprite.getShapeNum(), attval, speed, true);
+						proj.speed = speed;
+						proj.setSpriteShape(sprite.getShapeNum());
+						eman.addEffect(proj);
+					} else {	// See if we should drop projectile.
+						boolean drop = false;
+							// Seems to match originals quite well.
+						if (winf == null)
+							drop = true;
+						else if (ainf != null) {
+							int ammo = winf.getAmmoConsumed(),
+								type = ainf.getDropType();
+							drop = (ammo >= 0 || ammo == -3) &&
+								(type == AmmoInfo.always_drop ||
+								(!hit && type != AmmoInfo.never_drop));
+						}
+						if (drop) {
+							if (MapChunk.findSpot(epos, 3,
+										sprite.getShapeNum(), 0, 1)) {
+								GameObject aobj = IregGameObject.create(
+											sprite.getShapeNum(), 0);
+								if (attacker == null || attacker.getFlag(GameObject.is_temporary))
+									aobj.setFlag(GameObject.is_temporary);
+								aobj.setFlag(GameObject.okay_to_take);
+								aobj.move(pos);
+							}
+						}
+					}
+				}
+				addDirty();
+				skipRender = true;
+				eman.removeEffect(this);
+				return;
+			}
+			addDirty();			// Paint new spot/frame.
+							// Add back to queue for next time.
+			tqueue.add(curtime + delay, this, udata);
+		}
+		@Override
+		public void paint() {
+			if (skipRender)
+				return;
+			int liftpix = pos.tz*EConst.c_tilesize/2;
+			sprite.paintShape(
+				(pos.tx - gwin.getScrolltx())*EConst.c_tilesize - liftpix,
+				(pos.ty - gwin.getScrollty())*EConst.c_tilesize - liftpix);
+		}
+		public void setSpriteShape(int s) {
+			if (s < 0) {
+			skipRender = true;
+			sprite.setShape(s);
+			sprite.setFrame(0);
+			return;
+			}
+			sprite.setShape(s);
+			frames = sprite.getNumFrames();
+			if (frames >= 24) {		// Use frames 8-23, for direction
+						//   going clockwise from North.
+				path.getSrc(tempSrc); 
+				path.getDest(tempDest);
+				int dir = getDir16(tempSrc, tempDest);
+				sprite.setFrame(8 + dir);
+			} else if (frames == 1 && sprite.getInfo().isExplosive())
+				sprite.setFrame(0);	// (Don't show powder keg!)
+			else
+				skipRender = true;		// We just won't show it.
+			addDirty();			// Paint immediately.
 		}
 	}
 	/*

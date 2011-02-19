@@ -1,6 +1,5 @@
 package com.exult.android;
 import com.exult.android.shapeinf.*;
-import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -778,7 +777,7 @@ public class CombatSchedule extends Schedule {
 		if (info == null && !removed &&	// No weapon?
 		    (spellbook = readiedSpellbook()) == null &&	// No spellbook?
 						// Not dragging?
-		    /* +++++NEEDED? !gwin.isDragging() && */
+		    /* ++NEEDED? !gwin.isDragging() && */
 						// And not dueling?
 		    npc.getScheduleType() != Schedule.duel &&
 		    state != wait_return) {	// And not waiting for boomerang.
@@ -1152,16 +1151,16 @@ public class CombatSchedule extends Schedule {
 			// the possibility of the attacker's combat be lowered
 			// (e.g., due to being paralyzed) while the projectile is
 			// in flight and before it hits.
-			/* +++++FINISH
 			EffectsManager.Projectile projectile;
 			if (target != null)
-				projectile = new EffectsManager.Projectile(attacker, target, weapon,
-						ammo != null ? ammo.getShapeNum() : proj, proj, attval);
+				projectile = new EffectsManager.Projectile(attacker, target, 
+						weapon, ammo != null ? ammo.getShapeNum() : proj, 
+								proj, attval, -1);
 			else
-				projectile = new EffectsManager.Projectile(attacker, tile, weapon,
-						ammo != null ? ammo.getShapeNum() : proj, proj, attval);
+				projectile = new EffectsManager.Projectile(attacker, tile, 
+						weapon, ammo != null ? ammo.getShapeNum() : proj, 
+								proj, attval, -1, false);
 			eman.addEffect(projectile);
-			*/
 			return true;
 		} else if (target != null) {
 			// Do nothing when attacking tiles in melee.
@@ -1169,10 +1168,8 @@ public class CombatSchedule extends Schedule {
 			// godmode effects:
 			if (cheat.inGodMode())
 				autohit = trg_party ? false : (att_party ? true : autohit);
-			/* ++++++FINISH
 			if (!autohit && !target.tryToHit(attacker, attval))
 				return false;	// Missed.
-			*/
 			target.playHitSfx(weapon, false);
 			if (info.isExplosive()) {	// Powder keg.
 				// Blow up *instead*.

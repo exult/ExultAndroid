@@ -53,7 +53,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return powers; }
 	public boolean no_blocking()
 		{ return m_no_blocking; }
-	public byte get_drop_type()
+	public byte getDropType()
 		{ return dropType; }
 	public boolean autohits()
 		{ return m_autohit; }
@@ -61,7 +61,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		{ return m_lucky; }
 	public boolean returns()
 		{ return m_returns; }
-	public boolean is_homing()
+	public boolean isHoming()
 		{ return homing; }
 	public boolean explodes()
 		{ return m_explodes; }

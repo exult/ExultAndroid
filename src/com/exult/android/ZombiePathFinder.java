@@ -22,8 +22,11 @@ public class ZombiePathFinder extends PathFinder {
 	}
 	@Override
 	public boolean NewPath(Tile s, Tile d, Client ignored) {
+		if (src == null)
+			src = new Tile();
 		if (dest == null)
 			dest = new Tile();
+		src.set(s);
 		dest.set(d);
 		cur[X] = s.tx; cur[Y] = s.ty; cur[Z] = s.tz;
 		sum1 = sum2 = 0;		// Clear accumulators.

@@ -21,12 +21,13 @@ public class AStarPathFinder extends PathFinder {
 	public boolean followingSmartPath() {
 		return true;
 	}
-	public boolean NewPath(Tile s, Tile d, Client client) {	
-		/* Not using these for now.
-		src = s;			// Store start, destination.
-		*/
+	public boolean NewPath(Tile s, Tile d, Client client) {
+		// Store start, destination.
+		if (src == null)
+			src = new Tile();
 		if (dest == null)
 			dest = new Tile();
+		src.set(s);
 		dest.set(d);
 		path = null;		// Clear out old path, if there.
 		nextIndex = 0;

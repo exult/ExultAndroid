@@ -183,6 +183,40 @@ public abstract class GameObject extends ShapeID {
 	    	y = chunk.getCy()*EConst.c_tiles_per_chunk + ty - dy;
 	    t.set(x, y, lift + dz);
 	}
+	public final void getMissileTile(Tile t, int dir) {
+		MapChunk chunk = getChunk();
+		if (chunk == null) {
+			t.set(255*EConst.c_tiles_per_chunk, 255*EConst.c_tiles_per_chunk,
+					0);
+			return;
+		}
+		int frame = getFrameNum();
+		ShapeInfo info = getInfo();
+		int dx = info.get3dXtiles(frame)-1,
+		    dy = info.get3dYtiles(frame)-1,
+			dz = (info.get3dHeight()*3)/4;
+		/*switch (dir)
+			{
+			case south:
+				dy = -1;
+			case north:
+				dx /=2; break;
+			case east:
+				dx = -1;
+			case west:
+				dy /= 2; break;
+			case southeast:
+				dy = -1;
+			case northeast:
+				dx = -1; break;
+			case southwest:
+				dy = -1;
+				break;
+			}*/
+		int x = chunk.getCx()*EConst.c_tiles_per_chunk + tx - dx/2,
+		    y = chunk.getCy()*EConst.c_tiles_per_chunk + ty - dy/2;
+		t.set(x, y, lift + dz);
+	}
 	public final int getDirection(GameObject o2) {
 		Tile t = new Tile();
 		o2.getCenterTile(t);
@@ -1043,6 +1077,9 @@ public abstract class GameObject extends ShapeID {
 				sfx = Audio.gameSfx(4);
 			new Animator.ObjectSfx(this, sfx, 0);
 		}
+	}
+	public boolean tryToHit(GameObject attacker, int attval) {
+		return true;
 	}
 	/*
 	 *	Being attacked.

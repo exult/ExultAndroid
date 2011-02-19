@@ -185,6 +185,11 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		dungeon = 255;
 		transition = null;
 	}
+	// Start end cloud cover.
+	public void setOvercast(boolean onoff) {
+		overcast += (onoff ? 1 : -1);
+		setPalette();		// Update palette.
+	}
 	public void increment(int numMinutes) {
 		int oldHour;
 		long newMin;

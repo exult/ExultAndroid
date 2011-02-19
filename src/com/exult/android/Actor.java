@@ -1462,6 +1462,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *
 	 *	Output:	true if attack hit, false otherwise.
 	 */
+	@Override
 	public boolean tryToHit
 		(
 		GameObject attacker,

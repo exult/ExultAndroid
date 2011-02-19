@@ -2,13 +2,11 @@ package com.exult.android;
 
 public abstract class PathFinder {
 	protected Tile dest;
-	/* +++++MAYBE not needed.
 	protected Tile src;
 	
 	public final void getSrc(Tile s) {
-		return s.set(src);
+		s.set(src);
 	}
-	*/
 	public final void getDest(Tile d) {
 		d.set(dest);
 	}

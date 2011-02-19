@@ -93,9 +93,12 @@ public final class Audio extends GameSingletons {
 		bg2siSfxs = game.isSI() ? bgconv : null;
 	}
 	//	Play positioned at a given tile.
-	public int playSfx(int num, Tile t) {
+	public int playSfx(int num, Tile t, int volume, int repeat) {
 		//++++++FINISH
-		return playSfx(num, 0);
+		return playSfx(num, repeat);
+	}
+	public int playSfx(int num, Tile t) {
+		return playSfx(num, t, MAX_VOLUME, 0);
 	}
 	//	Play positioned at a given object.
 	public int playSfx(int num, GameObject obj, int volume, int repeat) {
