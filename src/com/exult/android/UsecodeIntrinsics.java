@@ -7,7 +7,7 @@ import java.util.Collections;
 import android.graphics.Point;
 
 public class UsecodeIntrinsics extends GameSingletons {
-	private static Tile tempTile = new Tile();
+	private static Tile tempTile = new Tile(), tempTile2 = new Tile();
 	private static Rectangle tempRect = new Rectangle();
 	private static Vector<GameObject> foundVec = new Vector<GameObject>();
 	// Stack of last items created with intrins. x24.
@@ -1741,6 +1741,34 @@ public class UsecodeIntrinsics extends GameSingletons {
 			System.out.println("Readied: invalid spot #: " + spot);
 		return UsecodeValue.getZero();
 	}
+	private final void fireProjectile(UsecodeValue p0, UsecodeValue p1, 
+			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4, UsecodeValue p5) {
+		// fire_projectile(attacker, dir, missile, attval, wshape, ashape)
+
+		GameObject attacker = getItem(p0);
+						// Get direction (0-7).
+		int dir = p1.getIntValue();
+		int missile = p2.getIntValue();	// Sprite to use for missile.
+		int attval = p3.getIntValue();	// Attack value.
+		int wshape = p4.getIntValue();	// What to use for weapon info.
+		int ashape = p5.getIntValue();	// What to use for ammo info.
+
+		Tile pos = tempTile;
+		attacker.getMissileTile(pos, dir);
+		
+		Tile adj = tempTile2;
+		pos.getNeighbor(adj, dir%8);
+					// Make it go dist tiles.
+		int dx = adj.tx - pos.tx, dy = adj.ty - pos.ty;
+
+		final int dist = 31;
+		pos.tx += dist*dx;
+		pos.ty += dist*dy;
+						// Fire missile.
+		eman.addEffect(new EffectsManager.Projectile(attacker,
+						pos, wshape, ashape, missile, attval, 4, false));
+	}
+	
 	private final void advanceTime(UsecodeValue p0) {
 		// Incr. clock by (parm[0]*.04min.).
 		clock.increment(p0.getIntValue()/GameClock.ticksPerMinute);
@@ -2266,6 +2294,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x72:
 			return isReadied(parms[0], parms[1], parms[2], parms[3]);
 		//++++++++++++++
+		case 0x76:
+			fireProjectile(parms[0], parms[1], parms[2], parms[3],
+			                                    parms[4], parms[5]); break;
+		//++++++++
 		case 0x78:
 			advanceTime(parms[0]); break;
 		case 0x79:
