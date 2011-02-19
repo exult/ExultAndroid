@@ -126,8 +126,8 @@ public class CombatSchedule extends Schedule {
 				src.tx%EConst.c_tiles_per_chunk, src.ty%EConst.c_tiles_per_chunk);
 		if (src.tz < 0)
 			src.tz = 0;
-		//+++++ FINISH eman.add_effect(new FireFieldEffect(src));
-		int sfx = audio.gameSfx(43);
+		eman.addEffect(new EffectsManager.FireField(src));
+		int sfx = Audio.gameSfx(43);
 		audio.playSfx(sfx, npc);	// The weird noise.
 		npc.move(dest.tx, dest.ty, dest.tz);
 						// Show the stars.
@@ -313,7 +313,7 @@ public class CombatSchedule extends Schedule {
 		int str, ind, new_opp_ind = -1;
 		switch (mode) {
 		case Actor.weakest:
-			int least_str = 100, least_ind = -1;
+			int least_str = 100;
 			ind = 0;
 			for (Actor opp : opponents) {
 				str = opp.getProperty(Actor.strength);
@@ -755,7 +755,7 @@ public class CombatSchedule extends Schedule {
 	 *	This (static) method is called to stop attacking a given NPC.
 	 *	This can happen because the NPC died or fell asleep.
 	 */
-	private static void stopAttackingInvisible(GameObject npc) {
+	public static void stopAttackingInvisible(GameObject npc) {
 		Vector<GameObject> nearby = new Vector<GameObject>();// Get all nearby NPC's.
 		npc.findNearbyActors(nearby, EConst.c_any_shapenum, 
 											2*EConst.c_tiles_per_chunk);
@@ -907,7 +907,7 @@ public class CombatSchedule extends Schedule {
 				UsecodeScript scr = UsecodeScript.find(npc);
 				// Warning: assuming that the most recent script for the
 				// actor is the spellcasting script.
-				delay += (scr != null ? scr.getCount() : 0) + 2;
+				delay += (scr != null ? UsecodeScript.getCount() : 0) + 2;
 			}
 				// Change back to ready frame.
 			byte frame2[] = new byte[1];

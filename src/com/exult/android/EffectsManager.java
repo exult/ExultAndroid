@@ -231,6 +231,36 @@ public final class EffectsManager extends GameSingletons {
 		}
 	}
 	/*
+	 *	A fire field that dies out after a few seconds.
+	 */
+	public static class FireField extends SpecialEffect {
+		private GameObject field;		// What we create.
+		public FireField(Tile t) {
+			field = IregGameObject.create(895, 0);
+			field.setFlag(GameObject.is_temporary);
+			field.move(t.tx, t.ty, t.tz);
+			tqueue.add(TimeQueue.ticks + 
+					(3000 + EUtil.rand()%2000)/TimeQueue.tickMsecs, this, null);
+		}
+		@Override
+		public void handleEvent(int curtime, Object udata) {
+			int frnum = field.getFrameNum();
+			if (frnum == 0) {			// All done?
+				field.removeThis();
+				eman.removeEffect(this);
+			} else {
+				if (frnum > 3) {		// Starting to wind down?
+					((EggObject) field).stopAnimation();
+					frnum = 3;
+				} else
+					frnum--;
+				gwin.addDirty(field);
+				field.setFrame(frnum);
+				tqueue.add(curtime + 1, this, udata);
+			}
+		}
+	}
+	/*
 	 *	Weather.
 	 */
 	public static abstract class WeatherEffect extends SpecialEffect {
