@@ -387,6 +387,25 @@ public abstract class GameObject extends ShapeID {
 				xtiles, ytiles);
 	}
 	/*
+	 *	Get volume in absolute tiles.  Creates block if null is passed.
+	 */
+	public Block getBlock (Block vol) {
+		if (vol == null)
+			vol = new Block();
+		ShapeInfo info = getInfo();
+						// Get footprint.
+		int frame = getFrameNum();
+		int xtiles = info.get3dXtiles(frame);
+		int ytiles = info.get3dYtiles(frame);
+		int ztiles = info.get3dHeight();
+		int tx = getTileX(), ty = getTileY(), tz = getLift();
+		vol.set((tx - xtiles + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, 
+			  (ty - ytiles + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, 
+			   tz, 
+			  xtiles, ytiles, ztiles);
+		return vol;
+	}
+	/*
 	 *	Based on frame #, get direction (N, S, E, W, 0-7), this (generally an
 	 *	NPC) is facing.
 	 */

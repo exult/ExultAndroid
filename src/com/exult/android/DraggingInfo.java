@@ -37,15 +37,14 @@ public final class DraggingInfo extends GameSingletons {
 			}
 			GameObject owner = obj.getOutermost();
 			if (owner == obj) {
-				/* ++++++++
 		    	if (!cheat.inHackMover() && 
-				!Fast_pathfinder_client::is_grabable(
+				!PathFinder.FastClient.isGrabable(
 				   gwin.getMainActor(), obj)) {
-		    		Mouse::mouse.flash_shape(Mouse::blocked);
+		    		mouse.flashShape(Mouse.blocked);
 		    		obj = null;
+		    		gump = null;
 		    		return (false);
 				}
-				*/
 			}
 		}
 					// Store original pos. on screen.
@@ -58,15 +57,13 @@ public final class DraggingInfo extends GameSingletons {
 					gump.getContainer().getOutermost(); 
 				Actor main_actor = gwin.getMainActor();
 				// Check the range
-				/* ++++++FINISH
 				if (!cheat.inHackMover() &&
-						!Fast_pathfinder_client::is_grabable(main_actor, owner_obj)) {
-					obj = 0;
-					gump = 0;
-					Mouse::mouse.flash_shape(Mouse::outofrange);
+						!PathFinder.FastClient.isGrabable(main_actor, owner_obj)) {
+					obj = null;
+					gump = null;
+					mouse.flashShape(Mouse.outofrange);
 					return false;
 				}
-				*/
 				if (owner != null)
 					readied_index = owner.findReadied(obj);
 				gump.remove(obj);
@@ -112,14 +109,12 @@ public final class DraggingInfo extends GameSingletons {
 			owner_obj = owner_obj.getOutermost();
 		Actor main_actor = gwin.getMainActor(); 
 		// Check the range
-		/* +++++++FINISH
-		if (owner_obj && !cheat.inHackMover() &&
-			!Fast_pathfinder_client::is_grabable(main_actor, owner_obj))
-			{	  		// Object was not grabable
-			Mouse::mouse.flash_shape(Mouse::outofrange);
+		if (owner_obj != null && !cheat.inHackMover() &&
+			!PathFinder.FastClient.isGrabable(main_actor, owner_obj)) {
+				  		// Object was not grabable
+			mouse.flashShape(Mouse.outofrange);
 			return false;
 		}
-		*/
 		if (!checkWeight(to_drop, on_gump.getContOrActor(x,y)))
 			return false;
 		if (on_gump != gump)		// Not moving within same gump?
@@ -525,11 +520,11 @@ public final class DraggingInfo extends GameSingletons {
 		}
 		Tile loc = new Tile(tx - xtiles + 1, ty - ytiles + 1, at_lift);
 		if (!MapChunk.areaAvailable(xtiles, ytiles, info.get3dHeight(),
-							loc, move_flags, max_drop, -1) /*++++ ||
+							loc, move_flags, max_drop, -1) ||
 		      (!cheat.inHackMover() &&
 						// Check for path to location.
-		    !Fast_pathfinder_client::is_grabable(main_actor, 
-				Tile_coord(tx, ty, lift)))*/)
+		    !PathFinder.FastClient.isGrabable(gwin.getMainActor(), 
+		    												tx, ty, lift)))
 			return 0;
 		lift = loc.tz;
 		to_drop.setInvalid();

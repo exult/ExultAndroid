@@ -285,6 +285,8 @@ public abstract class PathFinder {
 	 *	test for when an object can be grabbed.
 	 */
 	public static class FastClient extends Client {
+		public static final int MAX_GRAB_DIST = 3;
+		private static Tile pos1 = new Tile(), pos2 = new Tile();
 		private int dist;			// Succeeds at this distance from goal.
 		public FastClient(int d, int mf) {
 			dist = d;
@@ -327,14 +329,59 @@ public abstract class PathFinder {
 			int dz = tile.tz - goal.tz;	// Want to be within 1 story.
 			return dz <= 5 && dz >= -5;
 		}
-		/* ++++++++++FINISH
-		static int is_grabable(Tile_coord from, Tile_coord to);
-		static int is_grabable(Game_object *from, Game_object *to);
-		static int is_grabable(Game_object *from, Tile_coord to);
+		//static boolean is_grabable(Tile_coord from, Tile_coord to);
+		public static boolean isGrabable(GameObject from, GameObject to) {
+			if (from.distance(to) <= 1)
+				return true;		// Already okay.
+			PathFinder.FastClient client = new PathFinder.FastClient(
+					MAX_GRAB_DIST, gwin.getMainActor().getTypeFlags());
+			AStarPathFinder path = new AStarPathFinder();
+			from.getTile(pos1);
+			to.getTile(pos2);
+			return path.NewPath(pos1, pos2, client);
+		}
+		public static boolean isGrabable(GameObject from, int tx, int ty, int tz) {
+			pos2.set(tx, ty, tz);
+			if (from.distance(pos2) <= 1)
+				return true;		// Already okay.
+			PathFinder.FastClient client = new PathFinder.FastClient(
+					MAX_GRAB_DIST, gwin.getMainActor().getTypeFlags());
+			AStarPathFinder path = new AStarPathFinder();
+			from.getTile(pos1);
+			return path.NewPath(pos1, pos2, client);
+		}
+		//static boolean is_grabable(GameObject from, Tile_coord to) {
 						// Check for unblocked straight path.
-		static int is_straight_path(Tile_coord from, Tile_coord to);
-		static int is_straight_path(Game_object *from, Game_object *to);
-		*/
+		//static boolean is_straight_path(Tile_coord from, Tile_coord to);
+		public static boolean isStraightPath(GameObject from, GameObject to) {
+			Block fromvol = from.getBlock(null),
+		      	  tovol = to.getBlock(null);
+		  	from.getTile(pos1);
+		  	to.getTile(pos2);
+		  	int ht1 = fromvol.h;
+		  	int ht2 = tovol.h;
+		  	if (pos2.tx < pos1.tx)	// Going left?
+		  		pos1.tx = (short)fromvol.x;
+		  	else			// Right?
+		  		pos2.tx = (short)tovol.x;
+		  	if (pos2.ty < pos1.ty)	// Going north?
+		  		pos1.ty = (short)fromvol.y;
+		  	else			// South.
+		  		pos2.ty = (short)tovol.y;
+		  				// Use top tile.
+		  	pos1.tz += ht1 - 1;
+		  	pos2.tz += ht2 - 1;
+		  	ZombiePathFinder path = new ZombiePathFinder();;
+		  	if (!path.NewPath(pos1, pos2, null))	// Should always succeed.
+		  		return false;
+			// Check each tile.
+		  	while (path.getNextStep(pos2) && 
+		  				!tovol.hasPoint(pos2.tx, pos2.ty, pos2.tz))
+		  		if (!fromvol.hasPoint(pos2.tx, pos2.ty, pos2.tz) && 
+		  					gmap.isTileOccupied(pos2.tx, pos2.ty, pos2.tz))
+		  			return false;	// Blocked.
+		  	return true;			// Looks okay.
+		}
 	}
 	public static class MonsterClient extends FastClient {	
 		private Rectangle destbox = new Rectangle();// Got to intersect this box.

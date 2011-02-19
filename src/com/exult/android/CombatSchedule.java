@@ -620,14 +620,11 @@ public class CombatSchedule extends Schedule {
 			state = strike;
 		}
 		// At this point, we're within range, with state set.
-		/*++++++++FINISH
-		if (check_lof &&
-		    !Fast_pathfinder_client.is_straight_path(npc, opponent)) {
+		if (check_lof && !PathFinder.FastClient.isStraightPath(npc, opponent)) {
 			state = approach;
-			approach_foe(true);	// Try to get adjacent.
+			approachFoe(true);	// Try to get adjacent.
 			return;
 		}
-		*/
 		if (!startedBattle)
 			startBattle();	// Play music if first time.
 		if (combatTrace) {
@@ -981,8 +978,8 @@ public class CombatSchedule extends Schedule {
 			boolean found = false;	// Find a close-by enemy.
 			npc.getTile(npcPos);
 			for (Actor opp : opponents) {
-				if (opp.distance(npc) < (EConst.c_screen_tile_size/2 - 2) /* ++++FINISH &&
-					Fast_pathfinder_client.is_grabable(npc, opp) */) {
+				if (opp.distance(npc) < (EConst.c_screen_tile_size/2 - 2) &&
+					PathFinder.FastClient.isGrabable(npc, opp) ) {
 				found = true;
 				break;
 				}
@@ -1176,7 +1173,7 @@ public class CombatSchedule extends Schedule {
 			if (!autohit && !target.tryToHit(attacker, attval))
 				return false;	// Missed.
 			*/
-			//++++++FINISH target.playHitSfx(weapon, false);
+			target.playHitSfx(weapon, false);
 			if (info.isExplosive()) {	// Powder keg.
 				// Blow up *instead*.
 				Tile pos = new Tile();
