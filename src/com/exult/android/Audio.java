@@ -9,7 +9,8 @@ import android.media.AudioManager;
 import android.media.AudioFormat;
 
 public final class Audio extends GameSingletons {
-	public static final int MIXER_CHANNELS = 32;	// Max. # channels.
+	// FOR NOW, limit to 2 channels for speed.
+	public static final int MIXER_CHANNELS = 2;	// Max. # channels.
 	public static final int MAX_VOLUME = 256, MAX_SOUND_FALLOFF = 24;
 	public final static int // enum Combat_song
 		CSBattle_Over = 0,
@@ -142,6 +143,8 @@ public final class Audio extends GameSingletons {
 		player.play();
 		return 0;
 		*/
+		if (addPlayer(null) == -1)
+			return -1;						// All channels are busy.
 		String nm = null;
 		nm = EUtil.getSystemPath(
 				String.format("<DATA>/tempsfx%1$d.wav", num));
