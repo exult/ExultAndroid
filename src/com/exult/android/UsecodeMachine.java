@@ -59,7 +59,6 @@ public class UsecodeMachine extends GameSingletons {
 		 keyring = new Keyring();
 		 saved_pos = new Tile(-1, -1, -1);
 		 saved_map = -1;
-		 telekenesis_fun = -1;
 		 */
 		gflags = new byte[EConst.c_last_gflag + 1];
 		stack = new UsecodeValue[1024];

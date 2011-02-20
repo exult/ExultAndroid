@@ -22,7 +22,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static GameObject sailor;	// Current barge captain.
 	private Actor pathNpc;		// Last NPC in path_run_usecode()
 	private int speechTrack = -1;	// Set/read by some intrinsics.
-
+	private int telekenesisFun = -1;	// For next usecode call from spell.
 	private static final Actor asActor(GameObject obj) {
 		return obj == null ? null : obj.asActor();
 	}
@@ -2211,7 +2211,21 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getZero();
 	}
-	private UsecodeValue getAttackMode(UsecodeValue p0) {
+	
+	private final void telekenesis(UsecodeValue p0) {
+		telekenesisFun = p0.getIntValue();
+	}
+	private final UsecodeValue aOrAn(UsecodeValue p0) {
+		// a_or_an (word)
+		// return a/an depending on 'word'
+		String wrd = p0.getStringValue();
+		final String vowels = ("aeiouyAEIOUY");
+		if (wrd == null || vowels.indexOf(wrd.charAt(0)) == -1)
+			return new UsecodeValue.StringValue("a");
+		else
+			return new UsecodeValue.StringValue("an");
+	}
+	private final UsecodeValue getAttackMode(UsecodeValue p0) {
 		// get_attack_mode(npc).
 		Actor npc = asActor(getItem(p0));
 		if (npc != null)
@@ -2219,7 +2233,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		else
 			return UsecodeValue.getZero();
 	}
-	private void setOpponent(UsecodeValue p0, UsecodeValue p1) {
+	private final void setOpponent(UsecodeValue p0, UsecodeValue p1) {
 		// set_opponent(npc, new_opponent).
 		Actor npc = asActor(getItem(p0));
 		GameObject opponent = getItem(p1);
@@ -2544,10 +2558,25 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return getPartyList();	// get_party_list2.  Seems the same.
 		case 0x8e:
 			return UsecodeValue.getBoolean(gwin.inCombat());
-		//+++++++++++++++
+		case 0x8f:
+			return startSpeech(parms[0]); // Same as 0x74?
 		case 0x90:
 			return isWater(parms[0]);
-		//++++++++++++++++
+		case 0x91:
+			break;	// resetConvFace??
+		/* FINISH++++++++++++++++
+		case 0x92:
+			setCamera(parms[0]); break;
+		case 0x93:
+			return getDeadParty(parms[0]);
+		case 0x94:
+			viewTile(parms[0]); break;
+		*/
+		case 0x95:
+			telekenesis(parms[0]); break;
+		case 0x96:
+			return aOrAn(parms[0]);
+		//	Here, Exult supports SI intrinsics for users of UCC.
 		case 0xa1:
 			return getAttackMode(parms[0]);
 		case 0xb2:
