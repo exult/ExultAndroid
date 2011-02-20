@@ -1339,6 +1339,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getNullObj();
 	}
+	private void displayArea(UsecodeValue p0) {
+		// display_area(tilepos) - used for crystal balls.
+		//+++++++++++FINISH
+	}
+	private void wizardEye(UsecodeValue p0) {
+		// Let's give 50% longer.
+		//++++FINISH Wizard_eye(parms[0.getIntValue()*(3*gwin->get_std_delay())/2); 
+	}
 	private final UsecodeValue resurrect(UsecodeValue p0) {
 		// resurrect(body).  Returns actor if successful.
 		GameObject body = getItem(p0);
@@ -1776,6 +1784,74 @@ public class UsecodeIntrinsics extends GameSingletons {
 			System.out.println("Readied: invalid spot #: " + spot);
 		return UsecodeValue.getZero();
 	}
+	private void restartGame() {
+		// Think it's 'restart game'.  
+		// Happens if you die before leaving trinsic.
+		/*++++++++++FINISH
+		audio.stopMusic();
+		quitting_time = QUIT_TIME_RESTART;		// Quit & restart.
+		*/
+	}
+	private UsecodeValue startSpeech(UsecodeValue p0) {
+		// Start_speech(num).  Also sets speech_track.
+		boolean okay = false;
+		/*++++++++FINISH
+		speech_track = p0.getIntValue();
+		if (speech_track >= 0)
+		okay = Audio::get_ptr()->start_speech(speech_track);
+	if (!okay)			// Failed?  Clear faces.  (Fixes SI).
+		init_conversation();
+	else if (GAME_SI)
+		{			// Show guardian, serpent.
+		int face = 0;
+		if (speech_track < 21)	// Serpent?
+			{
+			Actor *ava = gwin->get_main_actor();
+			face = 300;	// Translucent.
+					// Wearing serpent ring?
+			Game_object *obj = ava->get_readied(lfinger);
+			if (obj && obj->get_shapenum() == 0x377 &&
+					obj->get_framenum() == 1)
+				face = 295;	// Solid.
+			else if ((obj = ava->get_readied(rfinger))!=0 &&
+					obj->get_shapenum() == 0x377 &&
+					obj->get_framenum() == 1)
+				face = 295;	// Solid.
+			}
+		else if (speech_track < 23)
+			face = 296;		// Batlin.
+		else if (speech_track < 25)
+			face = 256;		// Goblin?
+		else if (speech_track == 25)
+			face = 293;		// Chaos serpent.
+		else if (speech_track == 26)
+			face = 294;		// Order serpent.
+		if (face > 0)
+			{
+			Usecode_value sh(face), fr(0);
+			show_npc_face(sh, fr);
+			int x, y;		// Wait for click.
+			Get_click(x, y, Mouse::hand);
+			remove_npc_face(sh);
+			}
+		}
+		*/
+		return UsecodeValue.getBoolean(okay);
+	}
+	private static void runEndgame(UsecodeValue p0) {
+		/*+++++++++FINISH
+		audio.stopSfx();
+		game->end_game(parms[0.getIntValue() != 0);
+		// If successful enable menu entry and play credits afterwards
+		if(parms[0.getIntValue() != 0) {
+			std::ofstream endgameflg;
+		            U7open(endgameflg, "<SAVEGAME>/endgame.flg");
+		            endgameflg.close();
+			game->show_credits();
+		}
+		quitting_time = QUIT_TIME_YES;
+		*/
+	}
 	private final void fireProjectile(UsecodeValue p0, UsecodeValue p1, 
 			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4, UsecodeValue p5) {
 		// fire_projectile(attacker, dir, missile, attval, wshape, ashape)
@@ -1855,6 +1931,25 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = getItem(p0);
 		return UsecodeValue.getBoolean(obj != null && UsecodeScript.find(obj) != null);
 	}
+	private final void callGuards() {
+		//++++FINISH gsin.callGuards();
+	}
+	private final void objSpriteEffect(UsecodeValue p0, UsecodeValue p1,
+			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4, UsecodeValue p5,
+			UsecodeValue p6, UsecodeValue p7) {
+		// obj_sprite_effect(obj, sprite#, -xoff, -yoff, dx, dy, 
+		//						frame, length??)
+		GameObject obj = getItem(p0);
+		if (obj != null)
+			eman.addEffect(
+				new EffectsManager.SpritesEffect(p1.getIntValue(), obj,
+				-p2.getIntValue(), -p3.getIntValue(),
+				p4.getIntValue(), p5.getIntValue(),
+				p6.getIntValue(), p7.getIntValue()));
+	}
+	private final void attackAvatar() {
+		//++++FINISH gsin.attackAvatar();
+	}
 	private final UsecodeValue pathRunUsecode(Actor npc, UsecodeValue locval,
 			UsecodeValue useval, UsecodeValue itemval, UsecodeValue eventval,
 			boolean find_free, boolean always, boolean companions) {
@@ -1911,14 +2006,31 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	private final static void closeGump(UsecodeValue p0) {
 		/* if (!gwin.isDragging())	// NOT while dragging stuff. */
-		{
 		GameObject obj = getItem(p0);
 		Gump gump = gumpman.findGump(obj, EConst.c_any_shapenum);
 		if (gump != null) {
 			gumpman.closeGump(gump);
 			gwin.setAllDirty();
 		}
+	}
+	private final void setLight(UsecodeValue p0, UsecodeValue p1) {
+		//	// set_light(npc, onoff)
+		GameObject light = getItem(p0);
+		if (light == null)
+			return;
+		Actor npc = asActor(light.getOutermost());
+		if (npc != null) {
+			// This counts the light sources now too. This matches the originals;
+			// torches and other light sources need it to be done this way, and
+			// the other "obvious" manners fail.
+			npc.refigureGear();
+			if (p1.getIntValue() == 0)
+				npc.removeLightSource();
 		}
+	}
+	private final void setTimePalette() {
+		clock.reset();
+		clock.setPalette();
 	}
 	private final UsecodeValue isNotBlocked(UsecodeValue p0, UsecodeValue p1,
 			UsecodeValue p2) {
@@ -2299,7 +2411,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return clone(parms[0]);
 		case 0x4e:	// UNUSED
 			break;
-		//++++++++
+		case 0x4f:
+			displayArea(parms[0]);	// Crystal ball.
+		case 0x50:
+			wizardEye(parms[0]);
 		case 0x51:
 			return resurrect(parms[0]); 
 		case 0x52:
@@ -2371,7 +2486,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			reduceHealth(parms[0], parms[1], parms[2]); break;
 		case 0x72:
 			return isReadied(parms[0], parms[1], parms[2], parms[3]);
-		//++++++++++++++
+		case 0x73:
+			restartGame(); break;
+		case 0x74:
+			return startSpeech(parms[0]);
+		case 0x75:
+			runEndgame(parms[0]); break;
 		case 0x76:
 			fireProjectile(parms[0], parms[1], parms[2], parms[3],
 			                                    parms[4], parms[5]); break;
@@ -2381,7 +2501,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 			advanceTime(parms[0]); break;
 		case 0x79:
 			return inUsecode(parms[0]);
-		//+++++++++
+		case 0x7a:
+			callGuards(); break;
+		case 0x7b:
+			objSpriteEffect(parms[0], parms[1], parms[2], parms[3], parms[4], 
+							parms[5], parms[6], parms[7]); break;
+		case 0x7c:
+			attackAvatar(); break;
 		case 0x7d:
 			return pathRunUsecode(gwin.getMainActor(), parms[0], parms[1], parms[2],
 					parms[3], false, false, false);
@@ -2394,7 +2520,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			closeGump(parms[0]); break;
 		case 0x81:
 			return UsecodeValue.getBoolean(gumpman.showingGumps(true));
-		//++++++++++++++
+		case 0x82:
+			setLight(parms[0], parms[1]); break;
+		case 0x83:
+			break;	// UNKNOWN
+		case 0x84:
+			setTimePalette(); break;
 		case 0x85:
 			return isNotBlocked(parms[0], parms[1], parms[2]);
 		case 0x86:

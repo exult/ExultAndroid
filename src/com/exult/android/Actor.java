@@ -233,6 +233,35 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public Actor asActor() {
 		return this;
 	}
+	/**
+	 *	Goes through the actor's readied gear and caches powers
+	 *	and immunities.
+	 */
+
+	public void refigureGear() {
+		final int locs[] = {Ready.head, Ready.belt, Ready.lhand,
+				Ready.lfinger, Ready.legs,
+				Ready.feet, Ready.rfinger, Ready.rhand, Ready.torso, 
+				Ready.amulet, Ready.earrings, Ready.cloak, Ready.gloves
+			};
+		int powers = 0, immune = 0;
+		lightSources = 0;
+		for (int i = 0; i < locs.length; i++) {
+			GameObject worn = spots[locs[i]];
+			if (worn != null) {
+				ShapeInfo info = worn.getInfo();
+				int rdy = info.getReadyType();
+				if (info.isLightSource() && (locs[i] != Ready.belt ||
+						(rdy != Ready.lhand && rdy != Ready.rhand && rdy != Ready.both_hands)))
+					lightSources++;
+				powers |= info.getObjectFlags(worn.getFrameNum(),
+					info.hasQuality() ? worn.getQuality() : -1);
+				immune |= info.getArmorImmunity();
+			}
+		}
+		gearImmunities = (byte)immune;
+		gearPowers = (byte)powers;
+	}
 	public final int getProperty(int prop) {
 		
 		if (prop == Actor.sex_flag)
