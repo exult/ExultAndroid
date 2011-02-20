@@ -68,19 +68,17 @@ public class IregGameObject extends GameObject {
 		int lift			// Desired lift.
 		) {
 			// (These are all animated.)
-		/* +++++FINISH
 		if (info.isField() && info.getFieldType() >= 0)
-			return new Field_object(shnum, frnum, tilex, tiley,
-					lift, Egg_object::fire_field + info.get_field_type());
-		else */ if (info.isAnimated() || info.hasSfx())
+			return new EggObject.Field(shnum, frnum, tilex, tiley,
+					lift, (byte)(EggObject.fire_field + info.getFieldType()));
+		else if (info.isAnimated() || info.hasSfx())
 			return new Animated(shnum, frnum, tilex, tiley, lift);
 		else if (shnum == 607)		// Path.
 			return new EggObject.PathMarker(
 					shnum, frnum, tilex, tiley, lift);
-		/*++++++++++++++
-		else if (info.is_mirror())	// Mirror
-			return new Mirror_object(shnum, frnum, tilex, tiley, lift);
-		*/ else if (info.isBodyShape())
+		else if (info.isMirror())	// Mirror
+			return new EggObject.Mirror(shnum, frnum, tilex, tiley, lift);
+		else if (info.isBodyShape())
 			return new Actor.DeadBody(shnum, frnum, tilex, tiley, lift, -1);
 		else if (info.getShapeClass() == ShapeInfo.virtue_stone)
 			return new VirtueStoneObject(
@@ -107,6 +105,16 @@ public class IregGameObject extends GameObject {
 	public final int getCommonIregSize() {
 		return (getShapeNum() >= 1024 || getFrameNum() >= 64) 
 								? 7 : 5; 
+	}
+	@Override
+	public int getIregSize() {
+		return iregGetIregSize();
+	}
+	protected int iregGetIregSize() {
+		// These shouldn't ever happen, but you never know
+		if (gumpman.findGump(this) != null || UsecodeScript.find(this) != null)
+			return -1;
+		return 6 + getCommonIregSize();
 	}
 	/*
 	 *	Write the common IREG data for an entry.
@@ -149,6 +157,9 @@ public class IregGameObject extends GameObject {
 	}
 	@Override
 	public void writeIreg(OutputStream out) throws IOException {
+		iregWriteIreg(out);
+	}
+	public void iregWriteIreg(OutputStream out) throws IOException {	
 		int ind = writeCommonIreg(10, writeBuf);
 		writeBuf[ind++] = (byte)((getLift()&15)<<4);
 		writeBuf[ind] = (byte)getQuality();

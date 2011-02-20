@@ -424,7 +424,7 @@ public class EggObject extends IregGameObject {
 			owner.remove(this);
 		else {
 		 	if (chunk != null) {
-				gwin.addDirty(this);	// (Make's ::move() simpler.).
+				gwin.addDirty(this);	// (Make's .move() simpler.).
 				chunk.removeEgg(this);
 			}
 		}
@@ -468,10 +468,8 @@ public class EggObject extends IregGameObject {
 	// Get size of IREG. Returns -1 if can't write to buffer
 	public int getIregSize() {
 		// These shouldn't ever happen, but you never know
-		/*  +++++++++FINISH
-		if (gumpman.findGump(this) || UsecodeScript.find(this))
+		if (gumpman.findGump(this) != null || UsecodeScript.find(this) != null)
 			return -1;
-		*/
 		String str1 = getStr1();
 		boolean hasStr = str1 != null && str1.length() != 0;
 		return 8 + getCommonIregSize() + ((data3 > 0) ? 2 : 0)
@@ -532,15 +530,15 @@ public class EggObject extends IregGameObject {
 			super(shnum, frnum, tx, ty, tz, itype, prob, d1);
 		}
 		public void hatchNow(GameObject obj, boolean must) {
+			/* UNUSED
 			int dir = 0;
 			if (obj != null) {		// Get direction from obj. to egg.
 				dir = EUtil.getDirection16(obj.getTileY() - getTileY(), 
 							getTileX() - obj.getTileX());
-				}
-			/* ++++++FINISH
-			Audio::get_ptr().play_sound_effect(score, this, AUDIO_MAX_VOLUME, 
-								continuous);
+			}
 			*/
+			audio.playSfx((int)score, this, Audio.MAX_VOLUME, 
+							continuous ? -1 : 0);
 		}
 	};
 	public static class VoiceEgg extends EggObject {
@@ -659,7 +657,7 @@ public class EggObject extends IregGameObject {
 	public static class MissileEgg extends EggObject {
 		short weapon;
 		byte dir, delay;
-		// ++++++++FINISH Missile_launcher *launcher;
+		MissileLauncher launcher;
 		public MissileEgg(int shnum, int frnum, int tx, int ty,
 				int tz, short itype, byte prob, short d1, short d2) {
 			super(shnum, frnum, tx, ty, tz, itype, prob, d1, d2, (short)0);
@@ -668,51 +666,41 @@ public class EggObject extends IregGameObject {
 			  delay = (byte)((d2>>8)&0xff);
 		}
 		public void removeThis() {
-			/* ++++++++FINISH
-			if (launcher) {		// Stop missiles.
-				gwin.get_tqueue().remove(launcher);
-				delete launcher;
-				launcher = 0;
+			if (launcher != null) {		// Stop missiles.
+				tqueue.remove(launcher);
+				launcher = null;
 			}
-			*/
 			super.removeThis();
 		}
 		public void paint() {
-			/* +++++++++++
 						// Make sure launcher is active.
-			if (launcher && !launcher.in_queue())
-				gwin.get_tqueue().add(0L, launcher, 0);
-			*/
+			if (launcher != null && !launcher.inQueue())
+				tqueue.add(0, launcher, null);
 			super.paint();
 		}
 		public void set(int crit, int dist) {
-			/* +++++++++FINISH
-			if (crit == external_criteria && launcher) {	// Cancel trap.
+			if (crit == external_criteria && launcher != null) {	// Cancel trap.
 				tqueue.remove(launcher);
-				launcher = 0;
+				launcher = null;
 			}
 			super.set(crit, dist);
-			*/
 		}
 		public void hatchNow(GameObject obj, boolean must) {
 			ShapeInfo info = ShapeID.getInfo(weapon);
-			/* +++++++++FINISH
-			Weapon_info *winf = info.get_weapon_info();
+			WeaponInfo winf = info.getWeaponInfo();
 			int proj;
-			if (winf && winf.get_projectile())
-				proj = winf.get_projectile();
+			if (winf != null && winf.getProjectile() != 0)
+				proj = winf.getProjectile();
 			else
 				proj = 856;	// Fireball.  Shouldn't get here.
-			if (!launcher)
-				launcher = new Missile_launcher(this, weapon,
-				    proj, dir, gwin.get_std_delay()*delay);
-			if (!launcher.in_queue())
-				gwin.get_tqueue().add(0L, launcher, 0);
-			*/
+			if (launcher == null)
+				launcher = new MissileLauncher(this, weapon,
+				    proj, dir, delay);
+			if (!launcher.inQueue())
+				tqueue.add(0, launcher, null);
 		}
-	};
-
-
+	}
+	
 	public static class TeleportEgg extends EggObject {
 		short mapnum;			// If not -1.
 		int destx, desty, destz;
@@ -817,6 +805,256 @@ public class EggObject extends IregGameObject {
 					// Can this be clicked on?
 		public boolean isFindable() {
 			return gwin.paintEggs && super.isFindable();
+		}
+	}
+	/*
+	 *	Fields are activated like eggs.
+	 */
+	public static class Field extends EggObject {
+		/*
+		 *	Apply field.
+		 *
+		 *	Output:	True to delete field.
+		 */
+		private boolean fieldEffect(Actor actor) {// Apply field.
+			boolean del = false;		// Only delete poison, sleep fields.
+			switch ((int)type) {
+			case poison_field:
+				if (EUtil.rand()%2 != 0 && !actor.getFlag(GameObject.poisoned)) {
+					actor.setFlag(GameObject.poisoned);
+					del = true;
+				}
+				break;
+			case sleep_field:
+				if (EUtil.rand()%2 != 0 && !actor.getFlag(GameObject.asleep)) {
+					actor.setFlag(GameObject.asleep);
+					del = true;
+				}
+				break;
+			case fire_field:
+				actor.reduceHealth(2 + EUtil.rand()%3, WeaponInfo.fire_damage,
+											null, null);
+							// But no sleeping here.
+				actor.clearFlag(GameObject.asleep);
+				break;
+			case caltrops_field:
+				if (actor.getEffectiveProp(Actor.intelligence) < EUtil.rand()%40)
+					//actor.reduceHealth(2 + EUtil.rand()%3, Weapon_info.normal_damage);
+					// Caltrops don't seem to cause much damage.
+					actor.reduceHealth(1 + EUtil.rand()%1, 
+										WeaponInfo.normal_damage, null, null);
+				return false;
+				}
+			if (!del)			// Tell animator to keep checking.
+				((Animator.FieldFrame) animator).activated = true;
+			return del;
+		}
+		public Field(int shapenum, int framenum, int tilex, 
+						int tiley, int lft, byte typ) {
+			super(shapenum, framenum, tilex, tiley, lft, typ);
+			ShapeInfo info = getInfo();
+			if (info.isAnimated())
+				setAnimator(new Animator.FieldFrame(this));
+		}
+		@Override
+		public void paint() {
+			if (animator != null)
+				animator.wantAnimation();	// Be sure animation is on.
+			paintObj();	// Always paint these.
+		}
+		/*
+		 *	Run usecode when double-clicked or when activated by proximity.
+		 *	(Generally, nothing will happen.)
+		 */
+		@Override		
+		public void activate(int event) {
+							// Field_frame_animator calls us with
+							//   event==0 to check for damage.
+			if (event != UsecodeMachine.npc_proximity) {
+				super.activate(event);
+				return;
+			}
+			Vector<GameObject> npcs = new Vector<GameObject>();// Find all nearby NPC's.
+			findNearbyActors(npcs, EConst.c_any_shapenum, 
+					2*EConst.c_tiles_per_chunk);
+			Rectangle eggfoot = new Rectangle(), actfoot = new Rectangle();
+			getFootprint(eggfoot);
+							// Clear flag to check.
+			((Animator.FieldFrame) animator).activated = false;
+			for (GameObject obj : npcs) {
+				Actor actor = (Actor)obj;
+				if (actor.isDead() || distance(actor) > 4)
+					continue;
+				actor.getFootprint(actfoot);
+				if (actfoot.intersects(eggfoot))
+					hatch(actor, false);
+			}
+		}
+		@Override
+		public void hatch(GameObject obj, boolean must) {
+			if (fieldEffect((Actor) obj))// Apply field.
+				removeThis();		// Delete sleep/poison if applied.
+		}
+		@Override		// Write out to IREG file.
+		public void writeIreg(OutputStream out) throws IOException {
+			iregWriteIreg(out);	// Write as normal ireg.
+		}
+		@Override		// Get size of IREG. Returns -1 if can't write to buffer
+		public int getIregSize() {
+			return iregGetIregSize();
+		}
+		@Override
+		public boolean isFindable()
+			{ return true; }
+	}/*
+	 *	Mirrors are handled like eggs.
+	 */
+
+	public static class Mirror extends EggObject {
+		Tile t = new Tile();
+		public Mirror(int shapenum, int framenum,  int tilex, 
+			 int tiley,  int lft) {
+			super(shapenum, framenum, tilex, tiley, lft, (byte)mirror_object);
+				solid_area = true;
+		}
+		@Override				// Run usecode function.
+		public void activate(int event) {
+			ucmachine.callUsecode(getUsecode(), this, event);
+		}
+		@Override
+		public void hatch(GameObject obj, boolean must) {
+			// These are broken, so dont touch
+			if ((getFrameNum()%3) == 2)  
+				return;
+			int wanted_frame = getFrameNum()/3;
+			wanted_frame *= 3;
+			// Find upperleft or our area
+			getTile(t);
+			// To left or above?
+			if (getShapeNum()==268) {	// Left
+				t.tx++;
+				t.ty--;
+			}
+			else {				// Above
+				t.tx--;
+				t.ty++;
+			}
+			// We just want to know if the area is blocked
+			if (!MapChunk.areaAvailable(2, 2, 1, t, EConst.MOVE_WALK, 0, 0)) {
+				wanted_frame++;
+			}
+			// Only if it changed update the shape
+			if (getFrameNum() != wanted_frame)
+				changeFrame(wanted_frame);
+		}
+		@Override				// Can it be activated?
+		public boolean isActive(GameObject obj,
+				int tx, int ty, int tz, int from_tx, int from_ty) {
+			// These are broken, so dont touch
+			int frnum = getFrameNum();
+			if (frnum%3 == 2)
+				return false;
+			if (frnum >= 3 && game.isBG())	// Demon mirror in FOV.
+				return false;
+			return true;
+		}
+		@Override
+		public void setArea() {		// Set up active area.
+			// These are broken, so dont touch
+			if ((getFrameNum()%3) == 2) 
+				area.set(0, 0, 0, 0);
+			
+			// Get absolute tile coords.
+			int tx = getTileX(), ty = getTileY();
+			// To left or above?
+			if (getShapeNum()==268) 
+				area.set(tx-1, ty-3, 6, 6);
+			else  
+				area.set(tx-3 , ty-1, 6, 6);
+		}
+
+		@Override				// Render.
+		public void paint() {
+			paintObj();		// Always paint these.
+		}
+		@Override		// Can this be clicked on?
+		public boolean isFindable()
+			{ return true; }
+		@Override
+		public void writeIreg(OutputStream out) throws IOException {
+			iregWriteIreg(out);
+		}
+		@Override		// Get size of IREG. Returns -1 if can't write to buffer
+		public int getIregSize() {
+			return iregGetIregSize();
+		}
+	}
+	/*
+	 *	Timer for a missile egg (type-6 egg).
+	 */
+	static class MissileLauncher extends GameSingletons 
+								implements TimeSensitive {
+		EggObject egg;		// Egg this came from.
+		int timeQueueCount;
+		Tile src = new Tile(), adj = new Tile();
+		static Rectangle winRect = new Rectangle();
+		int weapon;			// Shape for weapon.
+		int shapenum;			// Shape for missile.
+		int dir;			// Direction (0-7).  (8==??).
+		int delay;			// Delay (msecs) between launches.
+		public MissileLauncher(EggObject e, int weap, int shnum, int di, int del) {
+			egg = e; weapon = weap; shapenum = shnum; dir = di; delay = del;
+		}
+		@Override
+		public void handleEvent(int curtime, Object udata) {
+			egg.getTile(src);
+			// Is egg off the screen?
+			gwin.getWinTileRect(winRect);
+			if (!winRect.hasPoint(src.tx, src.ty))
+				return;			// Return w'out adding back to queue.
+			EffectsManager.Projectile proj = null;
+			if (dir < 8) {			// Direction given?
+								// Get adjacent tile in direction.
+				src.getNeighbor(adj, dir%8);
+							// Make it go 20 tiles.
+				int dx = adj.tx - src.tx, dy = adj.ty - src.ty;
+				src.tx += 20*dx;
+				src.ty += 20*dy;
+				proj = new EffectsManager.Projectile(egg, src, weapon, 
+											shapenum, shapenum, 60, -1, false);
+			} else {				// Target a party member.
+				int psize = partyman.getCount() + 1;	// Include Avatar.
+				int cnt = psize;
+				int n = EUtil.rand()%psize;	// Pick one at random.
+							// Find one we can hit.
+				for (int i = n; proj == null && cnt > 0; 
+											cnt--, i = (i + 1)%psize) {
+					Actor act = i == 0 ? gwin.getMainActor() : gwin.getNpc(i+1);
+					act.getTile(adj);
+					if (PathFinder.FastClient.isStraightPath(src, adj))
+						proj = new EffectsManager.Projectile(
+							src, act, weapon, shapenum, shapenum, 60, -1, false);
+				}
+			}
+			if (proj != null)
+				eman.addEffect(proj);
+							// Add back to queue for next time.
+			tqueue.add(curtime + (delay > 0 ? delay : 1), this, udata);
+		}
+		/*
+		 * For TimeSensitive
+		 */
+		public boolean alwaysHandle() {	
+			return false;
+		}
+		public void addedToQueue() {
+			++timeQueueCount;
+		}
+		public void removedFromQueue() {
+			--timeQueueCount;
+		}
+		public boolean inQueue() {
+			return timeQueueCount > 0;
 		}
 	}
 }

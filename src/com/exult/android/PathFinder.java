@@ -350,7 +350,18 @@ public abstract class PathFinder {
 		}
 		//static boolean is_grabable(GameObject from, Tile_coord to) {
 						// Check for unblocked straight path.
-		//static boolean is_straight_path(Tile_coord from, Tile_coord to);
+		public static boolean isStraightPath(Tile from, Tile to) {
+			ZombiePathFinder path = new ZombiePathFinder();
+			if (!path.NewPath(from, to, null))	// Should always succeed.
+				return false;
+			// Check each tile.
+			boolean done;
+			while (path.getNextStep(pos1))
+				if (!pos1.equals(from) && !pos1.equals(to) && 
+								gmap.isTileOccupied(pos1.tx, pos1.ty, pos1.tz))
+					return false;	// Blocked.
+			return true;			// Looks okay.
+		}
 		public static boolean isStraightPath(GameObject from, GameObject to) {
 			Block fromvol = from.getBlock(null),
 		      	  tovol = to.getBlock(null);

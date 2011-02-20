@@ -1184,6 +1184,10 @@ public abstract class GameObject extends ShapeID {
 		gwin.getShapeLocation(paintLoc, this);
 		paintShape(paintLoc.x, paintLoc.y);
 	}
+	protected final void paintObj() {	// Same as above
+		gwin.getShapeLocation(paintLoc, this);
+		paintShape(paintLoc.x, paintLoc.y);
+	}
 	public void paintOutline(int pix) {
 		gwin.getShapeLocation(paintLoc, this);
 		paintOutline(paintLoc.x, paintLoc.y, pix);
