@@ -318,6 +318,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 		return val;
 	}
+	public void forceSleep() {
+		flags |= (1 << GameObject.asleep);
+		//++++FINISH needTimers().startSleep();
+		setAction(null);		// Stop what you're doing.
+		layDown(false);	// Lie down.
+	}
 	public void setFlag(int flag) {	
 		MonsterInfo minf = getInfo().getMonsterInfo();
 		if (minf == null)

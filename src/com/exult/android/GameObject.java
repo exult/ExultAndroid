@@ -294,6 +294,10 @@ public abstract class GameObject extends ShapeID {
 		}
 		return vec.elementAt(0);
 	}
+	public GameObject findClosest(int shapenums[]) {
+		Vector<GameObject> vec = new Vector<GameObject>();
+		return findClosest(vec, shapenums, 24);
+	}
 	public GameObject findClosest(Vector<GameObject> vec, int shapenums[]) {
 		return findClosest(vec, shapenums, 24);
 	}
@@ -343,6 +347,10 @@ public abstract class GameObject extends ShapeID {
 	}
 	public int findNearbyActors(Vector<GameObject> vec, int shapenum, int delta) {
 		return findNearby(vec, shapenum, delta, 8);
+	}
+	public int findNearbyActors(Vector<GameObject> vec, int shapenum, 
+												int delta, int mask) {
+		return findNearby(vec, shapenum, delta, mask);
 	}
 	public boolean isClosedDoor() {
 		ShapeInfo info = getInfo();

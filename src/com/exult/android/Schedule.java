@@ -1124,6 +1124,158 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	Sleep in a  bed.
+	 */
+	public static class Sleep extends Schedule {
+		private Tile floorloc;		// Where NPC was standing before.
+		private GameObject bed;		// Bed being slept on, or 0.
+		private int state;
+		private int spread0, spread1;		// Range of bedspread frames.
+		// Stand up if not already.
+		private static void standUp(Actor npc) {
+			if ((npc.getFrameNum()&0xf) != Actor.standing)
+				// Stand.
+				npc.changeFrame(Actor.standing);
+		}
+		public Sleep(Actor n) {
+			super(n);
+			floorloc = new Tile(-1, -1, -1);
+			if (game.isBG()) {
+				spread0 = 3;
+				spread1 = 16;
+			} else {		// Serpent Isle.
+				spread0 = 7;
+				spread1 = 20;
+			}
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			if (bed == null && state == 0 &&		// Always find bed.
+					!npc.getFlag(GameObject.asleep)) {	// Unless flag already set
+							// Find closest EW or NS bed.
+				final int bedshapes[] = {696, 1011};
+				standUp(npc);
+				bed = npc.findClosest(bedshapes);
+				if (bed == null && game.isBG()) {	// Check for Gargoyle beds.
+					final int gbeds[] = {363, 312};
+					bed = npc.findClosest(gbeds);
+				}
+			}
+			int frnum = npc.getFrameNum();
+			if ((frnum&0xf) == Actor.sleep_frame)
+				return;			// Already sleeping.
+
+			switch (state) {
+			case 0:				// Find path to bed.
+				if (bed == null) {
+							// Just lie down at current spot.
+					int dirbits = npc.getFrameNum()&(0x30);
+					npc.changeFrame(Actor.sleep_frame|dirbits);
+					npc.forceSleep();
+					return;
+				}
+				state = 1;
+				Vector<GameObject> tops = new Vector<GameObject>();	
+				// Want to find top of bed.
+				bed.findNearby(tops, bed.getShapeNum(), 1, 0);
+				for (GameObject top:tops) {
+					frnum = top.getFrameNum();
+					if (frnum >= spread0 && frnum <= spread1) {
+						bed = top;
+						break;
+					}
+				}
+				Tile bloc = new Tile();
+				bed.getTile(bloc);
+				bloc.tz -= bloc.tz%5;	// Round down to floor level.
+				ShapeInfo info = bed.getInfo();
+				bloc.tx -= info.get3dXtiles(bed.getFrameNum())/2;
+				bloc.ty -= info.get3dYtiles(bed.getFrameNum())/2;
+							// Get within 3 tiles.
+				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 3);
+				Tile pos = new Tile();
+				npc.getTile(pos);
+				ActorAction pact = ActorAction.PathWalking.createPath(
+						pos, bloc, cost);
+				if (pact != null)
+					npc.setAction(pact);
+				npc.start(200, 0);	// Start walking.
+				break;
+			case 1:				// Go to bed.
+				npc.stop();		// Just to be sure.
+				int bedshape = bed.getShapeNum();
+				int dir = (bedshape == 696 || bedshape == 363) 
+										? EConst.west : EConst.north;
+				npc.setFrame(npc.getDirFramenum(dir, Actor.sleep_frame));
+							// Get bed info.
+				info = bed.getInfo();
+				Tile bedloc = new Tile();
+				bed.getTile(bedloc);
+				npc.getTile(floorloc);
+				int bedframe = bed.getFrameNum();// Unmake bed.
+				if (bedframe >= spread0 && bedframe < spread1 && 
+											(bedframe%2) != 0) {
+					bedframe++;
+					bed.changeFrame(bedframe);
+					}
+				boolean bedspread = (bedframe >= spread0 && (bedframe%2) == 0);
+							// Put NPC on top of bed.
+				npc.move(bedloc.tx, bedloc.ty, bedloc.tz + 
+						(bedspread ? 0 : info.get3dHeight()));
+				npc.forceSleep();
+				state = 2;
+				break;
+			default:
+				break;
+			}
+		}
+		@Override
+		public void ending(int newtype) {// Switching to another schedule.
+			if (newtype == wait ||	
+				// Not time to get up, Penumbra!
+					newtype == sleep)
+				return;			// ++++Does this leave NPC's stuck?++++
+			if (bed != null &&			// Still in bed?
+					(npc.getFrameNum()&0xf) == Actor.sleep_frame &&
+					npc.distance(bed) < 8) {
+				// Locate free spot.
+				if (floorloc.tx == -1)
+						// Want spot on floor.
+					npc.getTile(floorloc);
+				floorloc.tz -= floorloc.tz%5;
+				Tile pos = new Tile(floorloc);
+				boolean found = MapChunk.findSpot(pos, 6, npc.getShapeNum(), 
+						Actor.standing, 0, -1, MapChunk.anywhere);
+				if (!found)
+					// Failed?  Allow change in lift.
+					found = MapChunk.findSpot(pos, 6, npc.getShapeNum(), 
+								Actor.standing, 1, -1, MapChunk.anywhere);
+				floorloc = pos;
+				if (!found)
+					floorloc.tx = -1;
+						// Make bed.
+				int frnum = bed.getFrameNum();
+				// Unless there's another occupant.
+					
+				if (frnum >= spread0 && frnum <= spread1 && (frnum%2) == 0) {
+					Vector<GameObject> occ = new Vector<GameObject>();
+					if (bed.findNearbyActors(occ, EConst.c_any_shapenum, 0) < 2)
+						bed.setFrame(frnum - 1);
+				}
+			}
+			if (floorloc.tx >= 0)		// Get back on floor.
+				npc.move(floorloc);
+			npc.clearFlag(GameObject.asleep);
+			npc.setFrame(Actor.standing);
+			gwin.setAllDirty();		// Update all, since Av. stands up.
+			state = 0;			// In case we go back to sleep.
+		}
+		@Override			// Set where to sleep.
+		public void setBed(GameObject b)
+			{ bed = b; state = 0; }
+		};
+	
+	/*
 	 *	Action to sit in the chair NPC is in front of.
 	 */
 

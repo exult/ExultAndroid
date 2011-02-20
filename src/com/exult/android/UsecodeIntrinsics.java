@@ -4,6 +4,8 @@ import java.util.Vector;
 import java.util.LinkedList;
 import java.util.Comparator;
 import java.util.Collections;
+
+import android.R.string;
 import android.graphics.Point;
 
 public class UsecodeIntrinsics extends GameSingletons {
@@ -142,13 +144,11 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (conv.getNumFacesOnScreen() == 0)
 			eman.removeTextEffects();
 		// Only non persistent
-		/* ++++++++++++
-		if (gumpman.showing_gumps(true)) {
-			gumpman.close_all_gumps();
+		if (gumpman.showingGumps(true)) {
+			gumpman.closeAllGumps(false);
 			gwin.setAllDirty();
-			init_conversation();	// jsf-Added 4/20/01 for SI-Lydia.
+			ucmachine.initConversation();	// jsf-Added 4/20/01 for SI-Lydia.
 		}
-		*/
 		gwin.paintDirty();
 		conv.showFace(shape, frame, slot);
 		//	user_choice = 0;		// Seems like a good idea.
@@ -846,7 +846,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		/* ++++++++++FINISH
 		while (todo > 0) {
 			Tile_coord pos = Map_chunk.find_spot(
-						gwin.get_main_actor().get_tile(), 3,
+						gwin.getMainActor().get_tile(), 3,
 								shapenum, framenum, 2);
 			if (pos.tx == -1)	// Hope this rarely happens.
 					break;
@@ -1439,6 +1439,41 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Is player female?
 		return UsecodeValue.getBoolean(gwin.getMainActor().getTypeFlag(Actor.tf_sex));
 	}
+	private static final void armageddonDeath(Actor npc, boolean barks,
+														Rectangle screen) {
+		// Leave a select few alive (like LB, Batlin).
+		if (npc != null && !npc.isDead() && 
+						!npc.getInfo().survivesArmageddon()) {
+			final String text[] = {"Aiiiieee!", "Noooo!", "#!?*#%!"};
+			final int numtext = text.length;
+			int tx = npc.getTileX(), ty = npc.getTileY();
+			if (barks && screen.hasPoint(tx, ty))
+				npc.say(text[EUtil.rand()%numtext]);
+			// Lay down and lie animation.
+			npc.layDown(false);
+			// Originals set health to -10; marking it this way allows
+			// Actor.is_dying to return true in case it is needed.
+			npc.setProperty(Actor.health, -npc.getProperty(Actor.health)/3-1);
+			// This makes the NPC stay there unresponsive and immune to damage.
+			npc.setFlag(GameObject.dead);
+		}
+	}
+	private final void armageddon() {
+		int cnt = gwin.getNumNpcs();
+		Rectangle screen = tempRect;
+		gwin.getWinTileRect(screen);
+		for (int i = 1; i < cnt; i++)	// Almost everyone dies.
+			armageddonDeath(gwin.getNpc(i), true, screen);
+		Vector<GameObject> vec = new Vector<GameObject>();		// Get any monsters nearby.
+		gwin.getMainActor().findNearbyActors(vec, 
+										EConst.c_any_shapenum, 40, 0x28);
+		for (GameObject each :vec) {
+			Actor act = (Actor)each;
+			if (each instanceof MonsterActor)
+				armageddonDeath(act, false, screen);
+			}
+		gwin.armageddon = true;
+	}
 	private final void haltScheduled(UsecodeValue p0) {
 		// Halt_scheduled(item)
 		GameObject obj = getItem(p0);
@@ -1615,7 +1650,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	/*
 	 *	Look for a barge that an object is a part of, or on, using the same
-	 *	sort (right-left, front-back) as ::find_nearby().  If there are more
+	 *	sort (right-left, front-back) as .find_nearby().  If there are more
 	 *	than one beneath 'obj', the highest is returned.
 	 */
 	private static BargeObject getBarge(GameObject obj) {
@@ -1768,7 +1803,49 @@ public class UsecodeIntrinsics extends GameSingletons {
 		eman.addEffect(new EffectsManager.Projectile(attacker,
 						pos, wshape, ashape, missile, attval, 4, false));
 	}
-	
+	private final void napTime(UsecodeValue p0) {
+		// nap_time(bed)
+		GameObject bed = getItem(p0);
+		if (bed == null)
+			return;
+		Vector<GameObject> npcs = new Vector<GameObject>();
+		// See if bed is occupied by an NPC.
+		int cnt = bed.findNearbyActors(npcs, EConst.c_any_shapenum, 0);
+		Actor npc = null;
+		if (cnt > 0) {
+			for (GameObject each : npcs) {
+				int zdiff = each.getLift() - bed.getLift();
+				if (each != gwin.getMainActor() &&
+				    (each.getFrameNum()&0xf) == Actor.sleep_frame &&
+							zdiff <= 2 && zdiff >= -2) {
+					npc = (Actor)each;
+					break;	// Found one.
+				}
+			}
+			if (npc != null) {	// Show party member's face.
+				int party_cnt = partyman.getCount();
+				int npcnum = party_cnt != 0 ? partyman.getMember(
+							EUtil.rand()%party_cnt) : 356;
+				UsecodeValue actval = new UsecodeValue.IntValue(-npcnum), 
+							 frval = UsecodeValue.getZero();
+				showNpcFace(actval, frval, -1);
+				conv.showNpcMessage(ItemNames.msgs[ItemNames.first_bed_occupied +
+							EUtil.rand()%ItemNames.num_bed_occupied]);
+				removeNpcFace(actval);
+				gwin.getMainActor().setScheduleType(
+							Schedule.follow_avatar);
+				return;
+			}
+		}
+		Schedule sched = gwin.getMainActor().getSchedule();
+		if (sched != null)			// Tell (sleep) sched. to use bed.
+			sched.setBed(bed);
+						// Give him a chance to get there (at
+						//   most 5 seconds.)
+		//++++++FINISH waitForArrival(gwin.getMainActor(), bed.get_tile(), 5000);
+						// !!! Seems 622 handles sleeping.
+		ucmachine.callUsecode(0x622, bed, UsecodeMachine.double_click);
+	}
 	private final void advanceTime(UsecodeValue p0) {
 		// Incr. clock by (parm[0]*.04min.).
 		clock.increment(p0.getIntValue()/GameClock.ticksPerMinute);
@@ -1801,7 +1878,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						// Allow rise of 3 (for SI lightning).
 			if (!MapChunk.findSpot(dest, 3, npc, 3))
 						// No?  Try at source level.
-				d = Map_chunk::find_spot(
+				d = Map_chunk.find_spot(
 					Tile_coord(dest.tx, dest.ty, src.tz), 3, npc,
 										0);
 			if (d.tx != -1)		// Found it?
@@ -2247,7 +2324,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			break;
 		case 0x5a:
 			return isPCFemale();
-		//++++++++++++
+		case 0x5b:
+			armageddon(); break;
 		case 0x5c:
 			haltScheduled(parms[0]); break;
 		case 0x5e:
@@ -2297,7 +2375,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x76:
 			fireProjectile(parms[0], parms[1], parms[2], parms[3],
 			                                    parms[4], parms[5]); break;
-		//++++++++
+		case 0x77:
+			napTime(parms[0]); break;
 		case 0x78:
 			advanceTime(parms[0]); break;
 		case 0x79:
