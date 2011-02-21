@@ -26,6 +26,59 @@ public class NpcTimers extends GameSingletons {
 			return true;
 		return false;
 	}
+	public NpcTimers(Actor n) {
+		npc = n;
+	}
+	public void done() {
+		hunger.done();
+		poison.done();
+		sleep.done();
+		invisibility.done();
+		protection.done();
+		for (Flag f : flags)
+			f.done();
+	}
+	public void startHunger() {
+		if (hunger == null)
+			hunger = new Hunger(this);
+	}
+	public void startPoison() {
+		if (poison != null)
+			poison.done();
+		poison = new Poison(this);
+	}
+	public void startSleep() {
+		if (sleep != null)
+			sleep.done();
+		sleep = new Sleep(this);
+	}
+	public void startInvisibility() {
+		if (invisibility != null)
+			invisibility.done();
+		invisibility = new Invisibility(this);
+	}
+	public void startProtection() {
+		if (protection != null)
+			protection.done();
+		protection = new Protection(this);
+	}
+	private void startFlag(int f, int i) {
+		if (flags[i] != null)
+			flags[i].done();
+		flags[i] = new Flag(this, f, i);
+	}
+	public void startMight() {
+		startFlag(GameObject.might, might);
+	}
+	public void startCurse() {
+		startFlag(GameObject.cursed, curse);
+	}
+	public void startCharm() {
+		startFlag(GameObject.charmed, charm);
+	}
+	public void startParalyze() {
+		startFlag(GameObject.paralyzed, paralyze);
+	}
 	public static abstract class Timer implements TimeSensitive {
 		protected int timeQueueCount;
 		protected NpcTimers list;
