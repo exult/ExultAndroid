@@ -484,10 +484,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (npc == gwin.getMainActor() && gwin.inCombat() &&
 			    newsched != Schedule.combat) {
 						// End combat mode (for L.Field).
-				/*+++++FINISH
-				audio.stopMusic();
+				//+++++FINISH audio.stopMusic();
 				gwin.toggleCombat();
-				*/
 			}
 		}
 	}
@@ -1139,10 +1137,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 				if (map != -1)
 					gwin.setMap(map);
 				gwin.centerView(tile.tx, tile.ty);
-				/* ++++++++FINISH
 				MapChunk.tryAllEggs(ava, tile.tx, 
 					tile.ty, tile.tz, oldX, oldY);
-				*/
 			// Close?  Add to 'nearby' list.
 			} else if (ava.distance(act) < 
 								gwin.getWidth()/EConst.c_tilesize) {
@@ -1345,7 +1341,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	private void wizardEye(UsecodeValue p0) {
 		// Let's give 50% longer.
-		//++++FINISH Wizard_eye(parms[0.getIntValue()*(3*gwin->get_std_delay())/2); 
+		//++++FINISH Wizard_eye(parms[0.getIntValue()*(3*gwin.get_std_delay())/2); 
 	}
 	private final UsecodeValue resurrect(UsecodeValue p0) {
 		// resurrect(body).  Returns actor if successful.
@@ -1798,7 +1794,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		/*++++++++FINISH
 		speech_track = p0.getIntValue();
 		if (speech_track >= 0)
-		okay = Audio::get_ptr()->start_speech(speech_track);
+		okay = Audio::get_ptr().start_speech(speech_track);
 	if (!okay)			// Failed?  Clear faces.  (Fixes SI).
 		init_conversation();
 	else if (GAME_SI)
@@ -1806,16 +1802,16 @@ public class UsecodeIntrinsics extends GameSingletons {
 		int face = 0;
 		if (speech_track < 21)	// Serpent?
 			{
-			Actor *ava = gwin->get_main_actor();
+			Actor *ava = gwin.get_main_actor();
 			face = 300;	// Translucent.
 					// Wearing serpent ring?
-			Game_object *obj = ava->get_readied(lfinger);
-			if (obj && obj->get_shapenum() == 0x377 &&
-					obj->get_framenum() == 1)
+			Game_object *obj = ava.get_readied(lfinger);
+			if (obj && obj.get_shapenum() == 0x377 &&
+					obj.get_framenum() == 1)
 				face = 295;	// Solid.
-			else if ((obj = ava->get_readied(rfinger))!=0 &&
-					obj->get_shapenum() == 0x377 &&
-					obj->get_framenum() == 1)
+			else if ((obj = ava.get_readied(rfinger))!=0 &&
+					obj.get_shapenum() == 0x377 &&
+					obj.get_framenum() == 1)
 				face = 295;	// Solid.
 			}
 		else if (speech_track < 23)
@@ -1841,13 +1837,13 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private static void runEndgame(UsecodeValue p0) {
 		/*+++++++++FINISH
 		audio.stopSfx();
-		game->end_game(parms[0.getIntValue() != 0);
+		game.end_game(parms[0.getIntValue() != 0);
 		// If successful enable menu entry and play credits afterwards
 		if(parms[0.getIntValue() != 0) {
 			std::ofstream endgameflg;
 		            U7open(endgameflg, "<SAVEGAME>/endgame.flg");
 		            endgameflg.close();
-			game->show_credits();
+			game.show_credits();
 		}
 		quitting_time = QUIT_TIME_YES;
 		*/
@@ -1918,7 +1914,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			sched.setBed(bed);
 						// Give him a chance to get there (at
 						//   most 5 seconds.)
-		//++++++FINISH waitForArrival(gwin.getMainActor(), bed.get_tile(), 5000);
+		Tile t = new Tile();
+		bed.getTile(t);
+		gwin.getMainActor().waitForArrival(t, 5000/TimeQueue.tickMsecs);
 						// !!! Seems 622 handles sleeping.
 		ucmachine.callUsecode(0x622, bed, UsecodeMachine.double_click);
 	}
@@ -2131,10 +2129,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case GameObject.bg_dont_move:
 			obj.setFlag(flag);
 						// Get out of combat mode.
-			/* ++++++++FINISH
 			if (obj == gwin.getMainActor() && gwin.inCombat())
 				gwin.toggleCombat();
-			*/
 						// Show change in status.
 			gwin.setAllDirty();
 			break;
@@ -2211,7 +2207,49 @@ public class UsecodeIntrinsics extends GameSingletons {
 		}
 		return UsecodeValue.getZero();
 	}
-	
+	public static void setCamera(UsecodeValue p0) {
+		// Set_camera(actor)
+		Actor actor = asActor(getItem(p0));
+		if (actor != null) {
+			gwin.setCameraActor(actor);
+			actor.getTile(tempTile);
+			//+++++FINISH activateCached(tempTile);	// Mar-10-01 - For Test of Love.
+		} else {
+			GameObject obj = getItem(p0);
+			if (obj != null) {
+				obj.getTile(tempTile);
+				gwin.centerView(tempTile);
+				//+++++FINISH activateCached(tempTile);	// Mar-10-01 - For Test of Love.
+			}
+		}
+	}
+	public final UsecodeValue getDeadParty(UsecodeValue p0) {
+		// Return list of dead companions' bodies.
+		GameObject obj = getItem(p0);
+		if (obj == null)
+			return UsecodeValue.getZero();
+		int cnt = partyman.getDeadCount();
+		Vector<GameObject> bodies = new Vector<GameObject>();
+		for (int i = 0; i < cnt; i++) {
+			GameObject body = gwin.getBody(
+						partyman.getDeadMember(i));
+						// Body within 50 tiles (a guess)?
+			if (body != null && body.distance(obj) < 50) {
+				bodies.add(body);
+			}
+		}
+		return UsecodeValue.ArrayValue.createObjectsList(bodies);
+	}
+	public final void viewTile(UsecodeValue p0) {
+		// Center view around given item.
+		Tile t;
+		if (!p0.isArray() || p0.getArraySize() < 2)
+			return;
+		else
+			t = new Tile(p0.getElem(0).getIntValue(),
+			               p0.getElem(1).getIntValue(), 0);
+		gwin.centerView(t);
+	}
 	private final void telekenesis(UsecodeValue p0) {
 		telekenesisFun = p0.getIntValue();
 	}
@@ -2564,14 +2602,12 @@ public class UsecodeIntrinsics extends GameSingletons {
 			return isWater(parms[0]);
 		case 0x91:
 			break;	// resetConvFace??
-		/* FINISH++++++++++++++++
 		case 0x92:
 			setCamera(parms[0]); break;
 		case 0x93:
 			return getDeadParty(parms[0]);
 		case 0x94:
 			viewTile(parms[0]); break;
-		*/
 		case 0x95:
 			telekenesis(parms[0]); break;
 		case 0x96:

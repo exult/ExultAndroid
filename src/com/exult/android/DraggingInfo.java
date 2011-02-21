@@ -418,17 +418,18 @@ public final class DraggingInfo extends GameSingletons {
 			return false;
 						// Make a 'dropped' sound.
 		audio.playSfx(Audio.gameSfx(74));
-		/* ++++++++FINISH
 		if (gump == null)			// Do eggs where it came from.
 			gmap.getChunk(oldcx, oldcy).activateEggs(obj,
-				    old_pos.tx, old_pos.ty, old_pos.tz, 
-						old_pos.tx, old_pos.ty);
+				    (int)old_pos.tx, (int)old_pos.ty, (int)old_pos.tz, 
+						(int)old_pos.tx, (int)old_pos.ty, false);
 						// Special:  BlackSword in SI.
-		else if (readied_index >= 0 && obj.getShapeNum() == 806)
+		else if (readied_index >= 0 && obj.getShapeNum() == 806) {
 						// Do 'unreadied' usecode.
-			gump.getContOrActor(x,y).callReadiedUsecode(
-				readied_index, obj, UsecodeMachine.unreadied);
-		*/
+			Actor act = gump.getContOrActor(x,y).asActor();
+			if (act != null)
+				act.callReadiedUsecode(
+								readied_index, obj, UsecodeMachine.unreadied);
+		}
 						// On a barge?
 		BargeObject barge = gwin.getMovingBarge();
 		if (barge != null)
@@ -441,10 +442,8 @@ public final class DraggingInfo extends GameSingletons {
 		*/
 		if (to_drop == obj) {		// Whole thing?
 						// Watch for stuff on top of it.
-			/* ++++++FINISH
 			if (old_foot.w > 0)
 				MapChunk.gravity(old_foot, old_top);
-			*/
 			System.out.println("Dropped whole object");
 			return true;		// All done.
 		}

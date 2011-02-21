@@ -16,8 +16,13 @@ public class CombatSchedule extends Schedule {
 						// In game:
 	/* MAYBE FINISH
 	public static void togglePause();	// Pause/resume.
-	public static void resume()		// Always resume.
 	*/
+	public static void resume() {	// Always resume.
+		if (paused) {
+			tqueue.resume(TimeQueue.ticks);
+			paused = false;
+		}
+	}
 	public static boolean isPaused()
 			{ return paused; }
 	/*

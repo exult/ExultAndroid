@@ -936,6 +936,105 @@ public final class MapChunk extends GameSingletons {
 		return findSpot(pos, dist, obj, 0, anywhere);
 	}
 	/*
+	 *	Test all nearby eggs when you've teleported in.
+	 */
+	private static int tryAllEggsNoRecurse = 0;
+	public static void tryAllEggs
+		(
+		GameObject obj,		// Object (actor) that's near.
+		int tx, int ty, int tz,		// Tile (absolute).
+		int from_tx, int from_ty	// Tile walked from.
+		)
+		{
+		// NO recursion here.
+		if (tryAllEggsNoRecurse != 0)
+			return;
+		tryAllEggsNoRecurse++;
+		int otx = obj.getTileX(), oty = obj.getTileY();
+		final int dist = 32;		// See if this works okay.
+		Rectangle area = new Rectangle(otx - dist, oty - dist, 2*dist, 2*dist);
+						// Go through interesected chunks.
+		ChunkIntersectIterator iter = new ChunkIntersectIterator(area);
+		// Get them here first, as activating an egg could affect chunk's list.
+		Vector<EggObject> eggs = new Vector<EggObject>(40);
+		MapChunk chunk;
+		while ((chunk = iter.getNext(null)) != null) {
+			ObjectList.ObjectIterator next = new ObjectList.ObjectIterator(
+												chunk.getObjects());
+			GameObject each;
+			while ((each = next.next()) != null) {
+				if (each.isEgg()) {
+					EggObject egg = (EggObject) each;
+						// Music eggs are causing problems.
+					if (egg.getType() != EggObject.jukebox &&
+						// And don't teleport a 2nd time.
+					    egg.getType() != EggObject.teleport &&
+				    	    egg.isActive(obj,
+							tx, ty, tz, from_tx, from_ty))
+						eggs.add(egg);
+				}
+			}
+		}
+		for (EggObject egg : eggs)
+			egg.hatch(obj, false);
+		tryAllEggsNoRecurse--;
+	}
+	/*
+	 *	Recursively apply gravity over a given rectangle that is known to be
+	 *	unblocked below a given lift.
+	 */
+	static public void gravity
+		(
+		Rectangle area,			// Unblocked tiles (in abs. coords).
+		int lift			// Lift where tiles are free.
+		) {	
+		// Gets list of objs. that dropped.
+		Vector<GameObject> dropped = new Vector<GameObject>(10);
+						// Go through interesected chunks.
+		ChunkIntersectIterator next_chunk =
+						new ChunkIntersectIterator(area);
+		MapChunk chunk;
+		Tile t = new Tile();
+		Rectangle foot = new Rectangle();
+		while ((chunk = next_chunk.getNext(null)) != null) {
+			ObjectList.ObjectIterator objs = new ObjectList.ObjectIterator(
+					chunk.objects);
+			GameObject obj;
+			while ((obj = objs.next()) != null) {
+						// We DO want NPC's to fall.
+				if (!obj.isDragable() && 
+							!obj.getInfo().isNpc())
+					continue;
+						// Get footprint.
+				obj.getFootprint(foot);
+						// Above area?
+				
+				t.set(foot.x, foot.y, obj.getLift() - 1);
+				int oldLift = t.tz;
+				if (t.tz >= lift && foot.intersects(area) &&
+						// Unblocked below itself?
+				    areaAvailable(foot.w, foot.h, 1, t,
+							EConst.MOVE_ALL_TERRAIN, 0) && t.tz < oldLift)
+					dropped.add(obj);
+			}
+		}
+						// Drop each one found.
+		for (GameObject obj : dropped) {
+						// Get footprint.
+			obj.getFootprint(foot);
+			t.set(foot.x, foot.y, obj.getLift() - 1);
+			int oldLift = t.tz;
+						// Let drop as far as possible.
+			if (areaAvailable(foot.w, foot.h, 1, t, 
+					EConst.MOVE_ALL_TERRAIN, 100) && t.tz < oldLift) {
+						// Drop & recurse.
+				obj.move(obj.getTileX(), obj.getTileY(), t.tz);
+				gravity(foot, obj.getLift() +
+						obj.getInfo().get3dHeight());
+			}
+		}
+	}
+	/*
 	 *	Get the list of tiles in a square perimeter around a given tile.
 	 *
 	 *	Output:	List (8*dist) of tiles, starting in Northwest corner and going
@@ -1045,9 +1144,11 @@ public final class MapChunk extends GameSingletons {
 					curcx = startcx;
 				}
 			}
-			intersect.set(0, 0, EConst.c_tiles_per_chunk, EConst.c_tiles_per_chunk);
+			if (intersect != null) {
+				intersect.set(0, 0, EConst.c_tiles_per_chunk, EConst.c_tiles_per_chunk);
 						// Intersect given rect. with chunk.
-			intersect.intersect(tiles);
+				intersect.intersect(tiles);
+			}
 			MapChunk chunk = gmap.getChunk(curcx, curcy);
 			curcx = EConst.INCR_CHUNK(curcx);
 			tiles.x -= EConst.c_tiles_per_chunk;

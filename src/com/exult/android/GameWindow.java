@@ -184,6 +184,44 @@ public class GameWindow extends GameSingletons {
 				timeStopped = new_expire;
 		}
 	}
+	public void toggleCombat() {
+		//combat = !combat;
+		// Change party member's schedules.
+		int newsched = combat ? Schedule.combat : Schedule.follow_avatar;
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt; i++) {
+			int party_member = partyman.getMember(i);
+			Actor person = getNpc(party_member);
+			if (person == null)
+				continue;
+			int sched = person.getScheduleType();
+			if (sched != newsched && sched != Schedule.wait &&
+			    sched != Schedule.loiter)
+				person.setScheduleType(newsched);
+			}
+		if (mainActor.getScheduleType() != newsched)
+			mainActor.setScheduleType(newsched);
+		if (combat) {			// Get rid of flee modes.
+			mainActor.readyBestWeapon();
+			setMovingBarge(null);	// And get out of barge mode.
+			Actor all[] = new Actor[9];
+			cnt = getParty(all, true);
+			for (int i = 0; i < cnt; i++) {
+						// Did Usecode set to flee?
+				Actor act = all[i];
+				if (act.getAttackMode() == Actor.flee &&
+				    !act.didUserSetAttack())
+					act.setAttackMode(Actor.nearest, false);
+						// And avoid attacking party members,
+						//  in case of Usecode bug.
+				GameObject targ = act.getTarget();
+				if (targ != null && targ.getFlag(GameObject.in_party))
+					act.setTarget(null);
+				}
+			}
+		else				// Ending combat.
+			CombatSchedule.resume();	// Make sure not still paused.
+	}
 	public final MainActor getMainActor() {
 		return mainActor;
 	}
@@ -507,6 +545,22 @@ public class GameWindow extends GameSingletons {
 		clipToWin(dirty);
 	}
 	/*
+	 *	Set actor to center view around.
+	 */
+
+	public void setCameraActor(Actor a) {
+		if (a == mainActor &&		// Setting back to main actor?
+		    cameraActor != null &&		// Change in chunk?
+		    (cameraActor.getCx() != mainActor.getCx() ||
+		     cameraActor.getCy() != mainActor.getCy()))
+		    				// Cache out temp. objects.
+			//++++FINISH emulateCache(cameraActor.getChunk(), mainActor.getChunk());
+		cameraActor = a;
+		setScrolls(a.getTileX(), a.getTileY());
+		// Set scrolling around position, and read in map there.
+		setAllDirty();
+	}
+	/*
 	 * 	Start walking using pathfinder.
 	 */
 	public void startActorAlongPath(int winx, int winy, int speed) {
@@ -572,7 +626,7 @@ public class GameWindow extends GameSingletons {
 				if (mainActor.get_lift()%5)// Up on something?
 				{	// See if we're stuck in the air.
 					int savetz = start.tz;
-					if (!Map_chunk::is_blocked(start, 1, 
+					if (!Map_chunk.is_blocked(start, 1, 
 						MOVE_WALK, 100) && 
 						start.tz < savetz)
 						mainActor.move(start.tx, start.ty, 
@@ -618,7 +672,7 @@ public class GameWindow extends GameSingletons {
 		int liftpixels = 4*lift;	// Figure abs. tile.
 		int tx = scrolltx + (fromx + liftpixels)/EConst.c_tilesize,
 	    	ty = scrollty + (fromy + liftpixels)/EConst.c_tilesize;
-					// Wrap:Game_window::start_actor
+					// Wrap:Game_window.start_actor
 		tx = (tx + EConst.c_num_tiles)%EConst.c_num_tiles;
 		ty = (ty + EConst.c_num_tiles)%EConst.c_num_tiles;
 		tempTile.set(tx, ty, lift);
@@ -656,12 +710,10 @@ public class GameWindow extends GameSingletons {
 			}
 		}
 		mainActor.getFollowers();
-		/* +++++++++++
-		if (!skip_eggs)			// Check all eggs around new spot.
-			Map_chunk::try_all_eggs(mainActor, t.tx, t.ty, t.tz,
+		if (!skipEggs)			// Check all eggs around new spot.
+			MapChunk.tryAllEggs(mainActor, t.tx, t.ty, t.tz,
 						oldpos.tx, oldpos.ty);
-		*/
-		/* +++++NEEDED? generate mousemotion event
+		/* NEEDED? generate mousemotion event
 		int x, y;
 		SDL_GetMouseState(&x, &y);
 		SDL_WarpMouse(x, y);
@@ -679,7 +731,7 @@ public class GameWindow extends GameSingletons {
 		if (mainActor.getFlag(GameObject.asleep) ||
 				mainActor.getFlag(GameObject.paralyzed) /* ++++ ||
 				mainActor.in_usecode_control() || 
-				mainActor.get_schedule_type() == Schedule.sleep */)
+				mainActor.getScheduleType() == Schedule.sleep */)
 			return;			// Zzzzz....
 		
 		if (gumpman.gumpMode())
@@ -815,7 +867,7 @@ public class GameWindow extends GameSingletons {
 			// ++++ String namestr = Get_object_name(obj);
 				// Combat and an NPC?
 			/* ++++++++
-			if (in_combat() && Combat::mode != Combat::original && npc)
+			if (in_combat() && Combat.mode != Combat.original && npc)
 				{
 				char buf[128];
 				sprintf(buf, "%s (%d)", objname, 
@@ -846,7 +898,7 @@ public class GameWindow extends GameSingletons {
 		//++++++	return;
 		/*
 						// Nothing going on?
-		if (!Usecode_script::get_count())
+		if (!Usecode_script.get_count())
 			removed.flush();	// Flush removed objects.
 		*/
 						// Look for obj. in open gump.
@@ -870,9 +922,9 @@ public class GameWindow extends GameSingletons {
 			if (obj && !obj.asActor() &&
 				!cheat.in_hack_mover() &&
 				//!Is_sign(obj.get_shapenum()) &&
-				!Fast_pathfinder_client::is_grabable(mainActor, obj))
+				!Fast_pathfinder_client.is_grabable(mainActor, obj))
 				{
-				Mouse::mouse.flash_shape(Mouse::blocked);
+				Mouse.mouse.flash_shape(Mouse.blocked);
 				return;
 				}
 			*/
@@ -885,7 +937,7 @@ public class GameWindow extends GameSingletons {
 				":  " + obj.getName());
 		/* +++++++++++
 		if (combat && !gump &&		// In combat?
-		    !Combat::is_paused() &&
+		    !Combat.is_paused() &&
 		    (!gump_man.gump_mode() || gump_man.gumps_dont_pause_game()))
 			{
 			Actor *npc = obj.as_actor();
@@ -1068,8 +1120,8 @@ public class GameWindow extends GameSingletons {
 		boolean changed = game.isNewGame();
 
 		/* ++++++++FINISH
-		if (Game::get_avsex() == 0 || Game::get_avsex() == 1 || Game::get_avname()
-				|| (Game::get_avskin() >= 0 && Game::get_avskin() <= 2))
+		if (Game.get_avsex() == 0 || Game.get_avsex() == 1 || Game.get_avname()
+				|| (Game.get_avskin() >= 0 && Game.get_avskin() <= 2))
 			changed = true;
 		*/
 		game.clearAvName();
@@ -1103,7 +1155,7 @@ public class GameWindow extends GameSingletons {
 		System.out.println("setupGame: finished initActors");
 		// CYCLE_RED_PLASMA();
 		/* ++++++++++FINISH 
-		Notebook_gump::initialize();		// Read in journal.
+		Notebook_gump.initialize();		// Read in journal.
 		*/
 		usecode.read();		// Read the usecode flags
 		/*
@@ -1116,7 +1168,7 @@ public class GameWindow extends GameSingletons {
 			config.value("config/gameplay/skip_intro", yn, "no");
 			if (yn == "yes")
 				usecode.set_global_flag(
-					Usecode_machine::did_first_scene, 1);
+					Usecode_machine.did_first_scene, 1);
 			*/
 			if (skipFirstScene)
 				usecode.setGlobalFlag(UsecodeMachine.did_first_scene, 1);
@@ -1146,7 +1198,7 @@ public class GameWindow extends GameSingletons {
 		}
 		timeStopped = 0;
 		*/
-	//+++++The below wasn't prev. done by ::read(), so maybe it should be
+	//+++++The below wasn't prev. done by .read(), so maybe it should be
 	//+++++controlled by a 'first-time' flag.
 		System.out.println("setupGame: about to activate eggs");
 						// Want to activate first egg.
@@ -1160,7 +1212,7 @@ public class GameWindow extends GameSingletons {
 		painted = true;			// Main loop uses this.
 		gumpman.closeAllGumps(true);		// Kill gumps.
 		/*+++++++++FINISH
-		Face_stats::load_config(config);
+		Face_stats.load_config(config);
 		*/
 		// Set palette for time-of-day.
 		clock.reset();
@@ -1299,8 +1351,8 @@ public class GameWindow extends GameSingletons {
 		int num_script_names = setToReadSchedules(sfile, offsets);
 		num_npcs = offsets.remove(0);
 		entsize = num_script_names >= 0 ? 8 : 4;
-		//+++++++FINISH Schedule_change::clear();
-		//++++++vector<String>& script_names = Schedule_change::get_script_names();
+		//+++++++FINISH Schedule_change.clear();
+		//++++++vector<String>& script_names = Schedule_change.get_script_names();
 		if (num_script_names > 0) {
 			EUtil.Read2(sfile);	// Skip past total size.
 			//++++++++++script_names.reserve(num_script_names);
@@ -1376,7 +1428,7 @@ public class GameWindow extends GameSingletons {
 	 */
 	private void clearWorld() {
 		/* +++++++FINISH
-		Combat::resume();
+		Combat.resume();
 		*/
 		tqueue.clear();		// Remove all entries.
 		clearDirty();
@@ -1386,7 +1438,7 @@ public class GameWindow extends GameSingletons {
 			maps.elementAt(i).clear();
 		setMap(0);			// Back to main map.
 		MonsterActor.deleteAll();	// To be safe, del. any still around.
-		//+++++++++ Notebook_gump::clear();
+		//+++++++++ Notebook_gump.clear();
 		mainActor = null;
 		cameraActor = null;
 		numNpcs1 = 0;
@@ -1400,7 +1452,7 @@ public class GameWindow extends GameSingletons {
 		ambientLight = false;	// And ambient lighting.
 		effects.removeAllEffects();
 		/* ++++++FINISH
-		Schedule_change::clear();
+		Schedule_change.clear();
 		*/
 	}
 	/*
@@ -1431,7 +1483,7 @@ public class GameWindow extends GameSingletons {
 	 */
 	public void read() {
 		/* +++++++++FINISH
-		Audio::get_ptr().cancel_streams();
+		Audio.get_ptr().cancel_streams();
 	#ifdef RED_PLASMA
 		// Display red plasma during load...
 		setup_load_palette();
@@ -1502,7 +1554,7 @@ public class GameWindow extends GameSingletons {
 				maps.elementAt(i).writeIreg();	// Write ireg files.
 			writeNpcs();			// Write out npc.dat.
 			usecode.write();		// Usecode.dat (party, global flags).
-			//+++++ Notebook_gump::write();		// Write out journal.
+			//+++++ Notebook_gump.write();		// Write out journal.
 			writeGwin();			// Write our data.
 			writeSaveInfo();
 		} catch (IOException e) {
@@ -1556,7 +1608,7 @@ public class GameWindow extends GameSingletons {
 		EUtil.Write2(gout, clock.getMinute());
 		EUtil.Write4(gout, specialLight);	// Write spell expiration minute.
 		/*++++++++++FINISH
-		MyMidiPlayer *player = Audio::get_ptr().get_midi();
+		MyMidiPlayer *player = Audio.get_ptr().get_midi();
 		if (player) {
 			EUtil.Write4(gout, static_cast<uint32>(player.get_current_track()));
 			EUtil.Write4(gout, static_cast<uint32>(player.is_repeating()));
@@ -1614,7 +1666,7 @@ public class GameWindow extends GameSingletons {
 		// So do I allow for all NPCs (type1 and type2) - Yes i will
 		num = npcs.size();
 		OutputStream sfile = EUtil.U7create(EFile.GSCHEDULE);
-		//+++++FINISH vector<char *>& script_names = Schedule_change::get_script_names();
+		//+++++FINISH vector<char *>& script_names = Schedule_change.get_script_names();
 
 		EUtil.Write4(sfile, -2);		// Exult version #.
 		EUtil.Write4(sfile, num);		// # of NPC's, not include Avatar.
@@ -1630,7 +1682,7 @@ public class GameWindow extends GameSingletons {
 		/* ++++++++++FINISH
 		if (script_names.size()) {
 			int total = 0;		// Figure total size.
-			vector<char *>::iterator it;
+			vector<char *>.iterator it;
 			for (it = script_names.begin(); it != script_names.end(); ++it)
 				total += 2 + strlen(*it);
 			EUtil.Write2(sfile, total);
@@ -1671,9 +1723,9 @@ public class GameWindow extends GameSingletons {
 						// Note: "*" means an old game.
 		if(!id || (*id != '*' && strcmp(static_identity, id) != 0))
 			{
-			std::string msg("Wrong identity '");
+			std.string msg("Wrong identity '");
 			msg += id; msg += "'.  Open anyway?";
-			int ok = Yesno_gump::ask(msg.c_str());
+			int ok = Yesno_gump.ask(msg.c_str());
 			if (!ok)
 				return;
 			}

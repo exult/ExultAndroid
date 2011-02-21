@@ -1306,6 +1306,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		attackMode = amode;
 		userSetAttack = byUser;
 	}
+	public final boolean didUserSetAttack() {
+		return userSetAttack;
+	}
 	public final boolean isCombatProtected() {
 		return combatProtected;
 	}
@@ -2977,10 +2980,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		setAction(action);
 		int speed = 1;
 		start(speed, 0);			// Walk fairly fast.
-		/* ++++++++FINISH?
+		
 		if (wait)			// Only wait ~1/5 sec.
-			Wait_for_arrival(this, dest, 2*);
-		*/
+			waitForArrival(dest, 2);
 		return true;
 	}
 	public final int getOppressor() {
@@ -3125,6 +3127,21 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return MapChunk.areaAvailable(xtiles, ytiles, ztiles,
 				f, t, move_flags | getTypeFlags(), 1, -1);
 	}
+	//	Wait for actor to stop walking, or 'maxticks' if maxticks > 0.
+    public void waitForArrival(Tile dest, int maxticks) {
+    	ActorAction origAction = getAction();
+    	boolean timeout = false;
+    	int stopTime = TimeQueue.ticks + maxticks;
+    	while (isMoving() && getAction() == origAction && !timeout &&
+    			(getTileX() != dest.tx || getTileY() != dest.ty ||
+    			 getLift() != dest.tz)) {
+    		try {
+    			Thread.sleep(200);
+    		} catch (InterruptedException e) { break; }
+    		if (maxticks > 0 && TimeQueue.ticks > stopTime)
+    			timeout = true;
+    	}		
+    }
 	/*
 	 *	Read in actor from a given file.
 	 */
