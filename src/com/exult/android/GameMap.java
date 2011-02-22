@@ -297,9 +297,7 @@ public class GameMap extends GameSingletons {
 				olist.add(obj);
 			}
 		}
-		/* ++++++FINISH
-		olist.setup_dungeon_levels();	// Should have all dungeon pieces now.
-		*/
+		olist.setupDungeonLevels();	// Should have all dungeon pieces now.
 	}
 	/*
 	 *	Read in a 'special' IREG entry (one starting with 255).
@@ -762,7 +760,7 @@ public class GameMap extends GameSingletons {
 		int qual,				// Quality, or c_any_qual for any.
 		int framenum			// Frame #, or c_any_framenum for any.
 		) {
-		if (delta < 0)			// +++++Until we check all old callers.
+		if (delta < 0)			// ++Until we check all old callers.
 			delta = 24;
 		if (shapenum > 0 && mask == 4)	// Ignore mask=4 if shape given!
 			mask = 0;

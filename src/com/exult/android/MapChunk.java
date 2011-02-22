@@ -14,6 +14,7 @@ public final class MapChunk extends GameSingletons {
 	// Counts of overlapping objects from chunks below, to right.
 	private short fromBelow, fromRight, fromBelowRight;
 	private byte dungeonLevels[];	// A 'dungeon' level value for each tile (4 bit).
+	private byte iceDungeon;	// For SI, chunk split into 4 quadrants
 	private boolean roof;			// 1 if a roof present.
 	// # light sources in chunk.
 	private byte dungeonLights, nonDungeonLights;
@@ -72,6 +73,14 @@ public final class MapChunk extends GameSingletons {
 	}
 	public final boolean isRead() {
 		return terrain != null;
+	}
+	//	Is object within dungeon? (returns height)
+	int isDungeon(int tx, int ty) {
+		if (dungeonLevels == null)
+			return 0;
+		int tnum = ty*EConst.c_tiles_per_chunk + tx;
+		return tnum%2 != 0? dungeonLevels[tnum/2] >> 4
+				: dungeonLevels[tnum/2] & 0xF;
 	}
 	public final void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {
@@ -170,16 +179,12 @@ public final class MapChunk extends GameSingletons {
 			firstNonflat = newobj;	// Inserted before old first_nonflat.
 		}
 		addObjectBlocking(newobj);
-		/* +++++++++FINISH
-		if (ord.info.is_light_source())	// Count light sources.
-			{
-			if (dungeon_levels && is_dungeon(newobj.get_tx(),
-							newobj.get_ty()))
-				dungeon_lights++;
+		if (ord.info.isLightSource()) {	// Count light sources.
+			if (isDungeon(newobj.getTx(), newobj.getTy()) > 0)
+				dungeonLights++;
 			else
-				non_dungeon_lights++;
-			}
-		 */
+				nonDungeonLights++;
+		}
 		if (newobj.getLift() >= 5) {	// Looks like a roof?
 			if (ord.info.getShapeClass() == ShapeInfo.building)
 				roof = true;
@@ -203,7 +208,7 @@ public final class MapChunk extends GameSingletons {
 		if (ext_above)
 			gmap.getChunk(cx, cy - 1).fromBelow--;
 		if (info.isLightSource()) {	// Count light sources.
-			if (dungeonLevels != null /* && +++++ is_dungeon(tx, ty) */)
+			if (isDungeon(tx, ty) > 0)
 				dungeonLights--;
 			else
 				nonDungeonLights--;
@@ -433,8 +438,8 @@ public final class MapChunk extends GameSingletons {
 			blocked.setSize(zlevel + 1);
 		short[] block = new short[256];
 		blocked.setElementAt(block, zlevel);
-//		std::cout << "***Creating block for level " << zlevel << ", cache = " 
-//			<< (void*)this << std::endl;
+//		std.cout << "***Creating block for level " << zlevel << ", cache = " 
+//			<< (void*)this << std.endl;
 		return block;
 	}
 	private short[] needBlockedLevel(int zlevel) {
@@ -978,6 +983,86 @@ public final class MapChunk extends GameSingletons {
 		for (EggObject egg : eggs)
 			egg.hatch(obj, false);
 		tryAllEggsNoRecurse--;
+	}
+	/*
+	 *	Add a rectangle of dungeon tiles (but only if higher!).
+	 */
+	private void addDungeonLevels(Rectangle tiles, int lift) {
+		if (dungeonLevels == null) {	// First one found.
+			dungeonLevels = new byte[256/2];
+		}
+		int endy = tiles.y + tiles.h, endx = tiles.x + tiles.w;
+		for (int ty = tiles.y; ty < endy; ty++) {
+			for (int tx = tiles.x; tx < endx; tx++) {
+				int tnum = (ty*EConst.c_tiles_per_chunk + tx)/2;
+				if (game.isSI())	// SI has roofs at random levels!!
+					lift = 5;
+				if ((tx % 2) != 0) {
+					dungeonLevels[tnum] &= 0x0F;
+					dungeonLevels[tnum] |= lift << 4;
+				} else {
+					dungeonLevels[tnum] &= 0xF0;
+					dungeonLevels[tnum] |= lift;
+				}
+			}
+		}
+	}
+	/*
+	 *	Set up the dungeon levels (after IFIX objects read).
+	 */
+
+	public void setupDungeonLevels() {
+		ObjectList.ObjectIterator next = new ObjectList.ObjectIterator(objects);
+		GameObject each;
+		Rectangle area = new Rectangle(), tiles = new Rectangle();
+		while ((each = next.next()) != null) {
+						// Test for mountain-tops.
+			ShapeInfo shinf = each.getInfo();
+			if (shinf.getShapeClass() == ShapeInfo.building &&
+				shinf.getMountainTopType() == ShapeInfo.normal_mountain_top) {
+				// SI shape 941, frame 0 => do whole chunk (I think).
+				if  (shinf.hasTranslucency() && each.getFrameNum() == 0)
+					area.set(cx*EConst.c_tiles_per_chunk,
+						    cy*EConst.c_tiles_per_chunk,
+						    EConst.c_tiles_per_chunk,
+						    EConst.c_tiles_per_chunk);
+				else
+					each.getFootprint(area);
+
+						// Go through interesected chunks.
+				ChunkIntersectIterator next_chunk =
+							new ChunkIntersectIterator(area);
+				MapChunk chunk;
+				while ((chunk = next_chunk.getNext(tiles)) != null)
+					chunk.addDungeonLevels(tiles, each.getLift());
+			}			// Ice Dungeon Pieces in SI
+			else if (shinf.getShapeClass() == ShapeInfo.building &&
+				shinf.getMountainTopType() == ShapeInfo.snow_mountain_top) {
+				// HACK ALERT! This gets 320x200 to work, but it is a hack
+				// This is not exactly accurate.
+				iceDungeon |= 1 << ( (each.getTx()>>3) + 2*(each.getTy()>>3) );
+
+				each.getFootprint(area);
+						// Go through interesected chunks.
+				ChunkIntersectIterator next_chunk = 
+								new ChunkIntersectIterator(area);
+				MapChunk chunk;
+				while ((chunk = next_chunk.getNext(tiles)) != null)
+					chunk.addDungeonLevels(tiles, each.getLift());
+			}
+		}
+		if (dungeonLevels != null) {		// Recount lights.
+			dungeonLights = nonDungeonLights = 0;
+			next.reset();
+			while ((each = next.next()) != null) {
+				if (each.getInfo().isLightSource()) {
+					if (isDungeon(each.getTx(), each.getTy()) > 0)
+						dungeonLights++;
+					else
+						nonDungeonLights++;
+				}
+			}
+		}
 	}
 	/*
 	 *	Recursively apply gravity over a given rectangle that is known to be
