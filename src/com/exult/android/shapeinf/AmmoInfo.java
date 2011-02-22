@@ -99,7 +99,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		int ind = 0;
 		if (buf[entry_size-3] == 0xff) {	// means delete entry.
 			setInvalid(true);
-			info.setWeaponInfo(null);
+			info.setAmmoInfo(null);
 			return true;
 		}		
 		familyShape = EUtil.Read2(buf, ind);
@@ -118,6 +118,7 @@ public class AmmoInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		byte flags1 = buf[ind++];
 		damageType = (byte)((flags1>>4)&15);
 		powers = buf[ind++];
+		info.setAmmoInfo(this);
 							// Last 2 unknown.
 		return true;
 	}

@@ -1286,6 +1286,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *	If no weapon readied, look through all possessions for the best one.
 	 */
 	public boolean readyBestWeapon() {
+		//System.out.println("readyBestWeapon for NPC #" + npcNum);
 		if (getWeapon() != null && readyAmmo())
 			return true;		// Already have one.
 		// Check for spellbook.
@@ -1305,13 +1306,17 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				continue;
 			ShapeInfo info = obj.getInfo();
 			int ready = info.getReadyType();
+			//System.out.println("Checking " + obj.getShapeNum() + ", " + 
+			//		obj.getName() + ", ready = " + ready);
 			if (ready != Ready.lhand && ready != Ready.both_hands)
 				continue;
 			WeaponInfo winf = info.getWeaponInfo();
+			//System.out.println("winf = " + (winf == null?"null":"nonnull"));
 			if (winf == null)
 				continue;	// Not a weapon.
 			if (!isWeaponUsable(obj, ammo_obj, true))
 				continue;
+			//System.out.println("Strength = " + strength);
 			int strength = winf.getBaseStrength();
 			strength += getEffectiveRange(winf, -1);
 			if (strength > best_strength) {

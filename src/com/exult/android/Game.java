@@ -4,7 +4,7 @@ import java.util.HashMap;
 public abstract class Game extends GameSingletons {
 	protected int gameType;
 	private boolean newGame;
-	private String avName;
+	private String avName = "Newbie";	//++FOR NOW.
 	private int avSex = -1;
 	private int avSkin = -1;
 	private HashMap<String,Integer> shapes;
