@@ -257,7 +257,9 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 		FrameFlagsInfo inf = BaseInfo.FrameInfo.searchDoubleWildCards(frflagsinf,
 				frame, qual);
 		return inf != null ? inf.getFlags() : 0;	// Default to no flags.
-	}
+	}	
+	public boolean hasObjectFlag(int frame, int qual, int p)
+		{ return (getObjectFlags(frame, qual)&(1 << p)) != 0; }
 	public Vector<WarmthInfo> getWarmthInfo()
 		{ return warminf; }
 	public void setWarmthInfo(Vector<WarmthInfo> i) {

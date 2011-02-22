@@ -53,10 +53,8 @@ public class ContainerGameObject extends IregGameObject {
 		if (getShapeNum() == obj.getShapeNum()	// Shape can't be inside itself.
 				|| (!dont_check && info.isContainerLocked()))	// Locked container.
 			return false;
-		/*++++++++++++
 		if (!info.isShapeAccepted(obj.getShapeNum()))	// Shape can't be inside.
 			return false;
-		*/
 		// Always check this. ALWAYS!
 		GameObject parent = this;
 		do				// Watch for snake eating itself.
@@ -78,15 +76,12 @@ public class ContainerGameObject extends IregGameObject {
 				obj.modifyQuantity(newquant - quant);
 			}
 		int objvol = obj.getVolume();
-		/* +++++++++++FINISH ?
-		if (!cheat.in_hack_mover() && !dont_check)
-			{
+		if (!cheat.inHackMover() && !dont_check) {
 			int maxvol = getMaxVolume();
 			// maxvol = 0 means infinite (ship's hold, hollow tree, etc...)
 			if (maxvol > 0 && objvol + volumeUsed > maxvol)
 				return false;	// Doesn't fit.
-			}
-		*/
+		}
 		volumeUsed += objvol;
 		obj.setOwner(this);		// Set us as the owner.
 		objects.append(obj);		// Append to chain.
@@ -94,6 +89,9 @@ public class ContainerGameObject extends IregGameObject {
 		if (getFlag(GameObject.okay_to_take))
 			obj.setFlag(GameObject.okay_to_take);
 		return true;
+	}
+	public int getMaxVolume() {
+		return getVolume();
 	}
 	public void changeMemberShape(GameObject obj, int newshape) {
 		int oldvol = obj.getVolume();
@@ -194,10 +192,8 @@ public class ContainerGameObject extends IregGameObject {
 			return delta;
 				// Usecode container?
 		ShapeInfo info = ShapeID.getInfo(getShapeNum());
-		/*+++++++++FINISH
-		if (info.getReadyType() == ucont)
+		if (info.getReadyType() == Ready.ucont)
 			return delta;
-		*/
 		ShapeInfo shp_info = ShapeID.getInfo(shnum);
 		if (!shp_info.hasQuality())	// Not a quality object?
 			qual = EConst.c_any_qual;	// Then don't set it.
@@ -302,13 +298,11 @@ public class ContainerGameObject extends IregGameObject {
 	public final boolean showGump(int event) {
 		ShapeInfo inf = getInfo();
 		int gump;
-		/* ++++++FINISH
 		if (inf.hasObjectFlag(getFrameNum(),
-				inf.hasQuality() ? getQuality() : -1, Frame_flags.force_usecode))
+				inf.hasQuality() ? getQuality() : -1, FrameFlagsInfo.force_usecode))
 				// Run normal usecode fun.
 			return false;
-		else */ if ((gump = inf.getGumpShape()) >= 0)
-			{
+		else if ((gump = inf.getGumpShape()) >= 0) {
 			gumpman.addGump(this, gump, false);
 			return true;
 		}
@@ -325,7 +319,6 @@ public class ContainerGameObject extends IregGameObject {
 	/*
 	 *	Get (total) weight.
 	 */
-
 	public int getWeight() {
 		int wt = super.getWeight();
 		GameObject obj;
@@ -418,7 +411,7 @@ public class ContainerGameObject extends IregGameObject {
 	 */
 	public void writeIreg(OutputStream out) throws IOException {
 		int ind = writeCommonIreg(12, writeBuf);
-		GameObject first = objects.getFirst(); // Guessing: +++++
+		GameObject first = objects.getFirst(); // Guessing: 
 		int tword = first != null ? first.getPrev().getShapeNum() 
 										: 0;
 		EUtil.Write2(writeBuf, ind, tword);
@@ -438,11 +431,9 @@ public class ContainerGameObject extends IregGameObject {
 	}
 	// Get size of IREG. Returns -1 if can't write to buffer
 	public int getIregSize() {
-		/* ++++++++++++
 		// These shouldn't ever happen, but you never know
-		if (gumpman.findGump(this) || UsecodeScript.find(this))
+		if (gumpman.findGump(this) != null || UsecodeScript.find(this) != null)
 			return -1;
-		*/
 		int total_size = 8 + getCommonIregSize();
 
 		// Now what's inside.
