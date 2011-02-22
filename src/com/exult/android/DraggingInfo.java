@@ -201,11 +201,10 @@ public final class DraggingInfo extends GameSingletons {
 		if (found != null && found != obj) {
 			if (!checkWeight(to_drop, found))
 				return false;
-			/* +++++++++FINISH
 			if (found.drop(to_drop)) {
 				dropped = 1;
 				possible_theft = true;
-			} else */ if ((lift = found.getLift() +
+			} else if ((lift = found.getLift() +
 				     found.getInfo().get3dHeight()) <= max_lift)
 				// Try to place on 'found'.
 				dropped = dropAtLift(to_drop,posx, posy, lift);

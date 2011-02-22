@@ -533,9 +533,27 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public int getTypeFlags() {
 		return typeFlags;
 	}	
+	/*
+	 *	A class whose whole purpose is to stop casting mode.
+	 */
+	private static class ClearCasting implements TimeSensitive {
+		public void handleEvent(int curtime, Object udata) {
+			Actor a = (Actor)(udata);
+			a.hideCastingFrames();
+			a.addDirty();
+		}
+		public boolean alwaysHandle()
+			{return false;}
+		public void addedToQueue() {}
+		public void removedFromQueue() {}
+	}
+	public final void hideCastingFrames() {
+		castingMode = not_casting;
+	}
 	public final short getCastingMode ()  { return castingMode; }
 	public final void endCastingMode (int delay) {
-		//+++++++FINISH
+		ClearCasting c = new ClearCasting();
+		tqueue.add(TimeQueue.ticks + 2, c, this);
 	}
 	public final int getCasting_shape () { return castingShape; }
 	public final void beginCasting (int s)
@@ -1095,7 +1113,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return best;
 	}
 	/*
-	 *	Is a given ammo shape in a given family. ++++++ Was in combat.cc in Exult.
+	 *	Is a given ammo shape in a given family. Was in combat.cc in Exult.
 	 */
 	public static boolean inAmmoFamily(int shnum, int family) {
 		if (shnum == family)
@@ -1445,11 +1463,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		if (explodes && !explosion) {	// Explosions shouldn't explode again.
 				// Time to explode.
-			/*++++++++++FINISH
-			Tile_coord offset(0, 0, getInfo().get_3d_height()/2);
-			eman.add_effect(new Explosion_effect(get_tile() + offset,
-					0, 0, weapon_shape, ammo_shape, attacker));
-			*/
+			Tile t = new Tile();
+			getTile(t);
+			t.tz += getInfo().get3dHeight()/2;
+			eman.addEffect(new EffectsManager.ExplosionEffect(t,
+					null, 0, weapon_shape, ammo_shape, attacker));
 				// The explosion will handle the damage.
 			return -1;
 		}
@@ -1756,7 +1774,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	private static int lastcall = 0;	// Last time yelled.
 	public void fightBack (GameObject attacker) {
-		// ++++ TODO: I think that nearby NPCs will help NPCs (or party members,
+		// ++ TODO: I think that nearby NPCs will help NPCs (or party members,
 		// as the case may be) of the same alignment when attacked by other NPCs,
 		// not just when the avatar & party attack. Although this is tricky to
 		// test (except, maybe, by exploiting the agressive U7 & SI duel schedule.
@@ -2087,7 +2105,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (isDying())
 			die(attacker);
 		else if (val <= 0 && !getFlag(GameObject.asleep)) {
-			//++++++++FINISH CombatSchedule.stopAttackingNpc(this);
+			CombatSchedule.stopAttackingNpc(this);
 			setFlag(GameObject.asleep);
 		} else if (npc != null && target == null  && !getFlag(GameObject.in_party)) {
 			setTarget(npc, npc.getScheduleType() != Schedule.duel);
@@ -2103,7 +2121,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (!getTypeFlag(tf_fly))
 			return;
 		int tx = getTileX(), ty = getTileY(), tz = getLift();
-		//+++Tile_coord start = get_tile();
 		int newz;
 		if ((newz = gmap.spotAvailable(1, tx, ty, tz, 
 								EConst.MOVE_WALK, 100, -1)) >= 0 && 
@@ -2484,39 +2501,35 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void paint() {
 		int flag = game.isBG() ? GameObject.bg_dont_render : GameObject.dont_render;
 		if ((flags & (1L << flag)) == 0) {
-			//UNUSED int xoff, yoff;
 			gwin.getShapeLocation(paintLoc, this);
+			int xoff = paintLoc.x, yoff = paintLoc.y;
 			boolean invis = (flags & (1L << GameObject.invisible)) != 0;
 			if (invis && partyId < 0 && this != gwin.getMainActor())
 				return;	// Don't render invisible NPCs not in party.
 			/* ++++++++++FINISH else if (invis)
 				paint_invisible(xoff, yoff);
 			*/ else
-				paintShape(paintLoc.x, paintLoc.y);
+				paintShape(xoff, yoff);
 			
 			paintWeapon();
-			/* +++++++++FINISH
 			if (hit)		// Want a momentary red outline.
-				ShapeID.paint_outline(xoff, yoff, HIT_PIXEL);
-			else if (flags & ((1L<<GameObject.protection) | 
-			    (1L << GameObject.poisoned) | (1 << GameObject.cursed) |
-			    	(1 << GameObject.charmed) | (1 << GameObject.paralyzed)))
+				paintOutline(xoff, yoff, HIT_PIXEL);
+			else if ((flags & ((1<<GameObject.protection) | 
+			    (1 << GameObject.poisoned) | (1 << GameObject.cursed) |
+			    	(1 << GameObject.charmed) | (1 << GameObject.paralyzed))) != 0)
 				{
-				if (flags & (1L << GameObject.poisoned))
-					ShapeID.paint_outline(xoff,yoff,POISON_PIXEL);
-				else if (flags & (1L << GameObject.cursed))
-					ShapeID.paint_outline(xoff,yoff,CURSED_PIXEL);
-				else if (flags & (1L << GameObject.charmed))
-					ShapeID.paint_outline(xoff, yoff,
+				if ((flags & (1 << GameObject.poisoned)) != 0)
+					paintOutline(xoff,yoff,POISON_PIXEL);
+				else if ((flags & (1 << GameObject.cursed)) != 0)
+					paintOutline(xoff,yoff,CURSED_PIXEL);
+				else if ((flags & (1 << GameObject.charmed)) != 0)
+					paintOutline(xoff, yoff,
 									CHARMED_PIXEL);
-				else if (flags & (1L << GameObject.paralyzed))
-					ShapeID.paint_outline(xoff, yoff,
-									PARALYZE_PIXEL);
+				else if ((flags & (1 << GameObject.paralyzed)) != 0)
+					paintOutline(xoff, yoff, PARALYZE_PIXEL);
 				else
-					ShapeID.paint_outline(xoff, yoff,
-									PROTECT_PIXEL);
+					paintOutline(xoff, yoff, PROTECT_PIXEL);
 				}
-			*/
 		}
 	}
 	/*
@@ -2914,7 +2927,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (distance(leader) <= 6)
 				return;		// In formation, & close enough.
 //			cout << "Follow:  Leader is stopped" << endl;
-			// +++++For formation, why not get correct positions?
+			// ++For formation, why not get correct positions?
 			final int xoffs[] = {-1, 1, -2, 2, -3, 3, -4, 4, -5, 5},
 				   	   yoffs[] = {1, -1, 2, -2, 3, -3, 4, -4, 5, -5};
 			if (partyId < 0 || partyId >= xoffs.length) {
@@ -3436,7 +3449,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		// 16 Bit Shape Numbers, allows for shapes > 1023
 		shnum = EUtil.Read2(out);
 		if (!fix_first && shnum != 0) {
-				// ++++ Testing
+				// ++Testing
 			if (npcNum == 0)
 				setActorShape();
 			else
