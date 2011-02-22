@@ -1316,8 +1316,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				continue;	// Not a weapon.
 			if (!isWeaponUsable(obj, ammo_obj, true))
 				continue;
-			//System.out.println("Strength = " + strength);
+			
 			int strength = winf.getBaseStrength();
+			//System.out.println("Strength = " + strength);
 			strength += getEffectiveRange(winf, -1);
 			if (strength > best_strength) {
 				wtype = ready;

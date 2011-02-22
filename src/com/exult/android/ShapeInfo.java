@@ -791,7 +791,7 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 			info.readyType = (byte)EUtil.Read1(in);
 			
 			try { in.skip(6); } catch (IOException e) {}
-			int ready = info.readyType;
+			int ready = info.readyType&0xff;
 			info.spellFlag = (ready&1) != 0;
 			ready >>= 3;
 			int spot = game == EConst.BLACK_GATE ? Ready.spotFromBG(ready)

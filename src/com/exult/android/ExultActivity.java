@@ -327,11 +327,12 @@ public class ExultActivity extends Activity {
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
     				GameSingletons.mouse.move(x, y);
+    				if (modal != null && clickPoint == null) {
+    					modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
+    					return true;
+    				}
     				if (clickPoint == null && UsecodeMachine.running <= 0) {
-    					if (modal != null) {
-    						modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
-    						return true;
-    					}
+    					
     					dragging = DraggingInfo.startDragging(x, y);
     					dragged = false;
     					GameObject obj = dragging?DraggingInfo.getObject():null;

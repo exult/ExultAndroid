@@ -261,6 +261,9 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		if (hitsfx == 123 && game == SERPENT_ISLE)	// SerpentIsle:  Does not sound right.
 			hitsfx = 61;		// Sounds more like a weapon.
 		*/
+		//System.out.println("new WeaponInfo: damage = " + damage +
+		//		", projectile = " + projectile + ", ammo = " + ammo +
+		//		", baseStrength = " + getBaseStrength());
 		info.setWeaponInfo(this);
 		return true;
 	}
