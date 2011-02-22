@@ -56,6 +56,8 @@ public class GameWindow extends GameSingletons {
 	private boolean ambientLight;	// Permanent version of special_light.
 	private int specialLight;		// Game minute when light spell ends.
 	private int timeStopped;		// For 'stop time' spell.
+	int theftWarnings;		// # times warned in current chunk.
+	short theftCx, theftCy;	// Chunk where warnings occurred.
 	/*
 	 *	Public flags and gameplay options:
 	 */
@@ -98,6 +100,7 @@ public class GameWindow extends GameSingletons {
 		GameSingletons.init(this);
 		skipLift = 16;
 		skipAboveActor = 31;
+		theftCx = theftCy = -1;
 	}
 	/*
 	 *	Read any map.  (This is for "multimap" games, not U7.)
@@ -319,6 +322,70 @@ public class GameWindow extends GameSingletons {
 	public final void scheduleNpcs(int hour) {
 		scheduleNpcs(hour, 7, true);
 	}
+	/*
+	 *	Tell all npc's to restore some of their HP's and/or mana on the hour.
+	 */
+	public void mendNpcs() {
+						// Go through npc's.
+		for (Actor npc : npcs) {
+			if (npc != null)
+				npc.mendHourly();
+		}
+	}
+	/*
+	 *	Get guard shape.
+	 */
+	private int getGuardShape
+		(
+		Tile pos			// Position to use.
+		) {
+		if (!game.isSI())			// Default (BG).
+			return (0x3b2);
+						// Moonshade?
+		if (pos.tx >= 2054 && pos.ty >= 1698 &&
+		    pos.tx < 2590 && pos.ty < 2387)
+			return 0x103;		// Ranger.
+						// Fawn?
+		if (pos.tx >= 895 && pos.ty >= 1604 &&
+		    pos.tx < 1173 && pos.ty < 1960)
+			return 0x17d;		// Fawn guard.
+		if (pos.tx >= 670 && pos.ty >= 2430 &&
+		    pos.tx < 1135 && pos.ty < 2800)
+			return 0xe4;		// Pikeman.
+		return -1;			// No local guard.
+	}
+	/*
+	 *	Handle theft.
+	 */
+	public void theft() {
+		/*+++++++FINISH
+						// See if in a new location.
+		int cx = mainActor.getCx(), cy = mainActor.getCy();
+		if (cx != theftCx || cy != theftCy) {
+			theftCx = (short)cx;
+			theftCy = (short)cy;
+			theftWarnings = 0;
+			}
+		Actor closest_npc;
+		Actor witness = findWitness(closest_npc);
+		if (witness == null) {
+			if (closest_npc != null && EUtil.rand()%2 != 0)
+				closest_npc.say(ItemNames.heard_something);
+			return;			// Didn't get caught.
+			}
+		int dir = witness.getDirection(mainActor);
+						// Face avatar.
+		witness.changeFrame(witness.getDirFramenum(dir, Actor.standing));
+		theftWarnings++;
+		if (theftWarnings < 2 + EUtil.rand()%3) {			// Just a warning this time.
+			witness.say(ItemNames.first_theft, ItemNames.last_theft);
+			return;
+			}
+		gumpman.closeAllGumps(false);	// Get gumps off screen.
+		callGuards(witness);
+		*/
+	}
+	
 	// Get screen location for an object.
 	public final void getShapeLocation(Point loc, int tx, int ty, int tz) {
 		int lft = 4*tz;
@@ -1427,9 +1494,7 @@ public class GameWindow extends GameSingletons {
 	 *	Clear out world's contents.  Should be used during a 'restore'.
 	 */
 	private void clearWorld() {
-		/* +++++++FINISH
-		Combat.resume();
-		*/
+		CombatSchedule.resume();
 		tqueue.clear();		// Remove all entries.
 		clearDirty();
 		UsecodeScript.clear();	// Clear out all scheduled usecode.
@@ -1442,7 +1507,7 @@ public class GameWindow extends GameSingletons {
 		mainActor = null;
 		cameraActor = null;
 		numNpcs1 = 0;
-		//++++++FINISH theftCx = theftCy = -1;
+		theftCx = theftCy = -1;
 		combat = false;
 		npcs.setSize(0);			// NPC's already deleted above.
 		if (bodies != null)

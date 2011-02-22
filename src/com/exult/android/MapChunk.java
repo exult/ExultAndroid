@@ -74,13 +74,25 @@ public final class MapChunk extends GameSingletons {
 	public final boolean isRead() {
 		return terrain != null;
 	}
+	public boolean hasDungeon() {
+		return dungeonLevels != null;
+	}
 	//	Is object within dungeon? (returns height)
-	int isDungeon(int tx, int ty) {
+	public int isDungeon(int tx, int ty) {
 		if (dungeonLevels == null)
 			return 0;
 		int tnum = ty*EConst.c_tiles_per_chunk + tx;
 		return tnum%2 != 0? dungeonLevels[tnum/2] >> 4
 				: dungeonLevels[tnum/2] & 0xF;
+	}
+	public boolean isIceDungeon(int tx, int ty) {
+		return iceDungeon == 0x0f;//0 != ((ice_dungeon >> ( (tx>>3) + 2*(ty>>3) ) )&1);
+	}
+	public int getDungeonLights() {
+		return dungeonLights;
+	}
+	public int getNonDungeonLights() {
+		return nonDungeonLights;
 	}
 	public final void setTerrain(ChunkTerrain ter) {
 		if (terrain != null) {

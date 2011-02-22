@@ -434,12 +434,10 @@ public final class DraggingInfo extends GameSingletons {
 		BargeObject barge = gwin.getMovingBarge();
 		if (barge != null)
 			barge.setToGather();	// Refigure what's on barge.
-		/*+++++++FINISH
 						// Check for theft.
 		if (!okay_to_move && !cheat.inHackMover() && possible_theft &&
-		    !gwin.isInDungeon())
+								gwin.isInDungeon() == 0)
 			gwin.theft();			
-		*/
 		if (to_drop == obj) {		// Whole thing?
 						// Watch for stuff on top of it.
 			if (old_foot.w > 0)

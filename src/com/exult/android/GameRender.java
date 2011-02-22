@@ -69,12 +69,10 @@ public class GameRender {
 		GameObject obj;
 		GameWindow gwin = GameWindow.instanceOf();
 		MapChunk olist = gwin.getMap().getChunk(cx, cy);
-		int light_sources =	0;	// Also check for light sources.
-		/* ++++FINISH
-				gwin->is_in_dungeon() ? olist->get_dungeon_lights()
-						: olist->get_non_dungeon_lights();
+		int light_sources =		// Also check for light sources.
+				gwin.isInDungeon() > 0 ? olist.getDungeonLights()
+						: olist.getNonDungeonLights();
 		
-		*/
 		skip = gwin.getRenderSkipLift(); 
 		ObjectList.NonflatObjectIterator iter = olist.getNonflatObjectIterator();
 

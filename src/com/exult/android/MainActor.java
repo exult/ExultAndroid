@@ -95,19 +95,15 @@ public class MainActor extends Actor {
 		if (olist != nlist)
 			this.switchedChunks(olist, nlist);
 		int roof_height = nlist.isRoof (tx, ty, t.tz);
-		// +++++FINISH gwin.set_ice_dungeon(nlist.is_ice_dungeon(tx, ty));
+		gwin.setIceDungeon(nlist.isIceDungeon(tx, ty));
 		if (gwin.setAboveMainActor(roof_height)) {
-			/* +++++++++++++
-			gwin.set_in_dungeon(nlist.has_dungeon()?
-						nlist.is_dungeon(tx, ty):0);
-			*/
+			gwin.setInDungeon(nlist.hasDungeon()?
+						nlist.isDungeon(tx, ty):0);
 			gwin.setAllDirty();
 		}
-		/*+++++++++FINISH
-		else if (roof_height < 31 && gwin.set_in_dungeon(nlist.has_dungeon()?
-	 					nlist.is_dungeon(tx, ty):0))
-			gwin.set_all_dirty();
-		*/
+		else if (roof_height < 31 && gwin.setInDungeon(nlist.hasDungeon()?
+	 					nlist.isDungeon(tx, ty):0))
+			gwin.setAllDirty();
 						// Near an egg?  (Do this last, since
 						//   it may teleport.)
 		nlist.activateEggs(this, t.tx, t.ty, t.tz,
@@ -174,8 +170,8 @@ public class MainActor extends Actor {
 		if (nlist != olist)
 			switchedChunks(olist, nlist);
 		int tx = getTx(), ty = getTy();
-		// +++++++FINISH gwin.set_ice_dungeon(nlist->is_ice_dungeon(tx, ty));
+		gwin.setIceDungeon(nlist.isIceDungeon(tx, ty));
 		if (gwin.setAboveMainActor(nlist.isRoof(tx, ty, newlift)))
-			;// +++++FINISH gwin.set_in_dungeon(nlist.hasDungeon() ? nlist.isDungeon(tx, ty) : 0);
+			gwin.setInDungeon(nlist.hasDungeon() ? nlist.isDungeon(tx, ty) : 0);
 	}
 }
