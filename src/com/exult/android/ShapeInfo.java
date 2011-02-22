@@ -219,7 +219,7 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 	}
 	public boolean isShapeAccepted(int shape) {
 		ContentRules inf = BaseInfo.OneKeyInfo.searchSingleWildCard(cntrules, shape);
-		return inf != null && inf.acceptsShape();
+		return inf != null ? inf.acceptsShape() : true;
 	}
 	public Vector<EffectiveHpInfo> getEffectiveHpInfo()
 		{ return hpinf; }

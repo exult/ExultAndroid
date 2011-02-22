@@ -22,6 +22,7 @@ public class ContentRules extends BaseInfo.OneKeyInfo {
 		if (keyval < 0)
 			keyval = -1;
 		accept = EUtil.ReadInt(txtin)!= 0;
+		System.out.println("ContentRules: keyval = " + keyval + ", accept = " + accept);
 		info.setContentRules(addVectorInfo(this, info.getContentRules()));
 		return true;
 	}

@@ -171,6 +171,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 	NpcTimers timers;					// Timers for poison, hunger, etc.
 	protected Rectangle weaponRect;		// Screen area weapon was drawn in.
+	protected static Rectangle tempRect = new Rectangle();
 	protected Point weaponPoint;
 	protected long restTime;			// # ticks of not doing anything.
 	protected int timeQueueCount;		// # times in timeQueue.
@@ -312,6 +313,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (prop == health && ((partyId != -1) || (npcNum == 0)) && 
 				cheat.inGodMode() && val < properties[prop])
 			return;
+		//System.out.println("Npc# " + npcNum + ", set prop " + prop + " to " + val);
 		switch (prop) {
 		case exp:
 			{			// Experience?  Check for new level.
@@ -2274,7 +2276,30 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
 			return false;
-		//+++++++FINISH: Figure casting/weapon rectangle.
+		if (figureWeapon || getCastingMode() == Actor.show_casting_frames) {
+			if (figureWeaponPos(weaponRect)) {
+				int weapon_x = weaponRect.x, weapon_y = weaponRect.y, 
+					weapon_frame = weaponRect.w;
+				int shnum = getEffectiveWeaponShape();
+			
+				ShapeFrame wshape = 
+					ShapeFiles.SHAPES_VGA.getShape(shnum, weapon_frame);
+				if (wshape != null)	// Set dirty area rel. to NPC.
+					gwin.getShapeRect(weaponRect, wshape, weapon_x, weapon_y);
+				else
+					weaponRect.w = 0;
+			} else
+			weaponRect.w = 0;
+		}
+		if (weaponRect.w > 0) {		// Repaint weapon area too.
+			Rectangle r = tempRect;
+			r.set(weaponRect);
+			gwin.getShapeLocation(weaponPoint, this);
+			r.shift(weaponPoint.x, weaponPoint.y);
+			r.enlarge(EConst.c_tilesize/2);
+			gwin.clipToWin(r);
+			gwin.addDirty(r);
+		}
 		return true;
 	}
 	public final boolean addDirty() {
@@ -3245,6 +3270,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int schunk = out.read();	// Superchunk #.
 							// For multi-map:1
 		int map_num = out.read();
+		//System.out.println("Npc #" + num + ", shape = " + getShapeNum() + ", map = " + map_num);
 		if (fix_first)
 			map_num = 0;
 		GameMap npcmap = gwin.getMap(map_num);
@@ -3495,9 +3521,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				delete [] nm;
 			}
 			*/
-			/*++++++++++++++++
-			int skin = out.read();
 			
+			int skin = out.read();
+			/*++++++++++++++++
 			if (extended_skin) {
 				if (Game.get_avskin() >= 0)
 					set_skin_color (Game.get_avskin());
@@ -3555,8 +3581,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int tilex = locx & 0xf;
 		int tiley = locy & 0xf;
 		// if (num == 0)//+++++++DEBUG
-			 //System.out.printf("Reading %1$s, locx = %2$d, cx = %3$d, tilex = %4$d\n",
-			//		getName(), locx, cx, tilex);
+			 //System.out.printf("Reading npc# %1$d, %2$s, locx = %3$d, cx = %4$d, tilex = %5$d\n",
+			//		num, getName(), locx, cx, tilex);
 		setShapePos(tilex, tiley);
 		MapChunk olist = npcmap.getChunk(scx + cx, scy + cy);
 		setInvalid();			// Not in world yet.
