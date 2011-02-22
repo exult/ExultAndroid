@@ -233,6 +233,9 @@ public class GameWindow extends GameSingletons {
 	}
 	public final boolean isMainActorInside()
 		{ return skipAboveActor < 31 ; }
+	public final int getSkipAboveActor() {
+		return skipAboveActor;
+	}
 	// Returns if skip_above_actor changed!
 	public final boolean setAboveMainActor(int lift) {
 		if (skipAboveActor == lift) 
@@ -247,6 +250,9 @@ public class GameWindow extends GameSingletons {
 		return true;
 	}
 	public void setIceDungeon(boolean ice) { iceDungeon = ice; }
+	public boolean isInIceDungeon() {
+		return iceDungeon;
+	}
 	public int isInDungeon()
 		{ return inDungeon; }
 	public boolean isSpecialLight()	// Light spell in effect?
@@ -440,7 +446,7 @@ public class GameWindow extends GameSingletons {
 			witness.say(ItemNames.first_call_guards, ItemNames.last_call_guards);
 		int gshape = getGuardShape(mainActor.getTileX(), mainActor.getTileY());
 		if (gshape < 0) {	// No local guards; lets forward to attack_avatar.
-		//+++++FINISH	attackAvatar(null);
+			attackAvatar(0);
 			return;
 		}
 		Tile actloc = new Tile(), dest = new Tile();
@@ -610,10 +616,8 @@ public class GameWindow extends GameSingletons {
 		int tx = cameraActor.getTx(), ty = cameraActor.getTy();
 		setAboveMainActor(nlist.isRoof (tx, ty,
 							cameraActor.getLift()));
-		/*+++++++FINISH
-		set_in_dungeon(nlist.hasDungeon()?nlist.isDungeon(tx, ty):0);
-		set_ice_dungeon(nlist.isIceDungeon(tx, ty));
-		*/
+		setInDungeon(nlist.hasDungeon()?nlist.isDungeon(tx, ty):0);
+		setIceDungeon(nlist.isIceDungeon(tx, ty));
 	}
 	public final void centerView(Tile t) {
 		// OFFSET HERE
@@ -908,9 +912,9 @@ public class GameWindow extends GameSingletons {
 		int speed			// Ticks between frames.
 		) {
 		if (mainActor.getFlag(GameObject.asleep) ||
-				mainActor.getFlag(GameObject.paralyzed) /* ++++ ||
-				mainActor.in_usecode_control() || 
-				mainActor.getScheduleType() == Schedule.sleep */)
+				mainActor.getFlag(GameObject.paralyzed) ||
+				mainActor.inUsecodeControl() || 
+				mainActor.getScheduleType() == Schedule.sleep)
 			return;			// Zzzzz....
 		
 		if (gumpman.gumpMode())
@@ -1013,7 +1017,7 @@ public class GameWindow extends GameSingletons {
 		Gump gump = gumpman.findGump(x, y);
 		if (gump != null) {
 			obj = gump.findObject(x, y);
-			/* +++++++FINISH
+			/* ++NEEDED?
 			if (obj == null) 
 				obj = gump.get_cont_or_actor(x, y);
 			*/
@@ -1025,7 +1029,7 @@ public class GameWindow extends GameSingletons {
 		*/
 			// Do we have an NPC?
 		Actor npc = obj != null && obj instanceof Actor ? (Actor) obj : null;
-		/* ++++CHEAT stuff went here. */
+		/* ++CHEAT stuff went here. */
 		if (obj != null) {			// Show name.
 			System.out.printf("Found '%1$s'(%2$d:%3$d) at (%4$h, %5$h, %6$h)\n",
 					obj.getName(),
@@ -1036,7 +1040,7 @@ public class GameWindow extends GameSingletons {
 					((Actor)obj).getNpcNum(), ((Actor)obj).getScheduleType());
 			// ++++ String namestr = Get_object_name(obj);
 				// Combat and an NPC?
-			/* ++++++++
+			/* ++MAYBE LATER
 			if (in_combat() && Combat.mode != Combat.original && npc)
 				{
 				char buf[128];
@@ -1064,13 +1068,8 @@ public class GameWindow extends GameSingletons {
 		)
 		{
 						// Animation in progress?
-		//++++++if (mainActorDontMove())
-		//++++++	return;
-		/*
-						// Nothing going on?
-		if (!Usecode_script.get_count())
-			removed.flush();	// Flush removed objects.
-		*/
+		if (mainActorDontMove())
+			return;
 						// Look for obj. in open gump.
 		GameObject obj = null;
 		Gump gump = gumpman.findGump(x, y);
@@ -1080,24 +1079,22 @@ public class GameWindow extends GameSingletons {
 		// If gump manager didn't handle it, we search the world for an object
 		} else {
 			obj = findObject(x, y);
-			/* ++++++++++++++
-			if (!avatarCanAct && obj && obj.as_actor()
-			    	&& obj.as_actor() == mainActor.as_actor())
+			/* ++FINISH?
+			if (!avatar_can_act && obj != null && obj.asActor()
+			    	&& obj.asActor() == mainActor)
 				{
 				ActionFileGump(0);
 				return;
 				}
-			
-			// Check path, except if an NPC, sign, or if editing.
-			if (obj && !obj.asActor() &&
-				!cheat.in_hack_mover() &&
-				//!Is_sign(obj.get_shapenum()) &&
-				!Fast_pathfinder_client.is_grabable(mainActor, obj))
-				{
-				Mouse.mouse.flash_shape(Mouse.blocked);
-				return;
-				}
 			*/
+			// Check path, except if an NPC, sign, or if editing.
+			if (obj != null && obj.asActor() == null &&
+				!cheat.inHackMover() &&
+				//!Is_sign(obj.get_shapenum()) &&
+				!PathFinder.FastClient.isGrabable(mainActor, obj)) {
+				mouse.flashShape(Mouse.blocked);
+				return;
+			}
 		}
 		if (obj == null /*+++++TESTING || !avatar_can_act */) {
 			startActorAlongPath(x, y, 1);	// Experiment.
@@ -1105,25 +1102,22 @@ public class GameWindow extends GameSingletons {
 		}
 		System.out.println("Double-clicked on shape " + obj.getShapeNum() +
 				":  " + obj.getName());
-		/* +++++++++++
-		if (combat && !gump &&		// In combat?
-		    !Combat.is_paused() &&
-		    (!gump_man.gump_mode() || gump_man.gumps_dont_pause_game()))
-			{
-			Actor *npc = obj.as_actor();
+
+		if (combat && gump != null &&		// In combat?
+		    !CombatSchedule.isPaused() &&
+		    (!gumpman.gumpMode())) {
+			Actor npc = obj.asActor();
 						// But don't attack party members.
-			if ((!npc || !npc.is_in_party()) &&
+			if ((npc == null || !npc.getFlag(GameObject.in_party)) &&
 						// Or bodies.
-					!obj.get_info().is_body_shape())
-				{		// In combat mode.
+					!obj.getInfo().isBodyShape()) {	// In combat mode.
 				// Want everyone to be in combat.
-				combat = 0;
-				mainActor.set_target(obj);
-				toggle_combat();
+				combat = false;
+				mainActor.setTarget(obj);
+				toggleCombat();
 				return;
 				}
 		}
-		*/
 		effects.removeTextEffects();	// Remove text msgs. from screen.
 		usecode.initConversation();
 		obj.activate();
@@ -1253,12 +1247,12 @@ public class GameWindow extends GameSingletons {
 		r.intersect(clipBox);
 	}
 	public void paintDirty() {
-		/*
+		/*+++++++FINISH
 		// Update the gumps before painting, unless in dont_move mode (may change dirty area)
-	    if (!mainActor_dont_move())
-	        gump_man.update_gumps();
+	    if (!mainActorDontMove())
+	        gumpman.updateGumps();
 
-		effects.update_dirty_text();
+		effects.updateDirtyText();
 		*/
 		paintBox.set(dirty);
 		clipToWin(paintBox);
@@ -1357,17 +1351,16 @@ public class GameWindow extends GameSingletons {
 	#ifdef RED_PLASMA
 		load_palette_timer = 0;
 	#endif
-
+		*/
 		// note: we had to stop the plasma here already, because init_readied
 		// and activate_eggs may update the screen through usecode functions
 		// (Helm of Light, for example)
-		Actor party[] = new Actor[9];
-		int cnt = getParty(party, 1);	// Get entire party.
+		mainActor.initReadied();
+		int cnt = partyman.getCount();	// Get entire party.
 		for (int i = 0; i < cnt; i++) {	// Init. rings.
-			party[i].initReadied();
+			getNpc(partyman.getMember(i)).initReadied();
 		}
 		timeStopped = 0;
-		*/
 	//+++++The below wasn't prev. done by .read(), so maybe it should be
 	//+++++controlled by a 'first-time' flag.
 		System.out.println("setupGame: about to activate eggs");

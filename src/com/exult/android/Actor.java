@@ -990,7 +990,25 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				return true;
 		return false;
 	}
-
+	/*
+	 *	Attack preset target/tile using preset weapon shape.
+	 *
+	 *	Output: True if attack was realized and hit target (or is
+	 *	a missile flying towards target), false otherwise
+	 */
+	boolean usecodeAttack() {
+		return CombatSchedule.attackTarget(
+				this, targetObject, targetTile, attackWeapon, false, null);
+	}
+	/*
+	 *	Should be called after actors and usecode are initialized.
+	 */
+	void initReadied () {
+		for (int i = 0; i < spots.length; i++)
+			if (spots[i] != null)
+				callReadiedUsecode(i, spots[i],
+								UsecodeMachine.readied);
+	}
 	public void setActorShape() { 	// Set shape based on sex, skin color
 		//+++++FINISH
 	}
@@ -2751,10 +2769,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			
 			if (index == Ready.lhand && schedule != null)
 				schedule.setWeapon(true);
-			/* ++++++++++FINISH
 			// Recheck armor immunities and frame powers.
-			refigure_gear();
-			*/
+			refigureGear();
 		}
 	}
 	/*

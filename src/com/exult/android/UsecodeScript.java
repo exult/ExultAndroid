@@ -271,14 +271,12 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	public void activate_egg(GameObject e) {
 		if (e == null || !e.isEgg())
 			return;
-		/* +++++++++FINISH
-		int type = ((Egg_object *) e).get_type();
+		int type = ((EggObject) e).getType();
 						// Guess:  Only certain types:
-		if (type == Egg_object::monster || type == Egg_object::button ||
-		    type == Egg_object::missile)
-			((Egg_object *) e).hatch(
+		if (type == EggObject.monster || type == EggObject.button ||
+		    type == EggObject.missile)
+			((EggObject) e).hatch(
 				gwin.getMainActor(), true);
-		*/
 	}
 	private static boolean IsActorNear(Actor avatar, GameObject obj, 
 			int maxdist) {
@@ -438,19 +436,14 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 						code.getElem(++i).getIntValue(), false, false);
 				break;
 			case egg:		// Guessing:  activate egg.
-				/*+++++++++FINISH
-				activateEgg(usecode, obj);
-				*/
+				activateEgg(obj);
 				break;
 			case set_egg:		// Set_egg(criteria, dist).
 				{
 				int crit = code.getElem(++i).getIntValue();
 				int dist = code.getElem(++i).getIntValue();
-				/* ++++++++++++
-				EggObject egg = obj.asEgg();
-				if (egg != null)
-					egg.set(crit, dist);
-				*/
+				if (obj instanceof EggObject)
+					((EggObject)obj).set(crit, dist);
 				break;
 				}
 			case next_frame_max:	// Stop at last frame.
@@ -524,20 +517,16 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				int fun = val.getIntValue();
 						// Watch for eggs:
 				int ev = UsecodeMachine.internal_exec;
+				/* ++++++FINISH
 				if (obj != null && obj.isEgg() 
-					/* +++++++FINISH
 					//Fixes the Blacksword's 'Fire' power in BG:
-					&& ((Egg_object *)obj).get_type() < Egg_object::fire_field
-					*/
-					)
-					ev = UsecodeMachine.egg_proximity;
+					&& ((EggObject)obj).getType() < EggObject.fire_field)
+						ev = UsecodeMachine.egg_proximity;
 						// And for telekenesis spell fun:
-				/* +++++++FINISH
-				else if (fun == ucmachine.telekenesis_fun)
-					{
+				else if (fun == ucmachine.telekenesisFun) {
 					ev = UsecodeMachine.double_click;
-					ucmachine.telekenesis_fun = -1;
-					}
+					ucmachine.telekenesisFun = -1;
+				}
 				*/
 				ucmachine.callUsecode(fun, obj, ev);
 				break;
@@ -555,13 +544,13 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				int track = val.getIntValue();
 				/*++++++++++++++
 				if (track >= 0)
-					Audio::get_ptr().start_speech(track);
+					Audio.get_ptr().start_speech(track);
 				*/
 				}
 			case sfx:		// Play sound effect!
 				{
 				UsecodeValue val = code.getElem(++i);
-				audio.playSfx(val.getIntValue() /* +++++ FINISH?, obj */);
+				audio.playSfx(val.getIntValue(), obj);
 				break;
 				}
 			case face_dir:		// Parm. is dir. (0-7).  0=north.
@@ -586,7 +575,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 					// Seems to match the originals:
 				/*++++++++++
 				if (type == 0xff || gwin.get_effects().get_weather() != 0)
-					Egg_object::set_weather(type == 0xff ? 0 : type);
+					EggObject.set_weather(type == 0xff ? 0 : type);
 				*/
 				break;
 				}
@@ -600,10 +589,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			case attack:		// Finish 'set_to_attack()'.
 				{
 				Actor act = obj.asActor();
-				/*++++++++++++
 				if (act != null)
-					act.usecode_attack();
-				*/
+					act.usecodeAttack();
 				break;
 				}
 			case resurrect:
@@ -671,7 +658,15 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			}
 		}
 	}
-	/*
+	private void activateEgg(GameObject e) {
+		if (e == null || !(e instanceof EggObject))
+			return;
+		int type = ((EggObject) e).getType();
+			// Guess:  Only certain types:
+		if (type == EggObject.monster || type == EggObject.button ||
+				type == EggObject.missile)
+			((EggObject) e).hatch(gwin.getMainActor(), true);
+	}
 	/*
 	 * For TimeSensitive
 	 */
@@ -696,19 +691,15 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		Object udata			// .usecode machine.
 		) {
 		Actor act = obj.asActor();
-		/* +++++++FINISH
-		if (act != null && act.get_casting_mode() == Actor::init_casting)
-			act.display_casting_frames();
-		*/
+		if (act != null && act.getCastingMode() == Actor.init_casting)
+			act.displayCastingFrames();
 		int delay = exec(false);
 		if (i < cnt) {			// More to do?
 			tqueue.add(curtime + delay, this, udata);
 			return;
 		}
-		/* ++++++++FINISH
-		if (act && act.get_casting_mode() == Actor::show_casting_frames)
-			act.end_casting_mode(delay);
-		 */
+		if (act != null && act.getCastingMode() == Actor.show_casting_frames)
+			act.endCastingMode(delay);
 		scripts.remove(this);	// All done.
 	}
 	/*

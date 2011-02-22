@@ -112,7 +112,7 @@ public class GameRender {
 	public int paintMap(int x, int y, int w, int h) {
 		GameWindow gwin = GameWindow.instanceOf();
 		GameMap map = gwin.getMap();
-		// Shape_manager *sman = gwin->shape_man;
+		// Shape_manager *sman = gwin.shape_man;
 		renderSeq++;			// Increment sequence #.
 		gwin.setPainted();
 
@@ -173,37 +173,97 @@ public class GameRender {
 					dx = EConst.INCR_CHUNK(dx), dy = EConst.DECR_CHUNK(dy))
 				light_sources += paintChunkObjects(dx, dy);
 			}
-		/* +++++++FINISH
-		/// Dungeon Blackness (but disable in map editor mode)
-		if ((int)gwin->in_dungeon >= gwin->skip_above_actor && 
-								!cheat.in_map_editor())
-			paint_blackness (start_chunkx, start_chunky, stop_chunkx, 
-						stop_chunky, gwin->ice_dungeon?73:0);
-
+		// Dungeon Blackness (but disable in map editor mode)
+		if (gwin.isInDungeon() >= gwin.getSkipAboveActor())
+			paintBlackness (start_chunkx, start_chunky, stop_chunkx, 
+						stop_chunky, gwin.isInIceDungeon() ? 73 : 0);
+		/*++LATER maybe
 						// Outline selected objects.
-		const Game_object_vector& sel = cheat.get_selected();
-		int render_skip = gwin->get_render_skip_lift();
+		GameObject_vector& sel = cheat.get_selected();
+		int render_skip = gwin.get_render_skip_lift();
 		for (Game_object_vector::const_iterator it = sel.begin();
 							it != sel.end(); ++it)
 			{
 			Game_object *obj = *it;
-			if (!obj->get_owner() && obj->get_lift() < render_skip)
-				obj->paint_outline(HIT_PIXEL);
-			}
-
-		// Paint tile grid if desired.
-		if (cheat.in_map_editor())
-			{
-			if (cheat.show_tile_grid())
-				Paint_grid(gwin, sman->get_xform(16));
-			if (cheat.get_edit_mode() == Cheat::select_chunks)
-				Paint_selected_chunks(gwin, sman->get_xform(13),
-					start_chunkx, start_chunky, stop_chunkx,
-								stop_chunky);
+			if (!obj.get_owner() && obj.get_lift() < render_skip)
+				obj.paint_outline(HIT_PIXEL);
 			}
 		*/
 		if (GameWindow.targetObj != null)
 			GameWindow.targetObj.paintOutline(ShapeID.HIT_PIXEL);
 		return light_sources;
+	}
+	/*
+	 *	Dungeon Blacking
+	 *
+	 *	This is really simple. If there is a dungeon roof over our head	we
+	 *	black out every tile on screen that doens't have a roof at the height
+	 *	of the roof that is directly over our head. The tiles are blacked out
+	 *	at the height of the the roof. 
+	 *
+	 *	I've done some simple optimizations. Generally all the blackness will
+	 *	cover entire chunks. So, instead of drawing each tile individually, I
+	 *	work out home many tiles in a row that need to be blacked out, and then
+	 *	black them all out at the same time.
+	 */
+
+	private void paintBlackness(int start_chunkx, int start_chunky, 
+			int stop_chunkx, int stop_chunky, int index) {
+		GameWindow gwin = GameWindow.instanceOf();
+		ImageBuf win = gwin.getWin();
+		GameMap map = gwin.getMap();
+		// Calculate the offset due to the lift (4x the lift).
+		int off = gwin.isInDungeon() << 2;
+
+		// For each chunk that might be renderable
+		for (int cy = start_chunky; cy != stop_chunky; cy = EConst.INCR_CHUNK(cy)) {
+			for (int cx = start_chunkx; cx != stop_chunkx; cx = EConst.INCR_CHUNK(cx)) {
+				// Coord of the left edge
+				int xoff = figureScreenOffset(cx, gwin.getScrolltx()) - off;
+				// Coord of the top edge 
+				int y = figureScreenOffset(cy, gwin.getScrollty()) - off;
+
+				// Need the chunk cache (needs to be setup!)
+				MapChunk mc = map.getChunk(cx, cy);
+				if (!mc.hasDungeon()) {
+					win.fill8((byte)index, 
+							EConst.c_tilesize*EConst.c_tiles_per_chunk,
+							EConst.c_tilesize*EConst.c_tiles_per_chunk, xoff, y);
+					continue;
+				}
+				// For each line in the chunk
+				for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++) {
+					// Start and width of the area to black out
+					int x = xoff;
+					int w = 0;
+					// For each tile in the line
+					for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++) {
+						// If the tile is blocked by 'roof'
+						if (mc.isDungeon(tilex, tiley) == 0) {
+							// Add to the width of the area
+							w += EConst.c_tilesize;
+						} else if (w > 0) {	// If not blocked and have area,
+							// Draw blackness
+							win.fill8((byte)index, w, EConst.c_tilesize, x, y);	
+
+							// Set the start of the area to the next tile
+							x += w + EConst.c_tilesize;
+
+							// Clear the width
+							w = 0;	
+						} else {	// Not blocked, and no area
+							// Increment the start of the area to the next tile
+							x += EConst.c_tilesize;
+						}
+					}
+					// If we have an area, paint it.
+					if (w > 0) 
+						win.fill8((byte)index, w, EConst.c_tilesize, x, y);
+					// Increment the y coord for the next line
+					y += EConst.c_tilesize;
+				}
+			}
 		}
+	}
+
 }
