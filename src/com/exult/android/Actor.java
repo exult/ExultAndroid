@@ -169,7 +169,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected int stepIndex;			// Index into walking frames, 1 1st.
 	protected int qsteps;				// # steps since last quake.
 
-	// Npc_timer_list *timers;		// Timers for poison, hunger, etc.
+	NpcTimers timers;					// Timers for poison, hunger, etc.
 	protected Rectangle weaponRect;		// Screen area weapon was drawn in.
 	protected Point weaponPoint;
 	protected long restTime;			// # ticks of not doing anything.
@@ -262,6 +262,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		gearImmunities = (byte)immune;
 		gearPowers = (byte)powers;
 	}
+	//	Don't wake Skara Brae ghost or Penumbra in Black Gate
+	public boolean bgDontWake() {
+		int num;
+		return (game.isBG() &&
+				(getInfo().hasTranslucency() ||
+							// Horace or Penumbra?
+				 (num = getNpcNum()) == 141 || num == 150));
+	}
 	public final int getProperty(int prop) {
 		
 		if (prop == Actor.sex_flag)
@@ -279,11 +287,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return (prop >= 0 && prop < Actor.sex_flag) ? properties[prop] : 0;
 	}
 	public final void setProperty(int prop, int val) {
-		/* ++++++++++
 		if (prop == health && ((partyId != -1) || (npcNum == 0)) && 
 				cheat.inGodMode() && val < properties[prop])
 			return;
-		*/
 		switch (prop) {
 		case exp:
 			{			// Experience?  Check for new level.
@@ -349,66 +355,73 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public void forceSleep() {
 		flags |= (1 << GameObject.asleep);
-		//++++FINISH needTimers().startSleep();
+		needTimers().startSleep();
 		setAction(null);		// Stop what you're doing.
 		layDown(false);	// Lie down.
+	}
+	public final NpcTimers needTimers() {
+		if (timers == null)
+			timers = new NpcTimers(this);
+		return timers;
 	}
 	public void setFlag(int flag) {	
 		MonsterInfo minf = getInfo().getMonsterInfo();
 		if (minf == null)
 			minf = MonsterInfo.getDefault();
 		switch (flag) {
-		/* ++++++++FINISH
 		case GameObject.asleep:
 			if (minf.sleepSafe() || minf.powerSafe() ||
-					(gear_powers&(Frame_flags.power_safe|Frame_flags.sleep_safe)))
+					(gearPowers&
+					 (FrameFlagsInfo.power_safe|FrameFlagsInfo.sleep_safe)) != 0)
 				return;		// Don't do anything.
 						// Avoid waking Penumbra.
-			if (scheduleType == Schedule.sleep && Bg_dont_wake(gwin, this))
+			if (scheduleType == Schedule.sleep && bgDontWake())
 				break;
 				// Set timer to wake in a few secs.
-			need_timers().start_sleep();
-			set_action(0);		// Stop what you're doing.
-			lay_down(false);	// Lie down.
+			needTimers().startSleep();
+			setAction(null);		// Stop what you're doing.
+			layDown(false);	// Lie down.
 			break;
 		case GameObject.poisoned:
-			if (minf.poison_safe() || (gear_powers&Frame_flags.poison_safe))
+			if (minf.poisonSafe() || (gearPowers&FrameFlagsInfo.poison_safe) != 0)
 					return;		// Don't do anything.
-			need_timers().start_poison();
+			needTimers().startPoison();
 			break;
 		case GameObject.protection:
-			need_timers().start_protection();
+			needTimers().startProtection();
 			break;
 		case GameObject.might:
-			need_timers().start_might();
+			needTimers().startMight();
 			break;
 		case GameObject.cursed:
-			if (minf.curse_safe() || minf.power_safe() ||
-				(gear_powers&(Frame_flags.power_safe|Frame_flags.curse_safe)))
+			if (minf.curseSafe() || minf.powerSafe() ||
+				(gearPowers&
+					(FrameFlagsInfo.power_safe|FrameFlagsInfo.curse_safe)) != 0)
 				return;		// Don't do anything.
-			need_timers().start_curse();
+			needTimers().startCurse();
 			break;
 		case GameObject.charmed:
-			if (minf.charm_safe() || minf.power_safe() ||
-					(gear_powers&(Frame_flags.power_safe|Frame_flags.charm_safe)))
+			if (minf.charmSafe() || minf.powerSafe() ||
+					(gearPowers&
+					(FrameFlagsInfo.power_safe|FrameFlagsInfo.charm_safe)) != 0)
 				return;		// Don't do anything.
-			need_timers().start_charm();
-			setTarget(0);		// Need new opponent if in combat.
+			needTimers().startCharm();
+			setTarget(null);		// Need new opponent if in combat.
 			break;
 		case GameObject.paralyzed:
-			if (minf.paralysis_safe() || minf.power_safe() ||
-					(gear_powers&(Frame_flags.power_safe|Frame_flags.paralysis_safe)))
+			if (minf.paralysisSafe() || minf.powerSafe() ||
+					(gearPowers&
+					(FrameFlagsInfo.power_safe|FrameFlagsInfo.paralysis_safe)) != 0)
 				return;		// Don't do anything.
-			fall_down();
-			need_timers().start_paralyze();
+			fallDown();
+			needTimers().startParalyze();
 			break;
 		case GameObject.invisible:
-			flags |= ((uint32) 1 << flag);
-			need_timers().start_invisibility();
-			Combat_Schedule.stop_attacking_invisible(this);
-			gclock.set_palette();
+			flags |= (1 << flag);
+			needTimers().startInvisibility();
+			CombatSchedule.stopAttackingInvisible(this);
+			clock.setPalette();
 			break;
-		*/
 		case GameObject.dont_move:
 		case GameObject.bg_dont_move:
 			stop();			// Added 7/6/03.
@@ -466,9 +479,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				changeFrame(Actor.standing);
 			}
 			UsecodeScript.terminate(this);
-		}
-		/* ++++++++FINISH else if (flag == GameObject.charmed)
-			setTarget(null); */			// Need new opponent.
+		} else if (flag == GameObject.charmed)
+			setTarget(null); 			// Need new opponent.
 		else if (flag == GameObject.bg_dont_move || flag == GameObject.dont_move)
 			// Start again after a little while
 			start(1, 1);
@@ -3417,10 +3429,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// Flags
 			f = EUtil.Read4(out);
 			flags |= f;
-			/* ++++++++
 			if (getFlag(GameObject.invisible))	// Force timer.	
-				need_timers().start_invisibility();
-			*/
+				needTimers().startInvisibility();
 			// SIFlags -- no longer used.
 			out.skip (2);
 			// Flags2	But don't set polymorph.
