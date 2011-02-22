@@ -236,11 +236,9 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 				hour -= 24;
 				day++;
 			}
-			/* +++++++FINISH
 			gwin.mendNpcs();	// Restore HP's each hour.
 			checkHunger();		// Use food, and print complaints.
 			gwin.scheduleNpcs(hour);
-			*/
 		}
 		if (transition != null && !transition.setStep(hour, minute)) {
 			transition = null;
@@ -263,10 +261,16 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		day += hour/24;			// Update day.
 		hour %= 24;
 		setPalette();
-		//++++++FINISH checkHunger();
+		checkHunger();
 		gwin.scheduleNpcs(hour);
-		//++++++++FINISHgwin.mendNpcs();		// Just do it once, cheater.
+		gwin.mendNpcs();		// Just do it once, cheater.
 		ExultActivity.showToast("The hour is now " + hour);
+	}
+	public void checkHunger() {
+		gwin.getMainActor().useFood();
+		int cnt = partyman.getCount();
+		for (int i = 0; i < cnt; ++i)
+			gwin.getNpc(partyman.getMember(i)).useFood();
 	}
 	@Override
 	public void removedFromQueue() {

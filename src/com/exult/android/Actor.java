@@ -201,7 +201,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// Set up actor's frame lists.
 						// Most NPC's walk with a 'stand'
 						//   frame between steps.
-		final int FRAME_NUM = 5;
+		//UNUSED final int FRAME_NUM = 5;
 		final byte	npc_north_frames[] = { 0,  1,  0,  2,  0},
 					npc_south_frames[] = {16, 17, 16, 18, 16},
 					npc_east_frames[] = {48, 49, 48, 50, 48},
@@ -237,7 +237,6 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *	Goes through the actor's readied gear and caches powers
 	 *	and immunities.
 	 */
-
 	public void refigureGear() {
 		final int locs[] = {Ready.head, Ready.belt, Ready.lhand,
 				Ready.lfinger, Ready.legs,
@@ -261,6 +260,29 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		gearImmunities = (byte)immune;
 		gearPowers = (byte)powers;
+	}
+	/*
+	 *	Decrement food level and print complaints if it gets too low.
+	 *	NOTE:  Should be called every hour.
+	 */
+	void useFood() {
+		if (getInfo().doesNotEat() || (gearPowers&FrameFlagsInfo.doesnt_eat) != 0)
+			return;
+		int food = getProperty(food_level);
+		food -= (EUtil.rand()%4);		// Average 1.5 level/hour.
+		setProperty(food_level, food);
+		if (food <= 0) {		// Really low?
+			if (EUtil.rand()%4 != 0)
+				say(ItemNames.first_starving, ItemNames.first_starving + 2);
+						// Set timer for damage.
+			needTimers().startHunger();
+		} else if (food <= 4) {
+			if (EUtil.rand()%3 != 0)
+				say(ItemNames.first_needfood, ItemNames.first_needfood + 2);
+		} else if (food <= 8) {
+			if (EUtil.rand()%2 != 0)
+				say(ItemNames.first_hunger, ItemNames.first_hunger + 2);
+		}
 	}
 	//	Don't wake Skara Brae ghost or Penumbra in Black Gate
 	public boolean bgDontWake() {
@@ -600,11 +622,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		schedule = newSched;
 		if (schedule == null) {
 			switch (newScheduleType) {
-			/* +++++++++++++++
 			case Schedule.combat:
-				schedule = new Combat_schedule(this, old_schedule);
+				schedule = new CombatSchedule(this, oldSchedule);
 				break;
-			*/
 			case Schedule.horiz_pace:
 				readyBestWeapon();
 				schedule = Schedule.Pace.createHoriz(this);
@@ -647,15 +667,14 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.blacksmith:
 				schedule = new Forge_schedule(this);
 				break;
-			case Schedule.sleep:
-				unready_weapon();
-				schedule = new Sleep_schedule(this);
-				break;
 			*/
+			case Schedule.sleep:
+				unreadyWeapon();
+				schedule = new Schedule.Sleep(this);
+				break;
 			case Schedule.wait:
 				schedule = new Schedule.Wait(this);
 				break;
-		
 			case Schedule.eat:		// For now.
 			case Schedule.sit:
 				//++++FINISH unready_weapon();
@@ -857,14 +876,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int warmth = -75;		// Base value.
 		for (int i = 0; i < warmthLocs.length; i++) {
 			GameObject worn = spots[warmthLocs[i]];
-			/* +++++++FINISH
 			if (worn != null)
 				warmth += worn.getInfo().getObjectWarmth(
 											worn.getFrameNum());
-			*/
-			}
-		return warmth;
 		}
+		return warmth;
+	}
 	/*
 	 *	Get maximum weight in stones that can be held.
 	 *
@@ -1173,8 +1190,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		WeaponInfo winf = info.getWeaponInfo();
 		if (winf == null)
 			return false;
-		int ammo;
-		if ((ammo = winf.getAmmoConsumed()) < 0) {	// Ammo not needed.
+		if ((winf.getAmmoConsumed()) < 0) {	// Ammo not needed.
 			if (winf.usesCharges() && info.hasQuality() &&
 						weapon.getQuality() <= 0)
 				return false;	// Uses charges, but none left.
@@ -1441,13 +1457,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		boolean nodamage = (powers & (WeaponInfo.no_damage)) != 0;
 		if (wpoints != 0 && instant_death)
 			wpoints = 127;
-		if (wpoints != 0 && !nodamage)
+		if (wpoints != 0 && !nodamage) {
 			// This may kill the NPC; this comes before powers because no
 			// damage means no powers -- except for the no_damage flag.
-			/*+++++++++FINISH
-			hits = applyDamage(attacker, getEffectiveProp(npc, Actor.strength, 0),
-					wpoints, type, bias, &expval);
-			*/
+			int tmp[] = new int[1];
+			hits = applyDamage(attacker, 
+					getEffectiveProp(npc, Actor.strength, 0),
+					wpoints, type, bias, tmp);
+			expval = tmp[0];
+		}
 			// Apply weapon powers if needed.
 			// wpoints == 0 ==> some spells that don't hurt (but need to apply powers).
 		if (powers != 0 && (hits != 0 || wpoints == 0 || nodamage)) {
@@ -1729,11 +1747,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			setScheduleType(Schedule.wander);
 					// Is this a bad guy?
 					// Party defeated an evil monster?
-			/*+++++++FINISH
 			if (npc.getFlag(GameObject.in_party) && !getFlag(GameObject.in_party) && 
 					alignment != neutral && alignment != friendly)
 				CombatSchedule.monsterDied();
-			*/
 		}
 			// Move party member to 'dead' list.
 		partyman.updatePartyStatus(this);
@@ -1950,7 +1966,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			else if (minf == null || !minf.cantYell())
 				say(ItemNames.first_ouch, ItemNames.last_ouch);
 		}
-		Vector<GameObject> bvec;		// Create blood.
+		// Create blood.
 		int blood = 912;		// ++++TAG for future de-hard-coding.
 				// Bleed only for normal damage.
 		if (type == WeaponInfo.normal_damage && !minf.cantBleed()
@@ -1958,7 +1974,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// it is hard to judge accurately (although 10 or more hits
 			// *always* cause bleeding).
 			&& EUtil.rand()%10 < delta
-			&& findNearby(bvec=new Vector<GameObject>(), blood, 1, 0) < 2) {
+			&& findNearby(new Vector<GameObject>(), blood, 1, 0) < 2) {
 						// Create blood where actor stands.
 			GameObject bobj = IregGameObject.create(blood, 0);
 			bobj.setFlag(GameObject.is_temporary);
@@ -2399,7 +2415,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		4 - attacking (pointing south)
 	*/
 	private boolean figureWeaponPos(Rectangle ret) {	// Gets x, y, weapon_frame
-		int weapon_x, weapon_y, weapon_frame;
+		int weapon_frame;
 		if((spots[Ready.lhand] == null) && (castingMode != Actor.show_casting_frames))
 			return false;
 		// Get offsets for actor shape
@@ -2468,7 +2484,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public void paint() {
 		int flag = game.isBG() ? GameObject.bg_dont_render : GameObject.dont_render;
 		if ((flags & (1L << flag)) == 0) {
-			int xoff, yoff;
+			//UNUSED int xoff, yoff;
 			gwin.getShapeLocation(paintLoc, this);
 			boolean invis = (flags & (1L << GameObject.invisible)) != 0;
 			if (invis && partyId < 0 && this != gwin.getMainActor())
@@ -3466,8 +3482,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				delete [] nm;
 			}
 			*/
-			int skin = out.read();
 			/*++++++++++++++++
+			int skin = out.read();
+			
 			if (extended_skin) {
 				if (Game.get_avskin() >= 0)
 					set_skin_color (Game.get_avskin());

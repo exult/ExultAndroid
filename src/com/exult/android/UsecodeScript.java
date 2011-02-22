@@ -22,7 +22,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	private int delay;			// Used for restoring.
 	protected int timeQueueCount;		// # times in timeQueue.
 	// The number of times that the game clock ticks in one game minute.
-	// ++++++FOR NOW.  Later, move to GameClock class.
+	// ++FOR NOW.  Later, move to GameClock class.
 	public static final int ticks_per_minute = 25;
 	public static final int // enum Ucscript_ops
 		cont = 		0x01,		// Continue without painting.
@@ -517,17 +517,15 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				int fun = val.getIntValue();
 						// Watch for eggs:
 				int ev = UsecodeMachine.internal_exec;
-				/* ++++++FINISH
 				if (obj != null && obj.isEgg() 
 					//Fixes the Blacksword's 'Fire' power in BG:
 					&& ((EggObject)obj).getType() < EggObject.fire_field)
 						ev = UsecodeMachine.egg_proximity;
 						// And for telekenesis spell fun:
-				else if (fun == ucmachine.telekenesisFun) {
+				else if (fun == ucmachine.getTelekenesisFun()) {
 					ev = UsecodeMachine.double_click;
-					ucmachine.telekenesisFun = -1;
+					ucmachine.setTelekenesisFun(-1);
 				}
-				*/
 				ucmachine.callUsecode(fun, obj, ev);
 				break;
 				}
@@ -573,10 +571,8 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 				UsecodeValue val = code.getElem(++i);
 				int type = val.getIntValue()&0xff;
 					// Seems to match the originals:
-				/*++++++++++
-				if (type == 0xff || gwin.get_effects().get_weather() != 0)
-					EggObject.set_weather(type == 0xff ? 0 : type);
-				*/
+				if (type == 0xff || eman.getWeather() != 0)
+					EggObject.setWeather(type == 0xff ? 0 : type);
 				break;
 				}
 			case hit:		// Hit(hps, type).

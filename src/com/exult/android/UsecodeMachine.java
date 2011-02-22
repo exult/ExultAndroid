@@ -1775,6 +1775,12 @@ public class UsecodeMachine extends GameSingletons {
 	public void restoreIntercept(GameObject obj, Tile t) {
 		intrinsics.restoreIntercept(obj, t);
 	}
+	public int getTelekenesisFun() {
+		return intrinsics.getTelekenesisFun();
+	}
+	public void setTelekenesisFun(int f) {
+		intrinsics.setTelekenesisFun(f);
+	}
 	/*
 	 * One Usecode function.
 	 */

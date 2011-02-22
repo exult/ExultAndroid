@@ -2640,4 +2640,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		interceptItem = obj;
 		interceptTile = t;
 	}
+	public int getTelekenesisFun() {
+		return telekenesisFun;
+	}
+	public void setTelekenesisFun(int f) {
+		telekenesisFun = f;
+	}
 }
