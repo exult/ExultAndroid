@@ -198,7 +198,7 @@ public class NpcTimers extends GameSingletons {
 				    !npc.getFlag(GameObject.asleep))){
 				// Avoid waking sleeping people.
 				if (npc.getScheduleType() == Schedule.sleep)
-					npc.clearFlag(GameObject.asleep);
+					npc.clearSleep();
 				else if (!npc.isDead()) {	// Don't wake the dead.
 					npc.clearFlag(GameObject.asleep);
 					int frnum = npc.getFrameNum();

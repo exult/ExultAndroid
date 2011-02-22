@@ -388,6 +388,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			timers = new NpcTimers(this);
 		return timers;
 	}
+	//	Need to clear flag without going recursive.
+	public void clearSleep() {
+		 flags &= ~(1 << GameObject.asleep);
+	}
 	public void setFlag(int flag) {	
 		MonsterInfo minf = getInfo().getMonsterInfo();
 		if (minf == null)

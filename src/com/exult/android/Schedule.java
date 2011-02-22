@@ -1265,7 +1265,7 @@ public abstract class Schedule extends GameSingletons {
 			}
 			if (floorloc.tx >= 0)		// Get back on floor.
 				npc.move(floorloc);
-			npc.clearFlag(GameObject.asleep);
+			npc.clearSleep();
 			npc.setFrame(Actor.standing);
 			gwin.setAllDirty();		// Update all, since Av. stands up.
 			state = 0;			// In case we go back to sleep.
