@@ -803,6 +803,9 @@ public abstract class GameObject extends ShapeID {
 	public void say(String text) {
 		eman.addText(text, this);
 	}
+	public void say(int msgnum) {
+		say(ItemNames.msgs[msgnum]);
+	}
 	// Show random msg. from 'text.flx'.
 	public void say(int from, int to) {
 		if (from > to) 

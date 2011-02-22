@@ -337,28 +337,68 @@ public class GameWindow extends GameSingletons {
 	 */
 	private int getGuardShape
 		(
-		Tile pos			// Position to use.
+		int tx, int ty			// Position to use.
 		) {
 		if (!game.isSI())			// Default (BG).
 			return (0x3b2);
 						// Moonshade?
-		if (pos.tx >= 2054 && pos.ty >= 1698 &&
-		    pos.tx < 2590 && pos.ty < 2387)
+		if (tx >= 2054 && ty >= 1698 &&
+		    tx < 2590 && ty < 2387)
 			return 0x103;		// Ranger.
 						// Fawn?
-		if (pos.tx >= 895 && pos.ty >= 1604 &&
-		    pos.tx < 1173 && pos.ty < 1960)
+		if (tx >= 895 && ty >= 1604 &&
+		    tx < 1173 && ty < 1960)
 			return 0x17d;		// Fawn guard.
-		if (pos.tx >= 670 && pos.ty >= 2430 &&
-		    pos.tx < 1135 && pos.ty < 2800)
+		if (tx >= 670 && ty >= 2430 &&
+		    tx < 1135 && ty < 2800)
 			return 0xe4;		// Pikeman.
 		return -1;			// No local guard.
+	}
+	/*
+	 *	Find a witness to the Avatar's thievery.
+	 *
+	 *	Output:	witness, or NULL.
+	 *		closest_npc = closest one that's nearby.
+	 */
+	private Actor findWitness
+		(
+		Actor closest_npc[]		// Closest one returned.
+		) {
+		Vector<GameObject> npcs = new Vector<GameObject>();	// See if someone is nearby.
+		mainActor.findNearbyActors(npcs, EConst.c_any_shapenum, 12, 0x28);
+		closest_npc[0]= null;		// Look for closest NPC.
+		int closest_dist = 5000;
+		Actor witness = null;		// And closest facing us.
+		int closest_witness_dist = 5000;
+		for (GameObject each : npcs) {
+			Actor npc = (Actor)each;
+			if (npc instanceof MonsterActor || npc.getFlag(GameObject.in_party) ||
+			    (npc.getFrameNum()&15) == Actor.sleep_frame ||
+			    npc.getNpcNum() >= numNpcs1)
+				continue;
+			int dist = npc.distance(mainActor);
+			if (dist >= closest_witness_dist ||
+			    !PathFinder.FastClient.isGrabable(npc, mainActor))
+				continue;
+						// Looking toward Avatar?
+			int dir = npc.getDirection(mainActor);
+			int facing = npc.getDirFacing();
+			int dirdiff = (dir - facing + 8)%8;
+			if (dirdiff < 3 || dirdiff > 5) {		// Yes.
+				witness = npc;
+				closest_witness_dist = dist;
+			}
+			else if (dist < closest_dist) {
+				closest_npc[0] = npc;
+				closest_dist = dist;
+			}
+		}
+		return witness;
 	}
 	/*
 	 *	Handle theft.
 	 */
 	public void theft() {
-		/*+++++++FINISH
 						// See if in a new location.
 		int cx = mainActor.getCx(), cy = mainActor.getCy();
 		if (cx != theftCx || cy != theftCy) {
@@ -366,11 +406,11 @@ public class GameWindow extends GameSingletons {
 			theftCy = (short)cy;
 			theftWarnings = 0;
 			}
-		Actor closest_npc;
+		Actor closest_npc[] = new Actor[1];
 		Actor witness = findWitness(closest_npc);
 		if (witness == null) {
-			if (closest_npc != null && EUtil.rand()%2 != 0)
-				closest_npc.say(ItemNames.heard_something);
+			if (closest_npc[0] != null && EUtil.rand()%2 != 0)
+				closest_npc[0].say(ItemNames.heard_something);
 			return;			// Didn't get caught.
 			}
 		int dir = witness.getDirection(mainActor);
@@ -383,9 +423,81 @@ public class GameWindow extends GameSingletons {
 			}
 		gumpman.closeAllGumps(false);	// Get gumps off screen.
 		callGuards(witness);
-		*/
 	}
-	
+	/*
+	 *	Create a guard to arrest the Avatar.
+	 */
+	public void callGuards
+		(
+		Actor witness			// .witness, or 0 to find one.
+		) {
+		
+		if (armageddon || inDungeon > 0)
+			return;
+		Actor closest[] = null;
+		if (witness != null || 
+				(witness = findWitness(closest = new Actor[1])) != null)
+			witness.say(ItemNames.first_call_guards, ItemNames.last_call_guards);
+		int gshape = getGuardShape(mainActor.getTileX(), mainActor.getTileY());
+		if (gshape < 0) {	// No local guards; lets forward to attack_avatar.
+		//+++++FINISH	attackAvatar(null);
+			return;
+		}
+		Tile actloc = new Tile(), dest = new Tile();
+		mainActor.getTile(actloc);
+		dest.set(actloc.tx + 128, actloc.ty + 128, actloc.tz);
+						// Show guard running up.
+						// Create it off-screen.
+		MonsterActor guard = MonsterActor.create(gshape, dest);
+		//++NEEDED add_nearby_npc(guard);
+		if (!MapChunk.findSpot(actloc, 5, 
+				guard.getShapeNum(), guard.getFrameNum(), 1)) {
+			int dir = EUtil.getDirection(dest.ty - actloc.ty,
+							actloc.tx - dest.tx);
+						
+			byte frames[] = new byte[2];	// Use frame for starting attack.
+			frames[0] = (byte)guard.getDirFramenum(dir, Actor.standing);
+			frames[1] = (byte)guard.getDirFramenum(dir, 3);
+			ActorAction action = new ActorAction.Sequence(
+					new ActorAction.Frames(frames, 2),
+					new ActorAction.Usecode(0x625, guard,
+						UsecodeMachine.double_click));
+			Schedule.setActionSequence(guard, dest, action, true, 0);
+		}
+	}
+	/*
+	 *	Have nearby residents attack the Avatar.
+	 */
+	void attackAvatar
+		(
+		int create_guards		// # of extra guards to create.
+		) {
+		if (armageddon)
+			return;
+		
+		int tx = mainActor.getTileX(), ty = mainActor.getTileY();
+		Tile loc = new Tile(tx + 128, ty + 128, mainActor.getLift());
+		int gshape = getGuardShape(tx, ty);
+		if (gshape >= 0) {
+			while (create_guards-- > 0) {
+							// Create it off-screen.
+				MonsterActor guard = MonsterActor.create(gshape, loc);
+				//++NEEDED? add_nearby_npc(guard);
+				guard.setTarget(mainActor, true);
+				guard.approachAnother(mainActor, false);
+			}
+		}
+		Vector<GameObject> npcs = new Vector<GameObject>();		// See if someone is nearby.
+		mainActor.findNearbyActors(npcs, EConst.c_any_shapenum, 20, 0x28);
+		for (GameObject each : npcs) {
+			Actor npc = (Actor)each;
+						// No monsters, except guards; unless no local guards.
+			if ((gshape < 0 || npc.getShapeNum() == gshape || 
+						!(npc instanceof MonsterActor))
+					&& !npc.getFlag(GameObject.in_party))
+				npc.setTarget(mainActor, true);
+		}
+	}
 	// Get screen location for an object.
 	public final void getShapeLocation(Point loc, int tx, int ty, int tz) {
 		int lft = 4*tz;
@@ -836,15 +948,6 @@ public class GameWindow extends GameSingletons {
 			if (!gumpman.gumpMode())
 					mainActor.getFollowers();
 		}
-	}
-	/*
-	 *	Have nearby residents attack the Avatar.
-	 */
-	public void attackAvatar
-		(
-		int create_guards		// # of extra guards to create.
-		) {
-		//++++++++++FINISH
 	}
 	/*
 	 *	Find the top object that can be selected, dragged, or activated.

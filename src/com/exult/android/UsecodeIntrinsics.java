@@ -590,7 +590,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						// FORCE it to be neutral (dec04,01).
 			monster.setAlignment((int) Actor.neutral);
 			gwin.addDirty(monster);
-			//+++++++++FINISH gwin.add_nearby_npc(monster);
+			//++NEEDED? gwin.add_nearby_npc(monster);
 			last_created.add(monster);
 			return monster;
 		} else  {
@@ -1142,7 +1142,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			// Close?  Add to 'nearby' list.
 			} else if (ava.distance(act) < 
 								gwin.getWidth()/EConst.c_tilesize) {
-				/* +++++++++++++
+				/* ++NEEDED?
 				NpcActor npc = act.asNpc();
 				if (npc != null) gwin.add_nearby_npc(npc);
 				*/
@@ -1930,7 +1930,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		return UsecodeValue.getBoolean(obj != null && UsecodeScript.find(obj) != null);
 	}
 	private final void callGuards() {
-		//++++FINISH gsin.callGuards();
+		gwin.callGuards(null);
 	}
 	private final void objSpriteEffect(UsecodeValue p0, UsecodeValue p1,
 			UsecodeValue p2, UsecodeValue p3, UsecodeValue p4, UsecodeValue p5,
@@ -1946,7 +1946,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 				p6.getIntValue(), p7.getIntValue()));
 	}
 	private final void attackAvatar() {
-		//++++FINISH gsin.attackAvatar();
+		gwin.attackAvatar(0);
 	}
 	private final UsecodeValue pathRunUsecode(Actor npc, UsecodeValue locval,
 			UsecodeValue useval, UsecodeValue itemval, UsecodeValue eventval,

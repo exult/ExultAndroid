@@ -167,6 +167,9 @@ public class MonsterActor extends NpcActor {
 	public static MonsterActor create(int shnum, Tile pos, int sched, int align) {
 		return create(shnum, pos, sched, align, true, true);
 	}
+	public static MonsterActor create(int shnum, Tile pos) {
+		return create(shnum, pos, -1, Actor.neutral, true, true);
+	}
 	public static MonsterActor create
 		(
 		int shnum,			// Shape to use.
