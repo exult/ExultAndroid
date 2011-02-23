@@ -21,6 +21,7 @@ public class Palette {
 	public static final int PALETTE_SINGLE_LIGHT = 11;
 	public static final int PALETTE_MANY_LIGHTS = 12;
 	
+	private static byte border[] = new byte[3];
 	private ImageBuf win;
 	private byte pal1[];
 	private byte pal2[];
@@ -52,7 +53,6 @@ public class Palette {
 		take(pal);
 	}
 	public void fade(int cycles, boolean inout, int pal_num) {
-		/*++++++++++FINISH
 		if (pal_num == -1) pal_num = palette;
 		palette = pal_num;
 		
@@ -63,8 +63,97 @@ public class Palette {
 			fadeIn(cycles);
 		else
 			fadeOut(cycles);
-		*/
 		fadedOut = !inout;		// Be sure to set flag.
+	}
+	private void fadeIn(int cycles) {
+		if (cycles != 0 && fadesEnabled) {
+			byte fade_pal[] = new byte[768];
+			int ticks = TimeQueue.ticks + 1;
+			for (int i = 0; i <= cycles; i++) {
+				byte r = pal1[255*3+0];
+				byte g = pal1[255*3+1];
+				byte b = pal1[255*3+2];
+
+				if (border255) {
+					pal1[255*3+0] = (byte)(border[0]*63/255);
+					pal1[255*3+1] = (byte)(border[1]*63/255);
+					pal1[255*3+2] = (byte)(border[2]*63/255);
+				}
+
+				for(int c=0; c < 768; c++)
+					fade_pal[c] = (byte)(((pal1[c]-pal2[c])*i)/cycles+pal2[c]);
+
+				pal1[255*3+0] = r;
+				pal1[255*3+1] = g;
+				pal1[255*3+2] = b;
+
+				win.setPalette(fade_pal, max_val, brightness);
+
+				// Frame skipping on slow systems
+				/* +UNSURE
+				if (i == cycles || ticks >= TimeQueue.ticks ||
+					    !gwin.getFrameSkipping())
+					win.show();
+				*/
+				while (ticks >= TimeQueue.ticks)
+					;
+				ticks += 1;
+			}
+		} else {
+			byte r = pal1[255*3+0];
+			byte g = pal1[255*3+1];
+			byte b = pal1[255*3+2];
+
+			if ((palette >= 0 && palette <= 12) && palette != 9) {
+				pal1[255*3+0] = (byte)(border[0]*63/255);
+				pal1[255*3+1] = (byte)(border[1]*63/255);
+				pal1[255*3+2] = (byte)(border[2]*63/255);
+			}
+			win.setPalette(pal1, max_val, brightness);
+			pal1[255*3+0] = r;
+			pal1[255*3+1] = g;
+			pal1[255*3+2] = b;
+			//NEEDED? win->show();
+		}
+	}
+	public void fadeOut(int cycles) {
+		fadedOut = true;		// Be sure to set flag.
+		if (cycles != 0 && fadesEnabled) {
+			byte fade_pal[] = new byte[768];
+			int ticks = TimeQueue.ticks + 1;
+			for (int i = cycles; i >= 0; i--) {
+				byte r = pal1[255*3+0];
+				byte g = pal1[255*3+1];
+				byte b = pal1[255*3+2];
+
+				if (border255) {
+					pal1[255*3+0] = (byte)(border[0]*63/255);
+					pal1[255*3+1] = (byte)(border[1]*63/255);
+					pal1[255*3+2] = (byte)(border[2]*63/255);
+				}
+
+				for(int c=0; c < 768; c++)
+					fade_pal[c] = (byte)(((pal1[c]-pal2[c])*i)/cycles+pal2[c]);
+
+				pal1[255*3+0] = r;
+				pal1[255*3+1] = g;
+				pal1[255*3+2] = b;
+
+				win.setPalette(fade_pal, max_val, brightness);
+				// Frame skipping on slow systems
+				/* ++NEEDED?
+				if (i == 0 || ticks >= TimeQueue.ticks ||
+					   !gwin.getFrameSkipping())
+					win.show();
+				*/
+				while (ticks >= TimeQueue.ticks)
+					;
+				ticks += 1;
+			}
+		} else {
+			win.setPalette(pal2, max_val, brightness);
+			//++NEEDED? win.show();
+		}
 	}
 	public boolean isFadedOut() {
 		return fadedOut;

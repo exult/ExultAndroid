@@ -2457,9 +2457,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x46:
 			sitDown(parms[0], parms[1]); break;
 		case 0x47:
-			return summon(parms[0]);
+			synchronized(gwin.getWin()) {
+				return summon(parms[0]);
+			}
 		case 0x48:
-			displayMap(); break;
+			synchronized(gwin.getWin()) {
+				displayMap();
+			}
+			break;
 		case 0x49:
 			killNpc(parms[0]); break;
 		case 0x4a:
@@ -2469,13 +2474,21 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x4c:
 			setOppressor(parms[0], parms[1]); break;
 		case 0x4d:
-			return clone(parms[0]);
+			synchronized(gwin.getWin()) {
+				return clone(parms[0]);
+			}
 		case 0x4e:	// UNUSED
 			break;
 		case 0x4f:
-			displayArea(parms[0]);	// Crystal ball.
+			synchronized(gwin.getWin()) {
+				displayArea(parms[0]);	// Crystal ball.
+			}
+			break;
 		case 0x50:
-			wizardEye(parms[0]);
+			synchronized(gwin.getWin()) {
+				wizardEye(parms[0]);
+			}
+			break;
 		case 0x51:
 			return resurrect(parms[0]); 
 		case 0x52:
@@ -2576,7 +2589,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			/* if (!gwin.isDragging()) */ gumpman.closeAllGumps(false); break;
 		case 0x7f:
 			if (!conv.isNpcTextPending())
-				itemSay(parms[0], parms[1]); break;
+				itemSay(parms[0], parms[1]); 
+			break;
 		case 0x80:
 			closeGump(parms[0]); break;
 		case 0x81:
@@ -2602,7 +2616,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x8b:
 			setPathFailure(parms[0], parms[1], parms[2]); break;
 		case 0x8c:
-			fadePalette(parms[0], parms[1], parms[2]); break;
+			synchronized(gwin.getWin()) {
+				fadePalette(parms[0], parms[1], parms[2]); 
+			}
+			break;
 		case 0x8d:
 			return getPartyList();	// get_party_list2.  Seems the same.
 		case 0x8e:
