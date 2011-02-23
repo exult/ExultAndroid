@@ -20,7 +20,7 @@ public final class Audio extends GameSingletons {
 		CSRun_Away = 4,
 		CSDanger = 5,
 		CSHidden_Danger = 6;
-	public boolean debug = true;
+	public boolean debug = false;
 	private MediaPlayer players[] = new MediaPlayer[MIXER_CHANNELS];
 	private int currentTrack = -1, currentTrackInd = -1;
 	private errorListener err = new errorListener();
@@ -102,7 +102,7 @@ public final class Audio extends GameSingletons {
 	}
 	//	Play positioned at a given object.
 	public int playSfx(int num, GameObject obj, int volume, int repeat) {
-		System.out.println("playSfx: " + num + ", vol = " + volume 
+		if (debug)System.out.println("playSfx: " + num + ", vol = " + volume 
 				+ ", repeat = " + repeat);
 		//+++++++++FINISH
 		return playSfx(num, repeat);
@@ -368,7 +368,7 @@ public final class Audio extends GameSingletons {
 	}
 	private static class completionListener implements android.media.MediaPlayer.OnCompletionListener {
 		public void onCompletion(MediaPlayer mp) {
-			System.out.println("Audio: Track has completed.");
+			//System.out.println("Audio: Track has completed.");
 			Audio.instanceOf().release(mp);
 		}
 	}
