@@ -1127,6 +1127,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	Sleep in a  bed.
 	 */
 	public static class Sleep extends Schedule {
+		public boolean debug;
 		private Tile floorloc;		// Where NPC was standing before.
 		private GameObject bed;		// Bed being slept on, or 0.
 		private int state;
@@ -1164,7 +1165,7 @@ public abstract class Schedule extends GameSingletons {
 			int frnum = npc.getFrameNum();
 			if ((frnum&0xf) == Actor.sleep_frame)
 				return;			// Already sleeping.
-
+			if (debug) System.out.println("sleep: state = " + state);
 			switch (state) {
 			case 0:				// Find path to bed.
 				if (bed == null) {
@@ -1195,11 +1196,14 @@ public abstract class Schedule extends GameSingletons {
 				PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 3);
 				Tile pos = new Tile();
 				npc.getTile(pos);
+				System.out.println("sleep: creating path to bed");
 				ActorAction pact = ActorAction.PathWalking.createPath(
 						pos, bloc, cost);
+				if (debug) System.out.println("sleep:  found path: " + 
+						(pact != null?"true":"false"));
 				if (pact != null)
 					npc.setAction(pact);
-				npc.start(200, 0);	// Start walking.
+				npc.start(1, 0);	// Start walking.
 				break;
 			case 1:				// Go to bed.
 				npc.stop();		// Just to be sure.

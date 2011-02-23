@@ -29,9 +29,8 @@ public class MainActor extends Actor {
 		} else if (inUsecodeControl() || getFlag(GameObject.paralyzed))
 				// Keep trying if we are in usecode control.
 			gwin.getTqueue().add(ctime + 1, this, udata);
-			/* else ++++  if (schedule != null)
-				schedule.nowWhat();
-			 */
+		else if (schedule != null)
+			schedule.nowWhat();
 	}
 	/*
 	 *	Get the party to follow.

@@ -51,6 +51,21 @@ public class Palette {
 	public Palette(Palette pal) {
 		take(pal);
 	}
+	public void fade(int cycles, boolean inout, int pal_num) {
+		/*++++++++++FINISH
+		if (pal_num == -1) pal_num = palette;
+		palette = pal_num;
+		
+		border255 = (palette >= 0 && palette <= 12) && palette != 9;
+
+		load(EFile.PALETTES_FLX, EFile.PATCH_PALETTES, pal_num);
+		if (inout)
+			fadeIn(cycles);
+		else
+			fadeOut(cycles);
+		*/
+		fadedOut = !inout;		// Be sure to set flag.
+	}
 	public boolean isFadedOut() {
 		return fadedOut;
 	}

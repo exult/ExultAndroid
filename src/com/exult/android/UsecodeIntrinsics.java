@@ -2187,6 +2187,15 @@ public class UsecodeIntrinsics extends GameSingletons {
 					new ActorAction.Usecode(fun, item, eventid));
 		}
 	}
+	private final void fadePalette(UsecodeValue p0, UsecodeValue p1,
+												UsecodeValue p2) {
+		// Fade(cycles?, ??(always 1), in_out (0=fade to black, 1=fade in)).
+		int cycles = p0.getIntValue();
+		boolean inout = p2.getIntValue() != 0;
+		if (!inout)
+			ucmachine.show_pending_text();	// Make sure prev. text was seen.
+		gwin.getPal().fade(cycles, inout, -1);
+	}
 	private final static UsecodeValue isWater(UsecodeValue p0) {
 		// Is_water(pos).
 		int size = p0.getArraySize();
@@ -2592,6 +2601,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 			clearItemFlag(parms[0], parms[1]); break;
 		case 0x8b:
 			setPathFailure(parms[0], parms[1], parms[2]); break;
+		case 0x8c:
+			fadePalette(parms[0], parms[1], parms[2]); break;
 		case 0x8d:
 			return getPartyList();	// get_party_list2.  Seems the same.
 		case 0x8e:
