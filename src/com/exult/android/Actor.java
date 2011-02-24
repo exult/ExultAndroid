@@ -553,6 +553,20 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		public void addedToQueue() {}
 		public void removedFromQueue() {}
 	}
+	/*
+	 *	A class whose whole purpose is to clear the 'hit' flag.
+	 */
+	private static class ClearHit implements TimeSensitive {
+		public void handleEvent(int curtime, Object udata) {
+			Actor a = (Actor)(udata);
+			a.hit = false;
+			a.addDirty();
+		}
+		public boolean alwaysHandle()
+			{return false;}
+		public void addedToQueue() {}
+		public void removedFromQueue() {}
+	}
 	public final void hideCastingFrames() {
 		castingMode = not_casting;
 	}
@@ -1912,10 +1926,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				// Flash red outline.
 			hit = true;
 			addDirty();
-			/*++++++FINISH
-			Clear_hit *c = new Clear_hit();
+			ClearHit c = new ClearHit();
 			tqueue.add(TimeQueue.ticks + 1, c, this);
-			*/
 				// Attack back.
 			fightBack(attacker);
 			return 0;	// No damage == no powers (usually).
@@ -1979,10 +1991,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		else {
 			hit = true;		// Flash red outline.
 			addDirty();
-			/*++++++++FINISH 
-			Clear_hit *c = new Clear_hit();
+			ClearHit c = new ClearHit();
 			tqueue.add(TimeQueue.ticks + 1, c, this);
-			*/
 		}
 		if (oldhp >= maxhp/2 && val < maxhp/2 && EUtil.rand()%2 != 0) {
 						// A little oomph.

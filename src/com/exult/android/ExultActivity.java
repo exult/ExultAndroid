@@ -469,12 +469,26 @@ public class ExultActivity extends Activity {
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewVertical(true, true); 
 		        		return true;
+		        	case KeyEvent.KEYCODE_C:	
+			        	if (event.isAltPressed()) {
+			        		GameSingletons.clock.fakeNextPeriod();
+			        		return true;
+			        	} else {
+			        		Shortcuts.combat();
+			        	}
+			        	return true;
 		        	case KeyEvent.KEYCODE_H:
-			        		if (event.isAltPressed()) {
-			        			GameSingletons.cheat.toggleHackMover();
-			        			return true;
-			        		} else
-			        			return false;
+			        	if (event.isAltPressed()) {
+			        		GameSingletons.cheat.toggleHackMover();
+			        		return true;
+			        	} else
+			        		return false;
+			        case KeyEvent.KEYCODE_I:
+			        	if (!event.isAltPressed()) {
+			        		Shortcuts.inv();
+					    return true;
+					    } else
+					    	return false;
 		        	case KeyEvent.KEYCODE_L:
 		        		if (event.isAltPressed()) {
 		        			if (gwin.skipLift == 16)
@@ -485,13 +499,6 @@ public class ExultActivity extends Activity {
 		        				gwin.skipLift = 16;
 		        			System.out.println("Setting skipLift to " + gwin.skipLift);
 		        			gwin.setAllDirty();
-		        			return true;
-		        		} else
-		        			return false;
-		        		
-		        	case KeyEvent.KEYCODE_C:	
-		        		if (event.isAltPressed()) {
-		        			GameSingletons.clock.fakeNextPeriod();
 		        			return true;
 		        		} else
 		        			return false;
@@ -529,6 +536,12 @@ public class ExultActivity extends Activity {
 		        	case KeyEvent.KEYCODE_X:
 		        		if (event.isAltPressed()) {
 		        			ExultActivity.instance.finish();
+		        			return true;
+		        		} else
+		        			return false;
+		        	case KeyEvent.KEYCODE_Z:
+		        		if (!event.isAltPressed()) {
+		        			Shortcuts.stats();
 		        			return true;
 		        		} else
 		        			return false;

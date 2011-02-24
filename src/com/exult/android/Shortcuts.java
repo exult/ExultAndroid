@@ -20,7 +20,7 @@ public final class Shortcuts extends GameSingletons {
     	t.start();
     }
     public static void combat() {
-    	
+    	gwin.toggleCombat();
     }
     /*
      * Show inventory page.
