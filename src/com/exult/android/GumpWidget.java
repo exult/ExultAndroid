@@ -146,7 +146,7 @@ public class GumpWidget extends ShapeID {
 		public boolean activate(boolean button) {
 			if (!button) 
 				return false;
-			//++++++FINISH gwin.toggleCombat();
+			gwin.toggleCombat();
 			setPushed(gwin.inCombat());
 			parent.paint();
 			return true;
@@ -171,7 +171,7 @@ public class GumpWidget extends ShapeID {
 			if (!button) 
 				return false;
 			// Want to toggle it.
-			/* +++++++FINISH
+			
 			boolean prot = !actor.isCombatProtected();
 			setPushed(prot);
 			parent.paint();
@@ -179,14 +179,14 @@ public class GumpWidget extends ShapeID {
 			if (!prot)			// Toggled off?
 				return true;
 			// On?  Got to turn off others.
-			Actor *party[9];		// Get entire party, including Avatar.
-			int cnt = gwin.get_party(party, 1);
-			for (int i = 0; i < cnt; i++) {
-				if (party[i] != actor && party[i].is_combat_protected())
-					party[i].set_combat_protected(false);
+			Actor party[] = new Actor[9];
+					// Get entire party, including Avatar.
+			int cnt = gwin.getParty(party, true);
+			for (Actor a : party) {
+				if (a != actor && a.isCombatProtected())
+					a.setCombatProtected(false);
 			// +++++Should also update gumps.
 			}
-			*/
 			return true;	
 		}
 	};
@@ -207,7 +207,7 @@ public class GumpWidget extends ShapeID {
 			int nframes = actor == gwin.getMainActor() ? 10 : 9;
 			setFrame((getFrameNum() + 1)%nframes);
 			// Flag that player set the mode.
-			// +++++++FINISH actor.setAttackMmode(getFrameNum(), true);
+			actor.setAttackMode(getFrameNum(), true);
 			paint();
 			gwin.setPainted();
 			return true;

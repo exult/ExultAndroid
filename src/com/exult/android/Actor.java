@@ -1402,6 +1402,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public final boolean isCombatProtected() {
 		return combatProtected;
 	}
+	public final void setCombatProtected(boolean tf) {
+		combatProtected = tf;
+	}
 	public static boolean rollToWin(int attacker, int defender) {
 		final int sides = 30;
 		int roll = EUtil.rand()%sides;

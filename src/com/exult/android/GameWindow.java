@@ -145,7 +145,7 @@ public class GameWindow extends GameSingletons {
 			    : mainActor.isMoving();
 	}
 	public final boolean inCombat() {
-		return false;	//++++++FINISH
+		return combat;
 	}
 	//	Return party in alist, along with count.  Need room for 9.
 	public int getParty(Actor a_list[], boolean avatar_too) {
@@ -188,7 +188,7 @@ public class GameWindow extends GameSingletons {
 		}
 	}
 	public void toggleCombat() {
-		//combat = !combat;
+		combat = !combat;
 		// Change party member's schedules.
 		int newsched = combat ? Schedule.combat : Schedule.follow_avatar;
 		int cnt = partyman.getCount();
