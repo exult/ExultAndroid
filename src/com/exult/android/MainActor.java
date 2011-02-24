@@ -173,4 +173,25 @@ public class MainActor extends Actor {
 		if (gwin.setAboveMainActor(nlist.isRoof(tx, ty, newlift)))
 			gwin.setInDungeon(nlist.hasDungeon() ? nlist.isDungeon(tx, ty) : 0);
 	}
+	/*
+	 *	We're dead.
+	 */
+	@Override
+	public void die(GameObject attacker) {
+		if (gwin.inCombat())
+			gwin.toggleCombat();	// Hope this is safe....
+		super.setFlag(GameObject.dead);
+		gumpman.closeAllGumps(false);	// Obviously.
+		//+++++FOR NOW:
+		if (game.isBG())
+			ucmachine.callUsecode(0x60e, this, UsecodeMachine.weapon);
+		else
+			ucmachine.callUsecode(0x400, this, UsecodeMachine.died);
+		/*++FINISH
+						// Special function for dying:
+		UsecodeFunctionData info = Shapeinfo_lookup::GetAvUsecode(0);
+		ucmachine.callUsecode(info.fun_id, this,
+				(UsecodeMachine.Usecode_events)info.event_id);
+		*/
+	}
 }
