@@ -40,7 +40,7 @@ public class CombatSchedule extends Schedule {
 		wait_return = 8		// Wait for boomerang.
 		;
 	private static final int dexToAttack = 30;
-	protected static int battleTime;// Time when battle started.
+	protected static int battleTime = -10000;// Time when battle started.
 	protected static int battleEndTime;	// And when it ended.
 	protected int state;
 	protected int prevSchedule;	// Before going into combat.

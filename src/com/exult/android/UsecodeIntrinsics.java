@@ -464,7 +464,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 				     : npc.getScheduleType();
 						// Path_run_usecode?  (This is to fix
 						//   a bug in the Fawn Trial.)
-						//+++++Should be a better way to check.
+						//++Should be a better way to check.
 		if (game.isSI() &&
 		    npc.getAction() != null && npc.getAction().asUsecodePath() != null)
 						// Give a 'fake' schedule.
@@ -1783,10 +1783,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 	private void restartGame() {
 		// Think it's 'restart game'.  
 		// Happens if you die before leaving trinsic.
-		/*++++++++++FINISH
-		audio.stopMusic();
-		quitting_time = QUIT_TIME_RESTART;		// Quit & restart.
-		*/
+		audio.stop();
+		ExultActivity.restartFlag = true;		// Quit & restart.
+		
 	}
 	private UsecodeValue startSpeech(UsecodeValue p0) {
 		// Start_speech(num).  Also sets speech_track.

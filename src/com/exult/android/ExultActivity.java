@@ -27,6 +27,7 @@ public class ExultActivity extends Activity {
 	private static boolean targeting;
 	private static ExultActivity instance;
 	private static GameWindow gwin;
+	public static boolean restartFlag;
 	
     /** Called when the activity is first created. */
     @Override
@@ -219,6 +220,10 @@ public class ExultActivity extends Activity {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
                 GameSingletons.mouse.hide();
+                if (restartFlag) {
+                	restartFlag = false;
+                	gwin.read();
+                }
                 if (!dragging && clickPoint == null && 
                 						GameSingletons.ucmachine.running == 0) {
                 	synchronized (gwin.getTqueue()) {
