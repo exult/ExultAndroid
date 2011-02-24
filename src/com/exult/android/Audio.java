@@ -44,7 +44,7 @@ public final class Audio extends GameSingletons {
 			if (players[i] == null) {
 				players[i] = p;
 				return i;
-			} else if (!players[i].isPlaying()) {
+			} else if (!isPlaying(players[i])) {
 				players[i].release();
 				players[i] = p;
 				return i;
@@ -114,9 +114,17 @@ public final class Audio extends GameSingletons {
 	public int updateSfx(int ind, GameObject obj) {
 		return ind; //++++++FINISH
 	}
+	public static boolean isPlaying(MediaPlayer p) {
+		try {
+			return p != null && p.isPlaying();
+		} catch (IllegalStateException e) {
+			return false;
+		}
+	}
 	public boolean isPlaying(int ind) {
-		return ind >= 0 && ind < players.length && players[ind] != null &&
-					players[ind].isPlaying();
+		if (ind < 0 || ind >= players.length)
+			return false;
+		return isPlaying(players[ind]);
 	}
 	public void stopSfx(int ind) {
 		MediaPlayer p = getPlayer(ind);
@@ -251,7 +259,7 @@ public final class Audio extends GameSingletons {
 		if (currentTrack == num && currentTrackInd >= 0) {
 			// OGG is playing?
 			MediaPlayer player = players[currentTrackInd];
-			if (player != null && player.isPlaying())
+			if (isPlaying(player))
 				return -1;
 		}
 		// Work around Usecode bug where track 0 is played at Intro Earthquake

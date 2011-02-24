@@ -554,10 +554,9 @@ public class GameMap extends GameSingletons {
 							   obj.getTy()&0xf);
 			}
 			MapChunk chunk = getChunk(scx + cx, scy + cy);
-			/*
 			if (is_egg)
-				chunk.addEgg((Egg_object *) obj);
-			else */
+				chunk.addEgg((EggObject) obj);
+			else
 				chunk.add(obj);
 		}
 	}

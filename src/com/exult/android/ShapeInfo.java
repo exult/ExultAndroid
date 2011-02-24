@@ -398,6 +398,9 @@ Paperdoll_item *get_item_paperdoll(int frame, int spot);
 		{ return occludesFlag; }
 	public byte getReadyType()
 		{ return readyType; }
+	public void setReadyType(int t) {
+		readyType = (byte)t;
+	}
 	public boolean isSpell()
 		{ return spellFlag; }
 	public byte getAltReady1()

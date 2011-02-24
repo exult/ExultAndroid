@@ -1026,7 +1026,6 @@ public class CombatSchedule extends Schedule {
 			return false;
 		boolean flash_mouse = !combat && att != null && gwin.getMainActor() == att
 				&& att.getAttackMode() != Actor.manual;
-		System.out.println("attackTarget: weapon = " + weapon);
 		ShapeInfo info = ShapeID.getInfo(weapon);
 		WeaponInfo winf = weapon >= 0 ? info.getWeaponInfo() : null;
 
