@@ -120,6 +120,10 @@ public class ExultActivity extends Activity {
     	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
     	return waitForClick(p, true);
     }
+    public static void setInCombat(boolean inCombat) {
+    	View btns = (View) instance.findViewById(R.id.buttons_list);
+    	btns.setBackgroundColor(inCombat ? 0xff8f0000 : 0xff8f8f40);
+    }
     /*
      * Button handlers:
      */
@@ -231,7 +235,7 @@ public class ExultActivity extends Activity {
                 	}
                 }
                 // If mouse still down, keep moving.
-                if (movingAvatar && !gwin.isMoving()) {
+                if (movingAvatar && !gwin.isMoving() && gwin.mainActorCanAct()) {
                 	int x = (int)gwin.getWin().screenToGameX(avatarMotion.getX()), 
     					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
                 	System.out.println("Keep moving");
@@ -328,6 +332,7 @@ public class ExultActivity extends Activity {
     			int x = (int)gwin.getWin().screenToGameX(sx), 
     				y = (int)gwin.getWin().screenToGameY(sy);
     			Gump.Modal modal = GameSingletons.gumpman.getModal();
+    			boolean canAct = gwin.mainActorCanAct();
     			// int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
@@ -341,7 +346,7 @@ public class ExultActivity extends Activity {
     					dragging = DraggingInfo.startDragging(x, y);
     					dragged = false;
     					GameObject obj = dragging?DraggingInfo.getObject():null;
-    					if (obj == gwin.getMainActor()) {
+    					if (obj == gwin.getMainActor() && canAct) {
     						DraggingInfo.abort();
     						dragging = false;
     						System.out.println("Starting motion");
@@ -396,7 +401,7 @@ public class ExultActivity extends Activity {
     				if (!dragging || !dragged)
     					lastB1Click = GameTime;
     				if (!clickHandled && 
-    						/* ++++ gwin.getMainActor().canAct()*/ true &&
+    						canAct &&
     						leftDownX - 1 <= x && x <= leftDownX + 1 &&
     						leftDownY - 1 <= y && y <= leftDownY + 1) {
     					showItemsX = x; showItemsY = y;

@@ -1075,6 +1075,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 */
 	@Override
 	public int getEffectiveRange(WeaponInfo winf, int reach) {
+		//System.out.println("getEffectiveRange for " + getName() +
+		//		", reach = " + reach);
 		if (reach < 0) {
 			if (winf == null) {
 				MonsterInfo minf = getInfo().getMonsterInfo();
@@ -1090,6 +1092,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			int eff_range;
 			int str = getEffectiveProp(Actor.strength);
 			int combat = getEffectiveProp(Actor.combat);
+			//System.out.println("getEffectiveRange: str = " + str +
+			//		", combat = " + combat);
 			if (str < combat)
 				eff_range = str;
 			else
@@ -1222,12 +1226,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 */
 	boolean readyAmmo() {
 		GameObject weapon = spots[Ready.lhand];
+		System.out.println("readyAmmo for npc #" + npcNum +
+				", weapon = " + weapon.getShapeNum());
 		if (weapon == null)
 			return false;
 		ShapeInfo info = weapon.getInfo();
 		WeaponInfo winf = info.getWeaponInfo();
 		if (winf == null)
 			return false;
+		System.out.println("readyAmmo: ammoConsumed = " + winf.getAmmoConsumed());
 		if ((winf.getAmmoConsumed()) < 0) {	// Ammo not needed.
 			if (winf.usesCharges() && info.hasQuality() &&
 						weapon.getQuality() <= 0)

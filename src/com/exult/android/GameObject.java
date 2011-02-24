@@ -960,7 +960,8 @@ public abstract class GameObject extends ShapeID {
 			if (info.getReadyType() == Ready.triple_bolts)
 				need_ammo = 3;
 			}
-
+		//System.out.println("getWeaponAmmo for weapon " + weapon +
+		//		", need_ammo = " + need_ammo);
 		if (ammo != null)
 			ammo[0] = findWeaponAmmo(weapon, need_ammo, recursive);
 		return need_ammo;

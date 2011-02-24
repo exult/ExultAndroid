@@ -5,6 +5,7 @@
     android:layout_height="fill_parent"
     >
     <LinearLayout
+    android:id="@+id/buttons_list"
     android:orientation="vertical"
     android:background="#8f8f40"
     android:layout_width="wrap_content"

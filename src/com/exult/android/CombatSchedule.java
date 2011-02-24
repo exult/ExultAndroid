@@ -5,7 +5,7 @@ import java.util.Vector;
 
 public class CombatSchedule extends Schedule {
 	//	Combat options:
-	public static boolean combatTrace;
+	public static boolean combatTrace = true;
 	private static boolean paused;		// For suspending.
 	public static int difficulty;		// 0=normal, >0 harder, <0 easier.
 	public static final int // enum Mode
@@ -577,6 +577,8 @@ public class CombatSchedule extends Schedule {
 		WeaponInfo winf = weaponShape >= 0 ?
 				ShapeID.getInfo(weaponShape).getWeaponInfo() : null;
 		int dist = npc.distance(opponent);
+		//System.out.println("startStrike: npc " + npc.getNpcNum() +
+		//	":" + npc.getName() +	", dist = " + dist);
 		int reach;
 		if (winf == null) {
 			MonsterInfo minf = npc.getInfo().getMonsterInfo();
@@ -585,6 +587,9 @@ public class CombatSchedule extends Schedule {
 		} else
 			reach = winf.getRange();
 		boolean ranged = notInMeleeRange(winf, dist, reach);
+		//System.out.println("startStrike: npc " + npc.getNpcNum() +
+		//		":" + npc.getName() + ", ranged = " + ranged + 
+		//		", effRange = " + npc.getEffectiveRange(winf, reach));
 			// Out of range?
 		if (spellbook == null && npc.getEffectiveRange(winf, reach) < dist) {
 			state = approach;
@@ -599,6 +604,7 @@ public class CombatSchedule extends Schedule {
 				int need_ammo = npc.getWeaponAmmo(weaponShape,
 						winf.getAmmoConsumed(), winf.getProjectile(),
 						ranged, ammoTemp, false);
+				//System.out.println("startStrike: need_ammo = " + need_ammo);
 				if (need_ammo != 0 && ammoTemp[0] == null && !npc.readyAmmo())
 					weapon_dead = true;
 			}

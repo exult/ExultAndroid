@@ -231,10 +231,10 @@ public class WeaponInfo extends BaseInfo implements DataUtils.ReaderFunctor {
 		m_no_blocking = ((flags0>>2)&1) != 0;
 		m_delete_depleted = ((flags0>>3)&1) != 0;
 		damageType = (byte)((flags0>>4)&15);
-		range = buf[ind++];
-		m_autohit = (range&1) != 0;
-		uses = (byte)((range>>1)&3);		// Throwable, etc.:
-		range = (byte) (range>>3);
+		int rangeval = ((int)buf[ind++])&0xff;
+		m_autohit = (rangeval&1) != 0;
+		uses = (byte)((rangeval>>1)&3);		// Throwable, etc.:
+		range = (byte) (rangeval>>3);
 		byte flags1 = buf[ind++];
 		m_returns = (flags1&1) != 0;
 		m_need_target = ((flags1>>1)&1) != 0;
