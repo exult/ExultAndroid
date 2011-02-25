@@ -38,6 +38,11 @@ public final class Cheat extends GameSingletons {
 	public boolean inInfravision() {
 		return infravision;
 	}
+	public void toggleInfravision() {
+		infravision = !infravision;
+		ExultActivity.showToast(infravision?"Infravision Mode":"Ending Infravision");
+		clock.setPalette();
+	}
 	public void mapTeleport() {
 		ShapeFrame map;
 		if (EUtil.U7exists(EFile.PATCH_MINIMAPS) != null) {

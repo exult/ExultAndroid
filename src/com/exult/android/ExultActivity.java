@@ -487,6 +487,12 @@ public class ExultActivity extends Activity {
 			        		Shortcuts.combat();
 			        	}
 			        	return true;
+			        case KeyEvent.KEYCODE_G:
+				        if (event.isAltPressed()) {
+				        	GameSingletons.cheat.toggleGodMode();
+				        	return true;
+				        } else
+				        	return false;
 		        	case KeyEvent.KEYCODE_H:
 			        	if (event.isAltPressed()) {
 			        		GameSingletons.cheat.toggleHackMover();
@@ -496,9 +502,10 @@ public class ExultActivity extends Activity {
 			        case KeyEvent.KEYCODE_I:
 			        	if (!event.isAltPressed()) {
 			        		Shortcuts.inv();
+					    } else {
+					    	GameSingletons.cheat.toggleInfravision();
+					    }
 					    return true;
-					    } else
-					    	return false;
 		        	case KeyEvent.KEYCODE_L:
 		        		if (event.isAltPressed()) {
 		        			if (gwin.skipLift == 16)

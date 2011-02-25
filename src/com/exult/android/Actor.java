@@ -2631,11 +2631,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					alt2 == Ready.scabbard);
 		boolean can_neck = (rtype == Ready.neck || 
 					alt1 == Ready.neck || alt2 == Ready.neck);
+
 		if (obj.getShapeNum() == 857) {
 			//+++++JSF-Android - Dragonbreath: Kludge until we read in paperdoll info.
-			if (spot != Ready.lhand)
+			if (spot == Ready.backpack)
 				return false;
-		}
+		} 
 		if (spot == Ready.both_hands)
 			spot = Ready.lhand;
 		else if (spot == Ready.lrgloves)
@@ -2766,8 +2767,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			boolean combine, boolean noset) {
 		int index = findBestSpot(obj);// Where should it go?
 		if (npcNum == 0)
-		//System.out.println("Adding shape " + obj.getShapeNum() +
-		//		", spot = " + index);
+			System.out.println("Adding shape " + obj.getShapeNum() +
+				", spot = " + index);
 		if (index < 0) {		// No free spot?  Look for a bag.
 			if (spots[Ready.backpack] != null && 
 					spots[Ready.backpack].add(obj, false, combine, false))
@@ -2820,7 +2821,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			useNeck = true;
 			index = Ready.amulet;
 		}
-
+		if (index < 0) {
+			System.out.println("Can't add obj " + obj.getShapeNum() +
+					", to " + getShapeNum());
+			return false;
+		}
 		spots[index] = obj;		// Store in correct spot.
 		if (index == Ready.lhand && schedule != null && !noset)
 			schedule.setWeapon(false);	// Tell combat-schedule about it.
