@@ -25,7 +25,7 @@ public final class ShapeInfo {
 	//+++++++++FINISH private PaperdollNpc npcpaperdoll;
 	// These vectors should be totally ordered by the strict-weak
 	// order operator defined for the classes.
-	//+++++++FINISH private vector<Paperdoll_item> objpaperdoll;
+	private Vector<PaperdollItem> objpaperdoll;
 	private Vector<EffectiveHpInfo> hpinf;
 	private Vector<FrameNameInfo> nameinf;
 	private Vector<FrameFlagsInfo> frflagsinf;
@@ -199,18 +199,27 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 	public void setBodyInfo(BodyInfo i) {
 		body = i;
 	}
-/*++++++++FINISH
-bool has_paperdoll_info() {;
-private vector<Paperdoll_item>& get_paperdoll_info()
-{ return objpaperdoll; }
-private vector<Paperdoll_item>& set_paperdoll_info(bool tf);
-void clean_invalid_paperdolls();
-void clear_paperdoll_info();
-void add_paperdoll_info(Paperdoll_item& add);
-Paperdoll_item *get_item_paperdoll(int frame, int spot);
-*/
+	public Vector<PaperdollItem> getPaperdollInfo() {
+		return objpaperdoll;
+	}
+	public void setPaperdollInfo(Vector<PaperdollItem> i) {
+		objpaperdoll = i;
+	}
+	PaperdollItem getItemPaperdoll(int frame, int spot) {
+		if (spot == Ready.both_hands)
+			spot = Ready.lhand;
+		else if (spot == Ready.lrgloves)
+			spot = Ready.lfinger;
+		else if (spot == Ready.neck)
+			spot = Ready.amulet;
+		else if (spot == Ready.scabbard)
+			spot = Ready.belt;
+		PaperdollItem inf = BaseInfo.FrameInfo.searchDoubleWildCards(
+				objpaperdoll, frame, spot);
+		return inf;
+	}
 	public final boolean isObjectAllowed(int frame, int spot) {
-		return true;// +++++FINISHreturn get_item_paperdoll(frame, spot) != 0; 
+		return true;// +++++FINISHreturn getItemPaperdoll(frame, spot) != null; 
 	}
 	public Vector<ContentRules> getContentRules()
 		{ return cntrules; }
