@@ -512,6 +512,12 @@ public class ExultActivity extends Activity {
 		        			return true;
 		        		} else
 		        			return false;
+		        	case KeyEvent.KEYCODE_P:
+			        	if (event.isAltPressed()) {
+			        		GameSingletons.cheat.togglePickpocket();
+			        		return true;
+			        	} else
+			        		return false;
 		        	case KeyEvent.KEYCODE_R:
 		        		if (event.isAltPressed()) {
 		        			gwin.read(1);	// +++++++TESTING

@@ -1311,7 +1311,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 *	If no weapon readied, look through all possessions for the best one.
 	 */
 	public boolean readyBestWeapon() {
-		//System.out.println("readyBestWeapon for NPC #" + npcNum);
+		//System.out.println("readyBestWeapon for NPC " + npcNum +
+		//		":" + getName());
 		if (getWeapon() != null && readyAmmo())
 			return true;		// Already have one.
 		// Check for spellbook.
@@ -1333,7 +1334,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			int ready = info.getReadyType();
 			//System.out.println("Checking " + obj.getShapeNum() + ", " + 
 			//		obj.getName() + ", ready = " + ready);
-			if (ready != Ready.lhand && ready != Ready.both_hands)
+			// backpack and rhand added for dragon breath and some spells
+			if (ready != Ready.lhand && ready != Ready.both_hands &&
+					 ready != Ready.rhand && ready != Ready.backpack)
 				continue;
 			WeaponInfo winf = info.getWeaponInfo();
 			//System.out.println("winf = " + (winf == null?"null":"nonnull"));
@@ -1343,7 +1346,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				continue;
 			
 			int strength = winf.getBaseStrength();
-			//System.out.println("Strength = " + strength);
+			System.out.println("Strength = " + strength);
 			strength += getEffectiveRange(winf, -1);
 			if (strength > best_strength) {
 				wtype = ready;
@@ -1369,7 +1372,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (remove2 != null)
 			remove2.removeThis();
 		best.removeThis();
-		add(best, true);			// Should go to the right place.
+		if (wtype == Ready.rhand) // tell it the correct ready spot
+			addReadied(best, Ready.lhand);
+		else
+			add(best, true);			// Should go to the right place.
 		if (wtype == Ready.lhand)
 			readyBestShield();	// Also add a shield for 1-handed weapons.
 		if (remove1 != null)			// Put back other things.
@@ -2595,9 +2601,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 								gwin.inCombat();
 		int sched = getScheduleType();
 		if (npcNum == 0 ||		// Avatar
-			(show_party_inv && partyId >= 0) /* +++++ || // Party
+			(show_party_inv && partyId >= 0)  || // Party
 			// Pickpocket cheat && double click
-			(cheat.in_pickpocket() && event == 1) */)
+			(cheat.inPickpocket() && event == 1))
 			showInventory();
 		// Asleep (but not awakened)?
 		else if ((sched == Schedule.sleep &&
@@ -2625,6 +2631,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					alt2 == Ready.scabbard);
 		boolean can_neck = (rtype == Ready.neck || 
 					alt1 == Ready.neck || alt2 == Ready.neck);
+		if (obj.getShapeNum() == 857) {
+			//+++++JSF-Android - Dragonbreath: Kludge until we read in paperdoll info.
+			if (spot != Ready.lhand)
+				return false;
+		}
 		if (spot == Ready.both_hands)
 			spot = Ready.lhand;
 		else if (spot == Ready.lrgloves)
@@ -2666,8 +2677,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		else if (can_neck && spot == Ready.amulet && spots[Ready.cloak] != null)
 			return false;
 		// If in left or right hand allow it
-		else if (spot == Ready.lhand || spot == Ready.rhand)
+		else if (spot == Ready.lhand || spot == Ready.rhand) {
+			if (obj.getShapeNum() == 857)
+				System.out.println("fitsInSpot " + spot + " successful");
 			return true;
+		}
 		// Special Checks for Belt
 		else if (spot == Ready.belt)
 		{
@@ -2752,8 +2766,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			boolean combine, boolean noset) {
 		int index = findBestSpot(obj);// Where should it go?
 		if (npcNum == 0)
-		System.out.println("Adding shape " + obj.getShapeNum() +
-				", spot = " + index);
+		//System.out.println("Adding shape " + obj.getShapeNum() +
+		//		", spot = " + index);
 		if (index < 0) {		// No free spot?  Look for a bag.
 			if (spots[Ready.backpack] != null && 
 					spots[Ready.backpack].add(obj, false, combine, false))

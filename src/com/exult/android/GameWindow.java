@@ -290,7 +290,7 @@ public class GameWindow extends GameSingletons {
 	public void setBody(int npcNum, Actor.DeadBody body) {
 		if (bodies == null)
 			bodies = new Vector<Actor.DeadBody>(npcNum + 1);
-		else if (npcNum >= bodies.size())
+		if (npcNum >= bodies.size())
 			bodies.setSize(npcNum + 1);
 		bodies.setElementAt(body, npcNum);
 	}
@@ -1381,7 +1381,7 @@ public class GameWindow extends GameSingletons {
 		// Set palette for time-of-day.
 		clock.reset();
 		clock.setPalette();
-		//+++++FINISH pal.fade(6, 1, -1);		// Fade back in.
+		pal.fade(6, true, -1);		// Fade back in.
 		System.out.println("setupGame: done");
 	}
 	public void readNpcs() throws IOException {

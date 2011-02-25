@@ -5,6 +5,7 @@ public final class Cheat extends GameSingletons {
 	private boolean godMode;
 	private boolean wizardMode;
 	private boolean infravision;
+	private boolean pickpocket;
 	
 	public boolean inHackMover() {
 		return hackMover;
@@ -26,6 +27,13 @@ public final class Cheat extends GameSingletons {
 	public void toggleWizardMode() {
 		wizardMode = !wizardMode;
 		ExultActivity.showToast(wizardMode?"WizardMode Mode":"Ending WizardMode");
+	}
+	public boolean inPickpocket() {
+		return pickpocket;
+	}
+	public void togglePickpocket() {
+		pickpocket = !pickpocket;
+		ExultActivity.showToast(pickpocket?"Pickpocket Mode":"Ending Pickpocket");
 	}
 	public boolean inInfravision() {
 		return infravision;

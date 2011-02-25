@@ -219,7 +219,8 @@ public class CombatSchedule extends Schedule {
 			(minf.getFlags() & (1<<MonsterInfo.see_invisible))!=0 : false;
 		for (GameObject each : nearby) {
 			Actor actor = (Actor) each;
-			if (actor.isDead() || actor.getFlag(GameObject.asleep) ||
+			if (actor.isDead() || 
+				(actor.getFlag(GameObject.asleep) && !opponents.isEmpty()) ||
 			    (!see_invisible && actor.getFlag(GameObject.invisible)))
 				continue;	// Dead, sleeping or invisible.
 			if (isEnemy(npc_align, actor.getEffectiveAlignment()))
@@ -577,8 +578,10 @@ public class CombatSchedule extends Schedule {
 		WeaponInfo winf = weaponShape >= 0 ?
 				ShapeID.getInfo(weaponShape).getWeaponInfo() : null;
 		int dist = npc.distance(opponent);
-		//System.out.println("startStrike: npc " + npc.getNpcNum() +
-		//	":" + npc.getName() +	", dist = " + dist);
+		if (combatTrace)
+			System.out.println("startStrike: npc " + npc.getNpcNum() +
+			":" + npc.getName() +	", dist = " + dist +
+			", weapon = " + weaponShape);
 		int reach;
 		if (winf == null) {
 			MonsterInfo minf = npc.getInfo().getMonsterInfo();
@@ -587,9 +590,10 @@ public class CombatSchedule extends Schedule {
 		} else
 			reach = winf.getRange();
 		boolean ranged = notInMeleeRange(winf, dist, reach);
-		//System.out.println("startStrike: npc " + npc.getNpcNum() +
-		//		":" + npc.getName() + ", ranged = " + ranged + 
-		//		", effRange = " + npc.getEffectiveRange(winf, reach));
+		if (combatTrace)
+			System.out.println("startStrike: npc " + npc.getNpcNum() +
+				":" + npc.getName() + ", ranged = " + ranged + 
+				", effRange = " + npc.getEffectiveRange(winf, reach));
 			// Out of range?
 		if (spellbook == null && npc.getEffectiveRange(winf, reach) < dist) {
 			state = approach;
