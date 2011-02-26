@@ -79,8 +79,7 @@ public class NpcTimers extends GameSingletons {
 	public void startParalyze() {
 		startFlag(GameObject.paralyzed, paralyze);
 	}
-	public static abstract class Timer implements TimeSensitive {
-		protected int timeQueueCount;
+	public static abstract class Timer extends TimeSensitive.Timer {
 		protected NpcTimers list;
 		protected int getMinute() {
 			return 60*clock.getTotalHours() + clock.getMinute();
@@ -92,21 +91,6 @@ public class NpcTimers extends GameSingletons {
 		public void done() {
 			if (inQueue())
 				tqueue.remove(this);
-		}
-		/*
-		 * For TimeSensitive
-		 */
-		public boolean alwaysHandle() {	
-			return false;
-		}
-		public void addedToQueue() {
-			++timeQueueCount;
-		}
-		public void removedFromQueue() {
-			--timeQueueCount;
-		}
-		public final boolean inQueue() {
-			return timeQueueCount > 0;
 		}
 	}
 	public static class Hunger extends Timer {

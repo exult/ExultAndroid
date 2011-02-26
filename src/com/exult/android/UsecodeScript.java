@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class UsecodeScript extends GameSingletons implements TimeSensitive {
+public class UsecodeScript extends TimeSensitive.Timer {
 	public static boolean debug = false;
 	private static LinkedList<UsecodeScript> scripts =
 						new LinkedList<UsecodeScript>();
@@ -20,7 +20,6 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 	private boolean must_finish;		// 1 to finish before deleting.
 	private boolean killed_barks;		// 1 to prevent barks from showing.
 	private int delay;			// Used for restoring.
-	protected int timeQueueCount;		// # times in timeQueue.
 	// The number of times that the game clock ticks in one game minute.
 	// ++FOR NOW.  Later, move to GameClock class.
 	public static final int ticks_per_minute = 25;
@@ -625,7 +624,6 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		int dz
 		) {
 		int frame = obj.getFrameNum();
-		BargeObject barge;
 		Actor act = obj.asActor();
 		if (act != null) {
 			Tile tile = new Tile();
@@ -641,7 +639,7 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 			if (tile.tz < 0)
 				tile.tz = 0;
 			obj.step(tile, frame, true);
-		} else if ((barge = obj.asBarge()) != null) {
+		} else if ((obj.asBarge()) != null) {
 			for (int i = 0; i < 4; i++) {
 				Tile t = new Tile();
 				obj.getTile(t);
@@ -662,21 +660,6 @@ public class UsecodeScript extends GameSingletons implements TimeSensitive {
 		if (type == EggObject.monster || type == EggObject.button ||
 				type == EggObject.missile)
 			((EggObject) e).hatch(gwin.getMainActor(), true);
-	}
-	/*
-	 * For TimeSensitive
-	 */
-	public boolean alwaysHandle() {	
-		return false;
-	}
-	public void addedToQueue() {
-		++timeQueueCount;
-	}
-	public void removedFromQueue() {
-		--timeQueueCount;
-	}
-	public final boolean inQueue() {
-		return timeQueueCount > 0;
 	}
 	/*
 	 *	Execute an array of usecode, generally one instruction per tick.

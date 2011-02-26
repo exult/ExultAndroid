@@ -1,8 +1,7 @@
 package com.exult.android;
 import com.exult.android.shapeinf.*;
 
-public abstract class Animator extends GameSingletons implements TimeSensitive {
-	private int timeQueueCount;
+public abstract class Animator extends TimeSensitive.Timer {
 	protected GameObject obj;		// Object we're controlling.
 	protected short deltax, deltay;	// If wiggling, deltas from
 										//   original position.
@@ -47,18 +46,6 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 		{ return deltay; }
 	public int getFrameNum() {
 		return obj.getFrameNum();
-	}
-	@Override
-	public void addedToQueue() {
-		++timeQueueCount;
-	}
-	@Override
-	public boolean alwaysHandle() {
-		return false;
-	}
-	@Override
-	public void removedFromQueue() {
-		--timeQueueCount;
 	}
 	/*
 	 *	Animate by going through frames.
@@ -391,10 +378,8 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 	 *	A class for playing sound effects that get updated by position
 	 *	and distance. Adds itself to time-queue, deletes itself when done.
 	 */
-	public static class ObjectSfx 
-				extends GameSingletons implements TimeSensitive {
+	public static class ObjectSfx extends TimeSensitive.Timer {
 		private GameObject obj;	// Object that caused the sound.
-		private int timeQueueCount;
 		private int sfx;			// ID of sound effect being played.
 		private int channel;		// Channel of sfx being played.
 		public ObjectSfx(GameObject o, int sx, int delay) {
@@ -437,18 +422,6 @@ public abstract class Animator extends GameSingletons implements TimeSensitive {
 				tqueue.add(curtime + delay, this, udata);
 			else
 				stop();
-		}
-		@Override
-		public void addedToQueue() {
-			++timeQueueCount;
-		}
-		@Override
-		public boolean alwaysHandle() {
-			return false;
-		}
-		@Override
-		public void removedFromQueue() {
-			--timeQueueCount;
 		}
 	}
 }

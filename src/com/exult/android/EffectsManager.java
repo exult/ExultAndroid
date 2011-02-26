@@ -138,9 +138,8 @@ public final class EffectsManager extends GameSingletons {
 	/*
 	 *	Base class for special-effects:
 	 */
-	public static abstract class SpecialEffect extends GameSingletons implements TimeSensitive
+	public static abstract class SpecialEffect extends TimeSensitive.Timer
 		{
-		private int timeQueueCount;
 		protected boolean always;			// For TimeQueue.
 		private SpecialEffect next, prev;	// All of them are chained together.
 						// Render.
@@ -151,15 +150,7 @@ public final class EffectsManager extends GameSingletons {
 		/*
 		 * For TimeSensitive
 		 */
-		public void addedToQueue() {
-				++timeQueueCount;
-		}
-		public void removedFromQueue() {
-			--timeQueueCount;
-		}
-		public final boolean inQueue() {
-			return timeQueueCount > 0;
-		}
+		@Override
 		public boolean alwaysHandle() {
 			return always;
 		}

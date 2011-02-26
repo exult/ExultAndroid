@@ -1,6 +1,6 @@
 package com.exult.android;
 
-public class GameClock extends GameSingletons implements TimeSensitive {
+public class GameClock extends TimeSensitive.Timer {
 	public static final int ticksPerMinute = 25;	// Ticks per game minute.
 	private int hour, minute;		// Time (0-23, 0-59).
 	private int day;			// Keep track of days played.
@@ -14,7 +14,6 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 	private boolean wasOvercast;
 	private int fog;			// >0 if there is fog.
 	private boolean wasFoggy;
-	private int timeQueueCount;
 	private Palette.Transition transition;	// For smooth palette transitions.
 	private int timeRate;
 	private static int getTimePalette(int hour, boolean dungeon) {
@@ -209,15 +208,6 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		if (hour != oldHour)		// Update NPC schedules.
 			gwin.scheduleNpcs(hour);
 	}
-	
-	@Override
-	public void addedToQueue() {
-		++timeQueueCount;
-	}
-	@Override
-	public boolean alwaysHandle() {
-		return false;
-	}
 	@Override
 	public void handleEvent(int ctime, Object udata) {
 		// TODO Auto-generated method stub
@@ -272,12 +262,4 @@ public class GameClock extends GameSingletons implements TimeSensitive {
 		for (int i = 0; i < cnt; ++i)
 			gwin.getNpc(partyman.getMember(i)).useFood();
 	}
-	@Override
-	public void removedFromQueue() {
-		--timeQueueCount;
-	}
-	public boolean inQueue() {
-		return timeQueueCount > 0;
-	}
-
 }

@@ -992,10 +992,8 @@ public class EggObject extends IregGameObject {
 	/*
 	 *	Timer for a missile egg (type-6 egg).
 	 */
-	static class MissileLauncher extends GameSingletons 
-								implements TimeSensitive {
+	static class MissileLauncher extends TimeSensitive.Timer {
 		EggObject egg;		// Egg this came from.
-		int timeQueueCount;
 		Tile src = new Tile(), adj = new Tile();
 		static Rectangle winRect = new Rectangle();
 		int weapon;			// Shape for weapon.
@@ -1040,21 +1038,6 @@ public class EggObject extends IregGameObject {
 				eman.addEffect(proj);
 							// Add back to queue for next time.
 			tqueue.add(curtime + (delay > 0 ? delay : 1), this, udata);
-		}
-		/*
-		 * For TimeSensitive
-		 */
-		public boolean alwaysHandle() {	
-			return false;
-		}
-		public void addedToQueue() {
-			++timeQueueCount;
-		}
-		public void removedFromQueue() {
-			--timeQueueCount;
-		}
-		public boolean inQueue() {
-			return timeQueueCount > 0;
 		}
 	}
 }

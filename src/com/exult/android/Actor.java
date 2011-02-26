@@ -542,30 +542,22 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	/*
 	 *	A class whose whole purpose is to stop casting mode.
 	 */
-	private static class ClearCasting implements TimeSensitive {
+	private static class ClearCasting extends TimeSensitive.Timer {
 		public void handleEvent(int curtime, Object udata) {
 			Actor a = (Actor)(udata);
 			a.hideCastingFrames();
 			a.addDirty();
 		}
-		public boolean alwaysHandle()
-			{return false;}
-		public void addedToQueue() {}
-		public void removedFromQueue() {}
 	}
 	/*
 	 *	A class whose whole purpose is to clear the 'hit' flag.
 	 */
-	private static class ClearHit implements TimeSensitive {
+	private static class ClearHit extends TimeSensitive.Timer {
 		public void handleEvent(int curtime, Object udata) {
 			Actor a = (Actor)(udata);
 			a.hit = false;
 			a.addDirty();
 		}
-		public boolean alwaysHandle()
-			{return false;}
-		public void addedToQueue() {}
-		public void removedFromQueue() {}
 	}
 	public final void hideCastingFrames() {
 		castingMode = not_casting;
