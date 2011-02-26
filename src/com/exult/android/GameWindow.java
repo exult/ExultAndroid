@@ -1252,6 +1252,24 @@ public class GameWindow extends GameSingletons {
 	}	
 	public void paint(Rectangle r)
 		{ paint(r.x, r.y, r.w, r.h); }
+	// Paint just the map with given top-left-corner tile.
+	public void paintMapAtTile(int x, int y, int w, int h, 
+					int toptx, int topty, int skip_above) {
+		synchronized (win) {
+			int savescrolltx = scrolltx, savescrollty = scrollty;
+			int saveskip = skipLift;
+			scrolltx = toptx;
+			scrollty = topty;
+			skipLift = skip_above;
+			map.readMapData();		// Gather in all objs., etc.
+			win.setClip(x, y, w, h);
+			render.paintMap(0, 0, getWidth(), getHeight());
+			win.clearClip();
+			scrolltx = savescrolltx;
+			scrollty = savescrollty;
+			skipLift = saveskip;
+		}
+	}
 	public void paintBusy() {
 		if (busyMessage != null) {
 			int text_height = fonts.getTextHeight(0);

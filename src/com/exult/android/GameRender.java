@@ -266,7 +266,7 @@ public class GameRender {
 		}
 	}
 	//	Paint the overlay and blackness around it.
-	public void paintWizardEye() {
+	public static void paintWizardEye() {
 		// Paint sprite over view.
 		GameWindow gwin = GameWindow.instanceOf();
 		ImageBuf win = gwin.getWin();

@@ -1337,7 +1337,42 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	private void displayArea(UsecodeValue p0) {
 		// display_area(tilepos) - used for crystal balls.
-		//+++++++++++FINISH
+		int size = p0.getArraySize();
+		if (size < 3)
+			return;
+		int tx = p0.getElem(0).getIntValue();
+		int ty = p0.getElem(1).getIntValue();
+		//int unknown = parms[0].get_elem(2).get_int_value();
+					// Figure in tiles.
+		int newmap = size == 3 ? -1 : p0.getElem(3).getIntValue();
+		int oldmap = gwin.getMap().getNum();
+		int w = gwin.getWidth(), h = gwin.getHeight();
+		int tw = w/EConst.c_tilesize, th = h/EConst.c_tilesize;
+		if ((newmap != -1) && (newmap != oldmap))
+			gwin.setMap(newmap);
+					// Center it.
+		int x = 0, y = 0;
+		int sizex = (w - 320)/2, sizey = (h - 200)/2;
+					// Show only inside the original resolution.
+		if (w > 320)
+			x = sizex;
+		if (h > 200)
+			y = sizey;
+		int save_dungeon = gwin.isInDungeon();
+					// Paint game area.
+		gwin.setInDungeon(0);	// Disable dungeon.
+		gwin.paintMapAtTile(x, y, 320, 200, tx - tw/2, ty - th/2, 4);
+		// Paint sprite #10 over it, transparently.	
+		GameRender.paintWizardEye();	
+					// Wait for click.
+		ExultActivity.getClick(new Point());
+		gwin.setInDungeon(save_dungeon);
+			// BG orrery viewer needs this because it also calls UI_view_tile:
+		Actor a = gwin.getMainActor();
+		gwin.centerView(a.getTileX(), a.getTileY());
+		if ((newmap != -1) && (newmap != oldmap))
+			gwin.setMap(oldmap);
+		gwin.paint();		// Repaint normal area.
 	}
 	static class WizardTimer extends TimeSensitive.Timer {
 		public WizardTimer(int ticks) {
