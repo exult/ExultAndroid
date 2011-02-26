@@ -729,6 +729,25 @@ public class GameWindow extends GameSingletons {
 		}
 		clipToWin(dirty);
 	}
+	public void shiftWizardEye(int mx, int my) {
+		// Figure dir. from center.
+		int cx = getWidth()/2, cy = getHeight()/2;
+		int dy = cy - my, dx = mx - cx;
+		int dir = EUtil.getDirection(dy, dx);
+		final int deltas[] = {0,-1, 1,-1, 1,0, 1,1, 0,1, 
+							-1,1, -1,0, -1,-1};
+		int dirx = deltas[2*dir], diry = deltas[2*dir + 1];
+		for (int i = 0; i < 4; ++i) {
+			if (dirx == 1)
+				shiftViewHoriz(false, true);
+			else if (dirx == -1)
+				shiftViewHoriz(true, true);
+			if (diry == 1)
+				shiftViewVertical(false, true);
+			else if (diry == -1)
+				shiftViewVertical(true, true);
+		}
+	}
 	/*
 	 *	Set actor to center view around.
 	 */

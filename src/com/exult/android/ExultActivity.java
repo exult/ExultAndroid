@@ -341,6 +341,10 @@ public class ExultActivity extends Activity {
     					modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
     					return true;
     				}
+    				if (gwin.wizardEye) {
+    					gwin.shiftWizardEye(x, y);
+    					return true;
+    				}
     				if (clickPoint == null && UsecodeMachine.running <= 0) {
     					
     					dragging = DraggingInfo.startDragging(x, y);
@@ -396,7 +400,7 @@ public class ExultActivity extends Activity {
     					// This function handles the trouble of deciding what to
     					// do when the avatar cannot act.
     					gwin.doubleClicked(x, y);
-    					// +++++ Mouse::mouse->set_speed_cursor();
+    					// +++++ Mouse::mouse.set_speed_cursor();
     					showItemsX = -1000;
     					return true;
     				}	
@@ -414,6 +418,10 @@ public class ExultActivity extends Activity {
     			case MotionEvent.ACTION_MOVE:
     				GameSingletons.mouse.move(x, y);
     				Mouse.mouseUpdate = true;
+    				if (gwin.wizardEye) {
+    					gwin.shiftWizardEye(x, y);
+    					return true;
+    				}
     				if (avatarMotion != null && clickPoint == null) {
     					if (modal != null) {
     						modal.mouseDrag(x, y);

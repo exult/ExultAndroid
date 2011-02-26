@@ -1349,7 +1349,10 @@ public class UsecodeIntrinsics extends GameSingletons {
 		@Override
 		public void handleEvent(int ctime, Object udata) {
 			gwin.wizardEye = false;
-			synchronized (gwin.getWin()) { gwin.setAllDirty(); }
+			synchronized (gwin.getWin()) { 
+				Actor a = gwin.getMainActor();
+				gwin.centerView(a.getTileX(), a.getTileY());
+			}
 		}
 	}
 	private void wizardEye(UsecodeValue p0) {
