@@ -398,7 +398,7 @@ public abstract class Animator extends TimeSensitive.Timer {
 			{ return sfx; }
 		public void handleEvent(int curtime, Object udata) {
 			final int delay = 3;		// Guessing this will be enough.
-			boolean active = channel != -1 ? audio.isPlaying(channel) : false;
+			//UNUSED boolean active = channel != -1 ? audio.isPlaying(channel) : false;
 
 			if (obj.isPosInvalid()) { // || (distance >= 0 && !active))
 				stop();// Quitting time.

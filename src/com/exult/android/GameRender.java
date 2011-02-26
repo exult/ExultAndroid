@@ -93,9 +93,9 @@ public class GameRender {
 		obj.renderSeq = renderSeq;
 		Set<GameObject> deps = obj.getDependencies();
 		if (deps != null) {
-			Iterator iter = deps.iterator();
+			Iterator<GameObject> iter = deps.iterator();
 			while (iter.hasNext()) {
-				GameObject dep = (GameObject) iter.next();
+				GameObject dep = iter.next();
 				if (dep.renderSeq != renderSeq)
 					paintObject(dep);
 			}
@@ -111,8 +111,6 @@ public class GameRender {
 	 */
 	public int paintMap(int x, int y, int w, int h) {
 		GameWindow gwin = GameWindow.instanceOf();
-		GameMap map = gwin.getMap();
-		// Shape_manager *sman = gwin.shape_man;
 		renderSeq++;			// Increment sequence #.
 		gwin.setPainted();
 

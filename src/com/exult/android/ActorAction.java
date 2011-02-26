@@ -140,21 +140,19 @@ abstract public class ActorAction extends GameSingletons {
 				actor.setFrameTime(speed);
 				return speed;		// Come back in a moment.
 			}
-			/* +++++++++++++
 			if (blocked != 0) {
-				if (actor.step(blocked_tile, blocked_frame))
-					{		// Successful?
+				if (actor.step(blocked_tile, blocked_frame, false)) {
+							// Successful?
 					if (deleted) return 0;
 					blocked = 0;
 						// He was stopped, so restore speed.
-					actor.set_frame_time(speed);
+					actor.setFrameTime(speed);
 					return speed;
 			}
 						// Wait up to 1.6 secs.
 			return deleted ? 0 : (blocked++ > max_blocked ? 0 
-						: 100 + blocked*(std::rand()%500));
+						: 1 + (blocked*(EUtil.rand()%500))/TimeQueue.tickMsecs);
 			}
-			 */
 			speed = actor.getFrameTime();// Get time between frames.
 			if (speed == 0)
 				return 0;		// Not moving.
@@ -325,7 +323,6 @@ abstract public class ActorAction extends GameSingletons {
 				byte frames[] = new byte[2];
 				frames[0] = (byte)actor.getDirFramenum(dir, Actor.standing);
 				frames[1] = (byte)actor.getDirFramenum(dir, 3);
-				byte standframe = frames[0];
 				setSubseq(createActionSequence(actor, past,
 						new Sequence(
 								new Frames(frames, 2),

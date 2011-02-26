@@ -168,7 +168,7 @@ public final class EffectsManager extends GameSingletons {
 			always = true;
 			gwin.setAllDirty();
 			eman.addEffect(this);
-			tqueue.add(tqueue.ticks + (1000/tqueue.tickMsecs)/2, this, null);
+			tqueue.add(TimeQueue.ticks + (1000/TimeQueue.tickMsecs)/2, this, null);
 		}
 		public void paint() {
 			shape.paintRle(win, x, y);
@@ -197,7 +197,6 @@ public final class EffectsManager extends GameSingletons {
 				// Play earthquake SFX once
 		  		audio.playSfx(Audio.gameSfx(60));
 			}
-			ImageBuf win = gwin.getWin();
 			if (dx != 0) {
 				gwin.shiftViewHoriz(dx < 0);
 				dx = 0;
@@ -890,8 +889,8 @@ public final class EffectsManager extends GameSingletons {
 			height = 8 + fonts.getTextHeight(0);
 			addDirty();			// Force first paint.
 							// Start immediately.
-			tqueue.add(tqueue.ticks, this, null);
-			int from = 0, to = msg.length();
+			tqueue.add(TimeQueue.ticks, this, null);
+			int to = msg.length();
 			if (msg.charAt(0) == '@')
 				msg = '"' + msg.substring(1, to);;
 			if (msg.charAt(to - 1) == '@')

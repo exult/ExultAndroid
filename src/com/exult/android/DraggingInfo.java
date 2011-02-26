@@ -15,7 +15,7 @@ public final class DraggingInfo extends GameSingletons {
 	private int readied_index;		// If it was a 'readied' item.
 					// Last mouse, paint positions:
 	private int mousex, mousey;
-	private int mouseShape;			// Save starting mouse shape.
+	//UNUSED private int mouseShape;			// Save starting mouse shape.
 	private Point paint;
 	//+++++Mouse::Mouse_shapes mouse_shape;// Save starting mouse shape.
 	private Rectangle rect;			// Rectangle to repaint.
@@ -271,7 +271,7 @@ public final class DraggingInfo extends GameSingletons {
 		mousex = x; mousey = y;
 		obj = null;
 		button = null;
-		mouseShape = mouse.getShape();
+		//UNUSED mouseShape = mouse.getShape();
 		mouse.setShape(Mouse.hand);
 		rect.w = -1;
 		// First see if it's a gump.

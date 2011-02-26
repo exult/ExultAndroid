@@ -26,7 +26,7 @@ public class EConst {
 
 	// Maximum number of shapes:
 	public static final int c_max_shapes = 2048;
-	public static final int c_occsize = c_max_shapes/8 + (((c_max_shapes%8) !=0) ? 1 : 0);
+	//UNUSED public static final int c_occsize = c_max_shapes/8 + (((c_max_shapes%8) !=0) ? 1 : 0);
 	
 	public static final int c_first_obj_shape = 0x96;	// 0-0x95 are 8x8 flat shapes.
 	// Directions:

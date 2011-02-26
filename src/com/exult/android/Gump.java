@@ -285,10 +285,8 @@ public abstract class Gump extends GameSingletons {
 							// Dropping on same thing?
 			GameObject onobj = findObject(mx, my);
 							// If possible, combine.
-			/* ++++FINISH
 			if (onobj != null && onobj != obj && onobj.drop(obj))
 				return true;
-			*/
 			if (!container.add(obj, dont_check))	// DON'T combine here.
 				return false;
 							// Not a valid spot?

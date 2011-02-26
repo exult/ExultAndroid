@@ -5,20 +5,17 @@ import java.io.OutputStream;
 import java.io.BufferedOutputStream;
 import java.io.InputStream;
 import java.io.FileInputStream;
-import java.io.DataInputStream;
 import java.io.PushbackInputStream;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.EOFException;
 import java.util.TreeMap;
 import java.util.Random;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 public class EUtil {
-	private static TreeMap pathMap;
+	private static TreeMap<String,String> pathMap;
 	private static byte buf2[] = new byte[2];
 	private static byte buf4[] = new byte[4];
 	private static Random random = new Random();
@@ -213,7 +210,7 @@ public class EUtil {
 			// See if we can translate this prefix
 			String syspath = path.substring(0, pos);
 			if (isSystemPathDefined(syspath)) {
-				String newPrefix = (String)pathMap.get(syspath);
+				String newPrefix = pathMap.get(syspath);
 				newPath = newPrefix + path.substring(pos);
 			} else {
 				newPath = path;
@@ -223,7 +220,7 @@ public class EUtil {
 	}
 	public static void addSystemPath(String key, String value) {
 		if (pathMap == null)
-			pathMap = new TreeMap();
+			pathMap = new TreeMap<String,String>();
 		pathMap.put(key, value);
 	}
 	public static void initSystemPaths() {

@@ -181,7 +181,6 @@ public class GumpWidget extends ShapeID {
 			// On?  Got to turn off others.
 			Actor party[] = new Actor[9];
 					// Get entire party, including Avatar.
-			int cnt = gwin.getParty(party, true);
 			for (Actor a : party) {
 				if (a != actor && a.isCombatProtected())
 					a.setCombatProtected(false);
@@ -219,7 +218,7 @@ public class GumpWidget extends ShapeID {
 			TB_OUTER_BORDER = (byte) 133,
 			TB_OUTER_BORDER_CORNER = (byte)		142,
 			TB_OUTER_BORDER_PUSHED_TOP = (byte)	144,
-			TB_OUTER_BORDER_PUSHED_LEFT = (byte)	140,
+			//UNUSED TB_OUTER_BORDER_PUSHED_LEFT = (byte)	140,
 			TB_INNER_BORDER_HIGHLIGHT = (byte)	138,
 			TB_INNER_BORDER_LOWLIGHT = (byte)	142,
 			TB_INNER_BORDER_CORNER = (byte)		141,

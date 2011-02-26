@@ -199,7 +199,7 @@ public final class DataUtils {
 			}
 			if (s.startsWith("%%endsection"))
 				break;
-			int ind, index, endptr;
+			int ind, index;
 
 			if (s.charAt(0) == ':') {	// Auto-index lines missing an index.
 				index = next_index++;

@@ -16,7 +16,7 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	//   which proceed those placed on it.
 	private int xtiles, ytiles;	// Tiles covered (when vertical).
 	private int dir;		// Direction: 0=N, 1=E, 2=S, 3=W.
-	private boolean complete;			// Flag:  all members have been read.
+	//UNUSED private boolean complete;			// Flag:  all members have been read.
 	private boolean gathered;			// Items on barge have been gathered.
 	private boolean iceRaft;			// For Serpent Isle.
 	private boolean firstStep;		// So first motion can just be 1 tile.
@@ -26,7 +26,7 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	//   not moving.
 	private PathFinder path;		// For traveling.
 	private Tile center;		// Center of barge.
-	private Tile pos;			// Temp.
+	private Tile pos, eventPos;			// Temp.
 	private Point loc;
 	private Rectangle footprint, newfoot, dirty;
 	GameObject getObject(int i)
@@ -230,14 +230,14 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 		xtiles = xt; ytiles = yt; dir = d;
 		firstStep = true;
 		boat = -1;
-		center = new Tile(); pos = new Tile();
+		center = new Tile(); pos = new Tile(); eventPos = new Tile();
 		footprint = new Rectangle(); newfoot = new Rectangle();
 		dirty = new Rectangle();
 		loc = new Point();
 		objects = new Vector<GameObject>();
 	}
 	public Rectangle getTileFootprint() {
-		int tx = getTileX(), ty = getTileY(), tz = getLift();
+		int tx = getTileX(), ty = getTileY();
 		int xts = xtiles, yts = ytiles;
 		footprint.set((tx - xts + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, 
 				(ty - yts + 1 + EConst.c_num_tiles)%EConst.c_num_tiles, xts, yts);
@@ -267,7 +267,6 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 		MapChunk.ChunkIntersectIterator iter = 
 						new MapChunk.ChunkIntersectIterator(foot);
 		Rectangle tiles = new Rectangle();
-		int cx, cy;
 		MapChunk chunk;
 		while ((chunk = iter.getNext(tiles)) != null) {
 			tiles.x += chunk.getCx()*EConst.c_tiles_per_chunk;
@@ -545,7 +544,7 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 		if(gwin.paintEggs) {
 			super.paint();
 			byte pix = ShapeID.getSpecialPixel(ShapeID.CURSED_PIXEL);
-			int rx, by, lx, ty;	// Right, bottom, left, top.
+			int lx, ty;	// Left, top.
 			gwin.getShapeLocation(loc, this);
 			lx = loc.x - xtiles*EConst.c_tilesize + 1;
 			ty = loc.y - ytiles*EConst.c_tilesize + 1;
@@ -642,7 +641,7 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	@Override
 	public void elementsRead() {	// Called when all member items read.	
 		permCount = 0;			// So we don't get haystack!
-		complete = true;
+		//UNUSED complete = true;
 	}
 	@Override
 	public void addedToQueue() {
@@ -654,7 +653,21 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	}
 	@Override
 	public void handleEvent(int ctime, Object udata) {
-		// TODO Auto-generated method stub
+		if (path == null || frameTime == 0 || gwin.getMovingBarge() != this)
+			return;			// We shouldn't be doing anything.
+						// Get spot & walk there.	
+						// Take two steps for speed.
+		if (!path.getNextStep(eventPos) || !step(eventPos, -1, false))
+			frameTime = 0;
+		else if (!firstStep) {		// But not when just starting.
+			taking2ndStep = true;
+			if (!path.getNextStep(eventPos) || !step(eventPos, -1, false))
+				frameTime = 0;
+			taking2ndStep = false;
+		}
+		if (frameTime > 0)			// Still good?
+			tqueue.add(ctime + frameTime, this, udata);
+		firstStep = false;		// After 1st, move 2 at a time.
 	}
 	@Override
 	public void removedFromQueue() {

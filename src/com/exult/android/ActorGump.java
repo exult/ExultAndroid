@@ -120,8 +120,8 @@ public class ActorGump extends Container {
 		super.paint();			// Paint gump & objects.
 
 		// Paint over blue lines for 2 handed
-		Actor actor = container.asActor();
 		/* +++++++++FINISH
+		Actor actor = container.asActor();
 		if (actor != null) {
 			if (actor->is_two_fingered()) {
 				int sx = x + 36,	// Note this is the right finger slot shifted slightly
