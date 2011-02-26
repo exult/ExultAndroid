@@ -56,8 +56,8 @@ public class PaperdollItem extends BaseInfo.FrameInfo {
 		frames[1] = (short)EUtil.ReadInt(txtin, -1);
 		frames[2] = (short)EUtil.ReadInt(txtin, -1);
 		frames[3] = (short)EUtil.ReadInt(txtin, -1);
-		System.out.println("PaperDollItem: shape = " + shape +
-				", frame = " + frame + ", spot = " + quality);
+		//System.out.println("PaperDollItem: shape = " + shape +
+		//		", frame = " + frame + ", spot = " + quality);
 		info.setPaperdollInfo(addVectorInfo(this, info.getPaperdollInfo()));
 		return true;
 	}

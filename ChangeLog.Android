@@ -32,4 +32,10 @@
 	Shortcut buttons are on the left side, and a few work: Q, T, S, I.
 	Targeting:  You drag with the mouse, and the object it's on shows up 
 	with a red outline.  When you release, the action is taken.
+2-24-2011
+	Implemented spellbook.
+	Implemented combat.
+	Most usecode intrinsics are written.
+	Alt-t = teleport, Alt-g = god mode, Alt-i = infravision
+	Some of the above might even work a little.:-)
 

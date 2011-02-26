@@ -2631,12 +2631,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					alt2 == Ready.scabbard);
 		boolean can_neck = (rtype == Ready.neck || 
 					alt1 == Ready.neck || alt2 == Ready.neck);
-
+		/* ++++++++++REMOVE
 		if (obj.getShapeNum() == 857) {
 			//+++++JSF-Android - Dragonbreath: Kludge until we read in paperdoll info.
 			if (spot == Ready.backpack)
 				return false;
-		} 
+		}
+		*/
 		if (spot == Ready.both_hands)
 			spot = Ready.lhand;
 		else if (spot == Ready.lrgloves)

@@ -319,7 +319,7 @@ public final class DataUtils {
 		public void readData(InputStream in, int index, int version,
 			boolean patch, int game, boolean binary) {
 			int id = idread.read(in, index, version, binary);
-			System.out.println("Reading entry for shape #" + id);
+			//System.out.println("Reading entry for shape #" + id);
 			if (id >= 0) {
 				ShapeInfo inf = info[id];
 				

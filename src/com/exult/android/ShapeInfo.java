@@ -219,7 +219,7 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 		return inf;
 	}
 	public final boolean isObjectAllowed(int frame, int spot) {
-		return true;// +++++FINISHreturn getItemPaperdoll(frame, spot) != null; 
+		return getItemPaperdoll(frame, spot) != null; 
 	}
 	public Vector<ContentRules> getContentRules()
 		{ return cntrules; }
