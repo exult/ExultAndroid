@@ -120,7 +120,7 @@ public class EUtil {
 				else if (Character.isDigit(b)) {
 					i = 10*i + (b - (int)'0');
 					++digits;
-				} else {
+				} else if (digits != 0 || !Character.isSpace((char)b)) {
 					if (b != -1)
 						in.unread(b);
 					break;

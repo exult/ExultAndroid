@@ -28,6 +28,7 @@ public class PaperdollItem extends BaseInfo.FrameInfo {
 		PushbackInputStream txtin = (PushbackInputStream)in;
 		frame = (short)EUtil.ReadInt(txtin);
 		translucent = EUtil.ReadInt(txtin) != 0;
+		quality = EUtil.ReadInt(txtin);
 		int ty = EUtil.ReadInt(txtin);
 		if (ty == -255) {	// 'Invalid' marker.
 			setInvalid(true);
@@ -55,7 +56,8 @@ public class PaperdollItem extends BaseInfo.FrameInfo {
 		frames[1] = (short)EUtil.ReadInt(txtin, -1);
 		frames[2] = (short)EUtil.ReadInt(txtin, -1);
 		frames[3] = (short)EUtil.ReadInt(txtin, -1);
-		
+		System.out.println("PaperDollItem: shape = " + shape +
+				", frame = " + frame + ", spot = " + quality);
 		info.setPaperdollInfo(addVectorInfo(this, info.getPaperdollInfo()));
 		return true;
 	}

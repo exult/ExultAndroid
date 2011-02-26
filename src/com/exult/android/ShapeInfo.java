@@ -469,6 +469,24 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 			ExultActivity.fatal("Failed to read \"bodies\" data");
 		}
 	}
+	//	Read Exult text data for bodies.
+	private static void readPaperdollTextDataFile(ShapeInfo info[], 
+						DataUtils.IDReaderFunctor idReader, int game) {
+		final String sections[] = {/*++++FINISH "characters",*/ "items"};
+		final DataUtils.BaseReader readers[] = {
+				new DataUtils.FunctorMultidataReader(info,
+						new PaperdollItem(), null, idReader, false)
+		};
+		assert(sections.length == readers.length);
+		int flxres = game == EConst.BLACK_GATE
+				? EFile.EXULT_BG_FLX_PAPERDOL_INFO_TXT 
+				: EFile.EXULT_SI_FLX_PAPERDOL_INFO_TXT;
+		try {
+			DataUtils.readTextDataFile("paperdol_info", readers, sections, game, flxres);
+		} catch (IOException e) {
+			ExultActivity.fatal("Failed to read \"bodies\" data");
+		}
+	}
 	//	Read in Exult text data.
 	private static void readShapeInfoTextDataFile(ShapeInfo info[], 
 						DataUtils.IDReaderFunctor idReader, int game) {
@@ -707,6 +725,7 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 		// Text files.
 		readShapeInfoTextDataFile(info, idReader, game);
 		readBodiesTextDataFile(info, idReader, game);
+		readPaperdollTextDataFile(info, idReader, game);
 		// Ensure valid ready spots for all shapes.
 		byte defready = (byte) (game == EConst.BLACK_GATE
 								? Ready.backpack : Ready.rhand);
