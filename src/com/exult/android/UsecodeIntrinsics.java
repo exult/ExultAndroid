@@ -1339,9 +1339,25 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// display_area(tilepos) - used for crystal balls.
 		//+++++++++++FINISH
 	}
+	static class WizardTimer extends TimeSensitive.Timer {
+		public WizardTimer(int ticks) {
+			gwin.wizardEye = true;
+			gwin.setAllDirty();
+			gwin.paint();
+			tqueue.add(TimeQueue.ticks + ticks, this, null);
+		}
+		@Override
+		public void handleEvent(int ctime, Object udata) {
+			gwin.wizardEye = false;
+			synchronized (gwin.getWin()) { gwin.setAllDirty(); }
+		}
+	}
 	private void wizardEye(UsecodeValue p0) {
 		// Let's give 50% longer.
-		//++++FINISH Wizard_eye(parms[0.getIntValue()*(3*gwin.get_std_delay())/2); 
+		int ticks = (p0.getIntValue()*3)/2;
+		synchronized (gwin.getWin()) {
+			new WizardTimer(ticks);
+		}
 	}
 	private final UsecodeValue resurrect(UsecodeValue p0) {
 		// resurrect(body).  Returns actor if successful.

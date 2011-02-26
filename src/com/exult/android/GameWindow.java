@@ -68,6 +68,7 @@ public class GameWindow extends GameSingletons {
 	public int blits;		// For frame-counting.
 	public boolean skipFirstScene;
 	public boolean armageddon;
+	public boolean wizardEye;		// When that spell is in effect.
 	public String busyMessage;		// True when doing something we need to wait for.
 	public void setBusyMessage(String s) {
 		busyMessage = s;
@@ -308,7 +309,7 @@ public class GameWindow extends GameSingletons {
 		 mainActor.getFlag(GameObject.dont_render));
 	}
 	public final boolean mainActorCanAct() {
-		return mainActor.canAct();
+		return !wizardEye && mainActor.canAct();
 	}
 	public final void scheduleNpcs(int hour, int backwards, boolean repaint) {
 		// Go through npc's, skipping Avatar.
@@ -1196,6 +1197,8 @@ public class GameWindow extends GameSingletons {
 			else
 				win.fill8((byte)0);
 			effects.paint();		// Draw sprites.
+			if (wizardEye)
+				render.paintWizardEye();
 			gumpman.paint(false);
 			if (drag != null) 
 				drag.paint();	// Paint what user is dragging.

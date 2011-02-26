@@ -356,9 +356,11 @@ public class ExultActivity extends Activity {
     											 !GameSingletons.cheat.inHackMover())) {
     						DraggingInfo.abort();
     						dragging = false;
-    						avatarMotion = MotionEvent.obtain(event);
-    						gwin.getShapeLocation(movePoint, gwin.getMainActor());
-    						avatarStartX = movePoint.x; avatarStartY = movePoint.y;
+    						if (canAct) {
+    							avatarMotion = MotionEvent.obtain(event);
+    							gwin.getShapeLocation(movePoint, gwin.getMainActor());
+    							avatarStartX = movePoint.x; avatarStartY = movePoint.y;
+    						}
     					}
     				}
     				leftDownX = x; leftDownY = y;

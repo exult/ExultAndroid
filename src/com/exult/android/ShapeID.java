@@ -90,8 +90,7 @@ public class ShapeID extends GameSingletons {
 	public static final byte getSpecialPixel(int pix) {
 		return specialPixels[pix];
 	}
-	public void paintShapeTranslucent(int xoff, int yoff) {
-		ShapeFrame s = getShape();
+	public static void paintShapeTranslucent(ShapeFrame s, int xoff, int yoff) {
 		if (s != null) {
 			if (xforms != null) {
 				s.paintRleTranslucent(gwin.getWin(), xoff, yoff, xforms);
@@ -99,6 +98,10 @@ public class ShapeID extends GameSingletons {
 				s.paint(gwin.getWin(), xoff, yoff);
 			}
 		}
+	}
+	public void paintShapeTranslucent(int xoff, int yoff) {
+		ShapeFrame s = getShape();
+		paintShapeTranslucent(s, xoff, yoff);
 	}
 	public void paintShape(int xoff, int yoff) {
 		ShapeFrame s = getShape();

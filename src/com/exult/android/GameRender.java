@@ -265,5 +265,27 @@ public class GameRender {
 			}
 		}
 	}
-
+	//	Paint the overlay and blackness around it.
+	public void paintWizardEye() {
+		// Paint sprite over view.
+		GameWindow gwin = GameWindow.instanceOf();
+		ImageBuf win = gwin.getWin();
+		ShapeFrame spr = ShapeFiles.SPRITES_VGA.getShape(10, 0);
+				// Center it.
+		int w = gwin.getWidth(), h = gwin.getHeight();
+		int sw = spr.getWidth(), sh = spr.getHeight();
+		int topx = (w - sw)/2,
+		    topy = (h - sh)/2;
+		ShapeID.paintShapeTranslucent(spr, topx + spr.getXLeft(),
+				topy + spr.getYAbove());
+		int sizex = (w - 320)/2, sizey = (h - 200)/2;
+		if (sizey > 0) {	// Black-fill area outside original resolution.
+			win.fill8((byte)0, w, sizey, 0, 0);
+			win.fill8((byte)0, w, sizey, 0, h - sizey);
+		}
+		if (sizex > 0){
+			win.fill8((byte)0, sizex, 200, 0, sizey);
+			win.fill8((byte)0, sizex, 200, w - sizex, sizey);
+		}
+	}
 }

@@ -52,13 +52,13 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 												int keyval) {
 			if (vec == null)
 				return null;
-			System.out.println("searchSingleWildCard: keyval " + keyval);
+			//System.out.println("searchSingleWildCard: keyval " + keyval);
 			T found;
 			if (search == null)
 				search = new OneKeyInfo();
 			search.keyval = keyval;
 			int ind = Collections.binarySearch(vec, search);
-			System.out.println("searchDoubleWildCard: first try: ind = " + ind);
+			//System.out.println("searchSingleWildCard: first try: ind = " + ind);
 			if (ind >= 0) {
 				found = vec.elementAt(ind);
 				if (!found.isInvalid())
@@ -110,13 +110,13 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 												int frame, int quality) {
 			if (vec == null)
 				return null;
-			System.out.println("searchDoubleWildCard: frame " + frame + ", qual = " + quality);
+			//System.out.println("searchDoubleWildCard: frame " + frame + ", qual = " + quality);
 			T found;
 			if (search == null)
 				search = new FrameInfo();
 			search.frame = frame; search.quality = quality;
 			int ind = Collections.binarySearch(vec, search);
-			System.out.println("searchDoubleWildCard: first try: ind = " + ind);
+			//System.out.println("searchDoubleWildCard: first try: ind = " + ind);
 			if (ind >= 0) {
 				found = vec.elementAt(ind);
 				if (!found.isInvalid())
@@ -131,7 +131,7 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 						// Maybe quality is to blame. Try wildcard qual.
 						search.quality = -1;
 						ind = Collections.binarySearch(vec, search);
-						System.out.println("searchDoubleWildCard: with qual=-1, ind = " +ind);
+						//System.out.println("searchDoubleWildCard: with qual=-1, ind = " +ind);
 						if (ind >= 0 && !vec.elementAt(ind).isInvalid())
 							return vec.elementAt(ind);
 					}
