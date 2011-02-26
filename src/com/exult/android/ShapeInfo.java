@@ -22,7 +22,7 @@ public final class ShapeInfo {
 	private AnimationInfo aniinf;
 	private ExplosionInfo explosion;
 	private BodyInfo body;
-	//+++++++++FINISH private PaperdollNpc npcpaperdoll;
+	private PaperdollNpc npcpaperdoll;
 	// These vectors should be totally ordered by the strict-weak
 	// order operator defined for the classes.
 	private Vector<PaperdollItem> objpaperdoll;
@@ -51,10 +51,11 @@ public final class ShapeInfo {
 		dims[2] = (byte)((tfa[0] >> 5)&7);
 	}
 	// Set/clear tfa bit.
+	/*UNUSED
 	private void setTfa(int i, int bit, boolean tf) {
 		tfa[i] = (byte)(tf ?
 				(tfa[i]|(1<<bit)) : (tfa[i]&~(1<<bit))); 
-	}
+	}*/
 	// Enum Actor_flags
 	public static final int cold_immune = 0;
 	public static final int doesnt_eat = 1;
@@ -159,14 +160,12 @@ public final class ShapeInfo {
 	public void setMonsterInfo(MonsterInfo m) {
 		monstinf = m;
 	}
-/*
-
-bool has_npc_paperdoll_info() {
-{ return npcpaperdoll != 0; }
-Paperdoll_npc *get_npc_paperdoll() {
-{ return npcpaperdoll; }
-Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
-*/
+	public PaperdollNpc getNpcPaperdollInfo() {
+		return npcpaperdoll;
+	}
+	public void setNpcPaperdollInfo(PaperdollNpc i) {
+		npcpaperdoll = i;
+	}
 	public boolean hasSfxInfo() {
 		return sfxinf != null; 
 	}
@@ -289,6 +288,12 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 		{ return fieldType; }
 	public int getGumpShape() { 
 		return gumpShape;
+	}	
+	public void setGumpData(int sh, int fnt) {
+		if (gumpShape != (short)sh || gumpFont != (short)sh) {
+			gumpShape = (short) sh;
+			gumpFont = (short) fnt;
+		}
 	}
 	public int getGumpFont() {
 		return gumpFont; }
@@ -469,11 +474,35 @@ Paperdoll_npc *get_npc_paperdoll_safe(bool sex) {;
 			ExultActivity.fatal("Failed to read \"bodies\" data");
 		}
 	}
-	//	Read Exult text data for bodies.
+	// Multiracial support in Exult.
+	static class PaperdollNpcIDReader extends DataUtils.IDReaderFunctor {
+		@Override
+		public int read(InputStream in, int index, int version, 
+				boolean binary) {
+			PushbackInputStream txtin = (PushbackInputStream)in;
+			if (EUtil.peek(txtin) == '%') {
+				/* ++++FINISH
+				String key = EUtil.ReadStr(txtin);
+					// We need these for Exult, but not for ES.
+					// For now, a compromise/hack in that ES defines
+					// a version of this function which always returns
+					// -1, while Exult has another which forwards to
+					// Shapeinfo_lookup::get_skinvar
+				int id = getSkinvar(key);
+				return id < 0 ? -1 : id;
+				*/ return -1;//+++
+				}
+			else
+				return EUtil.ReadInt(txtin);
+			}
+		};
+	//	Read Exult text data for paperdolls.
 	private static void readPaperdollTextDataFile(ShapeInfo info[], 
 						DataUtils.IDReaderFunctor idReader, int game) {
-		final String sections[] = {/*++++FINISH "characters",*/ "items"};
+		final String sections[] = {"characters", "items"};
 		final DataUtils.BaseReader readers[] = {
+				new DataUtils.FunctorMultidataReader(info,
+						new PaperdollNpc(), null, new PaperdollNpcIDReader(), false),
 				new DataUtils.FunctorMultidataReader(info,
 						new PaperdollItem(), null, idReader, false)
 		};

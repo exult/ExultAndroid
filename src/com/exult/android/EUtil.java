@@ -104,6 +104,16 @@ public class EUtil {
 		out.write((v>>16)&0xff);
 		out.write((v>>24)&0xff);
 	}
+	// Peek, but put back.
+	public static final int peek(PushbackInputStream in) {
+		try {
+			int p = in.read();
+			in.unread(p);
+			return p;
+		} catch (IOException e) {
+			return -1;
+		}
+	}
 	// Read integer from a text file, skipping past the '/' after the number.
 	public static final int ReadInt(PushbackInputStream in) {
 		return ReadInt(in, 0);
