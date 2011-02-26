@@ -64,17 +64,14 @@ public class UsecodeIntrinsics extends GameSingletons {
 		createScript(p0, p1, 1);
 		return UsecodeValue.getOne();
 	}
-	public final UsecodeValue delayedExecuteUsecodeArray(UsecodeValue p0,
+	public final UsecodeValue delayedExecuteUsecodeArray(int event, UsecodeValue p0,
 					UsecodeValue p1, UsecodeValue p2) {
 		// Delay = .20 sec.?
 						// Special problem with inf. loop:
-		/* +++++STILL NEEDED?
-		if (Game.get_game_type() == BLACK_GATE &&
-		    event == UsecodeMachine.internal_exec && 
-		    p1.getArrayAize() == 3 &&
-		    parms1.getElem(2).getIntValue() == 0x6f7)
+		if (game.isBG() &&
+				event == UsecodeMachine.internal_exec && 
+				p1.getArraySize() == 3 && p1.getElem(2).getIntValue() == 0x6f7)
 			return UsecodeValue.getZero();
-		*/
 		int delay = p2.getIntValue();
 		createScript(p0, p1, delay);
 		return UsecodeValue.getOne();
@@ -484,7 +481,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (npc == gwin.getMainActor() && gwin.inCombat() &&
 			    newsched != Schedule.combat) {
 						// End combat mode (for L.Field).
-				//+++++FINISH audio.stopMusic();
+				audio.stopMusic();
 				gwin.toggleCombat();
 			}
 		}
@@ -581,7 +578,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		GameObject obj = null;		// Create to be written to Ireg.
 		ShapeInfo info = ShapeID.getInfo(shapenum);
 		ucmachine.setModifiedMap();
-						// +++Not sure if 1st test is needed.
+						// ++Not sure if 1st test is needed.
 		if (info.getMonsterInfo() != null || info.isNpc()) {
 						// (Wait sched. added for FOV.)
 			// don't add equipment (Erethian's transform sequence)
@@ -836,37 +833,33 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (quantity < prev)	// Added to this NPC.
 					foundVec.add(obj);
 			}
+		UsecodeValue result = UsecodeValue.ArrayValue.createObjectsList(foundVec);
 		if (game.isBG())			// Black gate?  Just return result.
-			return UsecodeValue.ArrayValue.createObjectsList(foundVec);
+			return result;
 		int todo = quantity;		// SI:  Put remaining on the ground.
 		if (framenum == EConst.c_any_framenum)
 			framenum = 0;
-		/* ++++++++++FINISH
 		while (todo > 0) {
-			Tile_coord pos = Map_chunk.find_spot(
-						gwin.getMainActor().get_tile(), 3,
-								shapenum, framenum, 2);
-			if (pos.tx == -1)	// Hope this rarely happens.
-					break;
+			Tile pos = tempTile;
+			gwin.getMainActor().getTile(pos);
+			if (!MapChunk.findSpot(pos, 3,
+								shapenum, framenum, 2)) // Hope this rarely happens.
+				break;
 			ShapeInfo info = ShapeID.getInfo(shapenum);
 			// Create and place.
-			GameObject newobj = gmap.create_ireg_object(
-								info, shapenum, framenum, 0, 0, 0);
-			if (quality != c_any_qual)
-					newobj.set_quality(quality); // set quality
-					newobj.set_flag(Obj_flags.okay_to_take);
-					newobj.move(pos);
-					todo--;
-					if (todo > 0)		// Create quantity if possible.
-							todo = newobj.modify_quantity(todo);
-							}
+			GameObject newobj = IregGameObject.create(info, shapenum, framenum, 0, 0, 0);
+			if (quality != EConst.c_any_qual)
+				newobj.setQuality(quality); // set quality
+			newobj.setFlag(GameObject.okay_to_take);
+			newobj.move(pos);
+			todo--;
+			if (todo > 0)		// Create quantity if possible.
+				todo = newobj.modifyQuantity(todo);
+			}
 			// SI?  Append # left on ground.
-		Usecode_value ground(quantity - todo);
-		result.concat(ground);
+		//Usecode_value ground(quantity - todo);
+		result.concat(new UsecodeValue.IntValue(quantity - todo));
 		return result;
-		
-		}*/
-		return UsecodeValue.getZero();// ++++++To crash until above is finished.
 	}
 	private final UsecodeValue getMusicTrack() {
 		// Returns the song currently playing. In the original BG, this
@@ -1048,7 +1041,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		} else {
 			GameObject obj = getItem(objVal);
 			if (obj == null)
-				return UsecodeValue.getZero();	// +++Exult rets UsecodeValue(0,0).
+				return new UsecodeValue.ArrayValue(UsecodeValue.getZero(), UsecodeValue.getZero());
 			obj = obj.getOutermost();	// Might be inside something.
 			obj.getTile(tempTile);
 			gmap.findNearby(foundVec, tempTile, shapenum, distVal.getIntValue(), mval);
@@ -1217,7 +1210,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 			if (lift >= 0 && lift < 20) {
 				obj.move(obj.getTileX(), obj.getTileY(), lift);
 				ucmachine.setModifiedMap();
-				// ++++USED TO REPAINT WINDOW.  Still needed?
 			}
 		}
 	}
@@ -2013,27 +2005,23 @@ public class UsecodeIntrinsics extends GameSingletons {
 			System.out.println("Path_run_usecode: bad inputs");
 			return UsecodeValue.getZero();
 		}
-		int srcx = npc.getTileX(), srcy = npc.getTileY();
 		Tile dest = new Tile(locval.getElem(0).getIntValue(),
 				locval.getElem(1).getIntValue(),
 				sz == 3 ? locval.getElem(2).getIntValue() : 0);
-		if (dest.tz < 0)		// ++++Don't understand this.
+		if (dest.tz < 0)		// ++Don't understand this.
 			dest.tz = 0;
-		/* ++++++++FINISH
 		if (find_free) {// Now works with SI lightning platform
 						// Allow rise of 3 (for SI lightning).
-			if (!MapChunk.findSpot(dest, 3, npc, 3))
+			if (!MapChunk.findSpot(dest, 3, npc, 3, MapChunk.anywhere)) {
 						// No?  Try at source level.
-				d = Map_chunk.find_spot(
-					Tile_coord(dest.tx, dest.ty, src.tz), 3, npc,
-										0);
-			if (d.tx != -1)		// Found it?
-				dest = d;
-			if (usefun == 0x60a &&	// ++++Added 7/21/01 to fix Iron
-			    src.distance(dest) <= 1)
-				return 1;	// Maiden loop in SI.  Kludge+++++++
+				Tile d = new Tile(dest.tx, dest.ty, npc.getLift());
+				if (MapChunk.findSpot(d, 3, npc, 0, MapChunk.anywhere))
+					dest.set(d);// Found it?
+			}
+			if (usefun == 0x60a &&	// ++Added 7/21/01 to fix Iron
+			    npc.distance(dest) <= 1)
+				return UsecodeValue.getOne();	// Maiden loop in SI.  Kludge++
 		}
-		*/
 		if (obj == null) {			// Just skip the usecode part.
 			boolean res = npc.walkPathToTile(dest, 1, 0, 0);
 			if (res && companions && npc.getAction() != null)
@@ -2348,7 +2336,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		case 0x01:
 			return executeUsecodeArray(parms[0], parms[1]);
 		case 0x02:
-			return delayedExecuteUsecodeArray(parms[0], parms[1], parms[2]);
+			return delayedExecuteUsecodeArray(event, parms[0], parms[1], parms[2]);
 		case 0x03:
 			showNpcFace(parms[0], parms[1], -1); break;
 		case 0x04:

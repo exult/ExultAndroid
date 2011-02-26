@@ -196,6 +196,16 @@ public final class Audio extends GameSingletons {
 	public int getCurrentTrack() {
 		return currentTrack;
 	}
+	public void stopMusic() {
+		if (currentTrackInd >= 0) {
+			MediaPlayer p = getPlayer(currentTrackInd);
+			if (p != null) {
+				p.release();
+				players[currentTrackInd] = null;
+			}
+			currentTrack = currentTrackInd = -1;
+		}
+	}
 	//	Play from the 'Combat_song' list above.
 	public void startMusicCombat(int song, boolean continuous) {
 		int num = -1;
