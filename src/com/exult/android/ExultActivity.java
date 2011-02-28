@@ -542,12 +542,14 @@ public class ExultActivity extends Activity {
 		        		return true;
 		        	case KeyEvent.KEYCODE_S:
 		        		if (event.isAltPressed()) 
-		        			gwin.write(1, "Test save to zip");	//++++++++++TESTING.
+		        			//GameSingletons.audio.startSpeech(EUtil.rand()%4);
+		        			GameSingletons.ucmachine.doSpeech(EUtil.rand()%8);
+		        			//GameSingletons.audio.playFile(
+		        			//		EUtil.getSystemPath(EFile.INTROSND), false);
 		        		else if (!event.isShiftPressed()) {
 		        			Shortcuts.save();
 		        		}
 		        		return true;
-		        		
 		        	case KeyEvent.KEYCODE_T:
 		        		if (event.isAltPressed()) {
 		        			GameSingletons.cheat.mapTeleport();

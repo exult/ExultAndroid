@@ -186,6 +186,15 @@ public class UsecodeMachine extends GameSingletons {
 		t.start();
 		return 1;
 	}
+	/*
+	 *	Start speech, or show text if speech isn't enabled.
+	 */
+	public void doSpeech(int num) {
+		intrinsics.setSpeechTrack(num);		// Used in Usecode function.
+		if (!audio.startSpeech(num))
+						// No speech?  Call text function.
+			callUsecode(0x614, null, double_click);
+	}
 	public void initConversation() {
 		conv.initFaces();
 	}

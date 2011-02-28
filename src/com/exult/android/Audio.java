@@ -286,6 +286,60 @@ public final class Audio extends GameSingletons {
 	public int	startMusic(int num, boolean repeat) {
 		return startMusic(num, repeat, EFile.MAINMUS);
 	}
+	public boolean startSpeech(int num) {
+		/* ++++++++EXPERIMENTING 
+		String filename, patchfile;
+		if (game.isSI()) {
+			filename = EFile.SISPEECH;
+			patchfile = EFile.PATCH_SISPEECH;
+		} else {
+			filename = EFile.U7SPEECH;
+			patchfile = EFile.PATCH_U7SPEECH;
+		}
+		byte data[] = fman.retrieve(filename, patchfile, num);
+		int size = AudioTrack.getMinBufferSize(22050, AudioFormat.CHANNEL_OUT_STEREO,
+				AudioFormat.ENCODING_PCM_16BIT);
+		if (data.length > size)
+			size = data.length;
+		System.out.println("size = " + size);
+		AudioTrack player = new AudioTrack(AudioManager.STREAM_MUSIC, 22050,
+				AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT,
+				32000, AudioTrack.MODE_STATIC);
+		player.write(data, 0, data.length);
+		player.play();
+		return true;
+		*/
+		
+		/* Doesn't work either
+		String nm = null;
+		nm = EUtil.getSystemPath(
+				String.format("<DATA>/tempspch%1$d.voc", num));
+		if (debug) System.out.println("Audio: playing speech #" + num);
+		if (EUtil.U7exists(nm) != null)
+			return playFile(nm, false) >= 0;
+		String filename, patchfile;
+		if (game.isSI()) {
+			filename = EFile.SISPEECH;
+			patchfile = EFile.PATCH_SISPEECH;
+		} else {
+			filename = EFile.U7SPEECH;
+			patchfile = EFile.PATCH_U7SPEECH;
+		}
+		byte buf[] = fman.retrieve(filename, patchfile, num);
+		if (buf == null || buf.length == 0)
+			return false;	
+		try {
+			OutputStream out = EUtil.U7create(nm);
+			out.write(buf);
+			out.close();
+			return playFile(nm, false) >= 0;
+		} catch (IOException e) {
+			System.out.println("Audio: Failed to play speech track: " + nm);
+			return false;
+		}
+		*/
+		return false;
+	}
 	//	Returns channel/player index, or -1 if unsuccessful.
 	private int oggPlay(String filename, int num, boolean repeat) {
 		String ogg_name = "";
@@ -351,7 +405,7 @@ public final class Audio extends GameSingletons {
 		return playFile(ogg_name, repeat);
 	}
 	//	Returns player/channel index, or -1 if failed.
-	private int playFile(String fname, boolean repeat) {
+	public int playFile(String fname, boolean repeat) {
 		MediaPlayer player = null;
 		int ind = -1;
 		if (debug)

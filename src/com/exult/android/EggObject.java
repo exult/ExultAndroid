@@ -549,7 +549,7 @@ public class EggObject extends IregGameObject {
 			speechnum = (d1);
 		}
 		public void hatchNow(GameObject obj, boolean must) {
-			// +++++++FINISH  ucmachine.doSpeech(data1&0xff);
+			ucmachine.doSpeech(data1&0xff);
 		}
 	}
 	public static class MonsterEgg extends EggObject {

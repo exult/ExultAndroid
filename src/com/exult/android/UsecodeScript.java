@@ -539,10 +539,8 @@ public class UsecodeScript extends TimeSensitive.Timer {
 				{
 				UsecodeValue val = code.getElem(++i);
 				int track = val.getIntValue();
-				/*++++++++++++++
 				if (track >= 0)
-					Audio.get_ptr().start_speech(track);
-				*/
+					audio.startSpeech(track);
 				}
 			case sfx:		// Play sound effect!
 				{

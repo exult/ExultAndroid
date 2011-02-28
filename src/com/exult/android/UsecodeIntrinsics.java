@@ -1834,49 +1834,44 @@ public class UsecodeIntrinsics extends GameSingletons {
 		
 	}
 	private UsecodeValue startSpeech(UsecodeValue p0) {
-		// Start_speech(num).  Also sets speech_track.
+		// Start_speech(num).  Also sets speechTrack.
 		boolean okay = false;
-		/*++++++++FINISH
-		speech_track = p0.getIntValue();
-		if (speech_track >= 0)
-		okay = Audio::get_ptr().start_speech(speech_track);
-	if (!okay)			// Failed?  Clear faces.  (Fixes SI).
-		init_conversation();
-	else if (GAME_SI)
-		{			// Show guardian, serpent.
-		int face = 0;
-		if (speech_track < 21)	// Serpent?
-			{
-			Actor *ava = gwin.get_main_actor();
-			face = 300;	// Translucent.
+		speechTrack = p0.getIntValue();
+		if (speechTrack >= 0)
+		okay = audio.startSpeech(speechTrack);
+		if (!okay)			// Failed?  Clear faces.  (Fixes SI).
+			ucmachine.initConversation();
+		else if (game.isSI()) {
+					// Show guardian, serpent.
+			int face = 0;
+			if (speechTrack < 21) {	// Serpent?
+				Actor ava = gwin.getMainActor();
+				face = 300;	// Translucent.
 					// Wearing serpent ring?
-			Game_object *obj = ava.get_readied(lfinger);
-			if (obj && obj.get_shapenum() == 0x377 &&
-					obj.get_framenum() == 1)
-				face = 295;	// Solid.
-			else if ((obj = ava.get_readied(rfinger))!=0 &&
-					obj.get_shapenum() == 0x377 &&
-					obj.get_framenum() == 1)
+				GameObject obj = ava.getReadied(Ready.lfinger);
+				if (obj != null && obj.getShapeNum() == 0x377 && obj.getFrameNum() == 1)
+					face = 295;	// Solid.
+				else if ((obj = ava.getReadied(Ready.rfinger)) != null &&
+						obj.getShapeNum() == 0x377 && obj.getFrameNum() == 1)
 				face = 295;	// Solid.
 			}
-		else if (speech_track < 23)
-			face = 296;		// Batlin.
-		else if (speech_track < 25)
-			face = 256;		// Goblin?
-		else if (speech_track == 25)
-			face = 293;		// Chaos serpent.
-		else if (speech_track == 26)
-			face = 294;		// Order serpent.
-		if (face > 0)
-			{
-			Usecode_value sh(face), fr(0);
-			show_npc_face(sh, fr);
-			int x, y;		// Wait for click.
-			Get_click(x, y, Mouse::hand);
-			remove_npc_face(sh);
+			else if (speechTrack < 23)
+				face = 296;		// Batlin.
+			else if (speechTrack < 25)
+				face = 256;		// Goblin?
+			else if (speechTrack == 25)
+				face = 293;		// Chaos serpent.
+			else if (speechTrack == 26)
+				face = 294;		// Order serpent.
+			if (face > 0) {
+			UsecodeValue sh = new UsecodeValue.IntValue(face), 
+						 fr = UsecodeValue.getZero();
+			showNpcFace(sh, fr, -1);
+			// Wait for click.
+			ExultActivity.getClick(new Point() /*, Mouse::hand*/);
+			removeNpcFace(sh);
 			}
 		}
-		*/
 		return UsecodeValue.getBoolean(okay);
 	}
 	private static void runEndgame(UsecodeValue p0) {
@@ -2714,5 +2709,8 @@ public class UsecodeIntrinsics extends GameSingletons {
 	}
 	public void setTelekenesisFun(int f) {
 		telekenesisFun = f;
+	}
+	public void setSpeechTrack(int i) {
+		speechTrack = i;
 	}
 }
