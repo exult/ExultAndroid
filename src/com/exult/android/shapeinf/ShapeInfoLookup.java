@@ -2,6 +2,9 @@ package com.exult.android.shapeinf;
 import com.exult.android.*;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 import com.exult.android.EFile;
 
@@ -28,7 +31,7 @@ import com.exult.android.EFile;
 /*
  *	A class to get the extra information for a given shape.
  */
-public class ShapeInfoLookup {
+public class ShapeInfoLookup extends GameSingletons {
 	static Vector<StringIntPair> paperdoll_source_table;
 	static Vector<int[]>  imported_gump_shapes;
 	static Vector<int[]> blue_shapes;
@@ -44,10 +47,130 @@ public class ShapeInfoLookup {
 	static TreeMap<Integer, UsecodeFunctionData> usecode_funs;
 	static int last_skin;
 	
+	public Vector<StringIntPair> getPaperdollSources() {
+		if (paperdoll_source_table == null)
+			setupShapeFiles();
+		return paperdoll_source_table;
+	}
+	public Vector<int[]> getImportedSkins() {
+		if (imported_skin_shapes == null)
+			setupShapeFiles();
+		return imported_skin_shapes;
+	}
+	public boolean IsSkinImported(int shape) {
+		if (imported_skin_shapes == null)
+			setupShapeFiles();
+		assert(imported_skin_shapes != null);
+		for (int i[] : imported_skin_shapes) {
+			if (i[0] == shape)
+				return true;
+		}
+		return false;
+	}
+	public Vector<int[]> getImportedGumpShapes() {
+		if (imported_gump_shapes == null)
+			setupShapeFiles();
+		return imported_gump_shapes;
+	}
+	public int getBlueShapeData(int spot) {
+		if (blue_shapes == null)
+			setupShapeFiles();
+		for (int i[] : blue_shapes) {
+			if (i[0] == -1 || i[0] == spot)
+				return i[1];
+		}
+		return 54;
+	}
+	public BaseAvatarInfo getBaseAvInfo(boolean sex) {
+		if (def_av_info == null)
+			setupAvatarData();
+		BaseAvatarInfo inf = def_av_info.get(sex);
+		return inf;
+	}
+	public int getSkinvar(String key) {
+		if (skinvars == null)
+			setupShapeFiles();
+		Integer i = skinvars.get(key);
+		if (i != null)
+			return i;	// The shape #.
+		else
+			return -1;	// Invalid reference; bail out.
+	}
+	public int getMaleAvShape() {
+		if (def_av_info == null)
+			setupAvatarData();
+		return def_av_info.get(false).shape_num;
+	}
+	public int getFemaleAvShape() {
+		if (def_av_info == null)
+			setupAvatarData();
+		return def_av_info.get(true).shape_num;
+	}
+	public AvatarDefaultSkin getDefaultAvSkin() {
+		if (base_av_info == null)
+			setupAvatarData();
+		return base_av_info;
+	}
+	public Vector<SkinData> getSkinList() {
+		if (skins_table == null)
+			setupAvatarData();
+		return skins_table;
+	}
+	public SkinData getSkinInfo(int skin, boolean sex)
+	{
+		if (skins_table == null)
+			setupAvatarData();
+		for (SkinData s : skins_table) {
+			if (s.skin_id == skin && s.is_female == sex)
+				return s;
+		}
+		return null;
+	}
+	public SkinData getSkinInfoSafe(int skin, boolean sex, boolean sishapes) {
+		SkinData sk = getSkinInfo(skin, sex);
+		if (sk != null && (sishapes ||
+					(!IsSkinImported(sk.shape_num) && 
+						!IsSkinImported(sk.naked_shape))))
+			return sk;
+		sk = getSkinInfo(getDefaultAvSkin().default_skin, sex);
+		// Prevent unavoidable problems. *Should* never be needed.
+		assert(sk != null && (sishapes ||
+				(!IsSkinImported(sk.shape_num) && 
+					!IsSkinImported(sk.naked_shape))));
+		return sk;
+	}
+	public SkinData getSkinInfoSafe(Actor npc) {
+		int skin = npc.getSkinColor();
+		boolean sex = npc.getTypeFlag(Actor.tf_sex);
+		return getSkinInfoSafe(skin, sex, ShapeID.haveSiShapes());
+	}
+	public UsecodeFunctionData getAvUsecode(int type) {
+		if (usecode_funs == null)
+			setupAvatarData();
+		UsecodeFunctionData i = usecode_funs.get(type);
+		return i;
+	}
+	public boolean hasFaceReplacement(int npcid)
+	{
+		if (petra_table == null)
+			setupAvatarData();
+		Integer i = petra_table.get(npcid);
+		return i != null ? i.intValue() != 0 : npcid != 0;
+	}
+	public int getFaceReplacement(int facenum) {
+		if (petra_table == null)
+			setupAvatarData();
+		if (gwin.getMainActor().getFlag(GameObject.petra)) {
+			Integer i = petra_table.get(facenum);
+			if (i != null)
+				return i;
+		}
+		return facenum;
+	}
 	/*
 	 *	Base parser class shape data.
 	 */
-	abstract static class Shapeinfo_entry_parser extends GameSingletons {
+	abstract static class ShapeInfoEntryParser extends GameSingletons {
 		protected int indTemp[] = new int[1];
 		abstract void parse_entry(int index, byte buf[],
 				boolean for_patch, int version);
@@ -92,7 +215,7 @@ public class ShapeInfoLookup {
 			return new String(buf, ind, end - ind);
 		}
 	}
-	static class Int_pair_parser extends Shapeinfo_entry_parser {
+	static class Int_pair_parser extends ShapeInfoEntryParser {
 		TreeMap<Integer,Integer> table;
 		public Int_pair_parser(TreeMap<Integer,Integer> t) {
 			table = t;
@@ -105,7 +228,7 @@ public class ShapeInfoLookup {
 			table.put(key, data);
 		}
 	}
-	static class Bool_parser extends Shapeinfo_entry_parser {
+	static class Bool_parser extends ShapeInfoEntryParser {
 		TreeMap<Integer, Boolean> table;
 		Bool_parser(TreeMap<Integer, Boolean> t) {
 			table = t;
@@ -117,7 +240,7 @@ public class ShapeInfoLookup {
 			table.put(key, true);
 		}
 	}
-	static class Shape_imports_parser extends Shapeinfo_entry_parser
+	static class Shape_imports_parser extends ShapeInfoEntryParser
 	{
 		Vector<int[]> table;
 		TreeMap<String, Integer> shapevars;
@@ -147,7 +270,7 @@ public class ShapeInfoLookup {
 			table.add(data);
 		}
 	}
-	static class Shaperef_parser extends Shapeinfo_entry_parser {
+	static class Shaperef_parser extends ShapeInfoEntryParser {
 		Vector<int[]> table;
 		TreeMap<String, Integer> shapevars;
 		Shaperef_parser(Vector<int[]> t, TreeMap<String, Integer> sh) {
@@ -172,7 +295,7 @@ public class ShapeInfoLookup {
 			table.add(data);
 		}
 	}
-	static class Paperdoll_source_parser extends Shapeinfo_entry_parser {
+	static class Paperdoll_source_parser extends ShapeInfoEntryParser {
 		Vector<StringIntPair > table;
 		boolean erased_for_patch;
 		Paperdoll_source_parser(Vector<StringIntPair > t) {
@@ -201,7 +324,7 @@ public class ShapeInfoLookup {
 						"' was specified.");
 		}
 	}
-	static class Def_av_shape_parser extends Shapeinfo_entry_parser {
+	static class Def_av_shape_parser extends ShapeInfoEntryParser {
 		TreeMap<Boolean, BaseAvatarInfo> table;
 		Def_av_shape_parser(TreeMap<Boolean, BaseAvatarInfo> t) {
 			table = t;
@@ -217,7 +340,7 @@ public class ShapeInfoLookup {
 			table.put(fmale, entry);
 		}
 	}
-	static class Base_av_race_parser extends Shapeinfo_entry_parser {
+	static class Base_av_race_parser extends ShapeInfoEntryParser {
 		AvatarDefaultSkin table;
 		Base_av_race_parser(AvatarDefaultSkin t) {
 			table = t;
@@ -229,7 +352,7 @@ public class ShapeInfoLookup {
 			table.default_female = ReadInt(buf, indTemp, 1) != 0;
 		}
 	}
-	static class Multiracial_parser extends Shapeinfo_entry_parser {
+	static class Multiracial_parser extends ShapeInfoEntryParser {
 		Vector<SkinData> table;
 		TreeMap<String, Integer> shapevars;
 		Multiracial_parser(Vector<SkinData> t, TreeMap<String, Integer> sh) {
@@ -283,7 +406,7 @@ public class ShapeInfoLookup {
 			table.add(entry);
 		}
 	}
-	static class Avatar_usecode_parser extends Shapeinfo_entry_parser {
+	static class Avatar_usecode_parser extends ShapeInfoEntryParser {
 		TreeMap<Integer, UsecodeFunctionData> table;
 		Avatar_usecode_parser(TreeMap<Integer, UsecodeFunctionData> t) {
 			table = t;
@@ -295,12 +418,84 @@ public class ShapeInfoLookup {
 			int type = ReadInt(buf, indTemp, 1);
 			if (buf[indTemp[0]] == ':') {
 				String name = ReadStr(buf, indTemp, 1);
-				//++++++FINISH entry.fun_id = ucmachine.findFunction(name, true);
+				entry.fun_id = ucmachine.findFunction(name, true);
 			} else
 				entry.fun_id = ReadInt(buf, indTemp, 1);
 			entry.event_id = ReadInt(buf, indTemp, 1);
 			table.put(type, entry);
 		}
+	}
+	/*
+	 *	Parses a shape data file.
+	 */
+	void Read_data_file
+		(
+		String fname,					// Name of file to read, sans extension
+		String sections[],				// The names of the sections
+		ShapeInfoEntryParser parsers[]	// Parsers to use for each section
+		) {
+		int numsections = sections.length;
+		Vector<Vector<byte[]>> static_strings = new Vector<Vector<byte[]>>();
+		Vector<Vector<byte[]>> patch_strings = new Vector<Vector<byte[]>>();
+		static_strings.setSize(numsections);
+		int static_version = 1;
+		int patch_version = 1;
+		String nm;
+		if (game.isBG() || game.isSI()) {
+			nm = "config/" + fname;
+			try {
+				StringIntPair resource = game.getResource(nm);
+				byte txt[] = fman.retrieve(resource.str, resource.num);
+				InputStream in = new ByteArrayInputStream(txt);
+				DataUtils.readTextMsgFileSections(in, static_strings, sections);
+			} catch (IOException e) {
+				ExultActivity.fileFatal(nm);
+			}
+		} else {
+			nm = String.format("<STATIC>/%1$s.txt", fname);
+			try {
+				InputStream in = EUtil.U7openStream(nm);
+				static_version = DataUtils.readTextMsgFileSections(in,
+						static_strings, sections);
+				in.close();
+			} catch (IOException e) {
+				ExultActivity.fileFatal(nm);
+			}
+		}
+		patch_strings.setSize(numsections);
+		nm = String.format("<PATCH>/%1$s.txt", fname);
+		if (EUtil.U7exists(nm) != null) {
+			try {
+				InputStream in = EUtil.U7openStream(nm);
+				patch_version = DataUtils.readTextMsgFileSections(in, patch_strings,
+						sections);
+				in.close();
+			} catch (IOException e) {
+				ExultActivity.fileFatal(nm);
+			}
+		}
+		for (int i=0; i<static_strings.size(); i++) {
+			Vector<byte[]> section = static_strings.elementAt(i);
+			for (int j=0; j<section.size(); j++) {
+				byte ptr[] = section.elementAt(j);
+				if (ptr == null)
+					continue;
+				parsers[i].parse_entry(j, ptr, false, static_version);
+			}
+			section.clear();
+		}
+		static_strings.clear();
+		for (int i=0; i<patch_strings.size(); i++) {
+			Vector<byte[]> section = patch_strings.elementAt(i);
+			for (int j=0; j<section.size(); j++) {
+				byte ptr[] = section.elementAt(j);
+				if (ptr == null)
+					continue;
+				parsers[i].parse_entry(j, ptr, true, patch_version);
+			}
+			section.clear();
+		}
+		patch_strings.clear();
 	}
 	private void setupShapeFiles() {
 		paperdoll_source_table = new Vector<StringIntPair >();
@@ -315,8 +510,7 @@ public class ShapeInfoLookup {
 			"blue_shapes",
 			"multiracial_imports"
 			};
-		/*++++++++++FINISH
-		ShapeinfoEntryParser parsers[] = {
+		ShapeInfoEntryParser parsers[] = {
 			new Paperdoll_source_parser(paperdoll_source_table),
 			new Shape_imports_parser(imported_gump_shapes, gumpvars),
 			new Shaperef_parser(blue_shapes, gumpvars),
@@ -324,7 +518,6 @@ public class ShapeInfoLookup {
 			};
 
 		Read_data_file("shape_files", sections, parsers);
-		*/
 		// For safety.
 		if (paperdoll_source_table.size() == 0)
 			paperdoll_source_table.add(new StringIntPair(EFile.PAPERDOL, -1));
@@ -334,6 +527,29 @@ public class ShapeInfoLookup {
 	private void setupAvatarData() {
 		if (skinvars == null)
 			setupShapeFiles();
+		def_av_info = new TreeMap<Boolean, BaseAvatarInfo>();
+		base_av_info = new AvatarDefaultSkin();
+		skins_table = new Vector<SkinData>();
+		unselectable_skins = new TreeMap<Integer, Boolean>();
+		petra_table = new TreeMap<Integer, Integer>();
+		usecode_funs = new TreeMap<Integer, UsecodeFunctionData>();
+		String sections[] = {
+			"defaultshape",
+			"baseracesex",
+			"multiracial_table",
+			"unselectable_races_table",
+			"petra_face_table",
+			"usecode_info"
+			};
+		ShapeInfoEntryParser parsers[] = {
+			new Def_av_shape_parser(def_av_info),
+			new Base_av_race_parser(base_av_info),
+			new Multiracial_parser(skins_table, skinvars),
+			new Bool_parser(unselectable_skins),
+			new Int_pair_parser(petra_table),
+			new Avatar_usecode_parser(usecode_funs)
+			};
+		Read_data_file("avatar_data", sections, parsers);
 	}
 	
 	public static class StringIntPair {

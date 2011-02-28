@@ -6,6 +6,11 @@ public class ShapeID extends GameSingletons {
 	private byte hasTrans;
 	private ShapeFiles shapeFile;
 	private ShapeFrame shape;
+	private static boolean canHavePaperdolls;	// Set true if the SI paperdoll file 
+	//   is found when playing BG
+	private static boolean paperdollsEnabled;	// True if paperdolls are on.
+	private static boolean gotSiShapes;	// Set true if the SI shapes file 
+	//   is found when playing BGXformPalette xforms[];
 	private static ImageBuf.XformPalette xforms[];
 	public static final int // Special pixels
 		POISON_PIXEL = 0, PROTECT_PIXEL = 1, CURSED_PIXEL = 2,
@@ -90,6 +95,18 @@ public class ShapeID extends GameSingletons {
 	public static final byte getSpecialPixel(int pix) {
 		return specialPixels[pix];
 	}
+	// BG Only
+	public static boolean canUsePaperdolls()
+		{ return canHavePaperdolls; }
+
+	public static boolean arePaperdollsEnabled()
+		{ return paperdollsEnabled; }
+
+	public static void setPaperdollStatus(boolean p)
+		{ paperdollsEnabled = p; }
+
+	public static boolean haveSiShapes()
+		{ return gotSiShapes; }
 	public static void paintShapeTranslucent(ShapeFrame s, int xoff, int yoff) {
 		if (s != null) {
 			if (xforms != null) {

@@ -185,6 +185,33 @@ public class UsecodeMachine extends GameSingletons {
 		return 1;
 	}
 	/*
+	 *	Lookup function name in symbol table.  Prints error if not found.
+	 */
+	public int findFunction(String nm, boolean noerr) {
+		/* +++++++++FINISH
+		Usecode_symbol *ucsym = symtbl ? (*symtbl)[nm] : 0;
+		if (!ucsym)
+			{
+			if (!noerr)
+				cerr << "Failed to find Usecode symbol '" << nm
+						<< "'." << endl;
+			return -1;
+			}
+		return ucsym->get_val();
+		*/ return -1;
+	}
+	/*
+	 *	Lookup function id in symbol table.
+	 */
+	String findFunctionName(int funcid) {
+		/* +++++FINISH
+		Usecode_symbol *ucsym = symtbl ? (*symtbl)[funcid] : 0;
+		if (!ucsym)
+			return 0;
+		return ucsym->get_name();
+		*/ return null;
+	}
+	/*
 	 *	Start speech, or show text if speech isn't enabled.
 	 */
 	public void doSpeech(int num) {
@@ -1273,7 +1300,7 @@ public class UsecodeMachine extends GameSingletons {
 		return (choice_num);		// Return choice #.
 		}
 
-	private UsecodeFunction find_function(int funcid) {
+	private UsecodeFunction findFunction(int funcid) {
 		UsecodeFunction fun;
 		// locate function
 		int slotnum = funcid/0x100;
@@ -1301,7 +1328,7 @@ public class UsecodeMachine extends GameSingletons {
 				 int eventid,
 				 GameObject caller,
 				 boolean entrypoint, boolean orig) {
-		UsecodeFunction fun = find_function(funcid);
+		UsecodeFunction fun = findFunction(funcid);
 		if (fun == null)
 			return false;
 		if (orig && fun != fun.orig) {
@@ -1673,7 +1700,7 @@ public class UsecodeMachine extends GameSingletons {
 				*/
 			}
 			cnt = EUtil.Read4(in);
-			UsecodeFunction fun = find_function((int)funid);
+			UsecodeFunction fun = findFunction((int)funid);
 			if (fun == null)
 				continue;
 			fun.statics.setSize(cnt);
