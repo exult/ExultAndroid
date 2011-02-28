@@ -1,6 +1,8 @@
 package com.exult.android;
 import java.util.HashMap;
 
+import com.exult.android.shapeinf.ShapeInfoLookup;
+
 public abstract class Game extends GameSingletons {
 	protected int gameType;
 	private boolean newGame;
@@ -55,6 +57,9 @@ public abstract class Game extends GameSingletons {
 	public int getShape(String nm) {
 		Integer i = shapes.get(nm);
 		return i == null ? 0 : i;
+	}
+	public ShapeInfoLookup.StringIntPair getResource(String res) {
+		return null;//++++++++++++FINISH
 	}
 	public static class BGGame extends Game {
 		public BGGame() {
