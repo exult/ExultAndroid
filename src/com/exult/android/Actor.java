@@ -746,11 +746,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				unreadyWeapon();
 				schedule = new Schedule.EatAtInn(this);
 				break;
-			/*+++++++++++
 			case Schedule.duel:
-				schedule = new Duel_schedule(this);
+				schedule = new CombatSchedule.Duel(this);
 				break;
-			*/
 			case Schedule.preach:
 				readyBestWeapon();	// Fellowship staff.
 				schedule = new Schedule.Preach(this);
@@ -3564,7 +3562,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 			*/
 			
-			int skin = out.read();
+			/* ++++FINISH int skin = */ out.read();
 			/*++++++++++++++++
 			if (extended_skin) {
 				if (Game.get_avskin() >= 0)

@@ -1201,10 +1201,74 @@ public class CombatSchedule extends Schedule {
 	}	
 	public static class Duel extends CombatSchedule {
 		private Tile start;		// Starting position.
+		private Tile pos = new Tile();	// Temp.
 		private int attacks;			// Count strikes.
+		/*
+		 *	Ready a bow-and-arrows.
+		 */
+		private void readyDuelWeapon
+			(
+			int wshape,			// Weapon shape.
+			int ashape			// Ammo shape, or -1.
+			) {
+			GameObject weap = npc.getReadied(Ready.lhand);
+			if (weap == null || weap.getShapeNum() != wshape) {
+				// Need a bow.
+				GameObject newweap = 
+					npc.findItem(wshape, EConst.c_any_qual, EConst.c_any_framenum);
+				if (newweap != null)		// Have it?
+					newweap.removeThis();
+				else			// Create new one.
+					newweap = IregGameObject.create(wshape, 0);
+				if (weap != null)		// Remove old item.
+					weap.removeThis();
+				npc.add(newweap, true);	// Should go in correct spot.
+				if (weap != null)
+					npc.add(weap, true);
+			}
+			if (ashape == -1)		// No ammo needed.
+				return;
+							// Now provide 1-3 arrows.
+			GameObject aobj = npc.getReadied(Ready.quiver);
+			if (aobj != null)
+				aobj.removeThis();	// Toss current ammo.
+			GameObject arrows = IregGameObject.create(ashape, 0);
+			int extra = EUtil.rand()%3;		// Add 1 or 2.
+			if (extra != 0)
+				arrows.modifyQuantity(extra);
+			npc.add(arrows, true);		// Should go to right spot.
+		}
 		@Override
 		protected void findOpponents() {
-			//+++++++++FINISH
+			opponents.clear();
+			attacks = 0;
+			practiceTarget = null;
+			int r = EUtil.rand()%3;
+			if (r == 0) {		// First look for practice targets.
+							// Archery target:
+				practiceTarget = npc.findClosest(735);
+				if (practiceTarget != null)	// Need bow-and-arrows.
+					readyDuelWeapon(597, 722);
+			}
+			if (practiceTarget == null) {		// Fencing dummy or dueling opponent.
+				readyDuelWeapon(602, -1);
+				if (r == 1)
+					practiceTarget = npc.findClosest(860);
+			}
+			super.setWeapon();
+			if (practiceTarget != null) {
+				npc.setTarget(practiceTarget);
+				return;			// Just use that.
+			}
+			Vector<GameObject> vec = new Vector<GameObject>();		// Find all nearby NPC's.
+			npc.findNearbyActors(vec, EConst.c_any_shapenum, 24);
+			for (GameObject each : vec) {
+				Actor opp = (Actor)each;;
+				GameObject oppopp = opp.getTarget();
+				if (opp != npc && opp.getScheduleType() == duel &&
+					    (oppopp == null || oppopp == npc))
+					opponents.add(opp);
+			}
 		}
 		public Duel(Actor n) {
 			super(n, Schedule.duel);
@@ -1213,7 +1277,33 @@ public class CombatSchedule extends Schedule {
 		}
 		@Override
 		public void nowWhat() {
-			//+++++++++++++FINISH
+			if (state == strike || state == fire) {
+				attacks++;
+							// Practice target full?
+				if (practiceTarget != null && practiceTarget.getShapeNum() == 735
+					&& practiceTarget.getFrameNum() > 0 &&
+						practiceTarget.getFrameNum()%3 == 0) {
+					attacks = 0;	// Break off.
+							//++Should walk there.
+					practiceTarget.changeFrame(0);
+				}
+			} else {
+				super.nowWhat();
+				return;
+			}
+			if (attacks%8 == 0) {		// Time to break off.
+				npc.setTarget(null);
+				pos.set(start);
+				pos.tx += EUtil.rand()%24 - 12;
+				pos.ty += EUtil.rand()%24 - 12;
+							// Find a free spot.
+				if (!MapChunk.findSpot(pos, 3, npc, 1, MapChunk.anywhere) ||
+						!npc.walkPathToTile(pos, 1, 
+									(EUtil.rand()%2000)/TimeQueue.tickMsecs, 0))
+							// Failed?  Try again a little later.
+					npc.start(250, EUtil.rand()%3000);
+			} else
+				super.nowWhat();
 		}
 	}
 }
