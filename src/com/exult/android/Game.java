@@ -10,8 +10,10 @@ public abstract class Game extends GameSingletons {
 	private int avSex = -1;
 	private int avSkin = -1;
 	private HashMap<String,Integer> shapes;
+	private HashMap<String,ShapeInfoLookup.StringIntPair> resources; 
 	public Game() {
 		shapes = new HashMap<String,Integer>();
+		resources = new HashMap<String,ShapeInfoLookup.StringIntPair>();
 		GameSingletons.game = this;
 	}
 	public boolean isNewGame() {
@@ -58,8 +60,16 @@ public abstract class Game extends GameSingletons {
 		Integer i = shapes.get(nm);
 		return i == null ? 0 : i;
 	}
+	public void addResource(String name, String str, int num) {
+		ShapeInfoLookup.StringIntPair ent = new ShapeInfoLookup.StringIntPair(str, num);
+		resources.put(name, ent);
+	}
 	public ShapeInfoLookup.StringIntPair getResource(String res) {
-		return null;//++++++++++++FINISH
+		ShapeInfoLookup.StringIntPair ent = resources.get(res);
+		if (ent != null)
+			return ent;
+		ExultActivity.fatal("Resource " + res + " not found!");
+		return null;
 	}
 	public static class BGGame extends Game {
 		public BGGame() {
@@ -104,9 +114,100 @@ public abstract class Game extends GameSingletons {
 			addShape("gumps/tombstone", 50);
 			addShape("gumps/goldsign", 51);
 			addShape("gumps/body", 53);
+			
+			addShape("gumps/scroll_spells", 0xfff);
+			addShape("gumps/spell_scroll", 0xfff);
+			addShape("gumps/jawbone", 0xfff);
+			addShape("gumps/tooth", 0xfff);
 
 			addShape("sprites/map", 22);
 			addShape("sprites/cheatmap", EFile.EXULT_BG_FLX_BGMAP_SHP);
+			
+			String exultflx = EFile.EXULT_FLX;
+			String gameflx = EFile. EXULT_BG_FLX;
+			
+			addResource("files/shapes/count", null, 9);
+			addResource("files/shapes/0", EFile.SHAPES_VGA, 0);
+			addResource("files/shapes/1", EFile.FACES_VGA, 0);
+			addResource("files/shapes/2", EFile.GUMPS_VGA, 0);
+			addResource("files/shapes/3", EFile.SPRITES_VGA, 0);
+			addResource("files/shapes/4", EFile.MAINSHP_FLX, 0);
+			addResource("files/shapes/5", EFile.ENDSHAPE_FLX, 0);
+			addResource("files/shapes/6", EFile.FONTS_VGA, 0);
+			addResource("files/shapes/7", exultflx, 0);
+			addResource("files/shapes/8", gameflx, 0);
+
+			addResource("files/gameflx", gameflx, 0);
+
+			addResource("files/paperdolvga", gameflx, EFile.EXULT_BG_FLX_BG_PAPERDOL_VGA);
+			//++??addResource("files/mrfacesvga", gameflx, EFile.EXULT_BG_FLX_BG_MR_FACES_VGA);
+			addResource("config/defaultkeys", gameflx, EFile.EXULT_BG_FLX_DEFAULTKEYS_TXT);
+			addResource("config/bodies", gameflx, EFile.EXULT_BG_FLX_BODIES_TXT);
+			addResource("config/paperdol_info", gameflx, EFile.EXULT_BG_FLX_PAPERDOL_INFO_TXT);
+			addResource("config/shape_info", gameflx, EFile.EXULT_BG_FLX_SHAPE_INFO_TXT);
+			addResource("config/shape_files", gameflx, EFile.EXULT_BG_FLX_SHAPE_FILES_TXT);
+			addResource("config/avatar_data", gameflx, EFile.EXULT_BG_FLX_AVATAR_DATA_TXT);
+
+			addResource("palettes/count", null, 18);
+			addResource("palettes/0", EFile.PALETTES_FLX, 0);
+			addResource("palettes/1", EFile.PALETTES_FLX, 1);
+			addResource("palettes/2", EFile.PALETTES_FLX, 2);
+			addResource("palettes/3", EFile.PALETTES_FLX, 3);
+			addResource("palettes/4", EFile.PALETTES_FLX, 4);
+			addResource("palettes/5", EFile.PALETTES_FLX, 5);
+			addResource("palettes/6", EFile.PALETTES_FLX, 6);
+			addResource("palettes/7", EFile.PALETTES_FLX, 7);
+			addResource("palettes/8", EFile.PALETTES_FLX, 8);
+			addResource("palettes/9", EFile.PALETTES_FLX, 10);
+			addResource("palettes/10", EFile.PALETTES_FLX, 11);
+			addResource("palettes/11", EFile.PALETTES_FLX, 12);
+			addResource("palettes/12", EFile.INTROPAL_DAT, 0);
+			addResource("palettes/13", EFile.INTROPAL_DAT, 1);
+			addResource("palettes/14", EFile.INTROPAL_DAT, 2);
+			addResource("palettes/15", EFile.INTROPAL_DAT, 3);
+			addResource("palettes/16", EFile.INTROPAL_DAT, 4);
+			addResource("palettes/17", EFile.INTROPAL_DAT, 5);
+
+			addResource("palettes/patch/0", EFile.PATCH_PALETTES, 0);
+			addResource("palettes/patch/1", EFile.PATCH_PALETTES, 1);
+			addResource("palettes/patch/2", EFile.PATCH_PALETTES, 2);
+			addResource("palettes/patch/3", EFile.PATCH_PALETTES, 3);
+			addResource("palettes/patch/4", EFile.PATCH_PALETTES, 4);
+			addResource("palettes/patch/5", EFile.PATCH_PALETTES, 5);
+			addResource("palettes/patch/6", EFile.PATCH_PALETTES, 6);
+			addResource("palettes/patch/7", EFile.PATCH_PALETTES, 7);
+			addResource("palettes/patch/8", EFile.PATCH_PALETTES, 8);
+			addResource("palettes/patch/9", EFile.PATCH_PALETTES, 10);
+			addResource("palettes/patch/10", EFile.PATCH_PALETTES, 11);
+			addResource("palettes/patch/11", EFile.PATCH_PALETTES, 12);
+			addResource("palettes/patch/12", EFile.PATCH_INTROPAL, 0);
+			addResource("palettes/patch/13", EFile.PATCH_INTROPAL, 1);
+			addResource("palettes/patch/14", EFile.PATCH_INTROPAL, 2);
+			addResource("palettes/patch/15", EFile.PATCH_INTROPAL, 3);
+			addResource("palettes/patch/16", EFile.PATCH_INTROPAL, 4);
+			addResource("palettes/patch/17", EFile.PATCH_INTROPAL, 5);
+
+			addResource("xforms/count", null, 20);
+			addResource("xforms/0", EFile.XFORMTBL, 0);
+			addResource("xforms/1", EFile.XFORMTBL, 1);
+			addResource("xforms/2", EFile.XFORMTBL, 2);
+			addResource("xforms/3", EFile.XFORMTBL, 3);
+			addResource("xforms/4", EFile.XFORMTBL, 4);
+			addResource("xforms/5", EFile.XFORMTBL, 5);
+			addResource("xforms/6", EFile.XFORMTBL, 6);
+			addResource("xforms/7", EFile.XFORMTBL, 7);
+			addResource("xforms/8", EFile.XFORMTBL, 8);
+			addResource("xforms/9", EFile.XFORMTBL, 9);
+			addResource("xforms/10", EFile.XFORMTBL, 10);
+			addResource("xforms/11", EFile.XFORMTBL, 11);
+			addResource("xforms/12", EFile.XFORMTBL, 12);
+			addResource("xforms/13", EFile.XFORMTBL, 13);
+			addResource("xforms/14", EFile.XFORMTBL, 14);
+			addResource("xforms/15", EFile.XFORMTBL, 15);
+			addResource("xforms/16", EFile.XFORMTBL, 16);
+			addResource("xforms/17", EFile.XFORMTBL, 17);
+			addResource("xforms/18", EFile.XFORMTBL, 18);
+			addResource("xforms/19", EFile.XFORMTBL, 19);
 		}
 	}
 }

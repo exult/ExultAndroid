@@ -2301,7 +2301,45 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				(UsecodeScript.npc_frame + Actor.standing));
 		scr.start(1);
 		return (this);
+	}				
+	// Get the polymorph shape
+	public int getPolymorph () 
+		{ return shapeSave; }	
+	void setPolymorph(int shape) {	// Set a polymorph shape
+		//++++++++++FINISH
 	}
+	void setPolymorphDefault() {	// Set the default shape
+		if (!getFlag(GameObject.polymorph)
+				|| (getNpcNum() != 0 &&
+					(game.isSI() && getNpcNum() != 28)))
+			return;
+		setActorShape();
+		shapeSave = (short)getShapeNum();
+
+		if (getNpcNum() == 28)		// Handle Petra First
+			setPolymorph(ShapeInfoLookup.getMaleAvShape());
+		else if (getFlag(GameObject.petra))	// Avatar as petra
+			setPolymorph (658);
+		else	// Snake
+			setPolymorph (530);
+	}
+	// Get the non polymorph shape (note, doesn't returned skin coloured shapes)
+	// For usecode
+	@Override
+	public int getShapeReal() {
+		if (npcNum != 0)		// Not the avatar?
+			return shapeSave!=-1?shapeSave:getShapeNum();
+						// Taking guess (6/18/01):
+		if (getTypeFlag(Actor.tf_sex))
+			return ShapeInfoLookup.getFemaleAvShape();
+		else
+			return ShapeInfoLookup.getMaleAvShape();
+	}
+	// This does the same, but will return skin coloured shapes
+	// For paperdolls/face stats
+	public int getSexedColouredShape() { 
+		return shapeSave!=-1?shapeSave:getShapeNum(); 
+	}	
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
 			return false;
@@ -2881,25 +2919,23 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public int inventoryShapenum() {
 		// We are serpent if we can use serpent isle paperdolls
-		boolean serpent = false; // +++++FINISH(sman.can_use_paperdolls() && sman.are_paperdolls_enabled());
+		boolean serpent = ShapeID.canUsePaperdolls() && ShapeID.arePaperdollsEnabled();
 		
 		if (!serpent) {
 				// Can't display paperdolls (or they are disabled)
 				// Use BG gumps
 			int gump = getInfo().getGumpShape();
-			/* +++++++FINISH
 			if (gump < 0)
-				gump = ShapeID.getInfo(get_sexed_coloured_shape()).get_gump_shape();
+				gump = ShapeID.getInfo(getSexedColouredShape()).getGumpShape();
 			if (gump < 0)
-				gump = ShapeID.getInfo(get_shape_real()).get_gump_shape();
+				gump = ShapeID.getInfo(getShapeReal()).getGumpShape();
 			
 			if (gump < 0) {
 				int shape = getTypeFlag(Actor.tf_sex) ?
-					Shapeinfo_lookup.GetFemaleAvShape() :
-					Shapeinfo_lookup.GetMaleAvShape();
-				gump = ShapeID.getInfo(shape).get_gump_shape();
+					ShapeInfoLookup.getFemaleAvShape() :
+					ShapeInfoLookup.getMaleAvShape();
+				gump = ShapeID.getInfo(shape).getGumpShape();
 			}
-			*/
 			if (gump < 0)
 				// No gump at ALL; should never happen...
 				return (65);	// Default to male (Pickpocket Cheat)
@@ -3521,13 +3557,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			if (getFlag (GameObject.polymorph)) {
 						// Try to fix messed-up flag.
 				if (shnum != getShapeNum())
-					; /* +++++ finish set_polymorph(shnum); */
+					setPolymorph(shnum);
 				else
 					clearFlag(GameObject.polymorph);
 			}
 		} else {
 			out.skip (2);
-			// +++++++++ set_polymorph_default();
+			setPolymorphDefault();
 		}
 
 		// More Exult stuff
@@ -3596,13 +3632,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			}
 //			cout << "Actor " << namebuf << " has alignment " << alignment << endl;
-		/*+++++++++FINISH
-		if (num == 0 && Game.get_avname()) {
-			name = Game.get_avname();
+		if (num == 0 && game.getAvName() != null) {
+			name = game.getAvName();
 		} else
-		*/
 			name = new String(namebuf, 0, len);		// Store copy of it.
-
 							// Get abs. chunk. coords. of schunk.
 		int scy = 16*(schunk/12);
 		int scx = 16*(schunk%12);

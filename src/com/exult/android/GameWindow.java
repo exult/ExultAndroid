@@ -190,7 +190,7 @@ public class GameWindow extends GameSingletons {
 	}
 	public void toggleCombat() {
 		combat = !combat;
-		ExultActivity.setInCombat(combat);
+		ExultActivity.setInCombat();
 		// Change party member's schedules.
 		int newsched = combat ? Schedule.combat : Schedule.follow_avatar;
 		int cnt = partyman.getCount();

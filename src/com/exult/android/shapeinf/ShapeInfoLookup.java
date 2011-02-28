@@ -47,17 +47,17 @@ public class ShapeInfoLookup extends GameSingletons {
 	static TreeMap<Integer, UsecodeFunctionData> usecode_funs;
 	static int last_skin;
 	
-	public Vector<StringIntPair> getPaperdollSources() {
+	public static Vector<StringIntPair> getPaperdollSources() {
 		if (paperdoll_source_table == null)
 			setupShapeFiles();
 		return paperdoll_source_table;
 	}
-	public Vector<int[]> getImportedSkins() {
+	public static Vector<int[]> getImportedSkins() {
 		if (imported_skin_shapes == null)
 			setupShapeFiles();
 		return imported_skin_shapes;
 	}
-	public boolean IsSkinImported(int shape) {
+	public static boolean IsSkinImported(int shape) {
 		if (imported_skin_shapes == null)
 			setupShapeFiles();
 		assert(imported_skin_shapes != null);
@@ -67,12 +67,12 @@ public class ShapeInfoLookup extends GameSingletons {
 		}
 		return false;
 	}
-	public Vector<int[]> getImportedGumpShapes() {
+	public static Vector<int[]> getImportedGumpShapes() {
 		if (imported_gump_shapes == null)
 			setupShapeFiles();
 		return imported_gump_shapes;
 	}
-	public int getBlueShapeData(int spot) {
+	public static int getBlueShapeData(int spot) {
 		if (blue_shapes == null)
 			setupShapeFiles();
 		for (int i[] : blue_shapes) {
@@ -81,13 +81,13 @@ public class ShapeInfoLookup extends GameSingletons {
 		}
 		return 54;
 	}
-	public BaseAvatarInfo getBaseAvInfo(boolean sex) {
+	public static BaseAvatarInfo getBaseAvInfo(boolean sex) {
 		if (def_av_info == null)
 			setupAvatarData();
 		BaseAvatarInfo inf = def_av_info.get(sex);
 		return inf;
 	}
-	public int getSkinvar(String key) {
+	public static int getSkinvar(String key) {
 		if (skinvars == null)
 			setupShapeFiles();
 		Integer i = skinvars.get(key);
@@ -96,27 +96,27 @@ public class ShapeInfoLookup extends GameSingletons {
 		else
 			return -1;	// Invalid reference; bail out.
 	}
-	public int getMaleAvShape() {
+	public static int getMaleAvShape() {
 		if (def_av_info == null)
 			setupAvatarData();
 		return def_av_info.get(false).shape_num;
 	}
-	public int getFemaleAvShape() {
+	public static int getFemaleAvShape() {
 		if (def_av_info == null)
 			setupAvatarData();
 		return def_av_info.get(true).shape_num;
 	}
-	public AvatarDefaultSkin getDefaultAvSkin() {
+	public static AvatarDefaultSkin getDefaultAvSkin() {
 		if (base_av_info == null)
 			setupAvatarData();
 		return base_av_info;
 	}
-	public Vector<SkinData> getSkinList() {
+	public static Vector<SkinData> getSkinList() {
 		if (skins_table == null)
 			setupAvatarData();
 		return skins_table;
 	}
-	public SkinData getSkinInfo(int skin, boolean sex)
+	public static SkinData getSkinInfo(int skin, boolean sex)
 	{
 		if (skins_table == null)
 			setupAvatarData();
@@ -126,7 +126,7 @@ public class ShapeInfoLookup extends GameSingletons {
 		}
 		return null;
 	}
-	public SkinData getSkinInfoSafe(int skin, boolean sex, boolean sishapes) {
+	public static SkinData getSkinInfoSafe(int skin, boolean sex, boolean sishapes) {
 		SkinData sk = getSkinInfo(skin, sex);
 		if (sk != null && (sishapes ||
 					(!IsSkinImported(sk.shape_num) && 
@@ -139,25 +139,25 @@ public class ShapeInfoLookup extends GameSingletons {
 					!IsSkinImported(sk.naked_shape))));
 		return sk;
 	}
-	public SkinData getSkinInfoSafe(Actor npc) {
+	public static SkinData getSkinInfoSafe(Actor npc) {
 		int skin = npc.getSkinColor();
 		boolean sex = npc.getTypeFlag(Actor.tf_sex);
 		return getSkinInfoSafe(skin, sex, ShapeID.haveSiShapes());
 	}
-	public UsecodeFunctionData getAvUsecode(int type) {
+	public static UsecodeFunctionData getAvUsecode(int type) {
 		if (usecode_funs == null)
 			setupAvatarData();
 		UsecodeFunctionData i = usecode_funs.get(type);
 		return i;
 	}
-	public boolean hasFaceReplacement(int npcid)
+	public static boolean hasFaceReplacement(int npcid)
 	{
 		if (petra_table == null)
 			setupAvatarData();
 		Integer i = petra_table.get(npcid);
 		return i != null ? i.intValue() != 0 : npcid != 0;
 	}
-	public int getFaceReplacement(int facenum) {
+	public static int getFaceReplacement(int facenum) {
 		if (petra_table == null)
 			setupAvatarData();
 		if (gwin.getMainActor().getFlag(GameObject.petra)) {
@@ -178,14 +178,20 @@ public class ShapeInfoLookup extends GameSingletons {
 			ind[0] += off;
 			int b, cur = ind[0], len = buf.length;
 			boolean neg = false;
-			int i = 0, digits = 0;
+			int i = 0, digits = 0, base = 10;
+			if (cur + 2 < len && buf[cur] == '0' && buf[cur + 1] == 'x') {
+				base = 16;
+				cur += 2;
+			}
 			while (cur < len) {
 				b = buf[cur++]&0xff;
 				if (b == '-' && digits == 0)
 					neg = !neg;
 				else if (Character.isDigit(b)) {
-					i = 10*i + (b - (int)'0');
+					i = base*i + (b - (int)'0');
 					++digits;
+				} else if (base == 16 && b >= 'a' && b <= 'f') {
+					i = 16*i + (b - (int)'a');
 				} else if (digits != 0 || !Character.isSpace((char)b)) {
 					cur--;
 					break;
@@ -203,7 +209,7 @@ public class ShapeInfoLookup extends GameSingletons {
 			int start = ind[0];
 			int end = start, len = buf.length;
 			while (end < len && buf[end] != '/')
-				;
+				++end;
 			ind[0] = end;
 			return new String(buf, start, end - start);
 		}
@@ -307,7 +313,7 @@ public class ShapeInfoLookup extends GameSingletons {
 				table.clear();
 			String line = new String(buf);
 			if (line == "static" ||
-					(game.isSI() && line == "bg") ||
+					(game.isBG() && line == "bg") ||
 					(game.isSI() && line == "si"))
 				table.add(new StringIntPair(EFile.PAPERDOL, -1));
 			else if (line == "si")
@@ -316,7 +322,7 @@ public class ShapeInfoLookup extends GameSingletons {
 				// ++++ FIMXME: Implement in the future for SI paperdoll patches.
 				System.out.println("Paperdoll source file '" + line +
 						"' is not implemented yet.");
-			else if (game.isSI() && line == "flx") {
+			else if (game.isBG() && line == "flx") {
 				final StringIntPair resource = game.getResource("files/paperdolvga");
 				table.add(new StringIntPair(resource.str, resource.num));
 			} else
@@ -415,20 +421,21 @@ public class ShapeInfoLookup extends GameSingletons {
 		public void parse_entry(int index, byte buf[], boolean for_patch, int version) {
 			UsecodeFunctionData entry = new UsecodeFunctionData();
 			indTemp[0] = 0;
-			int type = ReadInt(buf, indTemp, 1);
+			int type = ReadInt(buf, indTemp, 0);
 			if (buf[indTemp[0]] == ':') {
 				String name = ReadStr(buf, indTemp, 1);
-				entry.fun_id = ucmachine.findFunction(name, true);
+				entry.funId = ucmachine.findFunction(name, true);
 			} else
-				entry.fun_id = ReadInt(buf, indTemp, 1);
-			entry.event_id = ReadInt(buf, indTemp, 1);
+				entry.funId = ReadInt(buf, indTemp, 1);
+			entry.eventId = ReadInt(buf, indTemp, 1);
+			System.out.println("Avatar_usecode_parser: type = " + type + ", funId = " + entry.funId);
 			table.put(type, entry);
 		}
 	}
 	/*
 	 *	Parses a shape data file.
 	 */
-	void Read_data_file
+	private static void readDataFile
 		(
 		String fname,					// Name of file to read, sans extension
 		String sections[],				// The names of the sections
@@ -446,6 +453,7 @@ public class ShapeInfoLookup extends GameSingletons {
 			try {
 				StringIntPair resource = game.getResource(nm);
 				byte txt[] = fman.retrieve(resource.str, resource.num);
+				//System.out.println("readDataFile: " + new String(txt));
 				InputStream in = new ByteArrayInputStream(txt);
 				DataUtils.readTextMsgFileSections(in, static_strings, sections);
 			} catch (IOException e) {
@@ -476,10 +484,12 @@ public class ShapeInfoLookup extends GameSingletons {
 		}
 		for (int i=0; i<static_strings.size(); i++) {
 			Vector<byte[]> section = static_strings.elementAt(i);
+			//System.out.println("Parsing section " + sections[i]);
 			for (int j=0; j<section.size(); j++) {
 				byte ptr[] = section.elementAt(j);
 				if (ptr == null)
 					continue;
+				//System.out.println("Text: " + new String(ptr));
 				parsers[i].parse_entry(j, ptr, false, static_version);
 			}
 			section.clear();
@@ -487,17 +497,19 @@ public class ShapeInfoLookup extends GameSingletons {
 		static_strings.clear();
 		for (int i=0; i<patch_strings.size(); i++) {
 			Vector<byte[]> section = patch_strings.elementAt(i);
-			for (int j=0; j<section.size(); j++) {
+			int sz = section == null ? 0 : section.size();
+			for (int j=0; j < sz; j++) {
 				byte ptr[] = section.elementAt(j);
 				if (ptr == null)
 					continue;
 				parsers[i].parse_entry(j, ptr, true, patch_version);
 			}
-			section.clear();
+			if (section != null)
+				section.clear();
 		}
 		patch_strings.clear();
 	}
-	private void setupShapeFiles() {
+	private static void setupShapeFiles() {
 		paperdoll_source_table = new Vector<StringIntPair >();
 		imported_gump_shapes = new Vector<int[]>();
 		gumpvars = new TreeMap<String, Integer>();
@@ -517,14 +529,14 @@ public class ShapeInfoLookup extends GameSingletons {
 			new Shape_imports_parser(imported_skin_shapes, skinvars)
 			};
 
-		Read_data_file("shape_files", sections, parsers);
+		readDataFile("shape_files", sections, parsers);
 		// For safety.
 		if (paperdoll_source_table.size() == 0)
 			paperdoll_source_table.add(new StringIntPair(EFile.PAPERDOL, -1));
 		// Add in patch paperdolls too.
 		paperdoll_source_table.add(new StringIntPair(EFile.PATCH_PAPERDOL, -1));
 	}
-	private void setupAvatarData() {
+	private static void setupAvatarData() {
 		if (skinvars == null)
 			setupShapeFiles();
 		def_av_info = new TreeMap<Boolean, BaseAvatarInfo>();
@@ -549,13 +561,13 @@ public class ShapeInfoLookup extends GameSingletons {
 			new Int_pair_parser(petra_table),
 			new Avatar_usecode_parser(usecode_funs)
 			};
-		Read_data_file("avatar_data", sections, parsers);
+		readDataFile("avatar_data", sections, parsers);
 	}
 	
 	public static class StringIntPair {
-		String str;
-		int num;
-		StringIntPair(String st, int i) {
+		public String str;
+		public int num;
+		public StringIntPair(String st, int i) {
 			str = st; num = i;
 		}
 	}
@@ -581,7 +593,7 @@ public class ShapeInfoLookup extends GameSingletons {
 					// with info from the default avatar shape
 	}
 	public static class UsecodeFunctionData {
-		int fun_id;
-		int event_id;
+		public int funId;
+		public int eventId;
 	}
 }

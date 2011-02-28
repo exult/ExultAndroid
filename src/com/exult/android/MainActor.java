@@ -1,4 +1,5 @@
 package com.exult.android;
+import com.exult.android.shapeinf.*;
 
 public class MainActor extends Actor {
 	static Tile stepFrom = new Tile();
@@ -182,16 +183,14 @@ public class MainActor extends Actor {
 			gwin.toggleCombat();	// Hope this is safe....
 		super.setFlag(GameObject.dead);
 		gumpman.closeAllGumps(false);	// Obviously.
-		//+++++FOR NOW:
+		/*+++++FOR NOW:  DELETE if the below works.
 		if (game.isBG())
 			ucmachine.callUsecode(0x60e, this, UsecodeMachine.weapon);
 		else
 			ucmachine.callUsecode(0x400, this, UsecodeMachine.died);
-		/*++FINISH
-						// Special function for dying:
-		UsecodeFunctionData info = Shapeinfo_lookup::GetAvUsecode(0);
-		ucmachine.callUsecode(info.fun_id, this,
-				(UsecodeMachine.Usecode_events)info.event_id);
 		*/
+						// Special function for dying:
+		ShapeInfoLookup.UsecodeFunctionData info = ShapeInfoLookup.getAvUsecode(0);
+		ucmachine.callUsecode(info.funId, this, info.eventId);
 	}
 }

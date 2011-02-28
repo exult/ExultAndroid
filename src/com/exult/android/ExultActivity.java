@@ -118,9 +118,13 @@ public class ExultActivity extends Activity {
     	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
     	return waitForClick(p, true);
     }
-    public static void setInCombat(boolean inCombat) {
-    	View btns = (View) instance.findViewById(R.id.buttons_list);
-    	btns.setBackgroundColor(inCombat ? 0xff8f0000 : 0xff8f8f40);
+    public static void setInCombat() {
+    	instance.runOnUiThread(new Runnable() {
+    		public void run() {
+    			View btns = (View) instance.findViewById(R.id.buttons_list);
+    			btns.setBackgroundColor(gwin.inCombat() ? 0xff8f0000 : 0xff8f8f40);
+    		}
+    	});
     }
     /*
      * Button handlers:
