@@ -34,6 +34,12 @@ public abstract class Game extends GameSingletons {
 	public void clearAvSkin() {
 		avSkin = -1;
 	}
+	public int getAvSex() {
+		return avSex;
+	}
+	public int getAvSkin() {
+		return avSkin;
+	}
 	public void addShape(String nm, int shapenum) {
 		shapes.put(nm, shapenum);
 	}

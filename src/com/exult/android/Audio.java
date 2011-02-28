@@ -2,12 +2,13 @@ package com.exult.android;
 import android.media.MediaPlayer;
 import java.io.IOException;
 import java.io.OutputStream;
+/*
 import android.media.MediaPlayer.OnErrorListener;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.AudioTrack;
 import android.media.AudioManager;
 import android.media.AudioFormat;
-
+*/
 public final class Audio extends GameSingletons {
 	// FOR NOW, limit to 2 channels for speed.
 	public static final int MIXER_CHANNELS = 2;	// Max. # channels.

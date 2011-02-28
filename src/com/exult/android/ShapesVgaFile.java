@@ -1,11 +1,10 @@
 package com.exult.android;
-import java.util.TreeMap;
 
 /*
  * Represents THE 'shapes.vga' file.
  */
 public class ShapesVgaFile extends VgaFile {
-	private boolean infoRead;
+	//UNUSED private boolean infoRead;
 	private static ShapeInfo info[];
 	private static ShapeInfo zinfo = new ShapeInfo();	//A fake one (all 0's).
 	public ShapesVgaFile(

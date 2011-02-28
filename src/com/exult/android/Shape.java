@@ -183,6 +183,9 @@ public class Shape {
 	public int getNumFrames() {
 	 	return numFrames; 
 	}
+	public boolean isFromPatch() {
+		return fromPatch;
+	}
 	public ShapeFrame getFrame(int framenum) {
 	 	return 0 <= framenum && framenum < frames.length
 					? frames[framenum] : null; 

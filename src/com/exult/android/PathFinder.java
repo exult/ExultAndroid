@@ -355,7 +355,6 @@ public abstract class PathFinder {
 			if (!path.NewPath(from, to, null))	// Should always succeed.
 				return false;
 			// Check each tile.
-			boolean done;
 			while (path.getNextStep(pos1))
 				if (!pos1.equals(from) && !pos1.equals(to) && 
 								gmap.isTileOccupied(pos1.tx, pos1.ty, pos1.tz))

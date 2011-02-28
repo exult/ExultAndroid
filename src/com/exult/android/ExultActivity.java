@@ -1,9 +1,8 @@
 package com.exult.android;
 
-import java.io.IOException;
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Debug;
+//UNUSED import android.os.Debug;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -17,7 +16,6 @@ import android.widget.Toast;
 import android.widget.Button;
 import android.util.AttributeSet;
 import android.content.DialogInterface;
-import java.util.LinkedList;
 import java.util.concurrent.Semaphore;
 import java.lang.InterruptedException;
 
@@ -229,7 +227,7 @@ public class ExultActivity extends Activity {
                 	gwin.read();
                 }
                 if (!dragging && clickPoint == null && 
-                						GameSingletons.ucmachine.running == 0) {
+                						UsecodeMachine.running == 0) {
                 	synchronized (gwin.getTqueue()) {
                 		gwin.getTqueue().activate(TimeQueue.ticks);
                 	}

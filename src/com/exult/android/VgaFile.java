@@ -54,7 +54,7 @@ public class VgaFile {
 		reset();
 		int count = sources.length;
 		int num_shapes = 0;
-		Vector<RandomAccessFile> tmpSources = new Vector(count);
+		Vector<RandomAccessFile> tmpSources = new Vector<RandomAccessFile>(count);
 		boolean tmpPatch[] = new boolean[count];
 		int tmpCnts[] = new int[count];
 		
@@ -156,12 +156,13 @@ public class VgaFile {
 		public void load(RandomAccessFile src) throws IOException { 
 			super.load(src);
 		}
+		/* UNUSED
 		private int getSize() {
 			int size = 4;
 			for (int i=0; i<numFrames; i++)
 				size += frames[i].getSize() + 4 + 8;
 			return size;
-		}
+		} */
 		//	This only works on RLE shapes.
 		public void save(OutputStream out) throws IOException {
 			int offsets[] = new int[numFrames];

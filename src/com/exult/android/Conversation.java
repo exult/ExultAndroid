@@ -148,10 +148,8 @@ public final class Conversation extends GameSingletons {
 
 		// Make sure mode is set right.
 		Palette pal = gwin.getPal();	// Watch for weirdness (lightning).
-		/*+++++++++++++
 		if (pal.getBrightness() >= 300)
-			pal.set(-1, 100);
-		*/
+			pal.set(-1, 100, null);
 						// Get screen dims.
 		int screenw = gwin.getWidth(), screenh = gwin.getHeight();
 		NpcFaceInfo info = null;
@@ -189,11 +187,9 @@ public final class Conversation extends GameSingletons {
 	public void changeFaceFrame(int frame, int slot) {
 		int maxFaces = faceInfo.length;
 		// Make sure mode is set right.
-		Palette pal = gwin.getPal();	// Watch for weirdness (lightning).
-		/* +++++++++++
+		Palette pal = gwin.getPal();	// Watch for weirdness (lightning)
 		if (pal.getBrightness() >= 300)
-			pal.set(-1, 100);
-		 */
+			pal.set(-1, 100, null);
 		if (slot >= maxFaces || faceInfo[slot] == null)
 			return;			// Invalid slot.
 
@@ -303,8 +299,8 @@ public final class Conversation extends GameSingletons {
 	 */
 	public void showAvatarChoices(String choices[]) {
 		int numChoices = choices.length;
-		boolean SI = false; // +++++++ Game::get_game_type()==SERPENT_ISLE;
-		Actor mainActor = gwin.getMainActor();
+		boolean SI = game.isSI();
+		// Actor mainActor = gwin.getMainActor();
 		int maxFaces = faceInfo.length;
 						// Get screen rectangle.
 		Rectangle sbox = new Rectangle(0, 0, gwin.getWidth(), gwin.getHeight());

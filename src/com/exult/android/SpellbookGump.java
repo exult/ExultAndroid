@@ -25,7 +25,7 @@ public class SpellbookGump extends Gump {
 	private static int RIGHTPAGE() {
 		return (game.isBG() ? 45 : 40);	// At top-right of right page.
 	}
-	private static int SCROLLSPELLS = 66;		// First group of scroll spells (SI).
+	//UNUSED private static int SCROLLSPELLS = 66;		// First group of scroll spells (SI).
 	/*
 	 *	And in 'text.flx' (indices are offset from 0x500):
 	 */
@@ -82,12 +82,14 @@ public class SpellbookGump extends Gump {
 	 *	Get shape, frame for a given spell #.  There are 8 shapes, each
 	 *	containing 9 frames, where frame # = spell circle #.
 	 */
+	/* UNUSED
 	private static int getSpellGumpShape(int spell) { // Spell # (as used in Usecode).
 		return (spell < 0 || spell >= 0x48) ? -1 : spell%8;
 	}
 	private static int getSpellGumpFrame(int spell) { // Spell # (as used in Usecode).
 		return (spell < 0 || spell >= 0x48) ? -1 : spell/8;
 	}
+	*/
 	public SpellbookGump(SpellbookObject b) {
 		super(SPELLBOOK());
 		book = b;	

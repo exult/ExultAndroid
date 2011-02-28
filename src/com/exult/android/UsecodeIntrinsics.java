@@ -4,8 +4,6 @@ import java.util.Vector;
 import java.util.LinkedList;
 import java.util.Comparator;
 import java.util.Collections;
-
-import android.R.string;
 import android.graphics.Point;
 
 public class UsecodeIntrinsics extends GameSingletons {

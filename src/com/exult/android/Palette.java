@@ -158,6 +158,9 @@ public class Palette {
 	public boolean isFadedOut() {
 		return fadedOut;
 	}
+	public int getBrightness() {
+		return brightness;
+	}
 	public void setBrightness(int b) {
 		brightness = b;
 	}

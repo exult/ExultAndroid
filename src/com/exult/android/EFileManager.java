@@ -3,9 +3,9 @@ import java.util.TreeMap;
 
 public class EFileManager {
 	static EFileManager instance;
-	private TreeMap fileList;
+	private TreeMap<String, EFile> fileList;
 	private EFileManager() {
-		fileList = new TreeMap();
+		fileList = new TreeMap<String,EFile>();
 	}
 	public static EFileManager instanceOf() {
 		if (instance == null)
@@ -15,7 +15,7 @@ public class EFileManager {
 	public EFile getFileObject(String nm) {
 		if (nm == null)
 			return null;
-		EFile file = (EFile) fileList.get(nm);
+		EFile file = fileList.get(nm);
 		if (file != null)
 			return file;
 		String fname = EUtil.U7exists(nm);

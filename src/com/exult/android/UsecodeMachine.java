@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
-import java.util.Iterator;
 import java.util.concurrent.Semaphore;
 import java.lang.InterruptedException;
 import android.graphics.Point;
@@ -109,9 +108,8 @@ public class UsecodeMachine extends GameSingletons {
 		return caller_item;
 	}
 	public final void readUsecode(InputStream file, boolean patch) throws IOException {
-		int size = file.available();	// Get file size.
 		file.mark(16);
-		long magic = EUtil.Read4(file);	// Test for symbol table.
+		/*UNUSED long magic = */ EUtil.Read4(file);	// Test for symbol table.
 		/*
 		if (magic == UCSYMTBL_MAGIC0 && (magic = EUtil.Read4(file)) 
 							== UCSYMTBL_MAGIC1) {
@@ -258,7 +256,7 @@ public class UsecodeMachine extends GameSingletons {
 					continue;
 				}
 
-				int current_IP = frame.ip - frame.code;
+				//UNUSED int current_IP = frame.ip - frame.code;
 				int opcode = frame.fcode[frame.ip];
 				// System.out.println("Opcode is " + opcode);
 				/*
@@ -1248,10 +1246,10 @@ public class UsecodeMachine extends GameSingletons {
 	public int get_user_choice_num() {
 		conv.setUserChoice(null);
 		conv.showAvatarChoices();
-		int x, y;			// Get click.
+					// Get click.
 		int choice_num;
 		do {
-			char chr;		// Allow '1', '2', etc.
+			//UNUSED char chr;		// Allow '1', '2', etc.
 			gwin.paint();		// Paint scenery.
 			ExultActivity.getClick(clickPoint);
 			/*  +++++++++
@@ -1426,9 +1424,10 @@ public class UsecodeMachine extends GameSingletons {
 		stack[sp] = null;
 		return ret;
 	}
+	/* UNUSED
 	private UsecodeValue peek() {
 		return stack[sp-1];
-	}
+	} */
 	private void pushref(GameObject obj) {
 		push(new UsecodeValue.ObjectValue(obj));
 	} 
@@ -1485,7 +1484,6 @@ public class UsecodeMachine extends GameSingletons {
 	 */
 	public void show_pending_text() {
 		if (book != null) {			// Book mode?
-			int x, y;
 			while (book.showNextPage()) /* ++++++ && 
 					Get_click(x, y, Mouse::hand, 0, false, book, true)) */
 				ExultActivity.getClick(clickPoint);
@@ -1551,7 +1549,7 @@ public class UsecodeMachine extends GameSingletons {
 		int num_parms			// # parms on stack.
 		) {
 		
-		UsecodeValue parms[] = new UsecodeValue[num_parms];	// Get parms.
+		//UNUSED UsecodeValue parms[] = new UsecodeValue[num_parms];	// Get parms.
 		for (int i = 0; i < num_parms; i++) {
 			UsecodeValue val = pop();
 			intrinsicParms[i] = val;
@@ -1575,8 +1573,7 @@ public class UsecodeMachine extends GameSingletons {
 	 *	Wait for user to click inside a conversation.
 	 */
 	private void click_to_continue() {
-		int xx, yy;
-		char c;
+		//UNUSED char c;
 		/* +++++ if (!gwin.getPal().is_faded_out()) */ // If black screen, skip!
 			{
 			gwin.paint();		// Repaint scenery.
