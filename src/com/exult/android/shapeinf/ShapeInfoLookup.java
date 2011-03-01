@@ -191,7 +191,7 @@ public class ShapeInfoLookup extends GameSingletons {
 					i = base*i + (b - (int)'0');
 					++digits;
 				} else if (base == 16 && b >= 'a' && b <= 'f') {
-					i = 16*i + (b - (int)'a');
+					i = 16*i + 10 + (b - (int)'a');
 				} else if (digits != 0 || !Character.isSpace((char)b)) {
 					cur--;
 					break;
@@ -428,7 +428,8 @@ public class ShapeInfoLookup extends GameSingletons {
 			} else
 				entry.funId = ReadInt(buf, indTemp, 1);
 			entry.eventId = ReadInt(buf, indTemp, 1);
-			System.out.println("Avatar_usecode_parser: type = " + type + ", funId = " + entry.funId);
+			System.out.println("Avatar_usecode_parser: type = " + type + ", funId = " + entry.funId
+					+ ", eventId = " + entry.eventId);
 			table.put(type, entry);
 		}
 	}
