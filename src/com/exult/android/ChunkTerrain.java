@@ -33,6 +33,7 @@ public class ChunkTerrain {
 		}
 		renderQueue = this;
 	}
+	/* UNUSED++
 	private void removeFromQueue() {
 		if (renderQueueNext == null)
 			return;			// Not in queue.
@@ -46,7 +47,7 @@ public class ChunkTerrain {
 			renderQueuePrev.renderQueueNext = renderQueueNext;
 			}
 		renderQueueNext = renderQueuePrev = null;
-	}
+	}*/
 	// Create rendered_flats.
 	private final void paintTile(int tilex, int tiley) {
 		ShapeFrame shape = getShape(tilex, tiley);

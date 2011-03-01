@@ -1,5 +1,4 @@
 package com.exult.android;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
@@ -558,11 +557,9 @@ public abstract class GameObject extends ShapeID {
 			int new_frame = newquant > 12 ? 7 : (newquant > 6 ? 6 : newquant - 1);
 			setFrame(base + new_frame);
 		}
-		/* ++++++++++FINISH
 		ContainerGameObject owner = getOwner();
 		if (owner != null)			// Update owner's volume.
 			owner.modifyVolumeUsed(getVolume() - oldvol);
-		*/
 		return (delta - (newquant - quant));
 	}
 	/*
@@ -1112,29 +1109,26 @@ public abstract class GameObject extends ShapeID {
 		int oldhp = getEffectiveObjHp(0);
 		int delta = figureHitPoints(attacker, weapon_shape, ammo_shape, explosion);
 		int newhp = getEffectiveObjHp(0);
-		/*+++++++FINISH
+
 		if (CombatSchedule.combatTrace) {
 			String name = "<trap>";
 			if (attacker != null)
 				name = attacker.getName();
-			cout << name << " attacks " << get_name();
-			if (oldhp < delta)
-				{
-				cout << ", destroying it." << endl;
-				return 0;
-				}
-			else if (!delta || oldhp == newhp)
-				{	// undamaged/indestructible
-				cout << " to no effect." << endl;
+			System.out.print(name + " attacks " + getName());
+			if (oldhp < delta) {
+				System.out.println(", destroying it.");
+				return null;
+			} else if (delta == 0 || oldhp == newhp) {
+					// undamaged/indestructible
+				System.out.println(" to no effect.");
 				return this;
 				}
 			else if (delta < 0)
-				cout << " causing an explosion." << endl;
+				System.out.println(" causing an explosion.");
 			else
-				cout << " for " << delta << " hit points, leaving "
-					<< newhp << " remaining." << endl;
+				System.out.println(" for " + delta + " hit points, leaving "
+					+ newhp + " remaining.");
 		}
-		*/
 		return this;
 	}
 	/*
@@ -1170,13 +1164,13 @@ public abstract class GameObject extends ShapeID {
 		dependors.add(obj);
 	}
 	public void clearDependencies() {
-		Iterator X;
+		Iterator<GameObject> X;
 		GameObject obj;
 		
 		if (dependencies != null) {
 			// First do those we depend on.
 			for (X = dependencies.iterator(); X.hasNext(); ) {
-				obj = (GameObject)X.next();
+				obj = X.next();
 				if (obj.dependors != null)
 					obj.dependors.remove(this);
 			}
@@ -1360,7 +1354,6 @@ public abstract class GameObject extends ShapeID {
 		GameObject obj2
 		)
 		{
-		GameWindow gwin = obj2.gwin;
 						// See if there's no overlap.
 		Rectangle r2 = gwin.getShapeRect(ordArea2, obj2);
 		if (!inf1.area.intersects(r2))

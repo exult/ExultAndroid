@@ -4,8 +4,6 @@ import java.io.InputStream;
 import com.exult.android.EUtil;
 import com.exult.android.ShapeInfo;
 
-import com.exult.android.ShapeInfo;
-
 public class SFXInfo extends BaseInfo {
 	private int		sfxnum;
 	private boolean	random;			// sfx in range are to be randomly chosen.

@@ -1,7 +1,6 @@
 package com.exult.android.shapeinf;
 import com.exult.android.*;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Vector;
 

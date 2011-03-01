@@ -14,7 +14,7 @@ public class GameMap extends GameSingletons {
 	private static Vector<ChunkTerrain> chunkTerrains;
 	private static RandomAccessFile chunks;	// "u7chunks" file.
 	private static boolean v2Chunks;		// True if 3 bytes/entry.
-	private static boolean readAllTerrain;	// Read them all.
+	//UNUSED private static boolean readAllTerrain;	// Read them all.
 	private short terrainMap[];				// ChunkTerrains index for each chunk.
 	private MapChunk objects[];				// List of objects for each chunk.
 	private boolean schunkRead[];			// 12x12, a flag for each superchunk.
@@ -86,7 +86,7 @@ public class GameMap extends GameSingletons {
 			chunks.close();	// Close 'u7chunks'.
 		} catch (IOException e) { }
 		chunks = null;
-		readAllTerrain = false;
+		//readAllTerrain = false;
 	}
 	// Init. the static data.
 	public static void initChunks() {
@@ -120,7 +120,7 @@ public class GameMap extends GameSingletons {
 			chunkTerrains = new Vector<ChunkTerrain>();
 						// Resize list to hold all.
 		chunkTerrains.setSize(numChunkTerrains);
-		readAllTerrain = false;
+		//readAllTerrain = false;
 	}
 	/*
 	 *	Build a file name with the map directory before it; ie,
@@ -135,7 +135,7 @@ public class GameMap extends GameSingletons {
 	public void init() {
 		String nm;
 		RandomAccessFile u7map = null;
-		Boolean nomap = false;
+		//UNUSED Boolean nomap = false;
 		if (num == 0)
 			initChunks();
 		try {
@@ -329,9 +329,9 @@ public class GameMap extends GameSingletons {
 		InputStream ireg,
 		GameObject obj		// Last object read.
 		) throws IOException {
-		int entlen;
+		//int entlen;
 		ireg.mark(4000);
-		while ((entlen = ireg.read()) == IREG_SPECIAL && ireg.available() > 0) {
+		while ((/* entlen = */ ireg.read()) == IREG_SPECIAL && ireg.available() > 0) {
 			int type = ireg.read();			
 			if (type == IREG_ENDMARK) { // End of list.
 				//System.out.println("readSpecialIreg: found ENDMARK");
@@ -573,16 +573,16 @@ public class GameMap extends GameSingletons {
 	private void getIregObjects(int schunk) { 	// Superchunk # (0-143).
 		InputStream ireg;
 
-		/*
+		/* +++++FINISH
 		if (schunk_cache[schunk] && schunk_cache_sizes[schunk] >= 0) {
 			// No items
 			if (schunk_cache_sizes[schunk] == 0) return;
 			ireg = new BufferDataSource (schunk_cache[schunk], schunk_cache_sizes[schunk]);
 		}
-		*/
+		
 		if (false)
 			;
-		else try {
+		else */ try {
 			ireg = EUtil.U7openStream(getSchunkFileName(EFile.U7IREG, schunk));
 			int scy = 16*(schunk/12);	// Get abs. chunk coords.
 			int scx = 16*(schunk%12);

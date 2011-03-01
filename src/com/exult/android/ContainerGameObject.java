@@ -92,6 +92,13 @@ public class ContainerGameObject extends IregGameObject {
 	}
 	public int getMaxVolume() {
 		return getVolume();
+	}				// For when an obj's quantity changes:
+	public void modifyVolumeUsed(int delta)
+		{ volumeUsed += delta; }
+				// Room for this object?
+	public boolean hasRoom(GameObject obj) {
+		return getMaxVolume() <= 0 || 
+			obj.getVolume() + volumeUsed <= getMaxVolume(); 
 	}
 	public void changeMemberShape(GameObject obj, int newshape) {
 		int oldvol = obj.getVolume();

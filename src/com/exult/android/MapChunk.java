@@ -15,7 +15,7 @@ public final class MapChunk extends GameSingletons {
 	private short fromBelow, fromRight, fromBelowRight;
 	private byte dungeonLevels[];	// A 'dungeon' level value for each tile (4 bit).
 	private byte iceDungeon;	// For SI, chunk split into 4 quadrants
-	private boolean roof;			// 1 if a roof present.
+	//UNUSED private boolean roof;			// 1 if a roof present.
 	// # light sources in chunk.
 	private byte dungeonLights, nonDungeonLights;
 	private short cx, cy;
@@ -162,7 +162,6 @@ public final class MapChunk extends GameSingletons {
 			objects.insertBefore(newobj, firstNonflat);
 		else
 			objects.append(newobj);
-		//+++++++FINISH - Lots of code involving sorting objects, etc.
 		if (newobj.getLift() > 0 || ord.info.get3dHeight() > 0) {
 					// Deal with dependencies.
 					// First this chunk.
@@ -197,10 +196,12 @@ public final class MapChunk extends GameSingletons {
 			else
 				nonDungeonLights++;
 		}
+		/* ++UNUSED
 		if (newobj.getLift() >= 5) {	// Looks like a roof?
 			if (ord.info.getShapeClass() == ShapeInfo.building)
 				roof = true;
 		}
+		*/
 	}
 	public void remove(GameObject remove) {
 		removeObjectBlocking(remove);

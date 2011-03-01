@@ -3,7 +3,6 @@ import java.io.PushbackInputStream;
 import java.io.InputStream;
 import com.exult.android.EUtil;
 import com.exult.android.ShapeInfo;
-import com.exult.android.ShapeInfo;
 
 public class FrameUsecodeInfo extends BaseInfo.FrameInfo {
 	private int		usecode;	// Usecode function of the frame/quality at hand,

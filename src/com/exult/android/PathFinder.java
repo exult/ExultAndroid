@@ -75,7 +75,7 @@ public abstract class PathFinder {
 			int tx = to.tx%EConst.c_tiles_per_chunk;	// Get tile within chunk.
 			int ty = to.ty%EConst.c_tiles_per_chunk;
 			int cost = 1;
-			boolean water, poison = false;		// Get tile info.
+			boolean /*++FINISH water, */ poison = false;		// Get tile info.
 			/* ++++++++FINISH
 			Actor.getTileInfo(0, gwin, olist, tx, ty, water, poison);
 			*/

@@ -3,10 +3,7 @@ import java.io.PushbackInputStream;
 import java.io.InputStream;
 import com.exult.android.ShapeInfo;
 import com.exult.android.EUtil;
-import com.exult.android.DataUtils;
-import java.io.InputStream;
 
-import com.exult.android.ShapeInfo;
 /*
  *	Information about effective HPs.
  *	This is meant to be stored in a totally ordered vector.

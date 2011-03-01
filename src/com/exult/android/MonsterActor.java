@@ -233,7 +233,7 @@ public class MonsterActor extends NpcActor {
 		for (i = 0; i < 3; i++)
 			if (prob < monster_mode_odds[inf.getAttackmode()*4 + i])
 				break;
-		//+++++FINISH monster.setAttackMode(monster_modes[inf.getAttackmode()*4 + i]);
+		monster.setAttackMode((int) monster_modes[inf.getAttackmode()*4 + i], false);
 
 		// Set temporary
 		if (temporary) 

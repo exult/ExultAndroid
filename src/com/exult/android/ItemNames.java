@@ -1,13 +1,15 @@
 package com.exult.android;
 import java.io.RandomAccessFile;
 import java.io.IOException;
-import java.util.Vector;
+// UNUSED import java.util.Vector;
 
 public class ItemNames {
+	/* +++FINISH
 	private static final String		// File section names.
 		SHAPES_SECT = 	"shapes",
 		MSGS_SECT =		"msgs",
 		MISC_SECT =		"miscnames";
+	*/
 	public static String names[];	// The game items' names.
 	public static String msgs[];	// Msgs. (0x400 - ).
 	public static String misc[];	//Frames, etc (0x500 - 0x5ff/0x685 (BG/SI)).
@@ -48,15 +50,17 @@ public class ItemNames {
 		boolean si,
 		boolean expansion
 		) throws IOException {
+		/* UNUSED  +++LATER
 		Vector<String> msglist = null;
 		int first_msg;			// First in exultmsg.txt.  Should
+		*/
 								//   follow those in text.flx.
 		int num_text_msgs = 0, num_item_names = 0, num_misc_names = 0, total_msgs = 0;
 		byte buf[] = new byte[256];
 		
 		itemfile.seek(0x54);
 		int flxcnt = EUtil.Read4(itemfile);
-		first_msg = num_item_names = flxcnt;
+		/*UNUSED first_msg = */ num_item_names = flxcnt;
 		if (flxcnt > 0x400) {
 			num_item_names = 0x400;
 			num_text_msgs = flxcnt - 0x400;
@@ -116,8 +120,10 @@ public class ItemNames {
 				misc[remapIndex(doremap, i - num_item_names - num_text_msgs)] = nm;
 			}
 		}
+		/* +++++FINISH
 		for (i = first_msg; i < total_msgs; i++)
 			msgs[i] = msglist.get(i + 0x400);
+		*/
 		num_text_msgs = total_msgs;
 	} 
 	private static int remapIndex(boolean remap, int index) {

@@ -1,5 +1,5 @@
 package com.exult.android;
-import java.io.InputStream;
+
 
 public class FontsVgaFile extends GameSingletons {
 	private static Font fonts[];

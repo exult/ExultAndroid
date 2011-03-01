@@ -442,9 +442,8 @@ public class GameWindow extends GameSingletons {
 		
 		if (armageddon || inDungeon > 0)
 			return;
-		Actor closest[] = null;
 		if (witness != null || 
-				(witness = findWitness(closest = new Actor[1])) != null)
+				(witness = findWitness(new Actor[1])) != null)
 			witness.say(ItemNames.first_call_guards, ItemNames.last_call_guards);
 		int gshape = getGuardShape(mainActor.getTileX(), mainActor.getTileY());
 		if (gshape < 0) {	// No local guards; lets forward to attack_avatar.
@@ -1049,7 +1048,7 @@ public class GameWindow extends GameSingletons {
 			cheat.clear_selected();	
 		*/
 			// Do we have an NPC?
-		Actor npc = obj != null && obj instanceof Actor ? (Actor) obj : null;
+		//UNUSED Actor npc = obj != null && obj instanceof Actor ? (Actor) obj : null;
 		/* ++CHEAT stuff went here. */
 		if (obj != null) {			// Show name.
 			System.out.printf("Found '%1$s'(%2$d:%3$d) at (%4$h, %5$h, %6$h)\n",
@@ -1117,8 +1116,8 @@ public class GameWindow extends GameSingletons {
 				return;
 			}
 		}
-		if (obj == null /*+++++TESTING || !avatar_can_act */) {
-			startActorAlongPath(x, y, 1);	// Experiment.
+		if (obj == null || !avatar_can_act) {
+			//startActorAlongPath(x, y, 1);	// Experiment.
 			return;			// Nothing found or avatar disabled.
 		}
 		System.out.println("Double-clicked on shape " + obj.getShapeNum() +
@@ -1217,7 +1216,7 @@ public class GameWindow extends GameSingletons {
 				win.fill8((byte)0);
 			effects.paint();		// Draw sprites.
 			if (wizardEye)
-				render.paintWizardEye();
+				GameRender.paintWizardEye();
 			gumpman.paint(false);
 			if (drag != null) 
 				drag.paint();	// Paint what user is dragging.
@@ -1430,7 +1429,7 @@ public class GameWindow extends GameSingletons {
 		npcs.add(mainActor);
 		InputStream nfile = EUtil.U7openStream(EFile.NPC_DAT);
 		int numNpcs;
-		boolean fix_unused = false;	// Get set for old savegames.
+		//UNUSED boolean fix_unused = false;	// Get set for old savegames.
 		numNpcs1 = EUtil.Read2(nfile);	// Get counts.
 		numNpcs = numNpcs1 + EUtil.Read2(nfile);
 		mainActor.read(nfile, 0, false);
@@ -1975,7 +1974,6 @@ public class GameWindow extends GameSingletons {
 			finfo[2*i] = EUtil.Read4(in);	// The position, then the length.
 			finfo[2*i + 1] = EUtil.Read4(in);
 		}
-		int baselen = basepath.length();
 		byte nm13[] = new byte[13];
 		for (i = 0; i < numfiles; i++) {	// Now read each file.
 						// Get file length.
@@ -2153,7 +2151,6 @@ public class GameWindow extends GameSingletons {
 		ZipOutputStream zout = new ZipOutputStream(out);
 		System.out.println("Saving to " + fname);
 		byte buf[] = null;
-		int sz;
 		for (int i = 0; i < numsavefiles; ++i) {
 			if (!saveOneZip(zout, savefiles[i], buf))
 				return;

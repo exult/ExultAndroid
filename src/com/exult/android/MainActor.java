@@ -114,6 +114,7 @@ public class MainActor extends Actor {
 		return true;
 	}
 	public void switchedChunks(MapChunk olist, MapChunk nlist) {
+		/* ++ MAYBE NOT NEED anymore.
 		int newcx = nlist.getCx(), newcy = nlist.getCy();
 		int xfrom, xto, yfrom, yto;	// Get range of chunks.
 		if (olist == null ||		// No old, or new map?  Use all 9.
@@ -155,7 +156,7 @@ public class MainActor extends Actor {
 				yto = newcy < EConst.c_num_chunks - 1 ? newcy + 1 : newcy;
 				}
 			}
-
+		*/
 		// If change in Superchunk number, apply Old Style caching emulation
 		// +++++FINISH gwin.emulate_cache(olist, nlist);
 	}
