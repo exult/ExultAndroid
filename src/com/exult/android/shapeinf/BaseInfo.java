@@ -124,8 +124,10 @@ public abstract class BaseInfo implements DataUtils.ReaderFunctor {
 			}
 			int sz = vec.size();
 			if (quality != -1) {
+				//System.out.println("ind = " + ind + ", size = " + vec.size());
 				ind = -ind - 1;
 				if (ind < sz) {
+					
 					found = vec.elementAt(-ind + 1);
 					if (found.frame == frame) {
 						// Maybe quality is to blame. Try wildcard qual.

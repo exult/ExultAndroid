@@ -65,18 +65,17 @@ public class ChunkTerrain {
 		renderedFlats = null;
 	}
 	private byte[] renderFlats() {
-		if (renderedFlats == null) {
-			if (queueSize > 100) {	// FOR NOW.
+		assert(renderedFlats == null);
+		if (queueSize > 100) {	// FOR NOW.
 								// Grown too big.  Remove last.
-				ChunkTerrain last = renderQueue.renderQueuePrev;
-				last.freeRenderedFlats();
-				renderQueue.renderQueuePrev = last.renderQueuePrev;
-				last.renderQueuePrev.renderQueueNext = renderQueue;
-				last.renderQueueNext = last.renderQueuePrev = null;
-				queueSize--;
-			}
-		renderedFlats = new byte[EConst.c_chunksize*EConst.c_chunksize];
+			ChunkTerrain last = renderQueue.renderQueuePrev;
+			last.freeRenderedFlats();
+			renderQueue.renderQueuePrev = last.renderQueuePrev;
+			last.renderQueuePrev.renderQueueNext = renderQueue;
+			last.renderQueueNext = last.renderQueuePrev = null;
+			queueSize--;
 		}
+		renderedFlats = new byte[EConst.c_chunksize*EConst.c_chunksize];
 					// Go through array of tiles.
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
 			for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++)
