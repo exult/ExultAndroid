@@ -57,7 +57,7 @@ public class ShapeInfoLookup extends GameSingletons {
 			setupShapeFiles();
 		return imported_skin_shapes;
 	}
-	public static boolean IsSkinImported(int shape) {
+	public static boolean isSkinImported(int shape) {
 		if (imported_skin_shapes == null)
 			setupShapeFiles();
 		assert(imported_skin_shapes != null);
@@ -99,12 +99,12 @@ public class ShapeInfoLookup extends GameSingletons {
 	public static int getMaleAvShape() {
 		if (def_av_info == null)
 			setupAvatarData();
-		return def_av_info.get(false).shape_num;
+		return def_av_info.get(false).shapeNum;
 	}
 	public static int getFemaleAvShape() {
 		if (def_av_info == null)
 			setupAvatarData();
-		return def_av_info.get(true).shape_num;
+		return def_av_info.get(true).shapeNum;
 	}
 	public static AvatarDefaultSkin getDefaultAvSkin() {
 		if (base_av_info == null)
@@ -121,7 +121,7 @@ public class ShapeInfoLookup extends GameSingletons {
 		if (skins_table == null)
 			setupAvatarData();
 		for (SkinData s : skins_table) {
-			if (s.skin_id == skin && s.is_female == sex)
+			if (s.skinId == skin && s.isFemale == sex)
 				return s;
 		}
 		return null;
@@ -129,14 +129,14 @@ public class ShapeInfoLookup extends GameSingletons {
 	public static SkinData getSkinInfoSafe(int skin, boolean sex, boolean sishapes) {
 		SkinData sk = getSkinInfo(skin, sex);
 		if (sk != null && (sishapes ||
-					(!IsSkinImported(sk.shape_num) && 
-						!IsSkinImported(sk.naked_shape))))
+					(!isSkinImported(sk.shapeNum) && 
+						!isSkinImported(sk.nakedShape))))
 			return sk;
 		sk = getSkinInfo(getDefaultAvSkin().default_skin, sex);
 		// Prevent unavoidable problems. *Should* never be needed.
 		assert(sk != null && (sishapes ||
-				(!IsSkinImported(sk.shape_num) && 
-					!IsSkinImported(sk.naked_shape))));
+				(!isSkinImported(sk.shapeNum) && 
+					!isSkinImported(sk.nakedShape))));
 		return sk;
 	}
 	public static SkinData getSkinInfoSafe(Actor npc) {
@@ -340,9 +340,9 @@ public class ShapeInfoLookup extends GameSingletons {
 			indTemp[0] = 0;
 			boolean fmale = ReadInt(buf, indTemp, 0) != 0;
 			BaseAvatarInfo entry = new BaseAvatarInfo();
-			entry.shape_num = ReadInt(buf, indTemp, 1);
-			entry.face_shape = ReadInt(buf, indTemp, 1);
-			entry.face_frame = ReadInt(buf, indTemp, 1);
+			entry.shapeNum = ReadInt(buf, indTemp, 1);
+			entry.faceShape = ReadInt(buf, indTemp, 1);
+			entry.faceFrame = ReadInt(buf, indTemp, 1);
 			table.put(fmale, entry);
 		}
 	}
@@ -380,26 +380,26 @@ public class ShapeInfoLookup extends GameSingletons {
 		public void parse_entry(int index, byte buf[], boolean for_patch, int version) {
 			SkinData entry = new SkinData();
 			indTemp[0] = 0;
-			entry.skin_id = ReadInt(buf, indTemp, 0);
-			if (entry.skin_id > last_skin)
-				last_skin = entry.skin_id;
-			entry.is_female = ReadInt(buf, indTemp, 1) != 0;
-			if ((entry.shape_num = ReadVar(buf, indTemp)) < 0)
+			entry.skinId = ReadInt(buf, indTemp, 0);
+			if (entry.skinId > last_skin)
+				last_skin = entry.skinId;
+			entry.isFemale = ReadInt(buf, indTemp, 1) != 0;
+			if ((entry.shapeNum = ReadVar(buf, indTemp)) < 0)
 				return;
-			if ((entry.naked_shape = ReadVar(buf, indTemp)) < 0)
+			if ((entry.nakedShape = ReadVar(buf, indTemp)) < 0)
 				return;
-			entry.face_shape = ReadInt(buf, indTemp, 1);
-			entry.face_frame = ReadInt(buf, indTemp, 1);
-			entry.alter_face_shape = ReadInt(buf, indTemp, 1);
-			entry.alter_face_frame = ReadInt(buf, indTemp, 1);
-			entry.copy_info = !(version == 2 && indTemp[0] < buf.length && 
+			entry.faceShape = ReadInt(buf, indTemp, 1);
+			entry.faceFrame = ReadInt(buf, indTemp, 1);
+			entry.alterFaceShape = ReadInt(buf, indTemp, 1);
+			entry.alterFaceFrame = ReadInt(buf, indTemp, 1);
+			entry.copyInfo = !(version == 2 && indTemp[0] < buf.length && 
 									ReadInt(buf, indTemp, 1)==0);
 			if (for_patch && !table.isEmpty()) {
 				int i;
 				int found = -1, sz = table.size();
 				for (i = 0; i < sz; i++) {
 					SkinData skin = table.elementAt(i);
-					if (skin.skin_id == entry.skin_id && skin.is_female == entry.is_female) {
+					if (skin.skinId == entry.skinId && skin.isFemale == entry.isFemale) {
 						found = i;
 						break;
 					}
@@ -573,24 +573,24 @@ public class ShapeInfoLookup extends GameSingletons {
 		}
 	}
 	public static class BaseAvatarInfo {
-		int shape_num;
-		int face_shape;			// Shape and frame for face during the
-		int face_frame;			// normal game.
+		public int shapeNum;
+		public int faceShape;			// Shape and frame for face during the
+		public int faceFrame;			// normal game.
 	}
 	public static class AvatarDefaultSkin {
-		int default_skin;		// The starting skin color.
-		boolean default_female;	// True if the default sex if female.
+		public int default_skin;		// The starting skin color.
+		public boolean default_female;	// True if the default sex if female.
 	}
 	public static class SkinData {
-		int skin_id;
-		int shape_num;
-		int naked_shape;
-		int face_shape;			// Shape and frame for face during the
-		int face_frame;			// normal game.
-		int alter_face_shape;	// Shape and frame for face to be used
-		int alter_face_frame;	// when flag 33 is set.
-		boolean is_female;
-		boolean copy_info;			// Whether or not Exult should overwrite shape info
+		public int skinId;
+		public int shapeNum;
+		public int nakedShape;
+		public int faceShape;			// Shape and frame for face during the
+		public int faceFrame;			// normal game.
+		public int alterFaceShape;	// Shape and frame for face to be used
+		public int alterFaceFrame;	// when flag 33 is set.
+		public boolean isFemale;
+		public boolean copyInfo;			// Whether or not Exult should overwrite shape info
 					// with info from the default avatar shape
 	}
 	public static class UsecodeFunctionData {

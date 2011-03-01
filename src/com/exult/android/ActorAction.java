@@ -175,7 +175,7 @@ abstract public class ActorAction extends GameSingletons {
 			int cur_speed = speed;		// Step() might delete us!
 			if (from_offscreen)	{	// Teleport to 1st spot.
 				from_offscreen = false;
-				//++++++ finish actor.move(tile.tx, tile.ty, tile.tz);
+				actor.move(stepTile);
 				return cur_speed;
 			} else if (actor.step(stepTile, frames.get(stepIndex), false)) {// Successful.
 				if (deleted) 
@@ -198,7 +198,7 @@ abstract public class ActorAction extends GameSingletons {
 			actor.getScheduleType() != Schedule.loiter &&
 			(actor.getInfo().getShapeClass() == ShapeInfo.human ||
 				actor.getEffectiveProp(Actor.intelligence) > 7))
-					// +++++Check for intelligence; guessing how to do it.
+					// +++Check for intelligence; guessing how to do it.
 			{
 			GameObject door = GameObject.findDoor(stepTile);
 			if (door != null && door.isClosedDoor() &&
@@ -395,8 +395,8 @@ abstract public class ActorAction extends GameSingletons {
 			if (++cur_step == check_step) {	// Time to check.
 				if (dest_obj.distance(orig_dest_pos) > 2)
 					return 0;	// Moved too much, so stop.
-				if (for_projectile /* ++++++FINISH &&
-				    Fast_pathfinder_client::is_straight_path(actor, dest_obj) */)
+				if (for_projectile &&
+				    PathFinder.FastClient.isStraightPath(actor, dest_obj))
 					return 0;	// Can fire projectile.
 							// Figure next check.
 				int nsteps = path.getNumSteps();

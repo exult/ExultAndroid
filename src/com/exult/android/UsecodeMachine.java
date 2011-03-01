@@ -220,6 +220,16 @@ public class UsecodeMachine extends GameSingletons {
 						// No speech?  Call text function.
 			callUsecode(0x614, null, double_click);
 	}
+	/*
+	 *	Are we in a usecode function for a given item and event?
+	 */
+	public boolean inUsecodeFor(GameObject item, int event) {
+		for (StackFrame f : callStack) {
+			if (f.eventid == event && f.caller_item == item)
+				return true;
+		}
+		return false;
+	}
 	public void initConversation() {
 		conv.initFaces();
 	}

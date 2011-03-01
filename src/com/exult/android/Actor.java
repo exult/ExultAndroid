@@ -455,28 +455,24 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			stop();			// Added 7/6/03.
 			setAction(null);	// Force actor to stop current action.
 			break;
-		/* +++++++++++++
 		case GameObject.naked:
-			{
 			// set_polymorph needs this, and there are no problems
 			// in setting this twice.
-			flags2 |= ((uint32) 1 << (flag-32));
-			if (get_npcNum() != 0)	// Ignore for all but avatar.
+			flags2 |= (1 << (flag-32));
+			if (getNpcNum() != 0)	// Ignore for all but avatar.
 				break;
 			int sn;
 			int female = getTypeFlag(tf_sex)?1:0;
-			Skin_data *skin = Shapeinfo_lookup.GetSkinInfoSafe(this);
+			ShapeInfoLookup.SkinData skin = ShapeInfoLookup.getSkinInfoSafe(this);
 	
-			if (!skin ||	// Should never happen, but hey...
-				(!sman.have_si_shapes() &&
-					Shapeinfo_lookup.IsSkinImported(skin.naked_shape)))
-				sn = Shapeinfo_lookup.GetBaseAvInfo(female != 0).shape_num;
+			if (skin == null ||	// Should never happen, but hey...
+				(!ShapeID.haveSiShapes() &&
+					ShapeInfoLookup.isSkinImported(skin.nakedShape)))
+				sn = ShapeInfoLookup.getBaseAvInfo(female != 0).shapeNum;
 			else
-				sn = skin.naked_shape;
-			set_polymorph(sn);
+				sn = skin.nakedShape;
+			setPolymorph(sn);
 			break;
-			}
-			*/
 		}
 		// Doing it here to prevent problems with immunities.
 		if (flag >= 0 && flag < 32)
@@ -1058,7 +1054,22 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 								UsecodeMachine.readied);
 	}
 	public void setActorShape() { 	// Set shape based on sex, skin color
-		//+++++FINISH
+		if (getNpcNum() != 0 || getSkinColor() < 0 ||
+				(getFlag(GameObject.polymorph) && !getFlag(GameObject.naked)))
+			return;
+		int sn;
+		boolean female = getTypeFlag(tf_sex);
+		ShapeInfoLookup.SkinData skin = ShapeInfoLookup.getSkinInfoSafe(this);
+	
+		if (skin == null ||	// Should never happen, but hey...
+				(!ShapeID.haveSiShapes() &&
+						ShapeInfoLookup.isSkinImported(
+								getFlag(GameObject.naked) ? skin.nakedShape : skin.shapeNum)))
+			sn = ShapeInfoLookup.getBaseAvInfo(female).shapeNum;
+		else
+			sn = getFlag(GameObject.naked) ? skin.nakedShape : skin.shapeNum;
+		setShape(sn, getFrameNum());
+		setFile(ShapeFiles.SHAPES_VGA);
 	}
 	/*
 	 *	Get effective maximum range for weapon taking in consideration
@@ -2011,7 +2022,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				  getShapeNum() == 0x2b3 ||
 				  getShapeNum() == 0x2d5 ||
 				  getShapeNum() == 0x2e8))
-				say(0x4d2, 0x4da);	// ++++ TODO: Not sure they use all these.
+				say(0x4d2, 0x4da);	// + TODO: Not sure they use all these.
 			else if (minf == null || !minf.cantYell())
 				say(ItemNames.first_ouch, ItemNames.last_ouch);
 		}
@@ -2306,7 +2317,28 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public int getPolymorph () 
 		{ return shapeSave; }	
 	void setPolymorph(int shape) {	// Set a polymorph shape
-		//++++++++++FINISH
+		// Want to set to Avatar
+		if (shape == ShapeInfoLookup.getMaleAvShape() ||
+					shape == ShapeInfoLookup.getFemaleAvShape()) {
+			Actor avatar = gwin.getMainActor();
+			if (avatar == null) return;
+
+			ShapeInfoLookup.SkinData skin = ShapeInfoLookup.getSkinInfoSafe(avatar);
+			shape = avatar.getFlag(GameObject.naked) ? skin.nakedShape : skin.shapeNum;
+		}
+		setFile(ShapeFiles.SHAPES_VGA);
+		if (shape == shapeSave) {
+			setShape (shapeSave);
+			shapeSave = -1;
+			clearFlag(GameObject.polymorph);
+			return;
+		}
+		if (shapeSave == -1) 
+			shapeSave = (short)getShapeNum();
+//			set_shape (shape, get_framenum());
+							// ++Taking a guess for SI amulet:
+		setShape (shape, getDirFramenum(Actor.standing));
+		setFlag (GameObject.polymorph);
 	}
 	void setPolymorphDefault() {	// Set the default shape
 		if (!getFlag(GameObject.polymorph)
@@ -2877,11 +2909,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		//   but it needs to be done before
 		//   removal too.
 		// Definitely DO NOT call if dead!
-		/* +++++++++FINISH
 		if (!isDead() && !ucmachine.inUsecodeFor(
 									obj, UsecodeMachine.unreadied))
 			callReadiedUsecode(index, obj, UsecodeMachine.unreadied);
-		*/
 		super.remove(obj);
 		if (index >= 0) {
 			spots[index] = null;
@@ -3361,10 +3391,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		setProperty(Actor.health, health_val);
 		out.skip(3);	// Skip 3 bytes.
 		int iflag2 = EUtil.Read2(out);	// The 'used-in-game' flag.
-		if (iflag2 == 0 && num >= 0 /* ++++ && !fix_unused */) {
-			if (num == 0)		// Old (bad) savegame?
-				/* +++++ fix_unused = true; */;
-			else
+		if (iflag2 == 0 && num >= 0) {
+			if (num != 0)		// Old (bad) savegame?
 				unused = true;
 		}
 		boolean has_contents = fix_first ? (iflag1 != 0 && !unused) : (iflag1&1) != 0;
@@ -3406,10 +3434,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 			if (num == 0) {
 				if (!extended_skin) {	// We will do it later for extended skins.
-					/*+++++++++++
-					if (Game.get_avskin() >= 0)
-						setSkinColor (Game.get_avskin());
-					else */
+					if (game.getAvSkin() >= 0)
+						setSkinColor (game.getAvSkin());
+					else 
 						setSkinColor (((strength_val >> 6)-1) & 0x3);
 				}
 			} else 
@@ -3418,12 +3445,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			setProperty(Actor.strength, strength_val & 0x1F);	
 			if (num == 0) {
 				if (!extended_skin) {	// We will do it later for extended skins.
-				/* ++++++FINISH
-					if (Game.get_avskin() >= 0 && Game.get_avskin() <= 2)
-						set_skin_color (Game.get_avskin());
+					if (game.getAvSkin() >= 0 && game.getAvSkin() <= 2)
+						setSkinColor (game.getAvSkin());
 					else
-						set_skin_color ((strength_val >> 5) & 0x3);
-				*/
+						setSkinColor ((strength_val >> 5) & 0x3);
 				}
 			} else 
 				setSkinColor (-1);
@@ -3531,13 +3556,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				setTypeFlag (tf_sex);
 		} else
 			setTypeFlags (tflags);
-		/* ++++++++FINISH
-		if (num == 0 && Game.get_avsex() == 0) {
+		if (num == 0 && game.getAvSex() == 0) {
 			clearTypeFlag (Actor.tf_sex);
-		} else if (num == 0 && Game.get_avsex() == 1) {
+		} else if (num == 0 && game.getAvSex() == 1) {
 			setTypeFlag (Actor.tf_sex);
 		}
-		*/
 		out.skip (5);	// Unknown
 		nextSchedule = (byte)out.read();	// Acty ????? what is this??
 		out.skip (1);	// SN ????? (refer to U7tech.txt)
@@ -3594,15 +3617,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			}
 			*/
 			
-			/* ++++FINISH int skin = */ out.read();
-			/*++++++++++++++++
+			int skin = out.read();
 			if (extended_skin) {
-				if (Game.get_avskin() >= 0)
-					set_skin_color (Game.get_avskin());
+				if (game.getAvSkin() >= 0)
+					setSkinColor (game.getAvSkin());
 				else
-					set_skin_color(skin);
+					setSkinColor(skin);
 			}
-			*/
 		} else {
 			// Flags
 			out.skip (4);
@@ -3649,7 +3670,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 							// Get tile #'s.
 		int tilex = locx & 0xf;
 		int tiley = locy & 0xf;
-		// if (num == 0)//+++++++DEBUG
+		// if (num == 0)//++DEBUG
 			 //System.out.printf("Reading npc# %1$d, %2$s, locx = %3$d, cx = %4$d, tilex = %5$d\n",
 			//		num, getName(), locx, cx, tilex);
 		setShapePos(tilex, tiley);
@@ -3689,7 +3710,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int shapenum = getShapeNum(), framenum = getFrameNum();
 		buf4[0] = (byte)(((getCx()%16) << 4) | getTx());
 		buf4[1] = (byte)(((getCy()%16) << 4) | getTy());
-		// ++++++Is this even needed anymore? We already save 16-bit shapes below.
+		// ++Is this even needed anymore? We already save 16-bit shapes below.
 		buf4[2] = (byte)(shapenum&0xff);
 		buf4[3] = (byte)(((shapenum>>8)&3) | (framenum<<2));
 		out.write(buf4);
@@ -3757,11 +3778,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		EUtil.Write2(out, iout);
 						// Write char. attributes.
 		iout = getProperty(Actor.strength);
-		/* ++++++++FINISH
 		if (!game.isBG() && npcNum == 0) 
 			iout |= (getSkinColor () & 3) << 5;
-		else if (npcNum == 0) iout |= ((getSkinColor()+1) & 3) << 6;
-		*/
+		else if (npcNum == 0) 
+			iout |= ((getSkinColor()+1) & 3) << 6;
 		if (getFlag(GameObject.freeze)) 
 			iout |= 1 << 7;
 		out.write(iout);
@@ -3851,7 +3871,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			out.write(nm);
 		}
 
-		out.write(0 /* ++++++FINISH (byte)getSkinColor()*/);
+		out.write((byte)getSkinColor());
 		// Skip 14
 		for (i = 0; i < 14; i++)
 			out.write(0);
