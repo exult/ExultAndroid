@@ -250,6 +250,13 @@ public final class GumpManager extends GameSingletons {
 			kbdFocus = null;
 		}
 	}
+	/*
+	 *	Update the gumps
+	 */
+	public void updateGumps() {
+		for (Gump gmp : openGumps)
+			gmp.updateGump();
+	}
 	public void paint(boolean modal) {
 		ListIterator<Gump> iter = openGumps.listIterator();
 		while (iter.hasNext()) {

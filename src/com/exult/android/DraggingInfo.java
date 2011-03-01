@@ -344,10 +344,9 @@ public final class DraggingInfo extends GameSingletons {
 		if (rect.w <= 0)			// Not moved enough yet?
 			return;
 		if (obj != null) {
-			/*++++++++++
 			if (obj.getFlag(GameObject.invisible))
 				obj.paintInvisible(paint.x, paint.y);
-			else */ {
+			else {
 				obj.paintShape(paint.x, paint.y);
 				obj.paintOutline(paint.x, paint.y, ShapeID.HIT_PIXEL);
 			}

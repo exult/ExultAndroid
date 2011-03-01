@@ -2536,9 +2536,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// Paint the weapon shape using the actor's coordinates
 			gwin.getShapeLocation(weaponPoint, this);
 			int xoff = weaponPoint.x + weapon_x, yoff = weaponPoint.y + weapon_y;
-			/* +++++++FINISH if ((flags & (1L<<GameObject.invisible)) != 0)
-				wshape.paintInvisible(xoff, yoff);
-			else */
+			if ((flags & (1L<<GameObject.invisible)) != 0)
+				ShapeID.paintInvisible(wshape, xoff, yoff);
+			else
 				wshape.paint(gwin.getWin(), xoff, yoff);
 		} else
 			weaponRect.w = 0;
@@ -2630,9 +2630,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			boolean invis = (flags & (1L << GameObject.invisible)) != 0;
 			if (invis && partyId < 0 && this != gwin.getMainActor())
 				return;	// Don't render invisible NPCs not in party.
-			/* ++++++++++FINISH else if (invis)
-				paint_invisible(xoff, yoff);
-			*/ else
+			else if (invis)
+				paintInvisible(xoff, yoff);
+			else
 				paintShape(xoff, yoff);
 			
 			paintWeapon();

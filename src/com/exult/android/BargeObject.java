@@ -623,10 +623,8 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 	@Override			// Get size of IREG. Returns -1 if can't write to buffer
 	public int getIregSize() {
 		// These shouldn't ever happen, but you never know
-		/* ++++++FINISH
-		if (gwin.getMovingBarge() == this || UsecodeScript.find(this))
+		if (gwin.getMovingBarge() == this || UsecodeScript.find(this) != null)
 			return -1;
-		*/
 		int total_size = 8 + getCommonIregSize();
 
 		for (int i = 0; i < permCount; i++) {

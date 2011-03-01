@@ -46,6 +46,8 @@ public abstract class Gump extends GameSingletons {
 	public void close() {
 		gumpman.closeGump(this);
 	}
+	public void updateGump() {	// Update if required.
+	}
 	public final int getX() {
 		return x;
 	}

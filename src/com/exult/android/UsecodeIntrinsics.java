@@ -86,40 +86,34 @@ public class UsecodeIntrinsics extends GameSingletons {
 		if (shape < 0)	// No need to do anything else.
 			return shape;
 		// Checks for Petra flag.
-		/*++++++++++++
-		shape = Shapeinfo_lookup.GetFaceReplacement(shape);
+		shape = ShapeInfoLookup.getFaceReplacement(shape);
 
 		Actor iact;
-		if (Game.get_game_type() == SERPENT_ISLE)
-				{			// Special case: Nightmare Smith.
+		if (game.isSI()) {
+							// Special case: Nightmare Smith.
 							//   (But don't mess up Guardian.)
-				if (shape == 296 && this.frame.caller_item &&
-				    (iact = this.frame.caller_item.as_actor()) != 0 &&
-				    iact.get_npc_num() == 277)
+			if (shape == 296 && ucmachine.getCallerItem() != null &&
+				    (iact = ucmachine.getCallerItem().asActor()) != null &&
+				    iact.getNpcNum() == 277)
 					shape = 277;
-				}
+		}
 
-			// Another special case: map face shape 0 to
-			// the avatar's correct face shape and frame:
-			if (shape == 0)
-				{
-				Actor *ava = gwin.getMainActor();
-				bool sishapes = Shape_manager.get_instance().have_si_shapes();
-				Skin_data *skin = Shapeinfo_lookup.GetSkinInfoSafe(
-						ava.get_skin_color(), npc ? (npc.get_type_flag(Actor.tf_sex)!=0)
-							: (ava.get_type_flag(Actor.tf_sex)!=0), sishapes);
-				if (gwin.getMainActor().get_flag(GameObject.tattooed))
-					{
-					shape = skin.alter_face_shape;
-					frame = skin.alter_face_frame;
-					}
-				else
-					{
-					shape = skin.face_shape;
-					frame = skin.face_frame;
-					}
-				}
-		*/
+		// Another special case: map face shape 0 to
+		// the avatar's correct face shape and frame:
+		if (shape == 0) {
+			Actor ava = gwin.getMainActor();
+			boolean sishapes = ShapeID.haveSiShapes();
+			ShapeInfoLookup.SkinData skin = ShapeInfoLookup.getSkinInfoSafe(
+						ava.getSkinColor(), npc != null ? npc.getTypeFlag(Actor.tf_sex)
+							: ava.getTypeFlag(Actor.tf_sex), sishapes);
+			if (gwin.getMainActor().getFlag(GameObject.tattooed)) {
+				shape = skin.alterFaceShape;
+				frame = skin.alterFaceFrame;
+			} else {
+				shape = skin.faceShape;
+				frame = skin.faceFrame;
+			}
+		}
 		return shape;
 	}
 	private final void showNpcFace(UsecodeValue p0, UsecodeValue p1,
@@ -419,7 +413,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 					itemval.getElem(2).getIntValue(),
 					itemval.getElem(3).getIntValue());
 		else				// Else assume caller_item.
-			ucmachine.get_caller_item().getTile(tile);
+			ucmachine.getCallerItem().getTile(tile);
 		return tile;
 	}
 	private final UsecodeValue findDirection(UsecodeValue from, UsecodeValue to) {
@@ -936,7 +930,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Doesn't ret. until user single-
 		//   clicks on an item.  Rets. item.
 		GameObject obj;
-		GameObject callerItem = ucmachine.get_caller_item();
+		GameObject callerItem = ucmachine.getCallerItem();
 		Tile t;
 
 		// intercept this click?
@@ -1235,7 +1229,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 				-1, gwin.isMainActorInside() ?
 					MapChunk.inside : MapChunk.outside))
 			return UsecodeValue.getZero();
-		Actor npc = asActor(ucmachine.get_caller_item());
+		Actor npc = asActor(ucmachine.getCallerItem());
 		int align = Actor.friendly;
 		if (npc != null && !npc.getFlag(Actor.in_party))
 			align = npc.getAlignment();

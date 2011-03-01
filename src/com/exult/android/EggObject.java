@@ -585,10 +585,8 @@ public class EggObject extends IregGameObject {
 			MonsterInfo inf = 
 					ShapeID.getInfo(mshape).getMonsterInfo();
 			if (inf != null) {
-				/* +++++++FINISH
 				if (gwin.armageddon)
 					return;
-				*/
 				int num = cnt;
 				if (num > 1)	// Randomize.
 					num = 1 + (EUtil.rand()%num);

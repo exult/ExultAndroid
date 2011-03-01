@@ -12,6 +12,7 @@ public class ShapeID extends GameSingletons {
 	private static boolean gotSiShapes;	// Set true if the SI shapes file 
 	//   is found when playing BGXformPalette xforms[];
 	private static ImageBuf.XformPalette xforms[];
+	private static ImageBuf.XformPalette invisXform;	// For showing invisible NPC's.
 	public static final int // Special pixels
 		POISON_PIXEL = 0, PROTECT_PIXEL = 1, CURSED_PIXEL = 2,
 		CHARMED_PIXEL = 3, HIT_PIXEL = 4, PARALYZE_PIXEL = 5, NPIXCOLORS = 6;
@@ -130,6 +131,15 @@ public class ShapeID extends GameSingletons {
 			}
 		}
 	}
+	public static void paintInvisible(ShapeFrame s, int xoff, int yoff) {
+		s.paintRleTransformed(gwin.getWin(), xoff, yoff, invisXform);
+	}
+	void paintInvisible(int xoff, int yoff) {
+		ShapeFrame s = getShape();
+		if (s != null) {
+			s.paintRleTransformed(gwin.getWin(), xoff, yoff, invisXform);
+		}
+	}
 	public void paintOutline(int xoff, int yoff, int pix) {
 		ShapeFrame s = getShape();
 		if (s != null) {
@@ -160,6 +170,7 @@ public class ShapeID extends GameSingletons {
 										ImageBuf.XformPalette.NCOLORS);
 				}
 			}
+			invisXform = xforms[nxforms - 1 - 0];   // ->entry 0.
 			xf.close();
 		} else {
 			xforms = null;

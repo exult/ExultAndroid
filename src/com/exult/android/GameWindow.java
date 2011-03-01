@@ -1273,10 +1273,7 @@ public class GameWindow extends GameSingletons {
 		if (busyMessage != null) {
 			int text_height = fonts.getTextHeight(0);
 			int text_width = fonts.getTextWidth(0, busyMessage);
-			/* +++++++FINISH
-			win.fill_translucent8(0, width, height, 0, 0, 
-							shape_man.get_xform(8));
-			*/
+			
 			fonts.paintText(0, busyMessage, getWidth()/2-text_width/2, 
 									getHeight()/2-text_height);
 		}
@@ -1287,13 +1284,10 @@ public class GameWindow extends GameSingletons {
 		r.intersect(clipBox);
 	}
 	public void paintDirty() {
-		/*+++++++FINISH
 		// Update the gumps before painting, unless in dont_move mode (may change dirty area)
 	    if (!mainActorDontMove())
 	        gumpman.updateGumps();
-
 		effects.updateDirtyText();
-		*/
 		paintBox.set(dirty);
 		clipToWin(paintBox);
 		//System.out.printf("paintDirty: x = %1$d, w = %2$d\n", dirty.x, dirty.w);
@@ -1323,11 +1317,9 @@ public class GameWindow extends GameSingletons {
 		// this bascially detects 
 		boolean changed = game.isNewGame();
 
-		/* ++++++++FINISH
-		if (Game.get_avsex() == 0 || Game.get_avsex() == 1 || Game.get_avname()
-				|| (Game.get_avskin() >= 0 && Game.get_avskin() <= 2))
+		if (game.getAvSex() == 0 || game.getAvSex() == 1 || game.getAvName() != null
+				|| (game.getAvSkin() >= 0 && game.getAvSkin() <= 2))
 			changed = true;
-		*/
 		game.clearAvName();
 		game.clearAvSex();
 		game.clearAvSkin();

@@ -79,7 +79,7 @@ public class VgaFile {
 			}
 		}
 		if (tmpSources.size() == 0)
-			return false;		// ++++++throw exception?
+			return false;		// ++throw exception?
 		if (!flex) {			// Just one shape, which we preload.
 			num_shapes = 1;
 			tmpCnts[0] = 1;

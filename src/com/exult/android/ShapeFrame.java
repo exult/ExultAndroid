@@ -433,6 +433,51 @@ public class ShapeFrame {
 		}
 	}
 	/*
+	 *	Paint a shape purely by translating the pixels it occupies.  This is
+	 *	used for invisible NPC's.
+	 */
+	public void paintRleTransformed
+		(
+		ImageBuf win,		// Buffer to paint in.
+		int xoff, int yoff,		// Where to show in iwin.
+		ImageBuf.XformPalette xform		// Use to transform pixels.
+		) {
+		assert(rle);
+
+		int w = getWidth(), h = getHeight();
+		if (w >= EConst.c_tilesize || h >= EConst.c_tilesize)// Big enough to check?  Off screen?
+			if (!win.isVisible(xoff - xleft, 
+							yoff - yabove, w, h))
+				return;
+		int in = 0;
+		int scanlen;
+		while ((scanlen = EUtil.Read2(data, in)) != 0)
+			{
+			in += 2;
+						// Get length of scan line.
+			int encoded = scanlen&1;// Is it encoded?
+			scanlen = scanlen>>1;
+			short scanx = (short)EUtil.Read2(data, in);
+			short scany = (short)EUtil.Read2(data, in + 2);
+			in += 4;
+			if (encoded == 0) {		// Raw data?
+						// (Note: 1st parm is ignored).
+				win.fillLineTranslucent8(scanlen, xoff + scanx, yoff + scany, xform);
+				in += scanlen;
+				continue;
+			}
+			for (int b = 0; b < scanlen; ) {
+				int bcnt = (int)data[in++]&0xff;
+						// Repeat next char. if odd.
+				int repeat = bcnt&1;
+				bcnt = bcnt>>1; // Get count.
+				in += repeat != 0 ? 1 : bcnt;
+				win.fillLineTranslucent8(bcnt, xoff + scanx + b, yoff + scany, xform);
+				b += bcnt;
+			}
+		}
+	}
+	/*
 	 *	Paint outline around a shape.
 	 */
 	public void paintRleOutline

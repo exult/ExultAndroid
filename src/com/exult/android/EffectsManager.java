@@ -132,8 +132,12 @@ public final class EffectsManager extends GameSingletons {
 			effect.paint();
 	}
 	public void paintText() {
-	for (TextEffect txt = texts; txt != null; txt = txt.next)
-		txt.paint();
+		for (TextEffect txt = texts; txt != null; txt = txt.next)
+			txt.paint();
+	}
+	public void updateDirtyText() {
+		for (TextEffect txt = texts; txt != null; txt = txt.next)
+			txt.updateDirty();
 	}
 	/*
 	 *	Base class for special-effects:

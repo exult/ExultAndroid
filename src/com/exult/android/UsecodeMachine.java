@@ -104,7 +104,7 @@ public class UsecodeMachine extends GameSingletons {
 	public final int getCurrentFunction() {
 		return frame.function.id;
 	}
-	public final GameObject get_caller_item() {
+	public final GameObject getCallerItem() {
 		return caller_item;
 	}
 	public final void readUsecode(InputStream file, boolean patch) throws IOException {
