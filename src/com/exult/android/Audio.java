@@ -36,10 +36,10 @@ public final class Audio extends GameSingletons {
 				return i;
 		return -1;
 	}
-	private MediaPlayer getPlayer(int ind) {
+	private synchronized MediaPlayer getPlayer(int ind) {
 		return (ind >= 0 && ind < players.length) ? players[ind] : null; 
 	}
-	private int addPlayer(MediaPlayer p) {
+	private synchronized int addPlayer(MediaPlayer p) {
 		int cnt = players.length;
 		for (int i = 0; i < cnt; ++i) {
 			if (players[i] == null) {
@@ -53,7 +53,7 @@ public final class Audio extends GameSingletons {
 		}
 		return -1;
 	}
-	private void release(MediaPlayer player) {
+	private synchronized void release(MediaPlayer player) {
 		player.release();
 		int i = findPlayer(player);
 		if (i >= 0) {
