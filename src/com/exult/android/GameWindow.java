@@ -1,11 +1,13 @@
 package com.exult.android;
 import java.util.Vector;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.io.RandomAccessFile;
 import java.io.OutputStream;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -1442,36 +1444,29 @@ public class GameWindow extends GameSingletons {
 			//+++++++CYCLE_RED_PLASMA();
 		}
 		nfile.close();
-		// +++++ mainActor.setActorShape();
-		/* ++++++++++FINISH
-		try
-		{
-			U7open(nfile_stream, MONSNPCS);	// Monsters.
+		mainActor.setActorShape();
+		nfile = EUtil.U7openStream(EFile.MONSNPCS);	// Monsters.
+		if (nfile != null) try {
+			PushbackInputStream nfile2 = new PushbackInputStream(nfile);
+			
 			// (Won't exist the first time; in this case U7open throws
-			int cnt = nfile.read2();
-			(void)nfile.read1();// Read 1 ahead to test.
-			int okay = nfile_stream.good();
-			nfile.skip(-1);
-			while (okay && cnt--)
-			{
+			int cnt = EUtil.Read2(nfile2);
+			while (cnt-- > 0) {
 						// Read ahead to get shape.
-				nfile.skip(2);
-				unsigned short shnum = nfile.read2()&0x3ff;
-				okay = nfile_stream.good();
-				nfile.skip(-4);
-				ShapeID sid(shnum, 0);
-				if (!okay || sid.get_num_frames() < 16)
+				nfile2.skip(2);
+				int shnum = (int)EUtil.Read2(nfile2)&0x3ff;
+				nfile2.unread(4);
+				if (ShapeFiles.SHAPES_VGA.getFile().getNumFrames(shnum) < 16)
 					break;	// Watch for corrupted file.
-				Monster_actor *act = Monster_Actor.create(shnum);
-				act.read(&nfile, -1, false, fix_unused);
-				act.restore_schedule();
-				CYCLE_RED_PLASMA();
+				MonsterActor act = MonsterActor.create(shnum);
+				act.read(nfile2, -1, false);
+				act.restoreSchedule();
+				// CYCLE_RED_PLASMA();
 			}
+			nfile2.close();
+		} catch (IOException e) {
+			//MonsterActor.giveUp();
 		}
-		catch(exult_exception &) {
-			Monster_Actor.give_up();
-		}
-		*/
 		if (movingBarge != null) {		// Gather all NPC's on barge.
 			BargeObject b = movingBarge;
 			movingBarge = null;
@@ -1825,26 +1820,20 @@ public class GameWindow extends GameSingletons {
 			
 		out.close();
 		writeSchedules();		// Write schedules
-		/* ++++++++++++++PUT BACK
 					// Now write out monsters in world.
 		out = EUtil.U7create(EFile.MONSNPCS);
 		int cnt = 0;
 		HashSet<MonsterActor> monsters = MonsterActor.getAll();
-		Iterator<MonsterActor> iter = monsters.iterator();
-		while (iter.hasNext()) {		// Count them.
-			MonsterActor mact = iter.next();
+		for (MonsterActor mact : monsters) {		// Count them.
 			if (!mact.isDead())		// Alive?
 				cnt++;
 		}
 		EUtil.Write2(out, cnt);
-		iter = monsters.iterator();
-		while (iter.hasNext()) {
-			MonsterActor mact = iter.next();
+		for (MonsterActor mact : monsters) {
 			if (!mact.isDead())		// Alive?
 				mact.write(out);
 		}
 		out.close();
-		*/
 	}
 	/*
 	 *	Write NPC schedules.
