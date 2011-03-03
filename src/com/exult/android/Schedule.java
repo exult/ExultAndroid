@@ -66,7 +66,32 @@ public abstract class Schedule extends GameSingletons {
 		return npc.getScheduleType();
 	}
 	public boolean seekFoes() {
-		return false;	//+++++++++FINISH
+		Vector<GameObject> vec = new Vector<GameObject>();	// Look within 10 tiles (guess).
+		npc.findNearbyActors(vec, EConst.c_any_shapenum, 10, 0x28);
+		int npc_align = npc.getEffectiveAlignment();
+		Actor foe = null;
+		MonsterInfo minf = npc.getInfo().getMonsterInfo();
+		boolean see_invisible = minf != null ?
+			(minf.getFlags() & (1<<MonsterInfo.see_invisible))!=0 : false;
+		for (GameObject each : vec) {
+			Actor actor = (Actor)each;
+			if (actor.isDead() || actor.getFlag(GameObject.asleep) ||
+			    (!see_invisible && actor.getFlag(GameObject.invisible)))
+				continue;	// Dead, asleep or invisible and can't see invisible.
+			if ((npc_align == Actor.friendly &&
+					actor.getEffectiveAlignment() >= Actor.hostile) ||
+				(npc_align == Actor.hostile &&
+					actor.getEffectiveAlignment() == Actor.friendly)) {
+				foe = actor;
+				break;
+			}
+		}
+		if (foe != null) {
+			npc.setScheduleType(Schedule.combat, null);
+			npc.setTarget(foe);
+			return true;
+		}
+		return false;
 	}
 	protected final void bark() {
 		ucmachine.callUsecode(npc.getUsecode(), npc, UsecodeMachine.npc_proximity);
@@ -74,6 +99,78 @@ public abstract class Schedule extends GameSingletons {
 	/*
 	 * 	THE SCHEDULES
 	 */
+	/*
+	 *	Street maintenance (turn lamps on/off).
+	 */
+	public static class StreetMaintenance extends Schedule {
+		GameObject obj;		// Lamp/shutters.
+		int shapenum, framenum;		// Save original shapenum.
+		ActorAction paction;		// Path to follow to get there.
+		public StreetMaintenance(Actor n, ActorAction p, GameObject o) {
+			super(n);
+			obj = o;
+			shapenum = o.getShapeNum();
+			framenum = o.getFrameNum();
+			paction = p;
+		}
+		@Override
+		public void nowWhat() {
+			if (paction != null) {			// First time?
+						// Set to follow given path.
+				npc.setAction(paction);
+				npc.start(1, 0);
+				paction = null;
+				return;
+			}
+			if (npc.distance(obj) <= 2 &&	// We're there.
+			    obj.getShapeNum() == shapenum && obj.getFrameNum() == framenum) {
+				int dir = npc.getDirection(obj);
+				byte frames[] = new byte[2];
+				frames[0] = (byte)npc.getDirFramenum(dir, Actor.standing);
+				frames[1] = (byte)npc.getDirFramenum(dir, 3);
+				npc.setAction(new ActorAction.Sequence(
+					new ActorAction.Frames(frames, frames.length),
+					new ActorAction.Activate(obj),
+					new ActorAction.Frames(frames, 1), null));
+				npc.start(1, 0);
+				switch (shapenum)
+					{
+				case 322:		// Closing shutters.
+				case 372:
+					npc.say(ItemNames.first_close_shutters, ItemNames.last_close_shutters);
+					break;
+				case 290:		// Open shutters (or both for SI).
+				case 291:
+					if (game.isBG())
+						npc.say(ItemNames.first_open_shutters, 
+								ItemNames.last_open_shutters);
+					else		// SI.
+						if (framenum <= 3)
+							npc.say(ItemNames.first_open_shutters, 
+									ItemNames.last_open_shutters);
+						else
+							npc.say(ItemNames.first_close_shutters, 
+									ItemNames.last_close_shutters);
+					break;
+				case 889:		// Turn on lamp.
+					npc.say(ItemNames.first_lamp_on, ItemNames.last_lamp_on);
+					break;
+				case 526:		// Turn off lamp.
+					npc.say(ItemNames.lamp_off, ItemNames.lamp_off);
+					break;
+					}
+				shapenum = 0;		// Don't want to repeat.
+				return;
+			}
+						// Set back to old schedule.
+			int period = clock.getHour()/3;
+			npc.updateSchedule(period, 7, 0);
+		}
+		@Override			// For Usecode intrinsic.
+		public int getActualType(Actor npc) {
+			return prevType;
+		}
+	}
 	/*
 	 *	For following the Avatar (by party members):
 	 */
