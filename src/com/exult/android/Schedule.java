@@ -136,8 +136,7 @@ public abstract class Schedule extends GameSingletons {
 		ActorAction pact = null;		// Gets .action to walk there.
 		for (int i = 0; found == null && i < night.length; i++) {
 			Vector<GameObject> objs = new Vector<GameObject>();// Find nearby.
-			int cnt = npc.findNearby(objs, shapes[i], 20, 0);
-			int j;
+			npc.findNearby(objs, shapes[i], 20, 0);
 			for (GameObject obj : objs) {
 				int shnum = obj.getShapeNum();
 				if (!bg &&	// Serpent isle?  Shutters?
@@ -893,7 +892,7 @@ public abstract class Schedule extends GameSingletons {
 				npc.unreadyWeapon();
 				npc.addDirty();
 					// Ready the hammer in the weapon hand.
-				//+++++++++FINISH npc.addReadied(hammer, Ready.lhand, 0, 1);
+				npc.addReadied(hammer, Ready.lhand, false, true, false);
 				npc.addDirty();
 
 				int hammersfx= game.isBG() ? 45:49;
@@ -939,17 +938,14 @@ public abstract class Schedule extends GameSingletons {
 				break;
 			case 22:		// One-handed swing.
 			case 23:		// Two-handed swing.
-				/* +++++++++FINISH
 				int dir = npc.getDirFacing();
-				byte frames[];		// Get frames to show.
+				byte frames[] = new byte[12];		// Get frames to show.
 				GameObject weap = npc.getReadied(Ready.rhand);
 				
 				int cnt = npc.getAttackFrames(weap != null ? weap.getShapeNum() 
-						: 0, 0, dir, frames);
-				
+						: 0, false, dir, frames);
 				if (cnt != 0)
 					npc.setAction(new ActorAction.Frames(frames, cnt, speed, null));
-				*/
 				npc.start(speed, speed*(delay+1));		// Get back into time queue.
 				break;
 			// What should these two do???
@@ -1280,6 +1276,78 @@ public abstract class Schedule extends GameSingletons {
 				npc.start(2, EUtil.rand()%12);
 			else if (EUtil.rand()%3 == 0)
 				bark();
+		}
+	}
+	/*
+	 *	Kid games.
+	 */
+	public static class KidGames extends Loiter {
+		Tile pos = new Tile(), kidpos = new Tile();
+		Vector<Actor> kids;			// Other kids playing.
+		public KidGames(Actor n) {
+			super(n, 10);
+			kids = new Vector<Actor>();
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			npc.getTile(pos);
+			Actor kid = null;			// Get a kid to chase.
+							// But don't run too far.
+			while (!kids.isEmpty()) {
+				kid = kids.remove(kids.size() - 1);
+				if (npc.distance(kid) < 16)
+					break;
+				kid = null;
+			}
+			if (kid != null) {
+				kid.getTile(kidpos);
+				PathFinder.FastClient cost = new PathFinder.FastClient(1);
+				ActorAction pact = ActorAction.PathWalking.createPath(pos, kidpos, cost);
+				if (pact != null) {
+					npc.setAction(pact);
+					npc.start(1, 1); // Run.
+					return;
+				}
+			} else {				// No more kids?  Search.
+				Vector<GameObject> vec = new Vector<GameObject>();
+				npc.findNearbyActors(vec, EConst.c_any_shapenum, 16);
+				for (GameObject each : vec) {
+					Actor act = (Actor)each;
+					if (act.getScheduleType() == kid_games)
+						kids.add(act);
+				}
+			}
+			super.nowWhat();	// Wander around the start.
+		}
+	}
+	/*
+	 *	Dance.
+	 */
+	public static class Dance extends Loiter {
+		Tile cur = new Tile(), dest = new Tile();
+		public Dance(Actor n) {
+			super(n, 4);
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			dest.set(center);	// Pick new spot to walk to.
+			dest.tx += -dist + EUtil.rand()%(2*dist);
+			dest.ty += -dist + EUtil.rand()%(2*dist);
+			npc.getTile(cur);
+			int dir = EUtil.getDirection4(cur.ty - dest.ty, 
+									dest.tx - cur.tx);
+			byte frames[] = new byte[4];
+			for (int i = 0; i < 4; i++)
+							// Spin with 'hands outstretched'.
+				frames[i] = (byte)npc.getDirFramenum((2*(dir + i))%8, 
+						   (npc.getShapeNum() == 846 && game.isSI()) ? 15 : 9);
+							// Create action to walk.
+			ActorAction walk = new ActorAction.PathWalking(new ZombiePathFinder());
+			walk.walkToTile(npc, cur, dest, 0);
+							// Walk, then spin.
+			npc.setAction(new ActorAction.Sequence(walk,
+				new ActorAction.Frames(frames, frames.length, 1, null)));
+			npc.start(1, 500/TimeQueue.tickMsecs);		// Start in 1/2 sec.
 		}
 	}
 	/*
