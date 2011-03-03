@@ -93,6 +93,76 @@ public abstract class Schedule extends GameSingletons {
 		}
 		return false;
 	}
+	/*
+	 *	Look for lamps to light/unlight and shutters to open/close.
+	 *
+	 *	Output:	1 if successful, which means npc's schedule has changed!
+	 */
+	protected boolean tryStreetMaintenance() {
+						// What to look for:
+		final int night[] = {322, 372, 889};
+		final int sinight[] = {290, 291, 889};
+		final int day[] = {290, 291, 526};
+
+		int curtime = TimeQueue.ticks;
+		if (curtime < streetMaintenanceTime)
+			return false;		// Not time yet.
+		if (npc.getNpcNum() <= 0 ||
+		    npc == gwin.getCameraActor())
+			return false;		// Only want normal NPC's.
+						// At least 30secs. before next one.
+		streetMaintenanceTime = curtime + 
+			(30000 + streetMaintenanceFailures*5000)/TimeQueue.tickMsecs;
+		int shapes[];
+		int hour = clock.getHour();
+		boolean bg = game.isBG();
+		if (hour >= 9 && hour < 18)
+			shapes = day;
+		else if (hour >= 18 || hour < 6)
+			shapes = bg ? night : sinight;
+		else
+			return false;		// Dusk or dawn.
+		int npctx = npc.getTileX(), npcty = npc.getTileY();
+						// Look at screen + 1/2.
+		Rectangle winrect = new Rectangle();
+		gwin.getWinTileRect(winrect);
+		winrect.enlarge(winrect.w/4);
+		if (!winrect.hasPoint(npctx, npcty))
+			return false;
+						// Get to within 1 tile.
+		PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 2);
+		Tile t = new Tile(), npcpos = new Tile(npctx, npcty, npc.getLift());
+		GameObject found = null;		// Find one we can get to.
+		ActorAction pact = null;		// Gets .action to walk there.
+		for (int i = 0; found == null && i < night.length; i++) {
+			Vector<GameObject> objs = new Vector<GameObject>();// Find nearby.
+			int cnt = npc.findNearby(objs, shapes[i], 20, 0);
+			int j;
+			for (GameObject obj : objs) {
+				int shnum = obj.getShapeNum();
+				if (!bg &&	// Serpent isle?  Shutters?
+				    (shnum == 290 || shnum == 291))
+						// Want closed during day.
+					if ((shapes == day) !=
+						(obj.getFrameNum() <= 3))
+						continue;
+				obj.getTile(t);
+				if ((pact = ActorAction.PathWalking.createPath(
+				    npcpos, t, cost)) != null) {
+					found = obj;
+					break;
+				}
+				streetMaintenanceFailures++;
+			}
+		}
+		if (found == null)
+			return false;		// Failed.
+						// Set actor to walk there.
+		npc.setScheduleType(Schedule.street_maintenance,
+				new StreetMaintenance(npc, pact, found));
+		// Warning: we are deleted here
+		return true;
+	}
 	protected final void bark() {
 		ucmachine.callUsecode(npc.getUsecode(), npc, UsecodeMachine.npc_proximity);
 	}
@@ -282,11 +352,9 @@ public abstract class Schedule extends GameSingletons {
 			return (new Pace(n, 0, t));
 		}
 		public void nowWhat() {	// Now what should NPC do?
-			/*+++++++FINISH
 			if (EUtil.rand() % 6 == 0)		// Check for lamps, etc.
-				if (try_street_maintenance())
+				if (tryStreetMaintenance())
 					return;		// We no longer exist.
-			*/
 			if (npc.isDormant()) {
 				return;
 			}
@@ -896,11 +964,9 @@ public abstract class Schedule extends GameSingletons {
 			npc.start(speed, speed*delay);
 		}
 		public void nowWhat() {	// Now what should NPC do?
-			/* ++++++++++FINISH
 			if (EUtil.rand() % 8 == 0)		// Check for lamps, etc.
-				if (try_street_maintenance())
+				if (tryStreetMaintenance())
 					return;		// We no longer exist.
-			*/
 			
 			if (seek_combat && seekFoes())	// Check for nearby foes.
 				return;
@@ -1170,11 +1236,9 @@ public abstract class Schedule extends GameSingletons {
 			n.getTile(center = new Tile());
 		}
 		public void nowWhat() {	// Now what should NPC do?
-			/* ++++++++FINISH
 			if (EUtil.rand() % 3 == 0)		// Check for lamps, etc.
-				if (try_street_maintenance())
+				if (tryStreetMaintenance())
 					return;		// We no longer exist.
-			*/
 			loc = new Tile(center.tx - dist + EUtil.rand()%(2*dist),
 								center.ty - dist + EUtil.rand()%(2*dist), center.tz);
 							// Wait a bit.
@@ -1191,11 +1255,9 @@ public abstract class Schedule extends GameSingletons {
 			super(n, 128);
 		}
 		public void nowWhat() {	// Now what should NPC do?
-			/* ++++++++FINISH
-			if (EUtil.rand() % 2)			// 1/2 time, check for lamps, etc.
-				if (try_street_maintenance())
+			if (EUtil.rand() % 2 != 0)			// 1/2 time, check for lamps, etc.
+				if (tryStreetMaintenance())
 					return;		// We no longer exist.
-			*/
 			Tile pos = new Tile();
 			npc.getTile(pos);
 			int legdist = 32;
@@ -1694,12 +1756,10 @@ public abstract class Schedule extends GameSingletons {
 		@Override
 		public void nowWhat() {	// Now what should NPC do?
 			GameObject food;
-			/* ++++++++++FINISH
 			if (state == get_customer &&
 			    EUtil.rand() % 4 == 0)		// Check for lamps, etc.
-				if (try_street_maintenance())
+				if (tryStreetMaintenance())
 					return;		// We no longer exist.
-			*/
 			if (state == get_order || state == serve_food) {
 				int dist = customer != null ? npc.distance(customer) : 5000;
 				if (dist > 32) {	// Need a new customer?
