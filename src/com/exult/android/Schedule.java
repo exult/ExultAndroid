@@ -2168,6 +2168,66 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	Be a thief.
+	 */
+	public static class Thief extends Schedule {
+		private Tile pos = new Tile(), dest = new Tile();
+		private int nextStealTime;	// Next time we can try to steal.
+		private void steal(Actor from) {
+			npc.say(ItemNames.first_thief, ItemNames.last_thief);
+			int shnum = EUtil.rand()%3;		// Gold coin, nugget, bar.
+			GameObject obj = null;
+			for (int i = 0; obj == null && i < 3; ++i) {
+				obj = from.findItem(644+shnum, EConst.c_any_qual, EConst.c_any_framenum);
+				shnum = (shnum + 1)%3;
+			}
+			if (obj != null) {
+				obj.removeThis();
+				npc.add(obj, false);
+			}
+		}
+		public Thief(Actor n) {
+			super(n);
+			nextStealTime = 0;
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			int curtime = TimeQueue.ticks;
+			Actor av = gwin.getMainActor();
+			if (curtime < nextStealTime) {
+							// Not time?  Wander.
+				
+				int centerx = av.getTileX(), centery = av.getTileY();;
+				final int dist = 6;
+				pos.set(centerx - dist + EUtil.rand()%(2*dist),
+						centery - dist + EUtil.rand()%(2*dist),
+						av.getLift());
+							// Wait a bit.
+				npc.walkToTile(pos, 
+						2, (EUtil.rand()%4000)/TimeQueue.tickMsecs);
+				return;
+			}
+			if (npc.distance(av) <= 1) {			// Next to Avatar.
+				if (EUtil.rand()%3 != 0)
+					steal(av);
+
+				nextStealTime = (curtime+8000+EUtil.rand()%8000)/TimeQueue.tickMsecs;
+				npc.start(1, (1000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
+			} else {			// Get within 1 tile of Avatar.
+				av.getTile(dest);
+				npc.getTile(pos);
+				PathFinder.MonsterClient cost = new PathFinder.MonsterClient(npc, dest, 1);
+				ActorAction pact = ActorAction.PathWalking.createPath(pos, dest, cost);
+				if (pact != null) {		// Found path?
+					npc.setAction(pact);
+					npc.start(1, (1000 + EUtil.rand()%1000)/TimeQueue.tickMsecs);
+				} else			// Try again in a couple secs.
+					npc.start(1, (2000 + EUtil.rand()%2000)/TimeQueue.tickMsecs);
+			}
+		}
+	}
+
+	/*
 	 *	Wait tables.
 	 */
 	public static class Waiter extends Schedule {

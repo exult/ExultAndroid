@@ -665,20 +665,17 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.talk:
 				schedule = new Schedule.Talk(this);
 				break;
-			
 			case Schedule.dance:
 				unreadyWeapon();
 				schedule = new Schedule.Dance(this);
 				break;
-				/*++++++
 			case Schedule.farm:	// Use a scythe.
-				schedule = new Tool_schedule(this, 618);
+				schedule = new Schedule.Tool(this, 618);
 				break;
 			case Schedule.tend_shop:// For now.
 				unreadyWeapon();
-				schedule = new Loiter_schedule(this, 3);
+				schedule = new Schedule.Loiter(this, 3);
 				break;
-			*/
 			case Schedule.miner:	// Use a pick.
 				schedule = new Schedule.Miner(this);
 				break;
@@ -722,15 +719,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				unreadyWeapon();
 				schedule = new Schedule.Shy(this);
 				break;
-			/*++++++++++++++++
 			case Schedule.lab:
-				schedule = new Lab_schedule(this);
+				schedule = new Schedule.Lab(this);
 				break;
 			case Schedule.thief:
 				unreadyWeapon();
-				schedule = new Thief_schedule(this);
+				schedule = new Schedule.Thief(this);
 				break;
-			*/
 			case Schedule.waiter:
 				unreadyWeapon();
 				schedule = new Schedule.Waiter(this);
