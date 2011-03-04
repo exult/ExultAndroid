@@ -1961,6 +1961,213 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	A class for indexing the perimeter of a rectangle.
+	 */
+	public static class Perimeter {
+		Rectangle perim;		// Outside given rect.
+		int sz;				// # squares.
+		public Perimeter(Rectangle r) {
+			sz = (2*r.w + 2*r.h + 4);
+			perim = new Rectangle(r);
+			perim.enlarge(1);
+		}
+		int size() { return sz; }
+		/*
+		 *	Get the i'th perimeter tile and the tile in the original rect.
+		 *	that's adjacent.
+		 */
+		void get(int i, Tile ptile, Tile atile) {
+			if (i < perim.w - 1) {		// Spiral around from top-left.
+				ptile.set(perim.x + i, perim.y, 0);
+				atile.set(ptile.tx + (i==0 ? 1 : 0), ptile.ty + 1, ptile.tz);
+				return;
+			}
+			i -= perim.w - 1;
+			if (i < perim.h - 1) {
+				ptile.set(perim.x + perim.w - 1, perim.y + i, 0);
+				atile.set(ptile.tx - 1, ptile.ty + (i==0 ? 1 : 0), ptile.tz);
+				return;
+			}
+			i -= perim.h - 1;
+			if (i < perim.w - 1) {
+				ptile.set(perim.x + perim.w - 1 - i,
+						perim.y + perim.h - 1, 0);
+				atile.set(ptile.tx + (i==0 ? -1 : 0), ptile.ty - 1, ptile.tz);
+				return;
+			}
+			i -= perim.w - 1; {
+				ptile.set(perim.x, perim.y + perim.h - 1 - i, 0);
+				atile.set(ptile.tx + 1, ptile.ty + (i==0 ? -1 : 0), ptile.tz);
+				return;
+			}
+						// Bad index if here.
+			//UNUSED get(i%sz, ptile, atile);
+		}
+	}
+	/*
+	 *	Lab work.
+	 */
+	public static class Lab extends Schedule {
+		Tile npcpos = new Tile(), objpos = new Tile();
+		private Vector<GameObject> tables = new Vector<GameObject>();
+		private GameObject chair;		// Chair to sit in.
+		private GameObject book;		// Book to read.
+		private GameObject cauldron;
+		private Tile spotOnTable = new Tile();
+	 	private final int // enum {
+			start = 0,
+			walk_to_cauldron = 1,
+			use_cauldron = 2,
+			sit_down = 3,
+			read_book = 4,
+			stand_up = 5,
+			walk_to_table = 6,
+			use_potion = 7;
+	 	private int state;
+		private void init() {
+			chair = book = null;
+			cauldron = npc.findClosest(995, 20);
+							// Find 'lab' tables.
+			npc.findNearby(tables, 1003, 20, 0);
+			npc.findNearby(tables, 1018, 20, 0);
+			int cnt = tables.size();	// Look for book, chair.
+			for (int i = 0; (book == null || chair == null) && i < cnt; i++) {
+				final int chairs[] = {873,292};
+				GameObject table = tables.elementAt(i);
+				Rectangle foot = new Rectangle();
+				table.getFootprint(foot);
+							// Book on table?
+				if (book == null && (book = table.findClosest(642, 4)) != null) {
+					int tx = book.getTileX(), ty = book.getTileY();
+					if (!foot.hasPoint(tx, ty))
+						book = null;
+				}
+				if (chair == null)
+					chair = table.findClosest(chairs, 4);
+			}
+		}
+		
+		public Lab(Actor n) {
+			super(n);
+			state = start;
+			init();
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			GameObject p;
+			npc.getTile(npcpos);
+			int r, dir, frnum, delay = 1;	
+			// Often want to get within 1 tile.
+			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
+			switch (state) {
+			case start:
+			default:
+				if (cauldron == null) {		// Try looking again.
+					init();
+					if (cauldron == null)	// Again a little later.
+						delay = 6000/TimeQueue.tickMsecs;
+					break;
+				}
+				r = EUtil.rand()%5;	// Pick a state.
+				if (r == 0)			// Sit less often.
+					state = sit_down;
+				else
+					state = r <= 2 ? walk_to_cauldron : walk_to_table;
+				break;
+			case walk_to_cauldron:
+				state = start;		// In case we fail.
+				if (cauldron == null)
+					break;
+				cauldron.getTile(objpos);
+				ActorAction pact = ActorAction.PathWalking.createPath(
+					npcpos, objpos, cost);
+				if (pact != null) {
+					npc.setAction(new ActorAction.Sequence(pact,
+								new ActorAction.FacePos(cauldron, 1)));
+					state = use_cauldron;
+				}
+				break;
+			case use_cauldron:
+				dir = npc.getDirection(cauldron);
+						// Set random frame (skip last frame).
+				cauldron.changeFrame(EUtil.rand()%(cauldron.getNumFrames() -1));
+				npc.changeFrame(npc.getDirFramenum(dir, Actor.bow_frame));
+				r = EUtil.rand()%5;
+				state = r == 0 ? use_cauldron : (r <= 2 ? sit_down : walk_to_table);
+				break;
+			case sit_down:
+				if (chair == null || Sit.setAction(npc, chair, 1) == null)
+					state = start;
+				else
+					state = read_book;
+				break;
+			case read_book:	
+				state = stand_up;
+				if (book == null || npc.distance(book) > 4)
+					break;
+						// Read a little while.
+				delay = (1000 + 1000*(EUtil.rand()%5))/TimeQueue.tickMsecs;
+						// Open book.
+				frnum = book.getFrameNum();
+				book.changeFrame(frnum - frnum%3);
+				break;
+			case stand_up:
+				if (book != null && npc.distance(book) < 4) {		// Close book.
+					frnum = book.getFrameNum();
+					book.changeFrame(frnum - frnum%3 + 1);
+				}
+				state = start;
+				break;
+			case walk_to_table:
+				state = start;		// In case we fail.
+				int ntables = tables.size();
+				if (ntables == 0)
+					break;
+				GameObject table = tables.elementAt(EUtil.rand()%ntables);
+				Rectangle trect = new Rectangle();
+				table.getFootprint(trect);
+				Perimeter perim = new Perimeter(trect);		// Find spot adjacent to table.
+				// Also get closest spot on table.
+				perim.get(EUtil.rand()%perim.size(), objpos, spotOnTable);
+				PathFinder.ActorClient cost0 = new PathFinder.ActorClient(npc, 0);
+				pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost0);
+				if (pact == null)
+					break;		// Failed.
+				ShapeInfo info = table.getInfo();
+				spotOnTable.tz += info.get3dHeight();
+				npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.FacePos(spotOnTable, 1)));
+				state = use_potion;
+				break;
+			case use_potion:
+				state = start;
+				Vector<GameObject> potions = new Vector<GameObject>();
+				gmap.findNearby(potions, spotOnTable, 340, 0, 0);
+				if (!potions.isEmpty()) {	// Found a potion.  Remove it.
+					gwin.addDirty(potions.elementAt(0));
+					potions.elementAt(0).removeThis();
+				} else {		// Create potion if spot is empty.
+					objpos.set(spotOnTable);
+					if (MapChunk.findSpot(objpos, 0, 340, 0, 0) && 
+							objpos.tz == spotOnTable.tz) {
+						// create a potion randomly, but don't use the last frame
+						int nframes = ShapeFiles.SHAPES_VGA.getFile().getNumFrames(340) - 1;
+						p = IregGameObject.create(
+								ShapeID.getInfo(340), 340, EUtil.rand()%nframes, 0, 0, 0);
+						p.move(objpos);
+					}
+				}
+				dir = npc.getDirection(spotOnTable);
+						// Reach out hand:
+				byte frames[] = { (byte)npc.getDirFramenum(dir, 1),
+								  (byte)npc.getDirFramenum(dir, Actor.standing) };
+				npc.setAction(new ActorAction.Frames(frames, 2));
+				break;
+			}
+		npc.start(1, delay);	// Back in queue.
+		}
+	}
+	/*
 	 *	Wait tables.
 	 */
 	public static class Waiter extends Schedule {

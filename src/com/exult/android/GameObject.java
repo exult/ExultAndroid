@@ -297,6 +297,10 @@ public abstract class GameObject extends ShapeID {
 		Vector<GameObject> vec = new Vector<GameObject>();
 		return findClosest(vec, shapenums, 24);
 	}
+	public GameObject findClosest(int shapenums[], int dist) {
+		Vector<GameObject> vec = new Vector<GameObject>();
+		return findClosest(vec, shapenums, dist);
+	}
 	public GameObject findClosest(Vector<GameObject> vec, int shapenums[]) {
 		return findClosest(vec, shapenums, 24);
 	}
