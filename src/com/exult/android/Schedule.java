@@ -1282,8 +1282,8 @@ public abstract class Schedule extends GameSingletons {
 	 *	Kid games.
 	 */
 	public static class KidGames extends Loiter {
-		Tile pos = new Tile(), kidpos = new Tile();
-		Vector<Actor> kids;			// Other kids playing.
+		private Tile pos = new Tile(), kidpos = new Tile();
+		private Vector<Actor> kids;			// Other kids playing.
 		public KidGames(Actor n) {
 			super(n, 10);
 			kids = new Vector<Actor>();
@@ -1324,7 +1324,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	Dance.
 	 */
 	public static class Dance extends Loiter {
-		Tile cur = new Tile(), dest = new Tile();
+		private Tile cur = new Tile(), dest = new Tile();
 		public Dance(Actor n) {
 			super(n, 4);
 		}
@@ -1351,6 +1351,207 @@ public abstract class Schedule extends GameSingletons {
 		}
 	}
 	/*
+	 *	Miner/farmer:
+	 */
+	public static class Tool extends Loiter {
+		protected int toolshape;			// Pick/scythe shape.
+		protected GameObject tool;
+		protected void getTool() {
+			tool = new IregGameObject(toolshape, 0, 0, 0, 0);
+			// Free up both hands.
+			GameObject obj = npc.getReadied(Ready.rhand);
+			if (obj != null)
+				obj.removeThis();
+				if ((obj = npc.getReadied(Ready.lhand)) != null)
+					obj.removeThis();
+					npc.addReadied(tool, Ready.lhand);
+		}
+		public Tool(Actor n, int shnum) {
+			super(n, 12);
+			toolshape = shnum;
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			if (tool == null)			// First time?
+				getTool();
+			if (EUtil.rand()%4 == 0) {		// 1/4 time, walk somewhere.
+				super.nowWhat();
+				return;
+			}
+			if (EUtil.rand()%10 == 0) {
+				int ty = npc.getScheduleType();
+				if (ty == Schedule.farm) {
+					if (EUtil.rand()%2 != 0)
+						npc.say(ItemNames.first_farmer, ItemNames.last_farmer);
+					else
+						npc.say(ItemNames.first_farmer2, ItemNames.last_farmer2);
+				}
+			}
+			byte frames[] = new byte[12];		// Use tool.
+			int cnt = npc.getAttackFrames(toolshape, false, EUtil.rand()%8, frames);
+			if (cnt > 0)
+				npc.setAction(new ActorAction.Frames(frames, cnt));
+			npc.start(0, 0);			// Get back into time queue.
+		}
+		@Override
+		public void ending(int newtype) {	// Switching to another schedule.
+			if (tool != null)
+				tool.removeThis();	// Should safely remove from NPC.
+		}
+	}
+
+	/*
+	 *	Miner.
+	 */
+	public static class Miner extends Tool {
+		private GameObject ore;
+		private Tile npcPos = new Tile(), orePos = new Tile();
+		private static final int // enum {
+			find_ore = 0,
+			attack_ore = 1,
+			ore_attacked = 2,
+			wander = 3;
+		private int state;
+		public Miner(Actor n)  {
+			super(n, 624);
+			state = find_ore;
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			int delay = 0, cnt;
+			if (tool == null)			// First time?
+				getTool();
+			switch (state) {
+			case find_ore:
+				final int oreshapes[] = {915, 916};
+				Vector<GameObject> ores = new Vector<GameObject>();
+				npc.findClosest(ores, oreshapes, oreshapes.length);
+				int from, to;
+				cnt = ores.size();
+				// Filter out frame #3 (dust).
+				for (from = to = 0; from < cnt; ++from) {
+					GameObject ore = ores.elementAt(from);
+					if (ore.getFrameNum() < 3)
+						ores.setElementAt(ore, to++);
+				}
+				cnt = to;
+				if (cnt > 0) {
+					ore = ores.elementAt(EUtil.rand()%cnt);
+					npc.getTile(npcPos);
+					ore.getTile(orePos);
+					PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 2);
+					ActorAction pact = ActorAction.PathWalking.createPath(
+						     npcPos, orePos, cost);
+					if (pact != null) {
+						state = attack_ore;
+						npc.setAction(new ActorAction.Sequence(pact,
+						    new ActorAction.FacePos(ore, 200)));
+						break;
+					}
+				}
+				ore = null;
+				state = wander;
+				delay = 1000 + EUtil.rand()%1000;	// Try again later.
+				break;
+			case attack_ore:
+				if (ore.isPosInvalid() || npc.distance(ore) > 2) {
+					state = find_ore;
+					break;
+				}
+				byte frames[] = new byte[20];		// Use pick.
+				int dir = npc.getDirection(ore);
+				cnt = npc.getAttackFrames(toolshape, false, dir,
+										frames);
+				if (cnt > 0) {
+					frames[cnt++] = (byte)npc.getDirFramenum(dir, Actor.standing);
+					npc.setAction(new ActorAction.Frames(frames, cnt));
+					state = ore_attacked;
+				} else
+					state = wander;
+				break;
+			case ore_attacked:
+				if (ore.isPosInvalid()) {
+					state = find_ore;
+					break;
+				}
+				state = attack_ore;
+				if (EUtil.rand()%6 == 0) {		// Break up piece.
+					int shnum, frnum = ore.getFrameNum();
+					if (frnum == 3)
+						state = find_ore;	// Dust.
+					else if (EUtil.rand()%(4+2*frnum) == 0) {
+						npc.say(ItemNames.first_miner_gold, ItemNames.last_miner_gold);
+						ore.getTile(orePos);
+						ore.removeThis();
+						if (frnum == 0) {	// Gold.
+							shnum = 645;
+							frnum = EUtil.rand()%2;
+						} else {		// Gem.
+							shnum = 760;
+							frnum = EUtil.rand()%10;
+						}
+						GameObject newobj = new IregGameObject(
+									shnum, frnum, 0, 0, 0);
+						newobj.move(orePos);
+						newobj.setFlag(GameObject.is_temporary);
+						state = find_ore;
+						break;
+					} else {
+						ore.changeFrame(frnum + 1);
+						if (ore.getFrameNum() == 3)
+							state = find_ore;// Dust.
+					}
+				}
+				if (EUtil.rand()%4 == 0) {
+					npc.say(ItemNames.first_miner, ItemNames.last_miner);
+				}
+				delay = 500 + EUtil.rand()%2000;
+				break;
+			case wander:
+				if (EUtil.rand()%2 == 0) {
+					super.nowWhat();
+					return;
+				} else
+					state = find_ore;
+				break;
+			}
+			npc.start(1, delay);
+		}
+	}
+	/*
+	 *	Hound the Avatar.
+	 */
+	public static class Hound extends Schedule {
+		Tile avPos = new Tile(), npcPos = new Tile();
+		public Hound(Actor n) {
+			super(n);
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			Actor av = gwin.getMainActor();
+			av.getTile(avPos);
+			npc.getTile(npcPos);
+							// How far away is Avatar?
+			int dist = npc.distance(av);
+			if (dist > 20 || dist < 3) {	// Too far, or close enough?
+							// Check again in a few seconds.
+				npc.start(1, (500 + EUtil.rand()%1000)/TimeQueue.tickMsecs);
+				return;
+			}
+			int newdist = 1 + EUtil.rand()%2;	// Aim for about 3 tiles from Avatar.
+			PathFinder.FastClient cost = new PathFinder.FastClient(newdist);
+			avPos.tx += EUtil.rand()%3 - 1;	// Vary a bit randomly.
+			avPos.ty += EUtil.rand()%3 - 1;
+			ActorAction pact = ActorAction.PathWalking.createPath(npcPos,
+									avPos, cost);
+			if (pact != null) {
+				npc.setAction(pact);
+				npc.start(1, 1);
+			} else				// Try again.
+				npc.start(1, (2000 + EUtil.rand()%3000)/TimeQueue.tickMsecs);
+		}
+	}
+	/*
 	 *	Sleep in a  bed.
 	 */
 	public static class Sleep extends Schedule {
@@ -1360,7 +1561,7 @@ public abstract class Schedule extends GameSingletons {
 		private int state;
 		private int spread0, spread1;		// Range of bedspread frames.
 		// Stand up if not already.
-		private static void standUp(Actor npc) {
+		public static void standUp(Actor npc) {
 			if ((npc.getFrameNum()&0xf) != Actor.standing)
 				// Stand.
 				npc.changeFrame(Actor.standing);
@@ -1669,6 +1870,94 @@ public abstract class Schedule extends GameSingletons {
 		}
 		public static GameObject setAction(Actor actor) {
 			return setAction(actor, null, 0);
+		}
+	}
+	/*
+	 *	Desk work - Just sit in front of desk.
+	 */
+	public static class Desk extends Schedule {
+		private GameObject chair;		// What to sit in.
+		public Desk(Actor n) {
+			super(n);
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			if (chair == null) {			// No chair found yet.
+				final int desks[] = {283, 407};
+				final int chairs[] = {873,292};
+				Sleep.standUp(npc);
+				GameObject desk = npc.findClosest(desks);
+				if (desk != null)
+					chair = desk.findClosest(chairs);
+				if (chair == null) {		// Failed.
+					// Try again in a few seconds.
+					npc.start(1, 5000/TimeQueue.tickMsecs);
+					return;	
+				}
+			}
+			int frnum = npc.getFrameNum();
+			if ((frnum&0xf) != Actor.sit_frame) {
+				if (Sit.setAction(npc, chair, 0) == null) {
+					chair = null;	// Look for any nearby chair.
+					npc.start(1, 5000/TimeQueue.tickMsecs);	// Failed?  Try again later.
+				} else
+					npc.start(1, 0);
+			} else {			// Stand up a second.
+				byte frames[] = { 
+						(byte)npc.getDirFramenum(Actor.standing),
+						(byte)npc.getDirFramenum(Actor.bow_frame),
+						(byte)npc.getDirFramenum(Actor.sit_frame) };
+				npc.setAction(new ActorAction.Frames(frames, frames.length));
+				npc.start(1, (10000 + EUtil.rand()%5000)/TimeQueue.tickMsecs);
+			}
+		}
+	}
+	/*
+	 *	Shy away from Avatar.
+	 */
+	public static class Shy extends Schedule {
+		private Tile npcpos = new Tile(), dest = new Tile();
+		public Shy(Actor n) {
+			super(n);
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			Actor av = gwin.getMainActor();
+			int avtx = av.getTileX(), avty = av.getTileY();
+			npc.getTile(npcpos);
+						// How far away is Avatar?
+			int dist = npc.distance(av);
+			if (dist > 10) {			// Far enough?
+			   			// Check again in a few seconds.
+				if (EUtil.rand()%3 != 0)		// Just wait.
+					npc.start(1, (1000 + EUtil.rand()%1000)/TimeQueue.tickMsecs);
+				else {			// Sometimes wander.
+					dest.set(npcpos.tx + EUtil.rand()%6 - 3,
+						npcpos.ty + EUtil.rand()%6 - 3, npcpos.tz);
+					npc.walkToTile(dest, 1, 0);
+					return;
+				}
+			}
+						// Get deltas.
+			int dx = npcpos.tx - avtx, dy = npcpos.ty - avty;
+			int adx = dx < 0 ? -dx : dx;
+			int ady = dy < 0 ? -dy : dy;
+						// Which is farthest?
+			int farthest = adx < ady ? ady : adx;
+			int factor = farthest < 2 ? 9 : farthest < 4 ? 4 
+					: farthest < 7 ? 2 : 1;
+						// Walk away.
+			dest.set(npcpos.tx + dx*factor, npcpos.ty + dy*factor, npcpos.tz);
+			dest.tx += EUtil.rand()%3;
+			dest.ty += EUtil.rand()%3;
+			PathFinder.MonsterClient cost = new PathFinder.MonsterClient(npc, dest, 4);
+			ActorAction pact = ActorAction.PathWalking.createPath(
+								npcpos, dest, cost);
+			if (pact != null) {			// Found path?
+				npc.setAction(pact);
+				npc.start(1, 1 + EUtil.rand()%2);	// Start walking.
+			} else					// Try again in a couple secs.
+				npc.start(1, (500 + EUtil.rand()%1000)/TimeQueue.tickMsecs);
 		}
 	}
 	/*

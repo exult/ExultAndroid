@@ -181,6 +181,7 @@ public class ItemNames {
 	 first_miner_gold = 0x45, last_miner_gold = 0x47,
 	 first_flee = 0x48,
 	 last_flee = 0x4e,
+	 first_farmer2 = 0x60, last_farmer2 = 0x62,
 	 first_lamp_on = 0x63,
 	 last_lamp_on = 0x66,
 	 lamp_off = 0x67,

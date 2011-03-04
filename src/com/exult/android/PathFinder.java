@@ -396,6 +396,19 @@ public abstract class PathFinder {
 		private Rectangle abox = new Rectangle();	// Temp.
 		private int intelligence;		// NPC's intelligence.
 		private int axtiles, aytiles, aztiles;	// NPC's dims. in tiles.
+		// Create client for getting within a desired distance of a destination.
+		public MonsterClient(Actor npc, Tile dest, int dist) {
+			super(dist); 
+			destbox.set(dest.tx, dest.ty, 0, 0);
+			intelligence = npc.getProperty(Actor.intelligence);
+			ShapeInfo info1 = npc.getInfo();
+			int frame = npc.getFrameNum();
+			axtiles = info1.get3dXtiles(frame);
+			aytiles = info1.get3dYtiles(frame);
+			aztiles = info1.get3dHeight();
+			setMoveFlags(npc.getTypeFlags());
+			destbox.enlarge(dist);		// How close we need to get.
+		}
 		// For combat:
 		public MonsterClient(Actor attacker, int reach, GameObject opponent) {
 			super(reach);

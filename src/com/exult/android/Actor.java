@@ -665,26 +665,27 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.talk:
 				schedule = new Schedule.Talk(this);
 				break;
-			/*++++++
+			
 			case Schedule.dance:
-				unready_weapon();
-				schedule = new Dance_schedule(this);
+				unreadyWeapon();
+				schedule = new Schedule.Dance(this);
 				break;
+				/*++++++
 			case Schedule.farm:	// Use a scythe.
 				schedule = new Tool_schedule(this, 618);
 				break;
 			case Schedule.tend_shop:// For now.
-				unready_weapon();
+				unreadyWeapon();
 				schedule = new Loiter_schedule(this, 3);
 				break;
+			*/
 			case Schedule.miner:	// Use a pick.
-				schedule = new Miner_schedule(this);
+				schedule = new Schedule.Miner(this);
 				break;
 			case Schedule.hound:
 				readyBestWeapon();
-				schedule = new Hound_schedule(this);
+				schedule = new Schedule.Hound(this);
 				break;
-			*/
 			case Schedule.loiter:
 			case Schedule.graze:	// For now.
 				schedule = new Schedule.Loiter(this);
@@ -706,7 +707,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				break;
 			case Schedule.eat:		// For now.
 			case Schedule.sit:
-				//++++FINISH unready_weapon();
+				unreadyWeapon();
 				schedule = new Schedule.Sit(this, null);
 				break;	
 			/*++++++++++++++++
@@ -716,18 +717,17 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.sew:
 				schedule = new Sew_schedule(this);
 				break;
-			
-			case Schedule.shy:
-				//+++++++FINISH unready_weapon();
-				schedule = new Shy_schedule(this);
-				break;
 			*/
+			case Schedule.shy:
+				unreadyWeapon();
+				schedule = new Schedule.Shy(this);
+				break;
 			/*++++++++++++++++
 			case Schedule.lab:
 				schedule = new Lab_schedule(this);
 				break;
 			case Schedule.thief:
-				unready_weapon();
+				unreadyWeapon();
 				schedule = new Thief_schedule(this);
 				break;
 			*/
@@ -735,12 +735,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				unreadyWeapon();
 				schedule = new Schedule.Waiter(this);
 				break;
-			/*+++++++++++
 			case Schedule.kid_games:
-				unready_weapon();
-				schedule = new Kid_games_schedule(this);
+				unreadyWeapon();
+				schedule = new Schedule.KidGames(this);
 				break;
-			*/
 			case Schedule.eat_at_inn:
 				unreadyWeapon();
 				schedule = new Schedule.EatAtInn(this);
@@ -756,12 +754,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				readyBestWeapon();
 				schedule = new Schedule.Patrol(this);
 				break;
-			/*
 			case Schedule.desk_work:
 				unreadyWeapon();
-				schedule = new Desk_schedule(this);
+				schedule = new Schedule.Desk(this);
 				break;
-			*/
 			case Schedule.follow_avatar:
 				schedule = new Schedule.FollowAvatar(this);
 				break;
