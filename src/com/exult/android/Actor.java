@@ -3191,6 +3191,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		return !(getFlag(GameObject.paralyzed) || getFlag(GameObject.asleep)
 				|| isDead() || getProperty(health) <= 0);
 	}
+	/*
+	 *	Notify scheduler that an object it may be using has disappeared.
+	 */
+	public final void notifyObjectGone(GameObject obj) {
+		if (schedule != null)
+			schedule.notifyObjectGone(obj);
+		}
 	//	Get destination or current spot if none.
 	public void getDest(Tile dest) {
 		if (action != null && action.getDest(dest))

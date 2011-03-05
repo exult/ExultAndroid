@@ -2555,6 +2555,7 @@ public abstract class Schedule extends GameSingletons {
 	 *	Bake schedule
 	 */
 	public static class Bake extends Schedule {
+		private Tile npcpos = new Tile();
 		private GameObject oven;
 		private GameObject worktable;
 		private GameObject displaytable;
@@ -2582,7 +2583,436 @@ public abstract class Schedule extends GameSingletons {
 		}
 		@Override
 		public void nowWhat() {
-			//+++++++++FINISH
+			npc.getTile(npcpos);
+			ActorAction pact;
+			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
+			PathFinder.ActorClient cost2 = new PathFinder.ActorClient(npc, 2);
+			int dir, delay = 1;
+			int dough_shp = (game.isSI() ? 863 : 658);
+			GameObject stove = npc.findClosest(664);
+
+			switch (state) {
+			case find_leftovers:	// Look for misplaced dough already made by this schedule
+				state = to_flour;
+				if (dough_in_oven == null) {
+					// look for baking dough
+					Vector<GameObject> baking_dough = new Vector<GameObject>();
+					int frnum = (game.isSI() ? 18 : 2);
+					gmap.findNearby(baking_dough, npcpos, dough_shp, 20, 0, 51, frnum);
+					if (!baking_dough.isEmpty()) {	// found dough
+						dough_in_oven = baking_dough.firstElement();
+						state = remove_from_oven;
+						break;
+					}
+					// looking for cooked food left in oven
+					oven = npc.findClosest(831);
+					if (oven == null)
+						oven = stove;
+					if (oven != null) {
+						Vector<GameObject> food = new Vector<GameObject>();
+						Tile Opos = new Tile();
+						oven.getTile(Opos);
+						gmap.findNearby(food, Opos, 377, 2, 0, 51, EConst.c_any_framenum);
+						if (!food.isEmpty()) {	// found food
+							dough_in_oven = food.firstElement();
+							state = remove_from_oven;
+							break;
+						}
+					}
+				}
+				if (dough == null) {		// Looking for unused dough on tables
+					Vector<GameObject> leftovers = new Vector<GameObject>();
+					if (game.isSI()) {
+						gmap.findNearby(leftovers, npcpos, dough_shp, 20, 0, 50, 16);
+						gmap.findNearby(leftovers, npcpos, dough_shp, 20, 0, 50, 17);
+						gmap.findNearby(leftovers, npcpos, dough_shp, 20, 0, 50, 18);
+					}
+					else
+						gmap.findNearby(leftovers, npcpos, dough_shp, 20, 0, 50, 
+								EConst.c_any_framenum);
+					if (!leftovers.isEmpty()) {	// found dough
+						dough = leftovers.firstElement();
+						state = make_dough;
+						delay = 0;
+						Tile t = new Tile();
+						dough.getTile(t);
+						pact = ActorAction.PathWalking.createPath(npcpos, t, cost2);
+						if (pact != null)	// walk to dough if we can
+							npc.setAction(pact);
+					}
+				}
+				break;
+			case to_flour:		// Looks for flourbag and walks to it if found
+				Vector<GameObject> items = new Vector<GameObject>();
+				gmap.findNearby(items, npcpos, 863, -1, 0, EConst.c_any_qual, 0);
+				gmap.findNearby(items, npcpos, 863, -1, 0, EConst.c_any_qual, 13);
+				gmap.findNearby(items, npcpos, 863, -1, 0, EConst.c_any_qual, 14);
+
+				if (items.isEmpty()) {
+					state = to_table;
+					break;
+				}
+
+				int nr = EUtil.rand()%items.size();
+				flourbag = items.elementAt(nr);
+
+				Tile tpos = new Tile();
+				flourbag.getTile(tpos);
+				pact = ActorAction.PathWalking.createPath(
+							npcpos, tpos, cost);
+				if (pact != null) {
+					npc.setAction(pact);
+				} else {
+					// just ignore it
+					state = to_table;
+					break;
+				}
+
+				state = get_flour;
+				break;
+			case get_flour:		// Bend over flourbag and change the frame to zero if nonzero
+				if (flourbag == null) {
+					// what are we doing here then? back to start
+					state = to_flour;
+					break;
+				}
+
+				dir = npc.getDirection(flourbag);
+				npc.changeFrame(npc.getDirFramenum(dir,Actor.bow_frame));
+
+				if (flourbag.getFrameNum() != 0)
+					flourbag.changeFrame(0);
+
+				delay = 750;
+				state = to_table;
+				break;
+			case to_table:		// Walk over to worktable and create flour
+				GameObject table1 = npc.findClosest(1003);
+				GameObject table2 = npc.findClosest(1018);
+				if (stove != null) {
+					Vector<GameObject> table = new Vector<GameObject>();
+					gmap.findNearby(table, npcpos, 890, -1, 0, EConst.c_any_qual, 5);
+					if (table.size() == 1)
+						worktable = table.firstElement();
+					else if (table.size() > 1) {
+						if (EUtil.rand()%2 != 0)
+							worktable = table.firstElement();
+						else
+							worktable = table.elementAt(1);
+					}
+				}
+				else if (table1 == null)
+					worktable = table2;
+				else if (table2 == null)
+					worktable = table1;
+				else if (table1.distance(npc) < table2.distance(npc))
+					worktable = table1;
+				else
+					worktable = table2;
+
+				if (worktable == null)
+					worktable = npc.findClosest(1018);
+				if (worktable == null) {
+					// problem... try again in a few seconds
+					delay = 2500/TimeQueue.tickMsecs;
+					state = to_flour;
+					break;
+				}
+
+							// Find where to put dough.
+				Rectangle foot = new Rectangle();
+				worktable.getFootprint(foot);
+				ShapeInfo info = worktable.getInfo();
+				Tile cpos = new Tile(foot.x + EUtil.rand()%foot.w, foot.y + EUtil.rand()%foot.h,
+					worktable.getLift() + info.get3dHeight());
+				Tile tablepos = new Tile(cpos);
+				cpos.tz = 0;
+
+				pact = ActorAction.PathWalking.createPath(
+							npcpos, cpos, cost);
+				if (pact != null) {
+					if (dough != null) {
+						dough.removeThis();
+						dough = null;
+					}
+					if (game.isSI())
+						dough = new IregGameObject(dough_shp, 16, 0, 0, 0);
+					else
+						dough = new IregGameObject(dough_shp, 0, 0, 0, 0);
+					dough.setQuality(50);
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.Pickup(dough,tablepos,1,false)));
+				} else {
+					// not good... try again
+					delay = 2500/TimeQueue.tickMsecs;
+					state = to_flour;
+					break;
+				}
+
+				state = make_dough;
+				break;
+			case make_dough:	// Changes flour to flat dough then dough ball
+				if (dough == null) {
+					// better try again...
+					delay = 2500/TimeQueue.tickMsecs;
+					state = to_table;
+					break;
+				}
+
+				dir = npc.getDirection(dough);
+				byte fr[] = new byte[2];
+				fr[0] = (byte)npc.getDirFramenum(dir, 3);
+				fr[1] = (byte)npc.getDirFramenum(dir, 0);
+
+				int frame = dough.getFrameNum();
+				if (game.isSI() ? frame == 16: frame == 0)
+					npc.setAction(new ActorAction.Sequence(
+						new ActorAction.Frames(fr, 2, 2, null),
+					((game.isSI()) ?
+						new ActorAction.Frames(0x11,1,dough) :
+						new ActorAction.Frames(0x01,1,dough)),
+						new ActorAction.Frames(fr, 2, 2, null),
+					((game.isSI()) ?
+						new ActorAction.Frames(0x12,1,dough) :
+						new ActorAction.Frames(0x02,1,dough))
+					));
+				else if (game.isSI() ? frame == 17: frame == 1)
+					npc.setAction(new ActorAction.Sequence(
+						new ActorAction.Frames(fr, 2, 2, null),
+						((game.isSI()) ?
+						new ActorAction.Frames(0x12,1,dough) :
+						new ActorAction.Frames(0x02,1,dough))
+						));
+				
+				state = remove_from_oven;
+				break;
+			case remove_from_oven:	// Changes dough in oven to food %7 and picks it up
+				if (dough_in_oven == null) {
+					// nothing in oven yet
+					state = get_dough;
+					break;
+				}
+				if (stove != null)
+					oven = stove;
+				else
+					oven = npc.findClosest(831);
+				if (oven == null) {
+					// this really shouldn't happen...
+					dough_in_oven.removeThis();
+					dough_in_oven = null;
+
+					delay = 2500/TimeQueue.tickMsecs;
+					state = to_table;
+					break;
+				}
+
+				if (dough_in_oven.getShapeNum() != 377){
+					gwin.addDirty(dough_in_oven);
+					dough_in_oven.setShape(377);
+					dough_in_oven.setFrame(EUtil.rand()%7);
+					gwin.addDirty(dough_in_oven);
+				}
+				tpos = new Tile();
+				oven.getTile(tpos);
+				tpos.tx++;
+				tpos.ty++;
+				pact = ActorAction.PathWalking.createPath(
+							npcpos, tpos, cost);
+				if (pact != null) {
+					npc.setAction(new ActorAction.Sequence(
+						pact,
+						new ActorAction.Pickup(dough_in_oven, 1)));
+				} else {
+					// just pick it up
+					npc.setAction(
+						new ActorAction.Pickup(dough_in_oven, 1));
+				}
+
+				state = display_wares;
+				break;
+			case display_wares:		// Walk to displaytable. Put food on it. If table full, go to
+									// clear_display which eventualy comes back here to place food
+				if (dough_in_oven == null) {
+					// try again
+					delay = 2500/TimeQueue.tickMsecs;
+					state = find_leftovers;
+					break;
+				}
+				displaytable = npc.findClosest(633); // Britain
+				if (displaytable == null) {
+					Vector<GameObject> table = new Vector<GameObject>();
+					int table_shp = 890; // Moonshade table
+					int table_frm = 1;
+					if (stove != null) {
+						table_shp = 1003;
+						table_frm = 2;
+					}
+					gmap.findNearby(table, npcpos, table_shp, -1, 0, 
+													EConst.c_any_qual, table_frm);
+					if (table.size() == 1)
+						displaytable = table.firstElement();
+					else if (table.size() > 1)
+					{
+						if (EUtil.rand()%2 != 0)
+							displaytable = table.firstElement();
+						else
+							displaytable = table.elementAt(1);
+					}
+				}
+				if (displaytable == null) {
+					// uh-oh...
+					dough_in_oven.removeThis();
+					dough_in_oven = null;
+
+					delay = 2500/TimeQueue.tickMsecs;
+					state = find_leftovers;
+					break;
+				}
+				Rectangle r = new Rectangle();
+				displaytable.getFootprint(r);
+				Perimeter p = new Perimeter(r);		// Find spot adjacent to table.
+				Tile spot = new Tile();	// Also get closest spot on table.
+				Tile spot_on_table = new Tile();
+				p.get(EUtil.rand()%p.size(), spot, spot_on_table);
+				PathFinder.ActorClient COST = (game.isSI() ? cost : cost2);
+				pact = ActorAction.PathWalking.createPath(npcpos, spot, COST);
+				info = displaytable.getInfo();
+				spot_on_table.tz += info.get3dHeight();
+
+				// Place baked goods if spot is empty.
+				Tile t = new Tile(spot_on_table);
+				if (MapChunk.findSpot(t, 0, 377, 0, 0) && t.tz == spot_on_table.tz) {
+					npc.setAction(new ActorAction.Sequence(pact,
+							new ActorAction.Pickup(dough_in_oven,
+									 spot_on_table, 1, false)));
+					dough_in_oven = null;
+					state = get_dough;
+				} else {
+					displaytable.getTile(t);
+					pact = ActorAction.PathWalking.createPath(npcpos, t, cost);
+					npc.setAction(new ActorAction.Sequence(pact, 
+												new ActorAction.FacePos(t, 1)));
+					delay = 1;
+					state = clear_display;
+				}		
+				clearing = false;
+				break;
+			case clear_display:		// Mark food for deletion by remove_food
+				Vector<GameObject> food = new Vector<GameObject>();
+				gmap.findNearby(food, npcpos, 377, 4, 0, 51, EConst.c_any_framenum);
+				if (food.size() == 0 && !clearing) { // none of our food on the table
+											   // so we can't clear it
+					if (dough_in_oven != null)
+						dough_in_oven.removeThis();
+					dough_in_oven = null;
+					state = get_dough;
+					break;
+				}
+				clearing = true;
+				if (!food.isEmpty()) {
+					delay = 2;
+					state = remove_food;
+					break;
+				}
+				if (food.size() == 0)
+					state = display_wares;
+				break;
+			case remove_food:	// Delete food on display table one by one with a slight delay
+				Vector<GameObject> food2 = new Vector<GameObject>();
+				gmap.findNearby(food2, npcpos, 377, 4, 0, 51, EConst.c_any_framenum);
+				if (food2.size() > 0) {
+					delay = 2;
+					state = clear_display;
+					gwin.addDirty(food2.firstElement());
+					food2.firstElement().removeThis();
+				}
+				break;
+			case get_dough:		// Walk to work table and pick up dough
+				if (dough == null) {
+					// try again
+					delay = 2500/TimeQueue.tickMsecs;
+					state = find_leftovers;
+					break;
+				}
+				if (stove != null)
+					oven = stove;
+				else
+					oven = npc.findClosest(831);
+				if (oven == null) {
+					// wait a while
+					delay = 2500/TimeQueue.tickMsecs;
+					state = find_leftovers;
+					break;
+				}
+
+				tpos = new Tile();
+				dough.getTile(tpos);
+				pact = ActorAction.PathWalking.createPath(
+							npcpos, tpos, cost2);
+				if (pact != null) {
+					npc.setAction(new ActorAction.Sequence(pact,
+								new ActorAction.Pickup(dough, 1)));
+				} else {
+					// just pick it up
+					npc.setAction(new ActorAction.Pickup(dough, 1));
+				}
+
+				state = put_in_oven;
+				break;
+			case put_in_oven:	// Walk to oven and put dough on in.
+				if (dough == null) {
+					// try again
+					delay = 2500/TimeQueue.tickMsecs;
+					state = find_leftovers;
+					break;
+				}
+				if (stove != null)
+					oven = stove;
+				else
+					oven = npc.findClosest(831);
+				if (oven == null) {
+					// oops... retry
+					dough.removeThis();
+					dough = null;
+
+					delay = 2500/TimeQueue.tickMsecs;
+					state = to_table;
+					break;
+				}
+
+				tpos = new Tile();
+				oven.getTile(tpos);
+				tpos.tx++; tpos.ty++; 
+				pact = ActorAction.PathWalking.createPath(npcpos, tpos, cost);
+
+				// offsets for oven placement
+				int offX = +1, offY = 0, offZ = 0;
+				if (stove != null) { // hide dough
+					offX = -3; offY = 0; offZ = -2;
+				}
+				foot = new Rectangle();
+				oven.getFootprint(foot);
+				info = oven.getInfo();
+				cpos = new Tile(foot.x + offX, foot.y + offY, 
+						oven.getLift() + info.get3dHeight() + offZ);
+
+				if (pact != null) {
+					npc.setAction(new ActorAction.Sequence(
+						pact,
+						new ActorAction.Pickup(dough, cpos, 1, false)));
+
+					dough.setQuality(51);
+					dough_in_oven = dough;
+					dough = null;
+				} else {
+					dough.removeThis();
+					dough = null;
+				}
+
+				state = find_leftovers;
+				break;
+			}
+			npc.start(1, delay);		// Back in queue.
 		}
 		@Override
 		public void ending(int newtype) {

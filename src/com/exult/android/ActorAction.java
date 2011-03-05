@@ -523,6 +523,13 @@ abstract public class ActorAction extends GameSingletons {
 			speed = spd;
 			obj = o;
 		}
+		public Frames(int oneFrame, int spd, GameObject o) {
+			frames = new byte[1];
+			frames[0] = (byte)oneFrame;
+			cnt = 1;
+			speed = spd;
+			obj = o;
+		}
 		public Frames(byte f[], int c) {
 			frames = f;
 			cnt = c;
@@ -587,7 +594,73 @@ abstract public class ActorAction extends GameSingletons {
 			}
 			return (delay);
 		}
-	}/*
+	}
+	/*
+	 *	Action to pick up an item or put it down.
+	 */
+
+	public static class Pickup extends ActorAction {
+		private GameObject obj;		// What to pick up/put down.
+		private boolean pickup;			// 1 to pick up, 0 to put down.
+		private int speed;			// Time between frames.
+		private int cnt;			// 0, 1, 2.
+		private Tile objpos = new Tile();		// Where to put it.
+		private int dir;			// Direction to face.
+		private boolean temp;			// True to make object temporary on drop.
+						// To pick up an object:
+		public Pickup(GameObject o, int spd) {
+			obj = o;
+			pickup = true;
+			speed = spd;
+			obj.getTile(objpos);
+		}
+						// To put down an object:
+		Pickup(GameObject o, Tile opos, int spd, boolean t) {
+			obj = o;
+			pickup = false;
+			speed = spd;
+			objpos.set(opos);
+			temp = t;
+		}
+		@Override
+		public int handleEvent(Actor actor) {
+			int frnum = -1;
+			switch (cnt) {
+			case 0:				// Face object.
+				dir = actor.getDirection(objpos);
+				frnum = actor.getDirFramenum(dir, Actor.standing);
+				cnt++;
+				break;
+			case 1:				// Bend down.
+				frnum = actor.getDirFramenum(dir, Actor.bow_frame);
+				cnt++;
+				if (pickup) {
+					if (actor.distance(obj) > 8) {	// No longer nearby.
+						actor.notifyObjectGone(obj);
+						break;
+					}
+					gwin.addDirty(obj);
+					obj.removeThis();
+					actor.add(obj, true);
+				} else {
+					obj.removeThis();
+					obj.move(objpos);
+					if (temp)
+						obj.setFlag(GameObject.is_temporary);
+					gwin.addDirty(obj);
+				}
+				break;
+			default:
+				return 0;		// Done.
+			}
+			actor.changeFrame(frnum);
+			return speed;
+		}
+		@Override
+		public int getSpeed()
+			{ return speed; }
+		}
+	/*
 	 *	Action to turn towards an object or spot.
 	 */
 	public static class FacePos extends ActorAction {
