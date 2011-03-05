@@ -596,9 +596,39 @@ abstract public class ActorAction extends GameSingletons {
 		}
 	}
 	/*
+	 *	Rotate through an object's frames.
+	 */
+	public static class ObjectAnimate extends ActorAction {
+		private GameObject obj;
+		private int nframes;			// # of frames.
+		private int cycles;			// # of cycles to do.
+		private int speed;			// Time between frames.
+
+		public ObjectAnimate(GameObject o, int cy, int spd) {
+			obj = o; cycles = cy; speed = spd;
+			nframes = obj.getNumFrames();
+		}
+		public ObjectAnimate(GameObject o, int nfr, int cy, int spd) {
+			obj = o; cycles = cy; speed = spd;
+			nframes = nfr;
+		}
+		@Override				// Handle time event.
+		public int handleEvent(Actor actor) {
+			if (cycles == 0) 
+				return 0;
+			int frnum = (obj.getFrameNum() + 1) % nframes;
+			if (frnum == 0)			// New cycle?
+				--cycles;
+			obj.changeFrame(frnum);
+			return (cycles > 0 ? speed : 0);
+		}
+		@Override
+		public int getSpeed()
+			{ return speed; }
+	}
+	/*
 	 *	Action to pick up an item or put it down.
 	 */
-
 	public static class Pickup extends ActorAction {
 		private GameObject obj;		// What to pick up/put down.
 		private boolean pickup;			// 1 to pick up, 0 to put down.

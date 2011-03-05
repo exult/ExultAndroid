@@ -2508,6 +2508,8 @@ public abstract class Schedule extends GameSingletons {
 	 *	Sew/weave schedule.
 	 */
 	public static class Sew extends Schedule {
+		private Tile npcpos = new Tile(), objpos = new Tile();
+		private Rectangle foot = new Rectangle();
 		private GameObject bale;		// Bale of wool.
 		private GameObject spinwheel;
 		private GameObject chair;		// In front of spinning wheel.
@@ -2535,8 +2537,220 @@ public abstract class Schedule extends GameSingletons {
 			state = get_wool;
 		}
 		@Override
-		public void nowWhat() {	// Now what should NPC do?
-			//++++++FINISH
+		public void nowWhat() {
+			npc.getTile(npcpos);
+							// Often want to get within 1 tile.
+			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
+			ActorAction pact;
+			switch (state) {
+			case get_wool:
+				if (spindle != null)		// Clean up any remainders.
+					spindle.removeThis();
+				if (cloth != null)
+					cloth.removeThis();
+				cloth = spindle = null;
+				npc.removeQuantity(2, 654, EConst.c_any_qual, EConst.c_any_framenum);
+				npc.removeQuantity(2, 851, EConst.c_any_qual, EConst.c_any_framenum);
+
+				bale = npc.findClosest(653);
+				if (bale == null) {		// Just skip this step.
+					state = sit_at_wheel;
+					break;
+				}
+				bale.getTile(objpos);
+				pact = ActorAction.PathWalking.createPath(
+						npcpos, objpos, cost);
+				if (pact != null)
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.Pickup(bale, 1),
+						new ActorAction.Pickup(bale, objpos, 1, false), null));
+				state = sit_at_wheel;
+				break;
+			case sit_at_wheel:
+				chair = npc.findClosest(873);
+				if (chair == null || Sit.setAction(npc, chair, 1) == null) {
+					// uh-oh... try again in a few seconds
+					npc.start(1, 10);
+					return;
+				}
+				state = spin_wool;
+				break;
+			case spin_wool:			// Cycle spinning wheel 8 times.
+				spinwheel = npc.findClosest(651);
+				if (spinwheel == null) {
+					// uh-oh... try again in a few seconds?
+					npc.start(1, 10);
+					return;
+				}
+				npc.setAction(new ActorAction.ObjectAnimate(spinwheel,
+										8, 1));
+				state = get_thread;
+				break;
+			case get_thread:
+				spinwheel.getTile(objpos);
+				if (MapChunk.findSpot(objpos, 1, 654, 0, 0)) {
+					// Space to create thread?
+					spindle = new IregGameObject(654, 0, 0, 0, 0);
+					spindle.move(objpos);
+					gwin.addDirty(spindle);
+					npc.setAction(new ActorAction.Pickup(spindle, 1));
+				}
+				state = weave_cloth;
+				break;
+			case weave_cloth:
+				if (spindle != null)		// Should be held by NPC.
+					spindle.removeThis();
+				spindle = null;
+				loom = npc.findClosest(261);
+				if (loom == null) {		// No loom found?
+					state = get_wool;
+					break;
+				}
+				loom.getTile(objpos);
+				objpos.tx--;
+				pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost);
+				if (pact != null)
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.FacePos(loom, 1),
+						new ActorAction.ObjectAnimate(loom, 4, 1), null));
+				state = get_cloth;
+				break;
+			case get_cloth:
+				loom.getTile(objpos);
+				if (MapChunk.findSpot(objpos, 1, 851, 0, 0)) {
+						// Space to create it?
+					cloth = new IregGameObject(851, EUtil.rand()%2, 0, 0, 0);
+					cloth.move(objpos);
+					gwin.addDirty(cloth);
+					npc.setAction(
+						new ActorAction.Pickup(cloth, 1));
+					}
+				state = to_work_table;
+				break;
+			case to_work_table:
+				work_table = npc.findClosest(971);
+				if (work_table == null || cloth == null) {
+					state = get_wool;
+					break;
+				}
+				work_table.getTile(objpos);
+				objpos.tx += 1; objpos.ty -= 2;
+				pact = ActorAction.PathWalking.createPath(
+							npcpos, objpos, cost);
+							// Find where to put cloth.
+				work_table.getFootprint(foot);
+				ShapeInfo info = work_table.getInfo();
+				objpos.set(foot.x + foot.w/2, foot.y + foot.h/2,
+					work_table.getLift() + info.get3dHeight());
+				if (pact != null)
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.FacePos(work_table, 1),
+						new ActorAction.Pickup(cloth, objpos, 1, false), null));
+				state = set_to_sew;
+				break;
+			case set_to_sew:
+				GameObject shears = npc.getReadied(Ready.lhand);
+				if (shears != null && shears.getShapeNum() != 698) {
+							// Something's not right.
+					shears.removeThis();
+					shears = null;
+				}
+				if (shears == null) {
+							// Shears on table?
+					Vector<GameObject> vec = new Vector<GameObject>();
+					if (npc.findNearby(vec, 698, 3, 0) > 0) {
+						shears = vec.firstElement();
+						gwin.addDirty(shears);
+						shears.removeThis();
+					}
+					else
+						shears = new IregGameObject(698, 0, 0, 0, 0);
+					npc.addReadied(shears, Ready.lhand);
+				}
+				state = sew_clothes;
+				sew_clothes_cnt = 0;
+				break;
+			case sew_clothes:
+				int dir = npc.getDirection(cloth);
+				byte frames[] = new byte[5];
+				int nframes = npc.getAttackFrames(698, false, 
+										dir, frames);
+				if (nframes > 0)
+					npc.setAction(new ActorAction.Frames(frames, nframes));
+				sew_clothes_cnt++;
+				if (sew_clothes_cnt > 1 && sew_clothes_cnt < 5) {
+					int num_cloth_frames = ShapeFiles.SHAPES_VGA.getFile().getNumFrames(851);
+					cloth.changeFrame(EUtil.rand()%num_cloth_frames);
+				} else if (sew_clothes_cnt == 5) {
+					gwin.addDirty(cloth);
+					cloth.getTile(objpos);
+					cloth.removeThis();
+							// Top or pants.
+					int shnum = game.isSI() ? 403 : (EUtil.rand()%2 != 0 ? 738 : 249);
+					cloth.setShape(shnum);
+					nframes = ShapeFiles.SHAPES_VGA.getFile().getNumFrames(shnum);
+					cloth.setFrame(EUtil.rand()%nframes);
+					cloth.move(objpos);
+					state = get_clothes;
+				}
+				break;
+			case get_clothes:
+				shears = npc.getReadied(Ready.lhand);
+				if (shears != null) {
+					cloth.getTile(objpos);
+					npc.setAction(new ActorAction.Sequence(
+									new ActorAction.Pickup(cloth, 1),
+									new ActorAction.Pickup(shears, objpos, 1, false)));
+				} else {
+					// ++++ maybe create shears? anyway, leaving this till after
+					// possible/probable schedule system rewrite
+					npc.setAction(new ActorAction.Pickup(cloth, 1));
+				}
+				state = display_clothes;
+				break;
+			case display_clothes:
+				state = done;
+				wares_table = npc.findClosest(890);
+				if (wares_table == null) {
+					cloth.removeThis();
+					cloth = null;
+					break;
+				}
+				wares_table.getTile(objpos);
+				objpos.tx += 1; objpos.ty -= 2;
+				pact = ActorAction.PathWalking.createPath(
+							npcpos, objpos, cost);
+							// Find where to put cloth.
+				wares_table.getFootprint(foot);
+				info = wares_table.getInfo();
+				objpos.set(foot.x + EUtil.rand()%foot.w, foot.y + EUtil.rand()%foot.h,
+					wares_table.getLift() + info.get3dHeight());
+				if (pact != null)
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.Pickup(cloth, objpos, 1, true)));
+				cloth = null;			// Leave it be.
+				break;
+			case done:				// Just put down clothing.
+				state = get_wool;
+				Vector<GameObject> vec = new Vector<GameObject>();// Don't create too many.
+				int cnt = 0;
+				if (game.isSI())
+					cnt += npc.findNearby(vec, 403, 5, 0);
+				else {			// BG shapes.
+					cnt += npc.findNearby(vec, 738, 5, 0);
+					cnt += npc.findNearby(vec, 249, 5, 0);
+				}
+				if (cnt >= 3) {
+					GameObject obj = vec.elementAt(EUtil.rand()%cnt);
+					gwin.addDirty(obj);
+					obj.removeThis();
+				}
+				break;
+			default:			// Back to start.
+				state = get_wool;
+				break;
+			}
+			npc.start(1, 1);		// Back in queue.
 		}
 		@Override
 		public void ending(int newtype) {// Switching to another schedule.
