@@ -1184,9 +1184,8 @@ public abstract class Schedule extends GameSingletons {
 				{
 				int dist = npc.distance(gwin.getMainActor());
 							// Got to be close & reachable.
-				if (dist > 5 /*++++++++FINISH ||
-					!Fast_pathfinder_client.is_grabable(npc,
-						gwin.getMainActor()) +++*/) {
+				if (dist > 5 ||
+					!PathFinder.FastClient.isGrabable(npc, gwin.getMainActor())) {
 					phase = 0;
 					npc.start(speed, 2);
 					return;
@@ -1666,7 +1665,7 @@ public abstract class Schedule extends GameSingletons {
 			if (newtype == wait ||	
 				// Not time to get up, Penumbra!
 					newtype == sleep)
-				return;			// ++++Does this leave NPC's stuck?++++
+				return;			// ++++Does this leave NPC's stuck?
 			if (bed != null &&			// Still in bed?
 					(npc.getFrameNum()&0xf) == Actor.sleep_frame &&
 					npc.distance(bed) < 8) {
@@ -2503,6 +2502,159 @@ public abstract class Schedule extends GameSingletons {
 			obj = npc.getReadied(Ready.rhand);
 			if (obj != null)
 				obj.removeThis();
+		}
+	}
+	/*
+	 *	Sew/weave schedule.
+	 */
+	public static class Sew extends Schedule {
+		private GameObject bale;		// Bale of wool.
+		private GameObject spinwheel;
+		private GameObject chair;		// In front of spinning wheel.
+		private GameObject spindle;		// Spindle of thread.
+		private GameObject loom;
+		private GameObject cloth;
+		private GameObject work_table, wares_table;
+		private int sew_clothes_cnt;
+	 	private final static int // enum {
+			get_wool = 0,
+			sit_at_wheel = 1,
+			spin_wool = 2,
+			get_thread = 3,
+			weave_cloth = 4,
+			get_cloth = 5,
+			to_work_table = 6,
+			set_to_sew = 7,
+			sew_clothes = 8,
+			get_clothes = 9,
+			display_clothes = 10,
+			done = 11;
+		private int state;
+		public Sew(Actor n) {
+			super(n);
+			state = get_wool;
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			//++++++FINISH
+		}
+		@Override
+		public void ending(int newtype) {// Switching to another schedule.
+			GameObject obj = npc.getReadied(Ready.lhand);
+			if (obj != null)
+				obj.removeThis();
+			if (cloth != null) {		// Don't leave cloth lying around.
+				if (cloth.getOwner() == null)
+					gwin.addDirty(cloth);
+				cloth.removeThis();
+				cloth = null;
+			}
+		}
+	}
+	/*
+	 *	Bake schedule
+	 */
+	public static class Bake extends Schedule {
+		private GameObject oven;
+		private GameObject worktable;
+		private GameObject displaytable;
+		private GameObject flourbag;
+		private GameObject dough;
+		private GameObject dough_in_oven;
+		private boolean clearing;
+		private final static int // enum {
+			find_leftovers = 0,		// Look for misplaced dough already made by this schedule
+			to_flour = 1,			// Looks for flourbag and walks to it if found
+			get_flour = 2,			// Bend over flourbag and change the frame to zero if nonzero
+			to_table = 3,			// Walk over to worktable and create flour
+			make_dough = 4,			// Changes flour to flat dough then dough ball
+			remove_from_oven = 5,	// Changes dough in oven to food %7 and picks it up
+			display_wares = 6,		// Walk to displaytable. Put food on it. If table full, go to
+									// clear_display which eventualy comes back here to place food
+			clear_display = 7,		// Mark food for deletion by remove_food
+			remove_food = 8,		// Delete food on display table one by one with a slight delay
+			get_dough = 9,			// Walk to work table and pick up dough
+			put_in_oven = 10;			// Walk to oven and put dough on in.
+		private int state;
+		public Bake(Actor n) {
+			super(n);
+			state = find_leftovers;
+		}
+		@Override
+		public void nowWhat() {
+			//+++++++++FINISH
+		}
+		@Override
+		public void ending(int newtype) {
+			if (dough != null) {
+				dough.removeThis();
+				dough = null;
+			}
+
+			if (dough_in_oven != null) {
+				dough_in_oven.removeThis();
+				dough_in_oven = null;
+			}
+		}
+		@Override
+		public void notifyObjectGone(GameObject obj) {
+			if (obj == dough)		// Someone stole the dough!
+				dough = null;
+			if (obj == dough_in_oven)
+				dough_in_oven = null;
+		}
+	}
+	/*
+	 *	Blacksmith schedule
+	 */
+	public static class Forge extends Schedule {
+		private GameObject tongs;
+		private GameObject hammer;
+		private GameObject blank;
+		private GameObject firepit;
+		private GameObject anvil;
+		private GameObject trough;
+		private GameObject bellows;
+		private final static int // enum {
+			put_sword_on_firepit = 0,
+			use_bellows = 1,
+			get_tongs = 2,
+			sword_on_anvil = 3,
+			get_hammer = 4,
+			use_hammer = 5,
+			walk_to_trough = 6,
+			fill_trough = 7,
+			get_tongs2 = 8,
+			use_trough = 9,
+			done = 10;
+		private int state;
+		public Forge(Actor n) {
+			super(n);
+			state = put_sword_on_firepit;
+		}
+		@Override
+		public void nowWhat() {	// Now what should NPC do?
+			//+++++++FINISH
+		}
+		@Override
+		public void ending(int newtype) { // Switching to another schedule
+			if (tongs != null) {
+				tongs.removeThis();
+				tongs = null;
+			}
+			if (hammer != null) {
+				hammer.removeThis();
+				hammer = null;
+			}
+			firepit = npc.findClosest(739);
+			bellows = npc.findClosest(431);
+
+			if (firepit != null && firepit.getFrameNum() != 0)
+				firepit.changeFrame(0);
+				if (bellows != null && bellows.getFrameNum() != 0)
+					bellows.changeFrame(0);
+			if (blank != null && blank.getFrameNum() != 0)
+				blank.changeFrame(0);
 		}
 	}
 	/*
