@@ -690,11 +690,9 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			case Schedule.wander:
 				schedule = new Schedule.Wander(this);
 				break;
-			/*++++++++++++++
 			case Schedule.blacksmith:
-				schedule = new Forge_schedule(this);
+				schedule = new Schedule.Forge(this);
 				break;
-			*/
 			case Schedule.sleep:
 				unreadyWeapon();
 				schedule = new Schedule.Sleep(this);
@@ -707,14 +705,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				unreadyWeapon();
 				schedule = new Schedule.Sit(this, null);
 				break;	
-			/*++++++++++++++++
 			case Schedule.bake:
-				schedule = new Bake_schedule(this);
+				schedule = new Schedule.Bake(this);
 				break;
 			case Schedule.sew:
-				schedule = new Sew_schedule(this);
+				schedule = new Schedule.Sew(this);
 				break;
-			*/
 			case Schedule.shy:
 				unreadyWeapon();
 				schedule = new Schedule.Shy(this);
