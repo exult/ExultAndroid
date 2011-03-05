@@ -3252,6 +3252,8 @@ public abstract class Schedule extends GameSingletons {
 	 *	Blacksmith schedule
 	 */
 	public static class Forge extends Schedule {
+		private Tile npcpos = new Tile(), objpos = new Tile();
+		private Rectangle foot = new Rectangle();
 		private GameObject tongs;
 		private GameObject hammer;
 		private GameObject blank;
@@ -3277,9 +3279,294 @@ public abstract class Schedule extends GameSingletons {
 			state = put_sword_on_firepit;
 		}
 		@Override
-		public void nowWhat() {	// Now what should NPC do?
-			//+++++++FINISH
+		public void nowWhat() {
+			npc.getTile(npcpos);
+							// Often want to get within 1 tile.
+			PathFinder.ActorClient cost = new PathFinder.ActorClient(npc, 1);
+			ActorAction pact;
+			switch (state) {
+			case put_sword_on_firepit:
+				if (blank == null) {
+					blank = npc.findClosest(668);
+					//TODO: go and get it...
+				}
+				if (blank == null)
+					blank = new IregGameObject(668, 0, 0, 0, 0);
+
+				firepit = npc.findClosest(739);
+				if (firepit == null) {
+					// uh-oh... try again in a few seconds
+					npc.start(1, 10);
+					return;
+				}
+				firepit.getTile(objpos);
+				pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost);
+
+				firepit.getFootprint(foot);
+				ShapeInfo info = firepit.getInfo();
+				objpos.set(foot.x + foot.w/2 + 1, foot.y + foot.h/2,
+					firepit.getLift() + info.get3dHeight());
+				if (pact != null) {
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.Pickup(blank, objpos, 1, false)));
+				} else {
+					npc.setAction(
+						new ActorAction.Pickup(blank, objpos, 1, false));
+				}
+
+				state = use_bellows;
+				break;
+			case use_bellows:
+				bellows = npc.findClosest(431);
+				firepit = npc.findClosest(739);
+				if (bellows == null || firepit == null || blank == null) {
+					// uh-oh... try again in a few second
+					npc.start(1, 10);
+					state = put_sword_on_firepit;
+					return;
+				}
+				bellows.getTile(objpos);
+				objpos.tx += 3;
+				pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost);
+
+				ActorAction a[] = new ActorAction[35];
+				a[0] = pact;
+				a[1] = new ActorAction.FacePos(bellows, 1);
+				a[2] = new ActorAction.Frames(0x2b, 0);
+				a[3] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[4] = new ActorAction.Frames(0x20, 0);
+				a[5] = new ActorAction.Frames(0x01, 0, firepit);
+				a[6] = new ActorAction.Frames(0x01, 0, blank);
+				a[7] = new ActorAction.Frames(0x2b, 0);
+				a[8] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[9] = new ActorAction.Frames(0x20, 0);
+				a[10] = new ActorAction.Frames(0x02, 0, blank);
+				a[11] = new ActorAction.Frames(0x2b, 0);
+				a[12] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[13] = new ActorAction.Frames(0x20, 0);
+				a[14] = new ActorAction.Frames(0x02, 0, firepit);
+				a[15] = new ActorAction.Frames(0x03, 0, blank);
+				a[16] = new ActorAction.Frames(0x2b, 0);
+				a[17] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[18] = new ActorAction.Frames(0x20, 0);
+				a[19] = new ActorAction.Frames(0x03, 0, firepit);
+				a[20] = new ActorAction.Frames(0x04, 0, blank);
+				a[21] = new ActorAction.Frames(0x2b, 0);
+				a[22] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[23] = new ActorAction.Frames(0x20, 0);
+				a[24] = new ActorAction.Frames(0x2b, 0);
+				a[25] =	new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[26] = new ActorAction.Frames(0x20, 0);
+				a[27] = new ActorAction.Frames(0x2b, 0);
+				a[28] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[29] = new ActorAction.Frames(0x20, 0);
+				a[30] = new ActorAction.Frames(0x2b, 0);
+				a[31] = new ActorAction.ObjectAnimate(bellows, 3, 1, 300);
+				a[32] = new ActorAction.Frames(0x20, 0);
+				a[33] = new ActorAction.Frames(0x00, 0, bellows);
+				a[34] = null;
+
+
+				npc.setAction(new ActorAction.Sequence(a));
+				state = get_tongs;
+				break;
+			case get_tongs:
+				if (tongs == null)
+					tongs = new IregGameObject(994, 0, 0, 0, 0);
+
+				npc.addDirty();
+				npc.unreadyWeapon(); // make sure the tongs can be equipped
+				npc.addReadied(tongs, Ready.lhand);
+				npc.addDirty();
+
+				state = sword_on_anvil;
+				break;
+			case sword_on_anvil:
+				anvil = npc.findClosest(991);
+				firepit = npc.findClosest(739);
+				if (anvil == null || firepit == null || blank == null) {
+					// uh-oh... try again in a few second
+					npc.start(1, 10);
+					state = put_sword_on_firepit;
+					return;
+				}
+
+				firepit.getTile(objpos);
+				pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost);
+				Tile tpos2 = new Tile();
+				anvil.getTile(tpos2);
+				tpos2.ty++; 
+				ActorAction pact2 = ActorAction.PathWalking.createPath(
+						objpos, tpos2, cost);
+				anvil.getFootprint(foot);
+				info = anvil.getInfo();
+				objpos.set(foot.x + 2, foot.y,
+					anvil.getLift() + info.get3dHeight());
+				if (pact != null && pact2 != null) {
+					npc.setAction(new ActorAction.Sequence(pact,
+						new ActorAction.Pickup(blank, 1),
+						pact2,
+						new ActorAction.Pickup(blank, objpos, 1, false)));
+				} else {
+					npc.setAction(new ActorAction.Sequence(
+						new ActorAction.Pickup(blank, 1),
+						new ActorAction.Pickup(blank, objpos, 1, false)));
+				}
+				state = get_hammer;
+				break;
+			case get_hammer:
+
+				if (hammer == null)
+					hammer = new IregGameObject(623, 0, 0, 0, 0);
+
+				npc.addDirty();
+				if (tongs != null) {
+					tongs.removeThis();
+					tongs = null;
+				}
+				npc.unreadyWeapon(); // make sure the hammer can be equipped
+				npc.addReadied(hammer, Ready.lhand);
+				npc.addDirty();
+
+				state = use_hammer;
+				break;
+			case use_hammer:
+				anvil = npc.findClosest(991);
+				firepit = npc.findClosest(739);
+				if (anvil == null || firepit == null || blank == null) {
+					// uh-oh... try again in a few seconds
+					npc.start(1, 10);
+					state = put_sword_on_firepit;
+					return;
+				}
+
+				byte frames[] = new byte[12];
+				int cnt = npc.getAttackFrames(623, false, 0, frames);
+				if (cnt > 0)
+					npc.setAction(new ActorAction.Frames(frames, cnt));
+				
+				a = new ActorAction[10];
+				a[0] = new ActorAction.Frames(frames, cnt);
+				a[1] = new ActorAction.Frames(0x03, 0, blank);
+				a[2] = new ActorAction.Frames(0x02, 0, firepit);
+				a[3] = new ActorAction.Frames(frames, cnt);
+				a[4] = new ActorAction.Frames(0x02, 0, blank);
+				a[5] = new ActorAction.Frames(0x01, 0, firepit);
+				a[6] = new ActorAction.Frames(frames, cnt);
+				a[7] = new ActorAction.Frames(0x01, 0, blank);
+				a[8] = new ActorAction.Frames(0x00, 0, firepit);
+				a[9] = null;
+				npc.setAction(new ActorAction.Sequence(a));
+
+				state = walk_to_trough;
+				break;
+			case walk_to_trough:
+				npc.addDirty();
+				if (hammer != null) {
+					hammer.removeThis();
+					hammer = null;
+				}
+				npc.addDirty();
+
+				trough = npc.findClosest(719);
+				if (trough == null) {
+					// uh-oh... try again in a few seconds
+					npc.start(1, 10);
+					state = put_sword_on_firepit;
+					return;
+				}
+
+				if (trough.getFrameNum() == 0) {
+					trough.getTile(objpos);
+					objpos.ty += 2;
+					pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost);
+					npc.setAction(pact);
+					state = fill_trough;
+					break;
+				}
+				state = get_tongs2;
+				break;
+			case fill_trough:
+				trough = npc.findClosest(719);
+				if (trough == null) {
+					// uh-oh... try again in a few seconds
+					npc.start(1, 10);
+					state = put_sword_on_firepit;
+					return;
+				}
+
+				int dir = npc.getDirection(trough);
+				trough.changeFrame(3);
+				npc.changeFrame(
+					npc.getDirFramenum(dir, Actor.bow_frame));
+
+				state = get_tongs2;
+				break;
+			case get_tongs2:
+				if (tongs == null)
+					tongs = new IregGameObject(994, 0, 0, 0, 0);
+
+				npc.addDirty();
+				npc.unreadyWeapon(); // make sure the tongs can be equipped
+				npc.addReadied(tongs, Ready.lhand);
+				npc.addDirty();
+
+				state = use_trough;
+				break;
+			case use_trough:
+				trough = npc.findClosest(719);
+				anvil = npc.findClosest(991);
+				if (trough == null || anvil == null || blank == null) {
+					// uh-oh... try again in a few seconds
+					npc.start(1, 10);
+					state = put_sword_on_firepit;
+					return;
+				}
+				anvil.getTile(objpos);
+				objpos.ty++;
+				pact = ActorAction.PathWalking.createPath(npcpos, objpos, cost);
+
+				tpos2 = new Tile();
+				trough.getTile(tpos2);
+				tpos2.ty += 2;
+				pact2 = ActorAction.PathWalking.createPath(objpos, tpos2, cost);
+
+				if (pact != null && pact2 != null) {
+					byte troughframe = (byte)(trough.getFrameNum() - 1);
+					if (troughframe < 0) troughframe = 0;
+
+					dir = npc.getDirection(trough);
+					byte npcframe = (byte)npc.getDirFramenum(dir, Actor.bow_frame);
+
+					a = new ActorAction[7];
+					a[0] = pact;
+					a[1] = new ActorAction.Pickup(blank, 1);
+					a[2] = pact2;
+					a[3] = new ActorAction.Frames(npcframe, 1);
+					a[4] = new ActorAction.Frames(troughframe, 0, trough);
+					a[5] = new ActorAction.Frames(0x00, 0, blank);
+					a[6] = null;
+					npc.setAction(new ActorAction.Sequence(a));
+				} else {
+					// no path found, just pick up sword blank
+					npc.setAction(new ActorAction.Sequence(
+					 	new ActorAction.Pickup(blank, 1),
+						new ActorAction.Frames(0, 0, blank)));
+				}	
+				state = done;
+				break;
+			case done:
+				npc.addDirty();
+				if (tongs != null) {
+					tongs.removeThis();
+					tongs = null;
+				}
+				npc.addDirty();
+				state = put_sword_on_firepit;
+			}
+			npc.start(1, 1);		// Back in queue.
 		}
+
 		@Override
 		public void ending(int newtype) { // Switching to another schedule
 			if (tongs != null) {

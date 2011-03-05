@@ -530,6 +530,13 @@ abstract public class ActorAction extends GameSingletons {
 			speed = spd;
 			obj = o;
 		}
+		public Frames(int oneFrame, int spd) {
+			frames = new byte[1];
+			frames[0] = (byte)oneFrame;
+			cnt = 1;
+			speed = spd;
+			obj = null;
+		}
 		public Frames(byte f[], int c) {
 			frames = f;
 			cnt = c;
@@ -564,6 +571,10 @@ abstract public class ActorAction extends GameSingletons {
 		public Sequence(ActorAction act[], int spd) {
 			actions = act;
 			index = 0; speed = spd;
+		}
+		public Sequence(ActorAction act[]) {
+			actions = act;
+			index = 0; speed = 1;
 		}
 						// Create with up to 4.
 		public Sequence(ActorAction a0, ActorAction a1,
