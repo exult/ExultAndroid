@@ -14,35 +14,35 @@
     	<Button
     	android:id="@+id/target_button"
         android:layout_width="fill_parent"
-        android:layout_height="30px"
+        android:layout_height="wrap_content"
 		style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:text="T" />
         <Button
     	android:id="@+id/combat_button"    	
         android:layout_width="fill_parent"
-        android:layout_height="30px"
+        android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:text="C" />
         <Button
     	android:id="@+id/inventory_button"
         android:layout_width="fill_parent"
-        android:layout_height="30px"
+        android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:text="I" />
         <Button
     	android:id="@+id/stats_button"
         android:layout_width="fill_parent"
-        android:layout_height="30px"
+        android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:text="Z" />
         <Button
     	android:id="@+id/feed_button"
         android:layout_width="fill_parent"
-        android:layout_height="30px"
+        android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:text="F" />
