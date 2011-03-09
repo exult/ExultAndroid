@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:visible="true" 
+		  android:titleCondensed="Save" 
+		  android:title="Save/Restore" 
+		  android:id="@+id/save_restore_button" 
+		  android:alphabeticShortcut="S" 
+		  android:enabled="true"></item>
+	<item android:visible="true" 
+		  android:titleCondensed="Quit" 
+		  android:title="Quit" android:id="@+id/quit_button" 
+		  android:alphabeticShortcut="Q" 
+		  android:enabled="true"></item>
+</menu>

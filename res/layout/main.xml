@@ -46,28 +46,6 @@
         style="?android:attr/buttonStyleSmall"
         android:padding= "4px"
         android:text="F" />
-        <Button
-    	android:id="@+id/zoom_button"
-        android:layout_width="fill_parent"
-        android:layout_height="30px"
-        style="?android:attr/buttonStyleSmall"
-        android:padding= "4px"
-        android:text="+" />
-        <Button
-    	android:id="@+id/save_button"
-        android:layout_width="fill_parent"
-        android:layout_height="30px"
-        style="?android:attr/buttonStyleSmall"
-        android:padding= "4px"
-        android:text="S" />
-        <Button
-        android:id="@+id/quit_button"
-        android:layout_width="fill_parent"
-        android:layout_height="30px"
-        style="?android:attr/buttonStyleSmall"
-        android:padding= "4px"
-        android:textColor="#ff0000"
-        android:text="Q" />
     </LinearLayout>
     <FrameLayout 
 	android:layout_width="fill_parent" 

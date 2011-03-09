@@ -13,6 +13,9 @@ import android.content.Context;
 import android.graphics.Point;
 import android.app.AlertDialog;
 import android.widget.Toast;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.MenuInflater;
 import android.widget.Button;
 import android.util.AttributeSet;
 import android.content.DialogInterface;
@@ -151,21 +154,29 @@ public class ExultActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { Shortcuts.feed();}
         });
-        button = (Button) findViewById(R.id.zoom_button);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { Shortcuts.zoom();}
-        });
-        button = (Button) findViewById(R.id.save_button);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { Shortcuts.save();}
-        });
-        button = (Button) findViewById(R.id.quit_button);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { Shortcuts.quit();}
-        });
     }
     public static void quit() {
     	instance.finish();
+    }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+        case R.id.save_restore_button:
+        	Shortcuts.save();
+            return true;
+        case R.id.quit_button:
+        	Shortcuts.quit();
+            return true;
+        default:
+            return super.onOptionsItemSelected(item);
+        }
     }
     /*
      * Subclasses.
