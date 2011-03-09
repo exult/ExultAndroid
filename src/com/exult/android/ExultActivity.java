@@ -166,6 +166,7 @@ public class ExultActivity extends Activity {
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+    	Cheat cheat = GameSingletons.cheat;
         // Handle item selection
         switch (item.getItemId()) {
         case R.id.save_restore_button:
@@ -174,6 +175,29 @@ public class ExultActivity extends Activity {
         case R.id.quit_button:
         	Shortcuts.quit();
             return true;
+        case R.id.teleport_map_button:
+        	cheat.mapTeleport();
+        	return true;
+        case R.id.hack_mover_button:
+        	cheat.toggleHackMover();
+        	item.setChecked(cheat.inHackMover());
+        	return true;
+        case R.id.god_mode_button:
+            cheat.toggleGodMode();
+            item.setChecked(cheat.inGodMode());
+            return true;
+        case R.id.wizard_mode_button:
+        	cheat.toggleWizardMode();
+        	item.setChecked(cheat.inWizardMode());
+        	return true;
+        case R.id.infra_mode_button:
+        	cheat.toggleInfravision();
+        	item.setChecked(cheat.inInfravision());
+        	return true;
+        case R.id.pickpocket_button:
+        	cheat.togglePickpocket();
+        	item.setChecked(cheat.inPickpocket());
+        	return true;
         default:
             return super.onOptionsItemSelected(item);
         }

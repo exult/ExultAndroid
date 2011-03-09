@@ -10,4 +10,47 @@
 		  android:title="Quit" android:id="@+id/quit_button" 
 		  android:alphabeticShortcut="Q" 
 		  android:enabled="true"></item>
+	<item android:visible="true" 
+		   android:enabled="true" 
+		   android:title="Cheat"
+		   android:id="@+id/cheat_button">
+		   <menu>
+		   <item android:visible="true" 
+		   		 android:title="Teleport" 
+		   		 android:id="@+id/teleport_map_button" 
+		   		 android:enabled="true"></item>
+		   <item android:checkable="true" 
+		   		 android:visible="true" 
+		   		 android:titleCondensed="Hack" 
+		   		 android:title="HackMover" 
+		   		 android:alphabeticShortcut="H" 
+		   		 android:enabled="true" 
+		   		 android:id="@+id/hack_mover_button" 
+		   		 android:checked="false"></item>
+		   	<item android:title="GodMode" 
+		   		  android:checked="false" 
+		   		  android:visible="true" 
+		   		  android:id="@+id/god_mode_button" 
+		   		  android:enabled="true" 
+		   		  android:checkable="true"></item>
+			<item android:title="WizardMode" 
+				  android:checked="false" 
+				  android:visible="true" 
+				  android:id="@+id/wizard_mode_button" 
+				  android:enabled="true" 
+				  android:checkable="true"></item>
+			<item android:title="InfraVision" 
+				  android:checked="false" 
+				  android:visible="true" 
+				  android:id="@+id/infra_mode_button" 
+				  android:enabled="true" 
+				  android:checkable="true"></item>
+			<item android:title="PickPocket" 
+				  android:checked="false" 
+				  android:visible="true" 
+				  android:id="@+id/pickpocket_button" 
+				  android:enabled="true" 
+				  android:checkable="true"></item>
+			</menu>
+	</item>
 </menu>
