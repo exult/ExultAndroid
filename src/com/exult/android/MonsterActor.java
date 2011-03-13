@@ -1,6 +1,7 @@
 package com.exult.android;
 import com.exult.android.shapeinf.*;
 import java.util.HashSet;
+import java.util.Vector;
 
 public class MonsterActor extends NpcActor {
 	private static HashSet<MonsterActor> inWorld =	// All monsters in the world.
@@ -258,5 +259,138 @@ public class MonsterActor extends NpcActor {
 			return EUtil.rand()%val + EUtil.rand()%val + 1;
 		else
 			return 1;
+	}
+	private static class Slime extends MonsterActor {
+		private Tile pos = new Tile(), pos2 = new Tile();
+		private Tile neighbors[] = new Tile[4];
+		private Vector<GameObject> nearby = new Vector<GameObject>();
+		Slime(String nm, int shapenum, int num , int uc) {
+			super(nm, shapenum, num, uc);
+			for (int i = 0; i < neighbors.length; ++i)
+				neighbors[i] = new Tile();
+		}				// Step onto an (adjacent) tile.
+		@Override 
+		public boolean step(Tile t, int frame, boolean force) {
+			// Save old pos.
+			getTile(pos);
+			boolean ret = super.step(t, -1, force);
+							// Update surrounding frames (& this).
+			getTile(pos2);
+			updateFrames(pos, pos2);
+			// Place blood in old spot.
+			if (!pos2.equals(pos) && EUtil.rand()%9 == 0 &&
+			    gmap.findNearby(nearby, pos, 912, 1, 0) == 0) {
+							// Frames 4-11 are green.
+				GameObject b = IregGameObject.create(912, 4 + EUtil.rand()%8);
+				b.setFlag(GameObject.is_temporary);
+				b.move(pos);
+			}
+			return ret;
+		}
+		// Remove/delete this object.
+		@Override 
+		public void removeThis() {
+			getTile(pos);
+			super.removeThis();
+							// Update surrounding slimes.
+			updateFrames(pos, null);
+		}
+		// Move to new abs. location.
+		@Override 
+		public void move(int newtx, int newty, int newlift, int newmap) {
+			Tile from = pos;
+			getTile(pos);	// Save old location.
+			if (isPosInvalid())
+				from = null;
+			super.move(newtx, newty, newlift, newmap);
+			getTile(pos2);
+			updateFrames(from, pos2);
+		}
+		@Override 
+		public void layDown(boolean die) {
+			removeThis();			// Remove.
+			setInvalid();
+		}
+		/*
+		 *	Find whether a slime is a neighbor of a given spot.
+		 *
+		 *	Output:	Direction (0-3 for N,E,S,W), or -1 if not found.
+		 */
+		private final int findNeighbor
+			(
+			) {
+			getTile(pos);
+			for (int dir = 0; dir < 4; dir++)
+				if (pos.equals(neighbors[dir]))
+					return dir;
+			return -1;			// Not found.
+		}
+		/*
+		 *	Get the tiles where slimes adjacent to one in a given position should
+		 *	be found.
+		 */
+		private static void getNeighbors
+			(
+			Tile pos,			// Position to look around.
+			Tile neighbors[]		// N,E,S,W tiles returned.
+			) {
+							// Offsets to neighbors 2 tiles away.
+			final int offsets[] = {0,-2, 2,0, 0,2, -2,0};
+			for (int dir = 0; dir < 4; dir++)
+				neighbors[dir].set(pos.tx + offsets[2*dir], pos.ty + offsets[2*dir + 1], pos.tz);
+		}
+		/*
+		 *	Update the frame of a slime and its neighbors after it has been moved.
+		 *	The assumption is that slimes are 2x2 tiles, and that framenum/2 is
+		 *	based on whether there are adjoining slimes to the N, W, S, or E, with
+		 *	bit 0 being random.
+		 */
+		void updateFrames
+			(
+			Tile src,			// May be null.
+			Tile dest			// May be null.  If src & dest are
+							//   both valid, we assume they're at
+							//   most 2 tiles apart.
+			) {
+			int dir;			// Get direction of neighbor.
+			// Get nearby slimes.
+			if (src != null)
+				if (dest != null)	// Assume within 2 tiles.
+					gmap.findNearby(nearby, dest, 529, 4, 8);
+				else
+					gmap.findNearby(nearby, src, 529, 2, 8);
+			else				// Assume they're both not invalid.
+				gmap.findNearby(nearby, dest, 529, 2, 8);
+			if (src != null) {		// Update neighbors we moved from.
+				getNeighbors(src, neighbors);
+				for (GameObject slime : nearby) {
+					if (slime != this &&  (dir = findNeighbor()) >= 0) {
+						int ndir = (dir+2)%4;
+							// Turn off bit (1<<ndir)*2, and set
+							//   bit 0 randomly.
+						slime.changeFrame((slime.getFrameNum()&
+							~(((1<<ndir)*2)|1)) |(EUtil.rand()%2));
+					}
+				}
+			}
+			if (dest.tx != -1) {		// Update neighbors we moved to.
+				int frnum = 0;		// Figure our new frame too.
+				getNeighbors(dest, neighbors);
+				for (GameObject slime : nearby) {
+					if (slime != this && 
+					    (dir = findNeighbor()) >= 0) {
+							// In a neighboring spot?
+						frnum |= (1<<dir)*2;
+						int ndir = (dir+2)%4;
+							// Turn on bit (1<<ndir)*2, and set
+							//   bit 0 randomly.
+						slime.changeFrame((slime.getFrameNum()&~1)|
+								((1<<ndir)*2)|(EUtil.rand()%2));
+						}
+					}
+				changeFrame(frnum|(EUtil.rand()%2));
+				}
+			}
+
 	}
 }
