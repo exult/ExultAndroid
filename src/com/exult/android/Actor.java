@@ -2359,6 +2359,20 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public int getSexedColouredShape() { 
 		return shapeSave!=-1?shapeSave:getShapeNum(); 
 	}	
+	/*
+	 *	Causes earthquake on step if the actor flag is set.
+	 *	@return: True if caused quake on walk, false otherwise.
+	 */
+	public final boolean quakeOnWalk() {
+		if (getInfo().quakeOnWalk()) {
+			qsteps = (qsteps + 1)%5;
+			if (qsteps == 0)		// Time to roll?
+				tqueue.add(TimeQueue.ticks + 1,
+						new EffectsManager.Earthquake(2), 0L);
+			return true;
+		}
+		return false;
+	}
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
 			return false;

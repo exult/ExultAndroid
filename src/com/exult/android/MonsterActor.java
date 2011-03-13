@@ -111,7 +111,7 @@ public class MonsterActor extends NpcActor {
 			dormant = true;
 			return false;
 		}
-		// ++++++FINISH quake_on_walk();
+		quakeOnWalk();
 		return true;			// Add back to queue for next time.
 	}
 	/*
