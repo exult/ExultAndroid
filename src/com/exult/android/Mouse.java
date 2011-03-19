@@ -105,6 +105,12 @@ public final class Mouse extends GameSingletons {
 		pointers = new VgaFile.ShapeFile(EFile.POINTERS);
 		init();
 	}
+	public int getX() {
+		return mousex;
+	}
+	public int getY() {
+		return mousey;
+	}
 	void show() { // Paint it.
 		if (!onscreen){
 			onscreen = true;

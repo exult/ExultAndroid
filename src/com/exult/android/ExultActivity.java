@@ -369,11 +369,13 @@ public class ExultActivity extends Activity {
     			int x = (int)gwin.getWin().screenToGameX(sx), 
     				y = (int)gwin.getWin().screenToGameY(sy);
     			Gump.Modal modal = GameSingletons.gumpman.getModal();
+    			Mouse mouse = GameSingletons.mouse;
     			boolean canAct = gwin.mainActorCanAct();
     			// int state = event.getMetaState();
     			switch (event.getAction()) {
     			case MotionEvent.ACTION_DOWN:
-    				GameSingletons.mouse.move(x, y);
+    				if (!targeting)
+    					mouse.move(x, y);
     				if (modal != null && clickPoint == null) {
     					modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
     					return true;
@@ -409,7 +411,7 @@ public class ExultActivity extends Activity {
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
     				if (!targeting)
-    					GameSingletons.mouse.hide();
+    					mouse.hide();
     				gwin.stopActor();
     				avatarMotion = null;
     				movingAvatar = false;
@@ -417,7 +419,7 @@ public class ExultActivity extends Activity {
     					if (targeting ||
     					   (leftDownX - 1 <= x && x <= leftDownX + 1 &&
     						leftDownY - 1 <= y && y <= leftDownY + 1)) {
-    						clickPoint.set(x, y);
+    						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
     					}
     					return true;
@@ -453,7 +455,8 @@ public class ExultActivity extends Activity {
     				dragging = dragged = false;
     				return true;
     			case MotionEvent.ACTION_MOVE:
-    				GameSingletons.mouse.move(x, y);
+    				if (!targeting)
+    					mouse.move(x, y);
     				Mouse.mouseUpdate = true;
     				if (gwin.wizardEye) {
     					gwin.shiftWizardEye(x, y);
@@ -474,11 +477,15 @@ public class ExultActivity extends Activity {
     					dragged = GameSingletons.drag.moved(x, y);
     				} else if (targeting) {
     					GameObject obj;
-    					Gump gump = GameSingletons.gumpman.findGump(x, y);
+    					// Move the mouse to follow the touch.
+    					int deltax = x - leftDownX, deltay = y - leftDownY;
+    					int mx = mouse.getX() + deltax, my = mouse.getY() + deltay;
+    					mouse.move(mx, my);
+    					Gump gump = GameSingletons.gumpman.findGump(mx, my);
     					if (gump != null)
-    						obj = gump.findObject(x, y);
+    						obj = gump.findObject(mx, my);
     					else
-    						obj = gwin.findObject(x, y);
+    						obj = gwin.findObject(mx, my);
     					if (obj != GameWindow.targetObj) {
     						if (GameWindow.targetObj != null)
     							gwin.addDirty(GameWindow.targetObj);
@@ -486,6 +493,7 @@ public class ExultActivity extends Activity {
     							gwin.addDirty(obj);
     						GameWindow.targetObj = obj;
     					}
+    					leftDownX = x; leftDownY = y;
     				}
     				return true;
     			case MotionEvent.ACTION_CANCEL:
