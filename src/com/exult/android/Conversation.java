@@ -9,6 +9,7 @@ public final class Conversation extends GameSingletons {
 	private int lastFaceShown;		// Index of last npc face shown.
 	private Rectangle avatarFace;		// Area take by Avatar in conversation.
 	private Rectangle convChoices[];	// Choices during a conversation.
+	private int highlighted = -1;		// The choice currently highlighted.
 	private Point clicked;
 	private String userChoice;
 	private Vector<String> answers;

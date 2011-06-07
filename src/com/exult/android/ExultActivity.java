@@ -24,6 +24,7 @@ import java.lang.InterruptedException;
 
 public class ExultActivity extends Activity {
 	private static Point clickPoint;	// Non-null if getClick() is active.
+	private static ClickTracker clickTrack;
 	private static final Semaphore clickWait = new Semaphore(1, true);
 	private static boolean targeting;
 	private static ExultActivity instance;
@@ -90,7 +91,10 @@ public class ExultActivity extends Activity {
     public static void fatal(String msg) {
     	instance.runOnUiThread(new MessageDisplayer(msg, false, true));
     }
-    public static GameObject waitForClick(Point p, Boolean target) {
+    public static abstract class ClickTracker {
+    	public abstract void onMotion(int x, int y);
+    }
+    public static GameObject waitForClick(Point p, Boolean target, ClickTracker track) {
     	p.x = -1;
     	
     	GameWindow.targetObj = null;
@@ -100,12 +104,15 @@ public class ExultActivity extends Activity {
     	targeting = target;
     	GameSingletons.mouse.setShape(Mouse.greenselect);
     	Point save = clickPoint;	// Don't expect this to happen.
+    	ClickTracker trackSave = clickTrack;
     	clickPoint = p;
+    	clickTrack = track;
     	// Wait for the click.
     	try { clickWait.acquire(); } catch (InterruptedException e) {
     		p.x = -1;
     	}
     	clickPoint = save;
+    	clickTrack = trackSave;
     	clickWait.release();
     	GameObject ret = GameWindow.targetObj;
     	if (ret != null)
@@ -115,11 +122,14 @@ public class ExultActivity extends Activity {
     	return ret;
     }
     public static void getClick(Point p) {
-    	waitForClick(p, false);
+    	waitForClick(p, false, null);
+    }
+    public static void getClick(Point p, ClickTracker t) {
+    	waitForClick(p, false, t);
     }
     public static GameObject getTarget(Point p) {
     	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
-    	return waitForClick(p, true);
+    	return waitForClick(p, true, null);
     }
     public static void setInCombat() {
     	instance.runOnUiThread(new Runnable() {
@@ -405,7 +415,8 @@ public class ExultActivity extends Activity {
     							avatarStartX = movePoint.x; avatarStartY = movePoint.y;
     						}
     					}
-    				}
+    				} else if (clickPoint != null && clickTrack != null) 
+    					clickTrack.onMotion(x, y);
     				leftDownX = x; leftDownY = y;
     				return true;
     			case MotionEvent.ACTION_UP:
@@ -416,7 +427,7 @@ public class ExultActivity extends Activity {
     				avatarMotion = null;
     				movingAvatar = false;
     				if (clickPoint != null) {
-    					if (targeting ||
+    					if (targeting || clickTrack != null ||
     					   (leftDownX - 1 <= x && x <= leftDownX + 1 &&
     						leftDownY - 1 <= y && y <= leftDownY + 1)) {
     						clickPoint.set(mouse.getX(), mouse.getY());
@@ -494,7 +505,8 @@ public class ExultActivity extends Activity {
     						GameWindow.targetObj = obj;
     					}
     					leftDownX = x; leftDownY = y;
-    				}
+    				} else if (clickTrack != null)
+    					clickTrack.onMotion(x, y);
     				return true;
     			case MotionEvent.ACTION_CANCEL:
     				return true;

@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.TreeMap;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.lang.InterruptedException;
 import android.graphics.Point;
@@ -1285,10 +1286,17 @@ public class UsecodeMachine extends GameSingletons {
 		conv.showAvatarChoices();
 					// Get click.
 		int choice_num;
+		ExultActivity.ClickTracker track = new ExultActivity.ClickTracker() {
+			public void onMotion(int x, int y) {
+				int num = conv.conversationChoice(x, y);
+				//if (num >= 0) System.out.println("track: num = " + num);
+			}
+		};
 		do {
 			//UNUSED char chr;		// Allow '1', '2', etc.
 			gwin.paint();		// Paint scenery.
-			ExultActivity.getClick(clickPoint);
+			ExultActivity.getClick(clickPoint, track);
+			//System.out.println("clickPoint in get_user_choice_num: x = " + clickPoint.x + ", y = " + clickPoint.y);
 			/*  +++++++++
 			int result=Get_click(x, y, Mouse::hand, &chr, false, conv, true);
 			if (result<=0) {	// ESC pressed, select 'bye' if poss.
@@ -1752,7 +1760,7 @@ public class UsecodeMachine extends GameSingletons {
 			EUtil.Write2(out, partyman.getMember(i));
 						// Timers.
 		EUtil.Write4(out, 0xffffffff);
-		for (TreeMap.Entry<Integer,Integer> entry : timers.entrySet()) {
+		for (Map.Entry<Integer,Integer> entry : timers.entrySet()) {
 			  Integer key = entry.getKey();
 			  Integer value = entry.getValue();
 			  if (value != 0) {	// Don't write unused timers.
