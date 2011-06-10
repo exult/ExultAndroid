@@ -27,6 +27,7 @@ public final class Conversation extends GameSingletons {
 	}
 	public final void setUserChoice(String c) {
 		userChoice = c;
+		highlighted = -1;
 	}
 	public final int getNumAnswers() {
 		return answers.size();
@@ -298,8 +299,7 @@ public final class Conversation extends GameSingletons {
 	/*
 	 *	Show the Avatar's conversation choices (and face).
 	 */
-	public void showAvatarChoices(String choices[]) {
-		int numChoices = choices.length;
+	public void showAvatarChoices() {
 		boolean SI = game.isSI();
 		// Actor mainActor = gwin.getMainActor();
 		int maxFaces = faceInfo.length;
@@ -362,10 +362,12 @@ public final class Conversation extends GameSingletons {
 		tbox.intersect(sbox);
 						// Draw portrait.
 		faceSid.paintShape(mbox.x + face.getXLeft(), mbox.y + face.getYAbove());
-		// Set up new list of choices.
+		// Set up new list of choices.	
+		synchronized(this) {
+		int numChoices = answers.size();
 		convChoices = new Rectangle[numChoices];
 		for (int i = 0; i < numChoices; i++) {
-			String text = (char)(127) +  choices[i];	// 127 is a circle.
+			String text = (char)(127) +  answers.elementAt(i);	// 127 is a circle.
 			int width = fonts.getTextWidth(0, text);
 			if (x > 0 && x + width >= tbox.w) {		// Start a new line.
 				x = 0;
@@ -376,50 +378,45 @@ public final class Conversation extends GameSingletons {
 						width, height);
 			convChoices[i].intersect(sbox);
 			avatarFace.add(convChoices[i]);
+			if (i == highlighted)
+				gwin.getWin().fill8(ShapeID.getSpecialPixel(ShapeID.HIT_PIXEL), 
+						convChoices[i].w, convChoices[i].h, convChoices[i].x, convChoices[i].y);
 			fonts.paintTextBox(gwin.getWin(), 0, text, tbox.x + x, tbox.y + y,
 				width + spaceWidth, height, 0, false, false);
 			x += width + spaceWidth;
-			}
+		}
+		} // synchronized
 		avatarFace.enlarge((3*EConst.c_tilesize)/4);		// Encloses entire area.
 		avatarFace.intersect(sbox);
 		clearTextPending();
 		gwin.setPainted();
 	}
-
-	public void showAvatarChoices() {
-		String result[];
-		int i;	// Blame MSVC
-
-		result=new String[answers.size()];
-		for (i=0;i<answers.size();i++) {			
-			result[i]=new String(answers.elementAt(i));
-		}
-		showAvatarChoices(result);
-	}
-
-	public void clearAvatarChoices()
-	{
+	public void clearAvatarChoices() {
 		gwin.addDirty(avatarFace);
 		avatarFace.w = 0;
 	}
-
-
+	public void setHighlighted(int n) {
+		if (n != highlighted) {
+			highlighted = n;
+			gwin.addDirty(avatarFace);
+		}
+	}
 	/*
 	 *	User clicked during a conversation.
 	 *
 	 *	Output:	Index (0-n) of choice, or -1 if not on a choice.
 	 */
-
-	int conversationChoice(int x, int y)
-	{
-		int i, cnt = convChoices.length;
-		for (i = 0; i < cnt &&
+	public int conversationChoice(int x, int y) {
+		synchronized(this) {
+			int i, cnt = convChoices.length;
+			for (i = 0; i < cnt &&
 				!convChoices[i].hasPoint(x, y); i++)
-			;
-		if (i < cnt)	// Found one?
+				;
+			if (i < cnt)	// Found one?
 			return (i);
 		else
 			return (-1);
+		}
 	}
 
 	/*

@@ -1289,6 +1289,7 @@ public class UsecodeMachine extends GameSingletons {
 		ExultActivity.ClickTracker track = new ExultActivity.ClickTracker() {
 			public void onMotion(int x, int y) {
 				int num = conv.conversationChoice(x, y);
+				conv.setHighlighted(num);
 				//if (num >= 0) System.out.println("track: num = " + num);
 			}
 		};
