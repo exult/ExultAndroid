@@ -41,6 +41,11 @@ public final class ImageBuf {
 		pixels = new byte[w*h];
 		pal = new int[256];
 	}
+	public void setSize(int w, int h) {
+		width = w; height = h;
+		rgba = new int[w*h];
+		pixels = new byte[w*h];
+	}
 	public void setToScale(int w, int h) {
 		scalew = w; scaleh = h;
 		toScale = Bitmap.createBitmap(width, height, Config.ARGB_8888);

@@ -353,7 +353,7 @@ public class ExultActivity extends Activity {
     		
     		gwin.getWin().setToScale(width, height);
     		*/
-    		gwin = new GameWindow(320, 200);	// Standard U7 dims.
+    		gwin = new GameWindow(EConst.c_game_w, EConst.c_game_h);	// Standard U7 dims.
     		gwin.initFiles(false);
     		gwin.readGwin();
     		gwin.setupGame();
@@ -635,8 +635,15 @@ public class ExultActivity extends Activity {
 		        		if (!event.isAltPressed()) {
 		        			Shortcuts.stats();
 		        			return true;
-		        		} else
+		        		} else {
 		        			return false;
+		        		}
+		        	case KeyEvent.KEYCODE_EQUALS:
+		        		if (event.isShiftPressed()) { // +
+		        			Shortcuts.zoom();
+		        			return true;
+		        		} else
+		        			return true;
 		        	}
 		        }
     			return false;		// Didn't handle it here.

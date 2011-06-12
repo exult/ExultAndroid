@@ -752,7 +752,6 @@ public class GameWindow extends GameSingletons {
 	/*
 	 *	Set actor to center view around.
 	 */
-
 	public void setCameraActor(Actor a) {
 		if (a == mainActor &&		// Setting back to main actor?
 		    cameraActor != null &&		// Change in chunk?
@@ -761,8 +760,11 @@ public class GameWindow extends GameSingletons {
 		    				// Cache out temp. objects.
 			//++++FINISH emulateCache(cameraActor.getChunk(), mainActor.getChunk());
 		cameraActor = a;
-		setScrolls(a.getTileX(), a.getTileY());
-		// Set scrolling around position, and read in map there.
+		setCenter();
+	}
+	//	Re-center around camera actor.
+	public void setCenter() {
+		centerView(cameraActor.getTileX(), cameraActor.getTileY());
 		setAllDirty();
 	}
 	/*

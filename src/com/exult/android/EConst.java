@@ -1,10 +1,11 @@
 package com.exult.android;
 
 public class EConst {
+	public static final int c_game_w = 320, c_game_h = 200;		// Standard game area.
 	public static final int c_basetilesize = 8;		// A tile (shape) is 8x8 pixels.
 	public static final int c_tilesize = 8;	// A tile (shape) is 8x8 pixels.
 	public static final int c_num_tile_bytes = c_tilesize * c_tilesize;	// Total pixels per tile.
-	public static final int c_screen_tile_size = 320/c_basetilesize;	// Number of tiles in a 'screen'.
+	public static final int c_screen_tile_size = c_game_w/c_basetilesize;	// Number of tiles in a 'screen'.
 	public static final int c_tiles_per_chunk = 16;	// A chunk is 16x16 tiles.
 	public static final int c_chunksize = 16 * 8;		// A chunk has 16 8x8 shapes.
 	public static final int c_num_schunks = 12;
