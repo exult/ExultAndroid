@@ -1121,7 +1121,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						// Make new loc. visible, test eggs.
 				if (map != -1)
 					gwin.setMap(map);
-				gwin.centerView(tile.tx, tile.ty);
+				gwin.centerView(tile.tx, tile.ty, tile.tz);
 				MapChunk.tryAllEggs(ava, tile.tx, 
 					tile.ty, tile.tz, oldX, oldY);
 			// Close?  Add to 'nearby' list.
@@ -1353,7 +1353,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		gwin.setInDungeon(save_dungeon);
 			// BG orrery viewer needs this because it also calls UI_view_tile:
 		Actor a = gwin.getMainActor();
-		gwin.centerView(a.getTileX(), a.getTileY());
+		gwin.centerView(a.getTileX(), a.getTileY(), a.getLift());
 		if ((newmap != -1) && (newmap != oldmap))
 			gwin.setMap(oldmap);
 		gwin.paint();		// Repaint normal area.
@@ -1370,7 +1370,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			gwin.wizardEye = false;
 			synchronized (gwin.getWin()) { 
 				Actor a = gwin.getMainActor();
-				gwin.centerView(a.getTileX(), a.getTileY());
+				gwin.centerView(a.getTileX(), a.getTileY(), a.getLift());
 			}
 		}
 	}

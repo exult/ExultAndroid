@@ -164,6 +164,10 @@ public class ExultActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { Shortcuts.feed();}
         });
+        button = (Button) findViewById(R.id.zoom_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { Shortcuts.zoom();}
+        });
     }
     public static void quit() {
     	instance.finish();

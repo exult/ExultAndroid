@@ -624,9 +624,10 @@ public class GameWindow extends GameSingletons {
 	}
 	public final void centerView(Tile t) {
 		// OFFSET HERE
+		int zoff = t.tz/2;
 		int tw = getWidth()/EConst.c_tilesize, 
 			th = (getHeight())/EConst.c_tilesize;
-		setScrolls(EConst.DECR_TILE(t.tx, tw/2), EConst.DECR_TILE(t.ty, th/2));
+		setScrolls(EConst.DECR_TILE(t.tx, tw/2 + zoff), EConst.DECR_TILE(t.ty, th/2 + zoff));
 		setAllDirty();
 	}
 	public boolean scrollIfNeeded(Tile t) {
@@ -656,9 +657,9 @@ public class GameWindow extends GameSingletons {
 			return scrollIfNeeded(t);
 	}
 	//	Center around given tile pos.
-	public void centerView(int tx, int ty) {
+	public void centerView(int tx, int ty, int tz) {
 		int tw = win.getWidth()/EConst.c_tilesize, th = (win.getHeight())/EConst.c_tilesize;
-		setScrolls(EConst.DECR_TILE(tx, tw/2), EConst.DECR_TILE(ty, th/2));
+		setScrolls(EConst.DECR_TILE(tx, tw/2 + tz/2), EConst.DECR_TILE(ty, th/2 + tz/2));
 		setAllDirty();
 	}
 	/*
@@ -764,7 +765,7 @@ public class GameWindow extends GameSingletons {
 	}
 	//	Re-center around camera actor.
 	public void setCenter() {
-		centerView(cameraActor.getTileX(), cameraActor.getTileY());
+		centerView(cameraActor.getTileX(), cameraActor.getTileY(), cameraActor.getLift());
 		setAllDirty();
 	}
 	/*
@@ -1433,7 +1434,7 @@ public class GameWindow extends GameSingletons {
 		if (bodies != null)
 			bodies.setSize(numNpcs);
 		int i;
-		centerView(mainActor.getTileX(), mainActor.getTileY());
+		centerView(mainActor.getTileX(), mainActor.getTileY(), mainActor.getLift());
 		for (i = 1; i < numNpcs; i++) {	// Create the rest.
 			Actor actor = new NpcActor("", 0);
 			npcs.set(i, actor);
@@ -1475,7 +1476,7 @@ public class GameWindow extends GameSingletons {
 			setMovingBarge(b);
 		}
 		readSchedules();		// Now get their schedules.
-		centerView(mainActor.getTileX(), mainActor.getTileY());
+		centerView(mainActor.getTileX(), mainActor.getTileY(), mainActor.getLift());
 	}
 	/*
 	 *	Read in offsets.  When done, file is set to start of script names (if

@@ -80,15 +80,23 @@ public final class Shortcuts extends GameSingletons {
     }
     private static int zoomCount = 0;
     public static void zoom() {
-    	ImageBuf win = gwin.getWin();
-    	if (zoomCount == 2) {	// Cycle back to full size.
-    		zoomCount = 0;
-    		win.setSize(EConst.c_game_w, EConst.c_game_h);
-    	} else {
-    		++zoomCount;
-    		win.setSize(win.getWidth()/2, win.getHeight()/2);
+    	synchronized(win) {
+    		if (zoomCount == 2) {	// Cycle back to full size.
+    			zoomCount = 0;
+    			win.setSize(EConst.c_game_w, EConst.c_game_h);
+    		} else {
+    			++zoomCount;
+    			win.setSize(win.getWidth()/2, win.getHeight()/2);
+    		}
     	}
     	gwin.setCenter();
+    }
+    public static void clearZoom() {
+    	if (zoomCount > 0) {
+    		zoomCount = 0;
+    		win.setSize(EConst.c_game_w, EConst.c_game_h);
+    		gwin.setCenter();
+    	}
     }
     public static void save() {
     	new NewFileGump();
