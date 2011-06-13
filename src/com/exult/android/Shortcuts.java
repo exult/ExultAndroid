@@ -93,6 +93,7 @@ public final class Shortcuts extends GameSingletons {
     }
     public static void clearZoom() {
     	if (zoomCount > 0) {
+    		System.out.println("clearZoom");
     		zoomCount = 0;
     		win.setSize(EConst.c_game_w, EConst.c_game_h);
     		gwin.setCenter();
