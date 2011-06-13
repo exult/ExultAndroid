@@ -45,6 +45,7 @@ public final class ImageBuf {
 		width = w; height = h;
 		rgba = new int[w*h];
 		pixels = new byte[w*h];
+		System.out.println("ImageBuf::setSize: " + w + ", " + h);
 	}
 	public void setToScale(int w, int h) {
 		scalew = w; scaleh = h;
@@ -212,7 +213,8 @@ public final class ImageBuf {
 	public void show(Canvas c) {
 		int cnt = width*height;
 		for (int i = 0; i < cnt; ++i) {
-			rgba[i] = pal[(int)pixels[i]&0xff];
+			int ind = (int)pixels[i]&0xff;
+			rgba[i] = pal[ind];
 		}
 		if (toScale == null)
 			c.drawBitmap(rgba, 0, width, 0, 0, width, height, false, null);

@@ -137,6 +137,9 @@ public class UsecodeIntrinsics extends GameSingletons {
 			gumpman.closeAllGumps(false);
 			gwin.setAllDirty();
 			ucmachine.initConversation();	// jsf-Added 4/20/01 for SI-Lydia.
+		}	
+		synchronized(gwin.getWin()) {
+			Shortcuts.clearZoom();
 		}
 		gwin.paintDirty();
 		conv.showFace(shape, frame, slot);

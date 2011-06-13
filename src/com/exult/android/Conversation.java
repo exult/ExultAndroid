@@ -152,7 +152,6 @@ public final class Conversation extends GameSingletons {
 		Palette pal = gwin.getPal();	// Watch for weirdness (lightning).
 		if (pal.getBrightness() >= 300)
 			pal.set(-1, 100, null);
-		Shortcuts.clearZoom();
 						// Get screen dims.
 		int screenw = gwin.getWidth(), screenh = gwin.getHeight();
 		NpcFaceInfo info = null;
