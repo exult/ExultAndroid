@@ -314,8 +314,9 @@ public class ExultActivity extends Activity {
                 		gwin.getWin().blit(canvas);
                 	}
                 }
-    		} else
+    		} else synchronized (gwin.getWin()) {
     			gwin.getWin().blit(canvas);
+    		}
     	}
     	// For direct instantiation.
     	public MySurfaceView(Context ctx){
