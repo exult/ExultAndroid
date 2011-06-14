@@ -483,12 +483,16 @@ public class ExultActivity extends Activity {
     						modal.mouseDrag(x, y);
     						return true;
     					}
-    					GameSingletons.mouse.setSpeedCursor(avatarStartX,
-    							avatarStartY);
-    					movingAvatar = true;
-    					avatarMotion.setLocation(sx, sy);
-    					gwin.startActor(avatarStartX, avatarStartY, x, y, 
+    					if (movingAvatar || x < leftDownX - 2 || x > leftDownX + 2 ||
+    										y < leftDownY - 2 || y > leftDownY + 2) {
+    						GameSingletons.mouse.setSpeedCursor(avatarStartX, avatarStartY);
+    						System.out.printf("Mouse moved from %1$d,%2$d to %3$d, %4$d\n",
+    								leftDownX, leftDownY, x, y);
+    						movingAvatar = true;
+    						avatarMotion.setLocation(sx, sy);
+    						gwin.startActor(avatarStartX, avatarStartY, x, y, 
     							GameSingletons.mouse.avatarSpeed);
+    					}
     				} else if (dragging) {
     					dragged = GameSingletons.drag.moved(x, y);
     				} else if (targeting) {
@@ -659,8 +663,10 @@ public class ExultActivity extends Activity {
     	}
     	@Override
     	public void surfaceCreated(SurfaceHolder holder){
+    		if (thread == null)
+    			thread = new MySurfaceThread(getHolder(), this);
+   			thread.start();
     		thread.setRunning(true);
-    		thread.start();
     	}
     	@Override
     	public void surfaceDestroyed(SurfaceHolder holder){
@@ -672,6 +678,7 @@ public class ExultActivity extends Activity {
     				retry = false;
     			} catch (InterruptedException e){}
     		}
+    		thread = null;
     	}
     } // End of MySurfaceView
    
