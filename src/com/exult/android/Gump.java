@@ -367,7 +367,9 @@ public abstract class Gump extends GameSingletons {
 				if (obj == GameWindow.targetObj)
 					obj.paintOutline(paintBox.x + obj.getTx(),
 							paintBox.y + obj.getTy(), ShapeID.HIT_PIXEL);
-				//+++++++++++DO THE SAME for onOBJ and POISON_PIXEL.
+				else if (obj == GameWindow.onObj)
+					obj.paintOutline(paintBox.x + obj.getTx(),
+							paintBox.y + obj.getTy(), ShapeID.POISON_PIXEL);
 			}
 		}
 	}
