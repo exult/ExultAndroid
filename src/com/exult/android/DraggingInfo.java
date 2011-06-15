@@ -266,6 +266,7 @@ public final class DraggingInfo extends GameSingletons {
 		gump = null;
 		button = null;
 		rect.w = -1;
+		GameWindow.onObj = null;
 	}
 	public boolean init(int x, int y) {		
 		mousex = x; mousey = y;
@@ -338,6 +339,20 @@ public final class DraggingInfo extends GameSingletons {
 			gump.setPos(paint.x, paint.y);
 		gwin.clipToWin(rect);
 		gwin.addDirty(rect);
+		// See if we're over something.
+		Gump onGump = gumpman.findGump(x, y);
+		GameObject onObj = null;
+		if (onGump != null)
+			onObj = onGump.findObject(x, y);
+		else
+			onObj = gwin.findObject(x, y);
+		if (onObj != GameWindow.onObj) {
+			if (GameWindow.onObj != null)
+				gwin.addDirty(GameWindow.onObj);
+			if (onObj != null)
+				gwin.addDirty(onObj);
+			GameWindow.onObj = onObj;
+		}
 		return true;
 	}
 	public void paint() {			// Paint object being dragged.
@@ -386,6 +401,7 @@ public final class DraggingInfo extends GameSingletons {
 			lastDropped = obj;
 		obj = null;			// Clear so we don't paint them.
 		gump = null;
+		GameWindow.onObj = null;
 		gwin.paint();
 		return ret;
 	}

@@ -189,6 +189,8 @@ public class GameRender {
 		*/
 		if (GameWindow.targetObj != null)
 			GameWindow.targetObj.paintOutline(ShapeID.HIT_PIXEL);
+		if (GameWindow.onObj != null)
+			GameWindow.onObj.paintOutline(ShapeID.POISON_PIXEL);
 		return light_sources;
 	}
 	/*
