@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout 
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent" 
+	android:layout_weight="1"
+	xmlns:android="http://schemas.android.com/apk/res/android">	
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/main_layout"
     android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -66,4 +72,69 @@
   		android:layout_weight="1"
   		android:fadingEdge="vertical" />
   	</FrameLayout>
-</LinearLayout>
+	</LinearLayout>
+	<FrameLayout
+	android:id="@+id/save_restore"
+	android:visibility="gone"
+	android:layout_width="fill_parent" 
+	android:layout_height="fill_parent" 
+	android:layout_weight="1">
+		<LinearLayout
+    	android:layout_weight="1" 
+    	android:layout_height="fill_parent" 
+    	android:layout_width="fill_parent" android:orientation="horizontal">
+			<LinearLayout
+			android:id="@+id/file_area"
+    		android:layout_weight=".25" 
+    		android:layout_height="fill_parent" 
+    		android:layout_width="fill_parent" android:orientation="vertical">
+    			<ListView
+    			android:id="@+id/sr_files"
+    			android:layout_width="fill_parent"
+    			android:layout_height="100px"
+    			android:layout_weight=".5"
+    			>
+    			</ListView>
+    			<LinearLayout
+    			android:id="@+id/sr_buttons"
+    			android:orientation="horizontal"
+    			android:layout_weight="0" 
+    			android:layout_height="wrap_content" android:layout_width="match_parent" android:gravity="center">
+					<Button android:id="@+id/save_button" 
+        			style="?android:attr/buttonStyleSmall" 
+        			android:layout_height="wrap_content"          			
+        			android:layout_width="0px"       		
+        			android:layout_weight="1"	
+        			android:text="Save"/>
+        			<Button
+    				android:id="@+id/load_button"
+        			android:layout_width="0px"
+        			android:layout_height="wrap_content"
+        			android:layout_weight="1"
+        			style="?android:attr/buttonStyleSmall"
+        			android:text="Load"/>
+        			<Button
+    				android:id="@+id/delete_button"
+        			android:layout_width="0px"
+        			android:layout_height="wrap_content"
+        			android:layout_weight="1"
+        			style="?android:attr/buttonStyleSmall"
+        			android:text="Delete"/>
+        			<Button
+    				android:id="@+id/save_cancel_button"
+        			android:layout_width="0px"
+        			android:layout_height="wrap_content"
+        			android:layout_weight="1"
+        			style="?android:attr/buttonStyleSmall"
+        			android:text="Cancel"/>
+        		</LinearLayout>
+        	</LinearLayout>
+        	<LinearLayout
+			android:id="@+id/right_area"
+    		android:layout_weight=".75" 
+    		android:layout_height="fill_parent" 
+    		android:layout_width="fill_parent" android:orientation="vertical">
+    		</LinearLayout>
+        </LinearLayout>
+	</FrameLayout>
+</FrameLayout>
