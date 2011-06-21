@@ -262,6 +262,7 @@ public class ExultActivity extends Activity {
     	private boolean dragging = false, dragged = false;
     	private boolean movingAvatar = false;
     	private int avatarStartX, avatarStartY;
+    	private float oldZoomDist = -1, zoomX = -1, zoomY = -1;
     	private Point movePoint = new Point();	// A temp.
     	@Override
     	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -387,7 +388,7 @@ public class ExultActivity extends Activity {
     			Mouse mouse = GameSingletons.mouse;
     			boolean canAct = gwin.mainActorCanAct();
     			// int state = event.getMetaState();
-    			switch (event.getAction()) {
+    			switch (event.getAction() & MotionEvent.ACTION_MASK) {
     			case MotionEvent.ACTION_DOWN:
     				if (!targeting)
     					mouse.move(x, y);
@@ -426,6 +427,7 @@ public class ExultActivity extends Activity {
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
+    				zoomX = -1;
     				if (!targeting)
     					mouse.hide();
     				gwin.stopActor();
@@ -471,6 +473,15 @@ public class ExultActivity extends Activity {
     				dragging = dragged = false;
     				return true;
     			case MotionEvent.ACTION_MOVE:
+    				if (zoomX >= 0) {
+    					float newDist = spacing(event);
+    					if (newDist > 10f) {
+    				         float scale = newDist / oldZoomDist;
+    				         //System.out.printf("Zoom: new scale is %1$f, center is (%2$f,%3$f)\n", scale, zoomX, zoomY);
+    				         // ++++ Zoom around zoomX, zoomY  matrix.postScale(scale, scale, mid.x, mid.y);
+    					}
+    					return true;
+    				}
     				if (!targeting)
     					mouse.move(x, y);
     				Mouse.mouseUpdate = true;
@@ -517,6 +528,17 @@ public class ExultActivity extends Activity {
     				} else if (clickTrack != null)
     					clickTrack.onMotion(x, y);
     				return true;
+    			case MotionEvent.ACTION_POINTER_DOWN:
+    				oldZoomDist = spacing(event);
+    				System.out.printf("oldZoomDist = %1$f\n", oldZoomDist);
+    				if (oldZoomDist > 10f) {
+    					zoomX = (event.getX(0) + event.getX(1))/2;
+    					zoomY = (event.getY(0) + event.getY(1))/2;
+    				}
+    				return true;    			
+    			case MotionEvent.ACTION_POINTER_UP:
+    				zoomX = -1;
+    				return true;
     			case MotionEvent.ACTION_CANCEL:
     				return true;
     			}
@@ -524,6 +546,11 @@ public class ExultActivity extends Activity {
     		}
     		}
     	};
+    	private float spacing(MotionEvent event) {
+    		float x = event.getX(0) - event.getX(1);
+    		float y = event.getY(0) - event.getY(1);
+    		return (float) Math.sqrt(x * x + y * y);
+    	}
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
     			if (UsecodeMachine.running > 0 || clickPoint != null || 
