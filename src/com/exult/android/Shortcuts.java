@@ -79,24 +79,49 @@ public final class Shortcuts extends GameSingletons {
     	
     }
     private static int zoomCount = 0;
+    private static float zoomFactor = 1.0f;
+    //	Cycle through zooms.
     public static void zoom() {
     	synchronized(win) {
-    		if (zoomCount == 2) {	// Cycle back to full size.
-    			zoomCount = 0;
-    			win.setSize(EConst.c_game_w, EConst.c_game_h);
-    		} else {
-    			++zoomCount;
-    			win.setSize(win.getWidth()/2, win.getHeight()/2);
-    		}
+    		zoomCount = (zoomCount + 1)%4;
+    		win.setSize(EConst.c_game_w/(zoomCount + 1), EConst.c_game_h/(zoomCount + 1));
     	}
     	gwin.setCenter();
     }
+    public static float getZoomFactor() {
+    	return zoomFactor;
+    }
+    //	Zoom to given factor.  Returns true if size changed.
+    public static boolean zoom(float f) {
+    	int oldw = win.getWidth(), oldh = win.getHeight();
+    	if (f <= 1) {
+    		clearZoom();
+    		return true;
+    	} else {
+    		int w = (int) (EConst.c_game_w/f), h = (int) (EConst.c_game_h/f);
+    		if (Math.abs(w - oldw) > 10 || Math.abs(h - oldh) > 10) {
+    			synchronized(win) {
+    				zoomCount = 0;
+    				zoomFactor = f;
+    				mouse.hide();
+    				win.setSize(w, h);
+    				gwin.setCenter();	//++++++++FOR NOW.
+    				return true;
+    			}
+    		} else
+    			return false;
+    	}
+    }
     public static void clearZoom() {
     	if (zoomCount > 0) {
+    		synchronized(win) {
     		System.out.println("clearZoom");
     		zoomCount = 0;
+    		zoomFactor = 1.0f;
+    		mouse.hide();
     		win.setSize(EConst.c_game_w, EConst.c_game_h);
     		gwin.setCenter();
+    		}
     	}
     }
     public static void save() {

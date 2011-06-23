@@ -262,7 +262,7 @@ public class ExultActivity extends Activity {
     	private boolean dragging = false, dragged = false;
     	private boolean movingAvatar = false;
     	private int avatarStartX, avatarStartY;
-    	private float oldZoomDist = -1, zoomX = -1, zoomY = -1;
+    	private float oldZoomDist = -1, zoomX = -1, zoomY = -1, oldZoomFactor;
     	private Point movePoint = new Point();	// A temp.
     	@Override
     	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -478,6 +478,7 @@ public class ExultActivity extends Activity {
     					if (newDist > 10f) {
     				         float scale = newDist / oldZoomDist;
     				         //System.out.printf("Zoom: new scale is %1$f, center is (%2$f,%3$f)\n", scale, zoomX, zoomY);
+    				         Shortcuts.zoom(scale*oldZoomFactor);
     				         // ++++ Zoom around zoomX, zoomY  matrix.postScale(scale, scale, mid.x, mid.y);
     					}
     					return true;
@@ -534,6 +535,7 @@ public class ExultActivity extends Activity {
     				if (oldZoomDist > 10f) {
     					zoomX = (event.getX(0) + event.getX(1))/2;
     					zoomY = (event.getY(0) + event.getY(1))/2;
+    					oldZoomFactor = Shortcuts.getZoomFactor();
     				}
     				return true;    			
     			case MotionEvent.ACTION_POINTER_UP:
