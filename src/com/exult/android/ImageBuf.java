@@ -63,6 +63,12 @@ public final class ImageBuf {
 		System.out.printf("setZoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
 		scaleSrc.set(x, y, x+w-1, y+h-1);
 	}
+	public final int getZoomWidth() {
+		return scaleSrc.right - scaleSrc.left + 1;
+	}
+	public final int getZoomHeight() {
+		return scaleSrc.bottom - scaleSrc.top + 1;
+	}
 	public int getWidth() {
 		return width;
 	}
@@ -71,10 +77,10 @@ public final class ImageBuf {
 	}
 	// Convert from scaled screen to game coords.
 	public final float screenToGameX(float sx) {
-		return scaleSrc.left + (sx * width/scalew);//++++++RIGHT?
+		return scaleSrc.left + (sx * (scaleSrc.right - scaleSrc.left + 1)/scalew);
 	}
 	public final float screenToGameY(float sy) {
-		return scaleSrc.top + (sy * height/scaleh);//++++++RIGHT?
+		return scaleSrc.top + (sy * (scaleSrc.bottom - scaleSrc.top + 1)/scaleh);
 	}
 	public void setClip(int x, int y, int w, int h) {
 		clipx = x; clipy = y; clipw = w; cliph = h;
