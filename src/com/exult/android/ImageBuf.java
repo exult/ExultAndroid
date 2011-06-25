@@ -70,7 +70,7 @@ public final class ImageBuf {
 			y = height - y;
 		if (w < 20 || h < 20)
 			return false;
-		System.out.printf("setZoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
+		//System.out.printf("setZoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
 		scaleSrc.set(x, y, x+w-1, y+h-1);
 		return true;
 	}
@@ -92,10 +92,16 @@ public final class ImageBuf {
 				y = height - zh;
 		}
 		dy = y - scaleSrc.top;
-		System.out.printf("ImageBuf.pan.current: %1$d, %2$d\n", scaleSrc.left, scaleSrc.top);
+		//System.out.printf("ImageBuf.pan.current: %1$d, %2$d\n", scaleSrc.left, scaleSrc.top);
 		scaleSrc.left += dx; scaleSrc.right += dx;
 		scaleSrc.top += dy; scaleSrc.bottom += dy;
-		System.out.printf("ImageBuf.pan: %1$d, %2$d\n", dx, dy);
+		//System.out.printf("ImageBuf.pan: %1$d, %2$d\n", dx, dy);
+	}
+	public final int getZoomX() {
+		return scaleSrc.left;
+	}
+	public final int getZoomY() {
+		return scaleSrc.top;
 	}
 	public final int getZoomWidth() {
 		return scaleSrc.right - scaleSrc.left + 1;

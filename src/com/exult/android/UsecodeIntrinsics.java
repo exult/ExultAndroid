@@ -138,9 +138,6 @@ public class UsecodeIntrinsics extends GameSingletons {
 			gwin.setAllDirty();
 			ucmachine.initConversation();	// jsf-Added 4/20/01 for SI-Lydia.
 		}	
-		synchronized(gwin.getWin()) {
-			Shortcuts.clearZoom();
-		}
 		gwin.paintDirty();
 		conv.showFace(shape, frame, slot);
 		//	user_choice = 0;		// Seems like a good idea.

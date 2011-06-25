@@ -427,12 +427,16 @@ public class ExultActivity extends Activity {
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
-    				zoomX = -1;
+    				
     				if (!targeting)
     					mouse.hide();
     				gwin.stopActor();
     				avatarMotion = null;
     				movingAvatar = false;
+    				if (zoomX >= 0) {
+    					zoomX = -1;
+    					return true;
+    				}
     				if (clickPoint != null) {
     					if (targeting || clickTrack != null ||
     					   (leftDownX - 1 <= x && x <= leftDownX + 1 &&
@@ -470,6 +474,7 @@ public class ExultActivity extends Activity {
     					showItemsX = x; showItemsY = y;
     					showItemsTime = GameTime + 500;
     				}
+    				zoomX = -1;
     				dragging = dragged = false;
     				return true;
     			case MotionEvent.ACTION_MOVE:
@@ -540,7 +545,7 @@ public class ExultActivity extends Activity {
     			case MotionEvent.ACTION_POINTER_DOWN:
     				oldZoomDist = spacing(event);
     				System.out.printf("oldZoomDist = %1$f\n", oldZoomDist);
-    				if (oldZoomDist > 10f) {
+    				if (!dragging && oldZoomDist > 10f) {
     					zoomX = (event.getX(0) + event.getX(1))/2;
     					zoomY = (event.getY(0) + event.getY(1))/2;
     					oldZoomFactor = Shortcuts.getZoomFactor();
@@ -550,7 +555,7 @@ public class ExultActivity extends Activity {
     				}
     				return true;    			
     			case MotionEvent.ACTION_POINTER_UP:
-    				zoomX = -1;
+    				//zoomX = -1;
     				return true;
     			case MotionEvent.ACTION_CANCEL:
     				return true;
