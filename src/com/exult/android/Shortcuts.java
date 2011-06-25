@@ -84,9 +84,14 @@ public final class Shortcuts extends GameSingletons {
     public static void zoom() {
     	synchronized(win) {
     		zoomCount = (zoomCount + 1)%4;
-    		win.setSize(EConst.c_game_w/(zoomCount + 1), EConst.c_game_h/(zoomCount + 1));
+    		int w = EConst.c_game_w/(zoomCount + 1), h = EConst.c_game_h/(zoomCount + 1);
+    		int x = (EConst.c_game_w - w)/2, y = (EConst.c_game_h - h)/2;
+    		//win.setSize(EConst.c_game_w/(zoomCount + 1), EConst.c_game_h/(zoomCount + 1));
+    		System.out.printf("Zoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
+    		win.setZoom(x, y, w, h);
     	}
-    	gwin.setCenter();
+    	//gwin.setCenter();
+    	gwin.setAllDirty();
     }
     public static float getZoomFactor() {
     	return zoomFactor;
@@ -104,8 +109,10 @@ public final class Shortcuts extends GameSingletons {
     				zoomCount = 0;
     				zoomFactor = f;
     				mouse.hide();
-    				win.setSize(w, h);
-    				gwin.setCenter();	//++++++++FOR NOW.
+    				//win.setSize(w, h);
+    				//gwin.setCenter();	//++++++++FOR NOW.
+    				win.setZoom(0, 0, w, h);
+    				gwin.setAllDirty();
     				return true;
     			}
     		} else
@@ -119,8 +126,10 @@ public final class Shortcuts extends GameSingletons {
     		zoomCount = 0;
     		zoomFactor = 1.0f;
     		mouse.hide();
-    		win.setSize(EConst.c_game_w, EConst.c_game_h);
-    		gwin.setCenter();
+    		win.setZoom(0, 0, EConst.c_game_w, EConst.c_game_h);
+    		gwin.setAllDirty();
+    		//win.setSize(EConst.c_game_w, EConst.c_game_h);
+    		//gwin.setCenter();
     		}
     	}
     }

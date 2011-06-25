@@ -45,13 +45,23 @@ public final class ImageBuf {
 		width = w; height = h;
 		rgba = new int[w*h];
 		pixels = new byte[w*h];
+		scaleSrc.set(0, 0, width - 1, height - 1);
 		System.out.println("ImageBuf::setSize: " + w + ", " + h);
 	}
 	public void setToScale(int w, int h) {
 		scalew = w; scaleh = h;
 		toScale = Bitmap.createBitmap(width, height, Config.ARGB_8888);
 		scaleSrc = new Rect();
+		scaleSrc.set(0, 0, width - 1, height - 1);
 		scaleDest = new Rect();
+	}
+	public void setZoom(int x, int y, int w, int h) {
+		if (x + w > width)
+			w = width - x;
+		if (y + h > height)
+			y = height - y;
+		System.out.printf("setZoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
+		scaleSrc.set(x, y, x+w-1, y+h-1);
 	}
 	public int getWidth() {
 		return width;
@@ -61,10 +71,10 @@ public final class ImageBuf {
 	}
 	// Convert from scaled screen to game coords.
 	public final float screenToGameX(float sx) {
-		return sx * width/scalew;
+		return scaleSrc.left + (sx * width/scalew);//++++++RIGHT?
 	}
 	public final float screenToGameY(float sy) {
-		return sy * height/scaleh;
+		return scaleSrc.top + (sy * height/scaleh);//++++++RIGHT?
 	}
 	public void setClip(int x, int y, int w, int h) {
 		clipx = x; clipy = y; clipw = w; cliph = h;
@@ -204,7 +214,6 @@ public final class ImageBuf {
 	public void blit(Canvas c) {
 		if (toScale != null) {
 			toScale.setPixels(rgba, 0, width, 0, 0, width, height);
-			scaleSrc.set(0, 0, width - 1, height - 1);
 			scaleDest.set(0, 0, scalew - 1, scaleh - 1);
 			c.drawBitmap(toScale, scaleSrc, scaleDest, null);
 		} else
