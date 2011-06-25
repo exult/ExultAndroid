@@ -55,13 +55,47 @@ public final class ImageBuf {
 		scaleSrc.set(0, 0, width - 1, height - 1);
 		scaleDest = new Rect();
 	}
-	public void setZoom(int x, int y, int w, int h) {
+	public final boolean setZoom(int x, int y, int w, int h) {
+		if (x < 0) {
+			w += x;
+			x = 0;
+		}
+		if (y < 0) {
+			h += y;
+			y = 0;
+		}
 		if (x + w > width)
 			w = width - x;
 		if (y + h > height)
 			y = height - y;
+		if (w < 20 || h < 20)
+			return false;
 		System.out.printf("setZoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
 		scaleSrc.set(x, y, x+w-1, y+h-1);
+		return true;
+	}
+	public final void pan(int dx, int dy) {
+		int x = scaleSrc.left + dx, y = scaleSrc.top + dy;
+		if (x < 0)
+			x = 0;
+		else {
+			int zw = getZoomWidth();
+			if (x + zw > width)
+				x = width - zw;
+		}
+		dx = x - scaleSrc.left;
+		if (y < 0)
+			y = 0;
+		else {
+			int zh = getZoomHeight();
+			if (y + zh > height)
+				y = height - zh;
+		}
+		dy = y - scaleSrc.top;
+		System.out.printf("ImageBuf.pan.current: %1$d, %2$d\n", scaleSrc.left, scaleSrc.top);
+		scaleSrc.left += dx; scaleSrc.right += dx;
+		scaleSrc.top += dy; scaleSrc.bottom += dy;
+		System.out.printf("ImageBuf.pan: %1$d, %2$d\n", dx, dy);
 	}
 	public final int getZoomWidth() {
 		return scaleSrc.right - scaleSrc.left + 1;

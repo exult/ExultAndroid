@@ -86,11 +86,9 @@ public final class Shortcuts extends GameSingletons {
     		zoomCount = (zoomCount + 1)%4;
     		int w = EConst.c_game_w/(zoomCount + 1), h = EConst.c_game_h/(zoomCount + 1);
     		int x = (EConst.c_game_w - w)/2, y = (EConst.c_game_h - h)/2;
-    		//win.setSize(EConst.c_game_w/(zoomCount + 1), EConst.c_game_h/(zoomCount + 1));
     		System.out.printf("Zoom: %1$d,%2$d,%3$d,%4$d\n", x, y, w, h);
     		win.setZoom(x, y, w, h);
     	}
-    	//gwin.setCenter();
     	gwin.setPainted();
     }
     public static float getZoomFactor() {
@@ -108,11 +106,8 @@ public final class Shortcuts extends GameSingletons {
     			synchronized(win) {
     				int x = (EConst.c_game_w - w)/2, y = (EConst.c_game_h - h)/2;
     				zoomCount = 0;
-    				zoomFactor = f;
-    				mouse.hide();
-    				//win.setSize(w, h);
-    				//gwin.setCenter();	//++++++++FOR NOW.
-    				win.setZoom(x, y, w, h);
+    				if (win.setZoom(x, y, w, h))
+    					zoomFactor = f;
     				gwin.setPainted();
     				return true;
     			}
@@ -120,17 +115,21 @@ public final class Shortcuts extends GameSingletons {
     			return false;
     	}
     }
+    public static void pan(float dx, float dy) {
+    	int deltax = (int)(dx*win.getZoomWidth()/win.getWidth());
+    	int deltay = (int)(dy*win.getZoomHeight()/win.getHeight());
+    	System.out.printf("pan: %1$d,%2$d\n", deltax, deltay);
+    	win.pan(deltax, deltay);
+    	gwin.setPainted();
+    }
     public static void clearZoom() {
     	if (zoomCount > 0) {
     		synchronized(win) {
     		System.out.println("clearZoom");
     		zoomCount = 0;
     		zoomFactor = 1.0f;
-    		mouse.hide();
     		win.setZoom(0, 0, EConst.c_game_w, EConst.c_game_h);
     		gwin.setPainted();
-    		//win.setSize(EConst.c_game_w, EConst.c_game_h);
-    		//gwin.setCenter();
     		}
     	}
     }

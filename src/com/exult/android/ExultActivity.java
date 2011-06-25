@@ -479,7 +479,15 @@ public class ExultActivity extends Activity {
     				         float scale = newDist / oldZoomDist;
     				         //System.out.printf("Zoom: new scale is %1$f, center is (%2$f,%3$f)\n", scale, zoomX, zoomY);
     				         Shortcuts.zoom(scale*oldZoomFactor);
-    				         // ++++ Zoom around zoomX, zoomY  matrix.postScale(scale, scale, mid.x, mid.y);
+    				         float newx = ((event.getX(0) + event.getX(1))/2);
+    				         float newy = ((event.getY(0) + event.getY(1))/2);
+    				         float diffx =  zoomX- newx,
+  						  	  	   diffy =  zoomY - newy;
+    				         if (Math.abs(diffx) > 5f || Math.abs(diffy) > 5f) {
+    							Shortcuts.pan(diffx, diffy);
+    							zoomX = newx;
+    							zoomY = newy;
+    				         }
     					}
     					return true;
     				}
@@ -536,6 +544,9 @@ public class ExultActivity extends Activity {
     					zoomX = (event.getX(0) + event.getX(1))/2;
     					zoomY = (event.getY(0) + event.getY(1))/2;
     					oldZoomFactor = Shortcuts.getZoomFactor();
+    					gwin.stopActor();
+        				avatarMotion = null;
+        				movingAvatar = false;
     				}
     				return true;    			
     			case MotionEvent.ACTION_POINTER_UP:
