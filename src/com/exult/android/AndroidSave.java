@@ -6,6 +6,7 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -19,7 +20,8 @@ import com.exult.android.NewFileGump.SaveInfo;
 public class AndroidSave extends GameSingletons {
 	private View myView, mainView;
 	private ListView filesView;
-	NewFileGump.SaveInfo	games[];		// The list of savegames
+	SaveInfo	games[];		// The list of savegames
+	ArrayAdapter<SaveInfo> adapter;
 	int		num_games;	// Number of save games
 	int		first_free;	// The number of the first free savegame
 
@@ -45,7 +47,7 @@ public class AndroidSave extends GameSingletons {
 		myView.setVisibility(View.VISIBLE);
 		filesView = (ListView) exult.findViewById(R.id.sr_files);
 		setButtonHandlers(exult);		
-		LoadSaveGameDetails();
+		LoadSaveGameDetails(exult);
 	}
 	private void setButtonHandlers(Activity exult) {
 		Button button;
@@ -58,7 +60,7 @@ public class AndroidSave extends GameSingletons {
 		mainView.setVisibility(View.VISIBLE);
 		myView.setVisibility(View.INVISIBLE);
 	}
-	void LoadSaveGameDetails() {	// Loads (and sorts) all the savegame details
+	void LoadSaveGameDetails(Activity exult) {	// Loads (and sorts) all the savegame details
 		int		i;
 		// Gamedat Details
 		/* +++++++++FINISH
@@ -158,9 +160,8 @@ public class AndroidSave extends GameSingletons {
 		// Now sort it again, with all the details so it can be done by date
 		if (num_games > 0) 
 			Arrays.sort(games, cmp);
-		for (i = 0; i<num_games; i++) {
-			
-		}
+		adapter = new ArrayAdapter<SaveInfo>(exult, R.id.savename, games);
+		filesView.setAdapter(adapter);
 	}
 	void	FreeSaveGameDetails() {	// Frees all the savegame details
 		cur_shot = null;

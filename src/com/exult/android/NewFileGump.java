@@ -822,6 +822,10 @@ public final class NewFileGump extends Gump.Modal {
 		SaveGameParty	party[];
 		VgaFile.ShapeFile		screenshot;
 
+		@Override
+		public String toString() {
+			return savename;
+		}
 		static class comparator implements Comparator<SaveInfo> {
 			public int compare(SaveInfo o1, SaveInfo o2) {
 				// Check by time first, if possible
