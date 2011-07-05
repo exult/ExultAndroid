@@ -184,7 +184,7 @@ public class ExultActivity extends Activity {
         // Handle item selection
         switch (item.getItemId()) {
         case R.id.save_restore_button:
-        	Shortcuts.save();
+        	Shortcuts.save(instance);
             return true;
         case R.id.quit_button:
         	Shortcuts.quit();
@@ -658,7 +658,7 @@ public class ExultActivity extends Activity {
 		        			//GameSingletons.audio.playFile(
 		        			//		EUtil.getSystemPath(EFile.INTROSND), false);
 		        		else if (!event.isShiftPressed()) {
-		        			Shortcuts.save();
+		        			Shortcuts.save(instance);
 		        		}
 		        		return true;
 		        	case KeyEvent.KEYCODE_T:

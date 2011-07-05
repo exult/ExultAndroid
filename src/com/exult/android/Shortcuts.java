@@ -1,4 +1,5 @@
 package com.exult.android;
+import android.app.Activity;
 import android.graphics.Point;
 
 public final class Shortcuts extends GameSingletons {
@@ -135,8 +136,9 @@ public final class Shortcuts extends GameSingletons {
     		gwin.setPainted();
     	}
     }
-    public static void save() {
+    public static void save(Activity exult) {
     	new NewFileGump();
+    	//+++++++new AndroidSave(exult);
 		gwin.setAllDirty();
     }
     public static void quit() {
