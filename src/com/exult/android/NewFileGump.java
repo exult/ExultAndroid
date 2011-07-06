@@ -817,7 +817,7 @@ public final class NewFileGump extends Gump.Modal {
 		int			num;
 		String 	filename;
 		String	savename;
-		boolean			readable, empty;
+		boolean			readable;
 		SaveGameDetails	details;
 		SaveGameParty	party[];
 		VgaFile.ShapeFile		screenshot;
@@ -828,10 +828,6 @@ public final class NewFileGump extends Gump.Modal {
 		}
 		static class comparator implements Comparator<SaveInfo> {
 			public int compare(SaveInfo o1, SaveInfo o2) {
-				if (o1.empty && !o2.empty)				// Want the empty one first.
-					return -1;
-				else if (o2.empty && !o1.empty)
-					return 1;
 				// Check by time first, if possible
 				if (o1.details != null && o2.details != null) {
 					if (o1.details.real_year < o2.details.real_year)
@@ -942,11 +938,6 @@ public final class NewFileGump extends Gump.Modal {
 		}
 		SaveInfo() {
 			readable = true;
-		}
-		//	Create empty one.
-		SaveInfo(String nm) {
-			empty = true;
-			savename = nm;
 		}
 	};
 	static class NewfileButton extends GumpWidget.Button {

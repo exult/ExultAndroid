@@ -6,8 +6,10 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import com.exult.android.NewFileGump.SaveGameDetails;
@@ -20,11 +22,13 @@ import com.exult.android.NewFileGump.SaveInfo;
 public class AndroidSave extends GameSingletons {
 	private View myView, mainView;
 	private ListView filesView;
+	private EditText editView;
 	SaveInfo	games[];		// The list of savegames
 	ArrayAdapter<SaveInfo> adapter;
 	int		num_games;	// Number of save games
 	int		first_free;	// The number of the first free savegame
-
+	int		selected = -1;
+	
 	VgaFile.ShapeFile cur_shot;		// Screenshot for current game
 	SaveGameDetails cur_details;	// Details of current game
 	SaveGameParty cur_party[];	// Party of current game
@@ -46,8 +50,21 @@ public class AndroidSave extends GameSingletons {
 		mainView.setVisibility(View.INVISIBLE);
 		myView.setVisibility(View.VISIBLE);
 		filesView = (ListView) exult.findViewById(R.id.sr_files);
+		editView = (EditText) exult.findViewById(R.id.sr_editname);
 		setButtonHandlers(exult);		
 		LoadSaveGameDetails(exult);
+		setListHandler();
+	}
+	private void setListHandler() {
+		filesView.setOnItemClickListener(new ListView.OnItemClickListener() {
+	        @Override
+	        public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
+	            filesView.setSelection(pos);
+	            editView.setText(games[pos].toString());
+	            selected = pos;
+	        }
+	    });
+
 	}
 	private void setButtonHandlers(Activity exult) {
 		Button button;
@@ -131,7 +148,7 @@ public class AndroidSave extends GameSingletons {
 		EUtil.U7ListFiles(mask, filenames);
 		num_games = filenames.size();
 		
-		games = new SaveInfo[num_games + 1];	// Leave room for 'empty slot'.
+		games = new SaveInfo[num_games];	
 
 		// Setup basic details
 		for (i = 0; i<num_games; i++) {
@@ -140,7 +157,6 @@ public class AndroidSave extends GameSingletons {
 			System.out.println("FILE: " + games[i].filename);
 			games[i].SetSeqNumber();
 		}
-		games[num_games] = new SaveInfo("Empty Slot");
 		// First sort the games so they will be sorted by number
 		// This is so I can work out the first free game
 		SaveInfo.comparator cmp = new SaveInfo.comparator();
@@ -148,12 +164,10 @@ public class AndroidSave extends GameSingletons {
 			Arrays.sort(games, cmp);
 		// Read and cache all details
 		first_free = -1;
-		for (i = 0; i<num_games+1; i++) {
-			if (!games[i].empty) { 
-				games[i].readable = gwin.getSaveInfo(games[i].num, games[i]); 
-				if (first_free == -1 && i != games[i].num) 
-					first_free = i;
-			}
+		for (i = 0; i<num_games; i++) {
+			games[i].readable = gwin.getSaveInfo(games[i].num, games[i]); 
+			if (first_free == -1 && i != games[i].num) 
+				first_free = i;
 		}
 		System.out.println("firstFree = " + first_free);
 		if (first_free == -1) 
