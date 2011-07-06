@@ -131,7 +131,7 @@ public class AndroidSave extends GameSingletons {
 		EUtil.U7ListFiles(mask, filenames);
 		num_games = filenames.size();
 		
-		games = new SaveInfo[num_games];
+		games = new SaveInfo[num_games + 1];	// Leave room for 'empty slot'.
 
 		// Setup basic details
 		for (i = 0; i<num_games; i++) {
@@ -140,18 +140,20 @@ public class AndroidSave extends GameSingletons {
 			System.out.println("FILE: " + games[i].filename);
 			games[i].SetSeqNumber();
 		}
-
-		// First sort thet games so the will be sorted by number
+		games[num_games] = new SaveInfo("Empty Slot");
+		// First sort the games so they will be sorted by number
 		// This is so I can work out the first free game
 		SaveInfo.comparator cmp = new SaveInfo.comparator();
 		if (num_games > 0)
 			Arrays.sort(games, cmp);
-		// Reand and cache all details
+		// Read and cache all details
 		first_free = -1;
-		for (i = 0; i<num_games; i++) {
-			games[i].readable = gwin.getSaveInfo(games[i].num, games[i]); 
-			if (first_free == -1 && i != games[i].num) 
-				first_free = i;
+		for (i = 0; i<num_games+1; i++) {
+			if (!games[i].empty) { 
+				games[i].readable = gwin.getSaveInfo(games[i].num, games[i]); 
+				if (first_free == -1 && i != games[i].num) 
+					first_free = i;
+			}
 		}
 		System.out.println("firstFree = " + first_free);
 		if (first_free == -1) 
@@ -160,7 +162,7 @@ public class AndroidSave extends GameSingletons {
 		// Now sort it again, with all the details so it can be done by date
 		if (num_games > 0) 
 			Arrays.sort(games, cmp);
-		adapter = new ArrayAdapter<SaveInfo>(exult, R.id.savename, games);
+		adapter = new ArrayAdapter<SaveInfo>(exult, R.layout.savename, games);
 		filesView.setAdapter(adapter);
 	}
 	void	FreeSaveGameDetails() {	// Frees all the savegame details

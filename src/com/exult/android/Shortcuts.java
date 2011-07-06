@@ -137,8 +137,8 @@ public final class Shortcuts extends GameSingletons {
     	}
     }
     public static void save(Activity exult) {
-    	new NewFileGump();
-    	//+++++++new AndroidSave(exult);
+    	//new NewFileGump();
+    	new AndroidSave(exult);
 		gwin.setAllDirty();
     }
     public static void quit() {
