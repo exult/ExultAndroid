@@ -1,26 +1,27 @@
 package com.exult.android;
 
+import java.util.Observable;
+import java.util.Observer;
+import java.util.concurrent.Semaphore;
+
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.graphics.Canvas;
+import android.graphics.Point;
 import android.os.Bundle;
-//UNUSED import android.os.Debug;
+import android.util.AttributeSet;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-import android.graphics.Canvas;
-import android.content.Context;
-import android.graphics.Point;
-import android.app.AlertDialog;
-import android.widget.Toast;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MenuInflater;
 import android.widget.Button;
-import android.util.AttributeSet;
-import android.content.DialogInterface;
-import java.util.concurrent.Semaphore;
-import java.lang.InterruptedException;
+import android.widget.Toast;
 
 public class ExultActivity extends Activity {
 	private static Point clickPoint;	// Non-null if getClick() is active.
@@ -90,6 +91,41 @@ public class ExultActivity extends Activity {
     }
     public static void fatal(String msg) {
     	instance.runOnUiThread(new MessageDisplayer(msg, false, true));
+    }
+    public static class YesNoDialog implements Runnable {
+    	String msg;
+    	Observer client;
+    	Reporter reporter;
+    	Boolean answer;
+    	YesNoDialog(Observer c, String m) {
+    		client = c;
+    		msg = m;
+    		reporter = new Reporter();
+    		reporter.addObserver(c);
+    	}
+    	public boolean getAnswer() {
+    		return answer;
+    	}
+    	private static class Reporter extends Observable {
+    		public void setChanged() { super.setChanged(); }
+    	}
+    	public void run() {
+    		DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+    			@Override
+    			public void onClick(DialogInterface dialog, int which) {		
+    				dialog.dismiss();
+    				answer = (which == DialogInterface.BUTTON_POSITIVE);
+    				reporter.setChanged();
+    				reporter.notifyObservers(this);
+    			}
+    		};
+    		AlertDialog.Builder builder = new AlertDialog.Builder(instance);
+    		builder.setMessage(msg).setPositiveButton("Yes", dialogClickListener)
+    	    	.setNegativeButton("No", dialogClickListener).show();
+    	}
+    };
+    public static void askYesNo(Observer c, String txt) {
+    	instance.runOnUiThread(new YesNoDialog(c, txt));
     }
     public static abstract class ClickTracker {
     	public abstract void onMotion(int x, int y);

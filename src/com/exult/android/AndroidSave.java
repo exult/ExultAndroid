@@ -1,7 +1,10 @@
 package com.exult.android;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 
 import android.app.Activity;
@@ -17,6 +20,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.exult.android.ExultActivity.YesNoDialog;
 import com.exult.android.NewFileGump.SaveGameDetails;
 import com.exult.android.NewFileGump.SaveGameParty;
 import com.exult.android.NewFileGump.SaveInfo;
@@ -29,27 +33,28 @@ public class AndroidSave extends GameSingletons {
 	private ListView filesView;
 	private EditText editView;
 	private Button saveBtn, loadBtn, deleteBtn, cancelBtn;
-	SaveInfo	games[];		// The list of savegames
-	SaveAdapter adapter;
-	int		num_games;	// Number of save games
-	int		first_free;	// The number of the first free savegame
-	int		selected = -1;
-	CheckBox selectedBtn = null;
+	private Activity exult;
+	private SaveInfo	games[];		// The list of savegames
+	private SaveAdapter adapter;
+	private int		num_games;	// Number of save games
+	private int		first_free;	// The number of the first free savegame
+	private int		selected = -1;
+	private CheckBox selectedBtn = null;
 	
-	VgaFile.ShapeFile cur_shot;		// Screenshot for current game
-	SaveGameDetails cur_details;	// Details of current game
-	SaveGameParty cur_party[];	// Party of current game
+	private VgaFile.ShapeFile cur_shot;		// Screenshot for current game
+	private SaveGameDetails cur_details;	// Details of current game
+	private SaveGameParty cur_party[];	// Party of current game
 
 	// Gamedat is being used as a 'quicksave'
-	VgaFile.ShapeFile gd_shot;		// Screenshot in Gamedat
-	SaveGameDetails gd_details;	// Details in Gamedat
-	SaveGameParty gd_party[];	// Parts in Gamedat
+	private VgaFile.ShapeFile gd_shot;		// Screenshot in Gamedat
+	private SaveGameDetails gd_details;	// Details in Gamedat
+	private SaveGameParty gd_party[];	// Parts in Gamedat
 
-	VgaFile.ShapeFile screenshot;		// The picture to be drawn
-	NewFileGump.SaveGameDetails details;	// The game details to show
-	NewFileGump.SaveGameParty party[];		// The party to show
-	boolean is_readable;		// Is the save game readable
-	String filename;		// Filename of the savegame, if exists
+	private VgaFile.ShapeFile screenshot;		// The picture to be drawn
+	private SaveGameDetails details;	// The game details to show
+	private SaveGameParty party[];		// The party to show
+	private boolean is_readable;		// Is the save game readable
+	private String filename;		// Filename of the savegame, if exists
 
 	public AndroidSave(Activity exult) {
 		myView = exult.findViewById(R.id.save_restore);
@@ -58,8 +63,9 @@ public class AndroidSave extends GameSingletons {
 		myView.setVisibility(View.VISIBLE);
 		filesView = (ListView) exult.findViewById(R.id.sr_files);
 		editView = (EditText) exult.findViewById(R.id.sr_editname);
-		setButtonHandlers(exult);		
-		LoadSaveGameDetails(exult);
+		this.exult = exult;
+		setButtonHandlers();		
+		LoadSaveGameDetails();
 		setListHandler();
 	}
 	private void setListHandler() {
@@ -76,6 +82,7 @@ public class AndroidSave extends GameSingletons {
 	            	selected = -1;
 	            	selectedBtn = null;
 	            	enabled = false;
+	            	is_readable = false;
 	            } else {
 	            	editView.setText(g.toString());
 	            	btn.setChecked(true);
@@ -83,21 +90,22 @@ public class AndroidSave extends GameSingletons {
 	            		selectedBtn.setChecked(false);
 	            	selected = pos;
 	            	selectedBtn = btn;
+	            	is_readable = g.readable;
 	            }
-	            saveBtn.setEnabled(enabled);
-	            loadBtn.setEnabled(enabled);
-	            deleteBtn.setEnabled(enabled);
+	            enableButtons(enabled);
 	        }
 	    });
-
 	}
-	private void setButtonHandlers(Activity exult) {
+	private void enableButtons(boolean enabled) {
+		saveBtn.setEnabled(enabled);
+        loadBtn.setEnabled(enabled);
+        deleteBtn.setEnabled(enabled);
+	}
+	private void setButtonHandlers() {
 		saveBtn = (Button) exult.findViewById(R.id.save_button);
 		loadBtn = (Button) exult.findViewById(R.id.load_button);
 		deleteBtn = (Button) exult.findViewById(R.id.delete_button);
-		saveBtn.setEnabled(false);
-        loadBtn.setEnabled(false);
-        deleteBtn.setEnabled(false);
+		enableButtons(false);
     	cancelBtn = (Button) exult.findViewById(R.id.save_cancel_button);
         cancelBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { close();}
@@ -107,7 +115,84 @@ public class AndroidSave extends GameSingletons {
 		mainView.setVisibility(View.VISIBLE);
 		myView.setVisibility(View.INVISIBLE);
 	}
-	void LoadSaveGameDetails(Activity exult) {	// Loads (and sorts) all the savegame details
+	public void load() {			// 'Load' was clicked.
+		// Aborts if unsuccessful.
+		if (selected != -1) 
+			gwin.read(games[selected].num);
+		else // Read Gamedat
+			gwin.read();
+		//+++NEEDED restored = true;
+		
+		// Reset Selection
+		selected = -1;
+		if (selectedBtn != null) {
+			selectedBtn.setChecked(false);
+			selectedBtn = null;
+		}
+		enableButtons(false);
+		close();
+	}
+	// Reset everything
+	private void reset() {
+		selected = -1;
+		enableButtons(false);
+		FreeSaveGameDetails();
+		LoadSaveGameDetails();
+		gwin.setAllDirty();
+	}
+	public void save(boolean dontAsk) {			// 'Save' was clicked.
+		String newname = editView.getText().toString();
+		// Shouldn't ever happen.
+		if (newname == null || newname.length() == 0)
+			return;	
+		// Already a game in this slot? If so ask to delete
+		if (selected != -1 && !dontAsk) { 
+			Observer o = new Observer() {
+				public void update(Observable o, Object arg) {
+					if (((YesNoDialog)arg).getAnswer())
+						save(true);
+				}
+			};
+			ExultActivity.askYesNo(o,
+					"Okay to write over existing saved game?");
+			return;
+		}
+		int num = selected >= 0 ? games[selected].num 
+				: first_free;
+		if (num >= 0) {	// Write to gamedat, then to savegame file.
+			Observer o = new Observer() {
+				public void update(Observable o, Object arg) {
+					reset();	// Write done, so update list.
+					System.out.println("Saved game #" + selected + " successfully.");
+				}
+			};
+			gwin.write(num, newname, o);
+		} else try {
+			gwin.write();	// Quick save.
+			reset();
+		} catch (IOException e) {
+			System.out.println("Error during quick save");
+		}
+	}
+	public void deleteFile() {		// 'Delete' was clicked.
+		// Shouldn't ever happen.
+		if (selected == -1)
+			return;	
+		Observer o = new Observer() {
+			public void update(Observable o, Object arg) {
+				if (!((YesNoDialog)arg).getAnswer())
+					return;
+				EUtil.U7remove(games[selected].filename);
+				filename = null;
+				is_readable = false;
+				System.out.println("Deleted Save game #" + selected + " (" +
+							games[selected].filename + ") successfully.");
+				reset();
+			}
+		};
+		ExultActivity.askYesNo(o, "Okay to delete saved game?");
+	}
+	void LoadSaveGameDetails() {	// Loads (and sorts) all the savegame details
 		int		i;
 		// Gamedat Details
 		/* +++++++++FINISH
