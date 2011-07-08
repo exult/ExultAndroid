@@ -9,6 +9,8 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -19,10 +21,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.exult.android.ExultActivity.YesNoDialog;
 import com.exult.android.NewFileGump.SaveGameDetails;
 import com.exult.android.NewFileGump.SaveGameParty;
 import com.exult.android.NewFileGump.SaveInfo;
@@ -35,6 +37,8 @@ public class AndroidSave extends GameSingletons {
 	private ListView filesView;
 	private EditText editView;
 	private Button saveBtn, loadBtn, deleteBtn, cancelBtn;
+	private ImageView saveMiniScreen;
+	private TextView saveDetails;
 	private Activity exult;
 	private SaveInfo	games[];		// The list of savegames
 	private SaveAdapter adapter;
@@ -53,11 +57,24 @@ public class AndroidSave extends GameSingletons {
 	private SaveGameParty gd_party[];	// Parts in Gamedat
 
 	private VgaFile.ShapeFile screenshot;		// The picture to be drawn
+	private ImageBuf shotWin;			// For converting to a bitmap.
+	private Bitmap shotBitmap;
 	private SaveGameDetails details;	// The game details to show
 	private SaveGameParty party[];		// The party to show
 	private boolean is_readable;		// Is the save game readable
-	private String filename;		// Filename of the savegame, if exists
-
+	static final String months[] = {	// Names of the months
+		"Jan",
+		"Feb",
+		"March",
+		"April",
+		"May",
+		"June",
+		"July",
+		"Aug",
+		"Sept",
+		"Oct",
+		"Nov",
+		"Dec"};
 	public AndroidSave(Activity exult) {
 		myView = exult.findViewById(R.id.save_restore);
 		mainView = exult.findViewById(R.id.main_layout);
@@ -65,6 +82,9 @@ public class AndroidSave extends GameSingletons {
 		filesView = (ListView) exult.findViewById(R.id.sr_files);
 		editView = (EditText) exult.findViewById(R.id.sr_editname);
 		editView.setText("");
+		saveMiniScreen = (ImageView) exult.findViewById(R.id.save_miniscreen);
+		saveDetails = (TextView) exult.findViewById(R.id.save_details);
+		saveDetails.setText("");
 		this.exult = exult;
 		setButtonHandlers();
 		setTextHandler();
@@ -79,14 +99,17 @@ public class AndroidSave extends GameSingletons {
 	            SaveInfo g = games[pos];
 	            Boolean enabled = true;
 	            CheckBox btn = (CheckBox) v.findViewById(R.id.savename_choice);
-	            if (btn == selectedBtn) {
+	            if (btn == selectedBtn) {	// Deselect.
 	            	editView.setText("");
 	            	selectedBtn.setChecked(false);
 	            	selected = -1;
 	            	selectedBtn = null;
 	            	enabled = false;
 	            	is_readable = false;
-	            } else {
+	            	screenshot = cur_shot;
+	    			details = cur_details;
+	    			party = cur_party;
+	            } else {					// Select.
 	            	editView.setText(g.toString());
 	            	btn.setChecked(true);
 	            	if (selectedBtn != null)
@@ -94,8 +117,12 @@ public class AndroidSave extends GameSingletons {
 	            	selected = pos;
 	            	selectedBtn = btn;
 	            	is_readable = g.readable;
+	            	screenshot = g.screenshot;
+	    			details = g.details;
+	    			party = g.party;
 	            }
 	            enableButtons(enabled);
+	            showGameInfo();
 	        }
 	    });
 	}
@@ -145,6 +172,88 @@ public class AndroidSave extends GameSingletons {
 			myView.setVisibility(View.VISIBLE);
 		}
 	}
+	private void showGameInfo() {
+		if (screenshot != null) {
+			ShapeFrame frame = screenshot.getFrame(0);
+			if (shotWin == null) {
+				shotWin = new ImageBuf(frame.getWidth(), frame.getHeight());
+				shotWin.setPalette(win);
+				shotBitmap = Bitmap.createBitmap(frame.getWidth(), frame.getHeight(), Config.ARGB_8888);
+			}
+			frame.paint(shotWin, 0, 0);
+			shotWin.blit(shotBitmap);
+			System.out.println("miniscreen: " + frame.getWidth() + ", " + frame.getHeight());
+			saveMiniScreen.setImageBitmap(shotBitmap);
+		}
+		String filename = selected >= 0 ? games[selected].filename : null;
+		if (details != null && party != null) {
+			/*+++++++++FINISH
+			int i;
+			for (i=0; i<4 && i<details.party_size; i++) {
+				ShapeFrame shape = party[i].shape_file.getShape(party[i].shape, 16);
+				shape.paint(win, x + 249 + i*23, y + 169);
+			}
+			for (i=4; i<8 && i<details.party_size; i++) {
+				ShapeFrame shape = party[i].shape_file.getShape(party[i].shape, 16);
+				shape.paint(win, x + 249 + (i-4)*23, y + 198);
+			} */
+			String suffix = "th";
+
+			if ((details.real_day%10) == 1 && details.real_day != 11)
+				suffix = "st";
+			else if ((details.real_day%10) == 2 && details.real_day != 12)
+				suffix = "nd";
+			else if ((details.real_day%10) == 3 && details.real_day != 13)
+				suffix = "rd";
+			String info0 = String.format("Avatar: %1$s\n", party[0].namestr);
+			String info1 = String.format("Exp: %1$d  Hp: %2$d\n", 
+					party[0].exp&0xff, party[0].health);
+			String info2 = String.format("Str: %1$d  Dxt: %2$d\n", 
+					party[0].str, party[0].dext);
+			String info3 = String.format("Int: %1$d  Trn: %2$d\n\n",
+				party[0].intel, party[0].training);
+			String info4 = String.format("Game Day: %1$d\n" +
+					"Game Time: %2$02d:%3$02d\n\n",
+				details.game_day, details.game_hour, details.game_minute);
+			String info5 = String.format("Save Count: %1$d\n",
+				details.save_count);
+			String info6 = String.format("Date: %1$d%2$s %3$s %4$04d\n",
+				details.real_day, suffix, months[details.real_month-1], details.real_year);
+			String info7 = String.format("Time: %1$02d:%2$02d",
+				details.real_hour, details.real_minute);
+			String info = info0 + info1 + info2 + info3 + info4 + info5 + info6 + info7;
+			if (filename != null) {
+				info += "\nFile: ";
+				int offset = filename.length();			
+				while (offset-- > 0) {
+					if (filename.charAt(offset) == '/' || filename.charAt(offset) == '\\') {
+						offset++;
+						break;
+					}
+				}
+				info += filename.substring(offset);
+			}
+			saveDetails.setText(info);
+		} else {
+			if (filename != null) {
+				String info = "File: ";
+				int offset = filename.length();
+				while (offset-- > 0) {
+					if (filename.charAt(offset) == '/' || filename.charAt(offset) == '\\') {
+						offset++;
+						break;
+					}
+				}
+				info += filename.substring(offset);
+				saveDetails.setText(info);
+			}
+			if (!is_readable) {
+				saveDetails.setText("Unreadable Savegame");
+			} else {
+				saveDetails.setText("No Info");
+			}
+		}
+	}
 	private void close() {
 		switchScreen(true);
 	}
@@ -172,7 +281,7 @@ public class AndroidSave extends GameSingletons {
 		enableButtons(false);
 		FreeSaveGameDetails();
 		LoadSaveGameDetails();
-		gwin.setAllDirty();
+		showGameInfo();
 	}
 	private void resetOnUi() {
 		exult.runOnUiThread(new Runnable() {
@@ -226,7 +335,6 @@ public class AndroidSave extends GameSingletons {
 				if (!(Boolean)arg)
 					return;
 				EUtil.U7remove(games[selected].filename);
-				filename = null;
 				is_readable = false;
 				System.out.println("Deleted Save game #" + selected + " (" +
 							games[selected].filename + ") successfully.");
@@ -344,7 +452,6 @@ public class AndroidSave extends GameSingletons {
 		gd_shot = null;
 		gd_details = null;
 		gd_party = null;
-		filename = null;
 		games = null;
 	}
 	

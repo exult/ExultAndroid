@@ -153,6 +153,11 @@ public final class ImageBuf {
 			pal[i] = (0xff<<24)|(r<<16) | (g<<8) | b;	// Include alpha = 0xff.
 		}
 	}
+	//	Set paletter from another window.
+	public void setPalette(ImageBuf w2) {
+		for (int i = 0; i < 256; i++)
+			pal[i] = w2.pal[i];
+	}
 	public void rotateColors
 		(
 		int first,			// Palette index of 1st.
@@ -257,6 +262,15 @@ public final class ImageBuf {
 			blit(c);// +++++++++FOR NOW.
 	}
 	*/
+	//	Just update the bitmap.
+	public void blit(Bitmap b) {
+		int cnt = width*height;
+		for (int i = 0; i < cnt; ++i) {
+			int ind = (int)pixels[i]&0xff;
+			rgba[i] = pal[ind];
+		}
+		b.setPixels(rgba, 0, width, 0, 0, width, height);
+	}
 	public void blit(Canvas c) {
 		if (toScale != null) {
 			toScale.setPixels(rgba, 0, width, 0, 0, width, height);

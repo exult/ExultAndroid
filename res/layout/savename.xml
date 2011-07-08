@@ -17,7 +17,7 @@
 		android:layout_width="0dip"
         android:layout_weight="1"
     	android:layout_height="fill_parent"
-    	android:textSize="24dp"
+    	android:textSize="20dp"
     	android:padding="6dp" >
  	</TextView>
  </LinearLayout>
