@@ -105,11 +105,21 @@ public class AndroidSave extends GameSingletons {
 		saveBtn = (Button) exult.findViewById(R.id.save_button);
 		loadBtn = (Button) exult.findViewById(R.id.load_button);
 		deleteBtn = (Button) exult.findViewById(R.id.delete_button);
-		enableButtons(false);
     	cancelBtn = (Button) exult.findViewById(R.id.save_cancel_button);
+    	enableButtons(false);
+    	saveBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { save(false);}
+        });
+    	loadBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { load();}
+        });
+    	deleteBtn.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { deleteFile();}
+        });
         cancelBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { close();}
         });
+        
 	}
 	private void close() {
 		mainView.setVisibility(View.VISIBLE);
