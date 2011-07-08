@@ -555,7 +555,8 @@ public class ExultActivity extends Activity {
     				}
     				return true;    			
     			case MotionEvent.ACTION_POINTER_UP:
-    				//zoomX = -1;
+    				System.out.println("ACTION_POINTER_UP");
+    				zoomX = -1;
     				return true;
     			case MotionEvent.ACTION_CANCEL:
     				return true;

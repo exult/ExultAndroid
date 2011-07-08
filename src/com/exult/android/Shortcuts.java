@@ -129,7 +129,7 @@ public final class Shortcuts extends GameSingletons {
     }
     private static void clearZoom() {
     		synchronized(win) {
-    		//System.out.println("clearZoom");
+    		System.out.println("clearZoom");
     		zoomCount = 0;
     		zoomFactor = 1.0f;
     		win.setZoom(0, 0, EConst.c_game_w, EConst.c_game_h);
