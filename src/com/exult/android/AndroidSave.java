@@ -28,11 +28,13 @@ public class AndroidSave extends GameSingletons {
 	private View myView, mainView;
 	private ListView filesView;
 	private EditText editView;
+	private Button saveBtn, loadBtn, deleteBtn, cancelBtn;
 	SaveInfo	games[];		// The list of savegames
-	ArrayAdapter<SaveInfo> adapter;
+	SaveAdapter adapter;
 	int		num_games;	// Number of save games
 	int		first_free;	// The number of the first free savegame
 	int		selected = -1;
+	CheckBox selectedBtn = null;
 	
 	VgaFile.ShapeFile cur_shot;		// Screenshot for current game
 	SaveGameDetails cur_details;	// Details of current game
@@ -64,17 +66,40 @@ public class AndroidSave extends GameSingletons {
 		filesView.setOnItemClickListener(new ListView.OnItemClickListener() {
 	        @Override
 	        public void onItemClick(AdapterView<?> parent, View v, int pos, long id) {
-	            filesView.setSelection(pos);
-	            editView.setText(games[pos].toString());
-	            selected = pos;
+	            //filesView.setSelection(pos);
+	            SaveInfo g = games[pos];
+	            Boolean enabled = true;
+	            CheckBox btn = (CheckBox) v.findViewById(R.id.savename_choice);
+	            if (btn == selectedBtn) {
+	            	editView.setText("");
+	            	selectedBtn.setChecked(false);
+	            	selected = -1;
+	            	selectedBtn = null;
+	            	enabled = false;
+	            } else {
+	            	editView.setText(g.toString());
+	            	btn.setChecked(true);
+	            	if (selectedBtn != null)
+	            		selectedBtn.setChecked(false);
+	            	selected = pos;
+	            	selectedBtn = btn;
+	            }
+	            saveBtn.setEnabled(enabled);
+	            loadBtn.setEnabled(enabled);
+	            deleteBtn.setEnabled(enabled);
 	        }
 	    });
 
 	}
 	private void setButtonHandlers(Activity exult) {
-		Button button;
-    	button = (Button) exult.findViewById(R.id.save_cancel_button);
-        button.setOnClickListener(new View.OnClickListener() {
+		saveBtn = (Button) exult.findViewById(R.id.save_button);
+		loadBtn = (Button) exult.findViewById(R.id.load_button);
+		deleteBtn = (Button) exult.findViewById(R.id.delete_button);
+		saveBtn.setEnabled(false);
+        loadBtn.setEnabled(false);
+        deleteBtn.setEnabled(false);
+    	cancelBtn = (Button) exult.findViewById(R.id.save_cancel_button);
+        cancelBtn.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { close();}
         });
 	}

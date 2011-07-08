@@ -17,34 +17,39 @@
     android:layout_weight="0" android:layout_height="match_parent" android:layout_width="wrap_content">
     	<Button
     	android:id="@+id/target_button"
-        android:layout_width="fill_parent"
+        android:layout_width="32dp"
         android:layout_height="wrap_content"
 		style="?android:attr/buttonStyleSmall"
-        android:padding= "6px"
+		android:textSize="18dp"
+        android:padding= "6dp"
         android:text="T" />
         <Button
     	android:id="@+id/combat_button"    	
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
-        android:padding= "6px"
+        android:textSize="18dp"
+        android:padding= "6dp"
         android:text="C" />
         <Button
     	android:id="@+id/inventory_button"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
-        android:padding= "6px"
+        android:textSize="18dp"
+        android:padding= "6dp"
         android:text="I" />
         <Button
     	android:id="@+id/stats_button"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
-        android:padding= "6px"
+        android:textSize="18dp"
+        android:padding= "6dp"
         android:text="Z" />
         <Button android:id="@+id/feed_button" 
-        android:padding="6px" 
+        android:textSize="18dp"
+        android:padding="6dp" 
         style="?android:attr/buttonStyleSmall" 
         android:layout_width="fill_parent" 
         android:layout_height="wrap_content" 
@@ -55,7 +60,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         style="?android:attr/buttonStyleSmall"
-        android:padding= "6px"
+        android:padding= "6dp"
         android:text="+" />
     </LinearLayout>
     <FrameLayout 
