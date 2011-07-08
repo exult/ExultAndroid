@@ -5,12 +5,17 @@ import java.util.Calendar;
 import java.util.Vector;
 
 import android.app.Activity;
+import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.exult.android.NewFileGump.SaveGameDetails;
 import com.exult.android.NewFileGump.SaveGameParty;
@@ -176,7 +181,7 @@ public class AndroidSave extends GameSingletons {
 		// Now sort it again, with all the details so it can be done by date
 		if (num_games > 0) 
 			Arrays.sort(games, cmp);
-		adapter = new ArrayAdapter<SaveInfo>(exult, R.layout.savename, games);
+		adapter = new SaveAdapter(exult, R.layout.savename);
 		filesView.setAdapter(adapter);
 	}
 	void	FreeSaveGameDetails() {	// Frees all the savegame details
@@ -189,4 +194,31 @@ public class AndroidSave extends GameSingletons {
 		filename = null;
 		games = null;
 	}
+	
+	private class SaveAdapter extends ArrayAdapter<SaveInfo> {
+		private Context ctx;
+		
+        public SaveAdapter(Context context, int textViewResourceId) {
+                super(context, textViewResourceId, games);
+                ctx = context;
+        }
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+        	View v = convertView;
+        	if (v == null) {
+        		LayoutInflater vi = (LayoutInflater)ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        		v = vi.inflate(R.layout.savename, null);
+        	}
+        	SaveInfo g = games[position];
+        	if (g != null) {
+        		ToggleButton btn = (ToggleButton) v.findViewById(R.id.savename_choice);
+        		TextView txt = (TextView) v.findViewById(R.id.savename_text);
+        		if (txt != null)
+        			txt.setText(g.savename);
+        		if(btn != null)
+        			btn.setChecked(position == selected);
+        	}
+        	return v;
+        }
+	};
 }
