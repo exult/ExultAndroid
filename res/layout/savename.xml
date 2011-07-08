@@ -4,12 +4,14 @@
 	android:orientation="horizontal" 
 	android:layout_width="fill_parent"
     android:layout_height="wrap_content">
-    <ToggleButton
+    <CheckBox
     	android:id="@+id/savename_choice" 
+    	style="?android:attr/radioButtonStyle" 
+    	android:focusable="false"
     	android:layout_width="wrap_content"
     	android:layout_height="fill_parent"
     	>
-    </ToggleButton>
+    </CheckBox>
 	<TextView
 		android:id="@+id/savename_text"
 		android:layout_width="0dip"

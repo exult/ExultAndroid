@@ -12,10 +12,10 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.ToggleButton;
 
 import com.exult.android.NewFileGump.SaveGameDetails;
 import com.exult.android.NewFileGump.SaveGameParty;
@@ -211,7 +211,7 @@ public class AndroidSave extends GameSingletons {
         	}
         	SaveInfo g = games[position];
         	if (g != null) {
-        		ToggleButton btn = (ToggleButton) v.findViewById(R.id.savename_choice);
+        		CheckBox btn = (CheckBox) v.findViewById(R.id.savename_choice);
         		TextView txt = (TextView) v.findViewById(R.id.savename_text);
         		if (txt != null)
         			txt.setText(g.savename);
