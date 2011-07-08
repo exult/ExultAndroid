@@ -89,6 +89,7 @@ public class AndroidSave extends GameSingletons {
 		setButtonHandlers();
 		setTextHandler();
 		LoadSaveGameDetails();
+		showGameInfo();
 		setListHandler();
 	}
 	private void setListHandler() {
