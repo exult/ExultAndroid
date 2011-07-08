@@ -9,6 +9,8 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,12 +61,13 @@ public class AndroidSave extends GameSingletons {
 	public AndroidSave(Activity exult) {
 		myView = exult.findViewById(R.id.save_restore);
 		mainView = exult.findViewById(R.id.main_layout);
-		mainView.setVisibility(View.INVISIBLE);
-		myView.setVisibility(View.VISIBLE);
+		switchScreen(false);
 		filesView = (ListView) exult.findViewById(R.id.sr_files);
 		editView = (EditText) exult.findViewById(R.id.sr_editname);
+		editView.setText("");
 		this.exult = exult;
-		setButtonHandlers();		
+		setButtonHandlers();
+		setTextHandler();
 		LoadSaveGameDetails();
 		setListHandler();
 	}
@@ -121,9 +124,29 @@ public class AndroidSave extends GameSingletons {
         });
         
 	}
+	private void setTextHandler() {
+		editView.addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            	String txt = editView.getText().toString();
+            	saveBtn.setEnabled(txt != null && txt.length() > 0);
+            }
+		}); 
+	}
+	private void switchScreen(boolean main) {
+		if (main) {
+			mainView.setVisibility(View.VISIBLE);
+			myView.setVisibility(View.INVISIBLE);
+		} else {
+			mainView.setVisibility(View.INVISIBLE);
+			myView.setVisibility(View.VISIBLE);
+		}
+	}
 	private void close() {
-		mainView.setVisibility(View.VISIBLE);
-		myView.setVisibility(View.INVISIBLE);
+		switchScreen(true);
 	}
 	public void load() {			// 'Load' was clicked.
 		// Aborts if unsuccessful.
@@ -145,10 +168,19 @@ public class AndroidSave extends GameSingletons {
 	// Reset everything
 	private void reset() {
 		selected = -1;
+		editView.setText("");
 		enableButtons(false);
 		FreeSaveGameDetails();
 		LoadSaveGameDetails();
 		gwin.setAllDirty();
+	}
+	private void resetOnUi() {
+		exult.runOnUiThread(new Runnable() {
+			public void run() {
+				reset();
+				switchScreen(false);	// Back to save/restore dialog.
+		    }
+		});
 	}
 	public void save(boolean dontAsk) {			// 'Save' was clicked.
 		String newname = editView.getText().toString();
@@ -159,7 +191,7 @@ public class AndroidSave extends GameSingletons {
 		if (selected != -1 && !dontAsk) { 
 			Observer o = new Observer() {
 				public void update(Observable o, Object arg) {
-					if (((YesNoDialog)arg).getAnswer())
+					if ((Boolean)arg)
 						save(true);
 				}
 			};
@@ -172,10 +204,11 @@ public class AndroidSave extends GameSingletons {
 		if (num >= 0) {	// Write to gamedat, then to savegame file.
 			Observer o = new Observer() {
 				public void update(Observable o, Object arg) {
-					reset();	// Write done, so update list.
+					resetOnUi();	// Write done, so update list.
 					System.out.println("Saved game #" + selected + " successfully.");
 				}
 			};
+			switchScreen(true);
 			gwin.write(num, newname, o);
 		} else try {
 			gwin.write();	// Quick save.
@@ -190,14 +223,14 @@ public class AndroidSave extends GameSingletons {
 			return;	
 		Observer o = new Observer() {
 			public void update(Observable o, Object arg) {
-				if (!((YesNoDialog)arg).getAnswer())
+				if (!(Boolean)arg)
 					return;
 				EUtil.U7remove(games[selected].filename);
 				filename = null;
 				is_readable = false;
 				System.out.println("Deleted Save game #" + selected + " (" +
 							games[selected].filename + ") successfully.");
-				reset();
+				resetOnUi();
 			}
 		};
 		ExultActivity.askYesNo(o, "Okay to delete saved game?");

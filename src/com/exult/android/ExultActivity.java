@@ -96,15 +96,11 @@ public class ExultActivity extends Activity {
     	String msg;
     	Observer client;
     	Reporter reporter;
-    	Boolean answer;
     	YesNoDialog(Observer c, String m) {
     		client = c;
     		msg = m;
     		reporter = new Reporter();
     		reporter.addObserver(c);
-    	}
-    	public boolean getAnswer() {
-    		return answer;
     	}
     	private static class Reporter extends Observable {
     		public void setChanged() { super.setChanged(); }
@@ -114,9 +110,9 @@ public class ExultActivity extends Activity {
     			@Override
     			public void onClick(DialogInterface dialog, int which) {		
     				dialog.dismiss();
-    				answer = (which == DialogInterface.BUTTON_POSITIVE);
+    				Boolean answer = (which == DialogInterface.BUTTON_POSITIVE);
     				reporter.setChanged();
-    				reporter.notifyObservers(this);
+    				reporter.notifyObservers(answer);
     			}
     		};
     		AlertDialog.Builder builder = new AlertDialog.Builder(instance);
