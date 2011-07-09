@@ -171,6 +171,10 @@ public class ExultActivity extends Activity {
     		}
     	});
     }
+    @Override
+	public void onBackPressed() {
+		// Keeps program from exiting.
+	}
     /*
      * Button handlers:
      */
@@ -608,6 +612,7 @@ public class ExultActivity extends Activity {
     	}
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
+    			System.out.println("onKey: " + keyCode);
     			if (UsecodeMachine.running > 0 || clickPoint != null || 
     										gwin.busyMessage != null)
     				return false;
@@ -621,6 +626,10 @@ public class ExultActivity extends Activity {
 		        		keyCode == KeyEvent.KEYCODE_SHIFT_RIGHT)
 		        		return false;		// Weed these out for performance.
 		        	switch (keyCode) {
+		        	case KeyEvent.KEYCODE_BACK:
+		        		if (GameSingletons.gumpman.gumpMode())
+		        			GameSingletons.gumpman.closeAllGumps(false);
+		        		return true;
 		        	case KeyEvent.KEYCODE_DPAD_RIGHT:
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewHoriz(false, true); 
