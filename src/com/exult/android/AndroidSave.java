@@ -86,6 +86,7 @@ public class AndroidSave extends GameSingletons {
 		saveParty = (ImageView) exult.findViewById(R.id.save_party);
 		saveDetails = (TextView) exult.findViewById(R.id.save_details);
 		saveDetails.setText("");
+		tqueue.pause(TimeQueue.ticks);
 		this.exult = exult;
 		setButtonHandlers();
 		setTextHandler();
@@ -265,6 +266,7 @@ public class AndroidSave extends GameSingletons {
 		}
 	}
 	private void close() {
+		tqueue.resume(TimeQueue.ticks);
 		switchScreen(true);
 	}
 	public void load() {			// 'Load' was clicked.
