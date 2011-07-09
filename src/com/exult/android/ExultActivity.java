@@ -291,6 +291,7 @@ public class ExultActivity extends Activity {
     	private long showItemsTime = 0;
     	private long lastB1Click = 0;
     	private int leftDownX = -1, leftDownY = -1;
+    	private final static int clickDist = 5;		// Max. distance in movement to consider a click.
     	private boolean dragging = false, dragged = false;
     	private boolean movingAvatar = false;
     	private int avatarStartX, avatarStartY;
@@ -422,6 +423,7 @@ public class ExultActivity extends Activity {
     			// int state = event.getMetaState();
     			switch (event.getAction() & MotionEvent.ACTION_MASK) {
     			case MotionEvent.ACTION_DOWN:
+    				//System.out.println("action_down: " + x + ", " + y);
     				if (!targeting)
     					mouse.move(x, y);
     				if (modal != null && clickPoint == null) {
@@ -459,7 +461,7 @@ public class ExultActivity extends Activity {
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
-    				
+    				//System.out.println("action_up: " + x + ", " + y);
     				if (!targeting)
     					mouse.hide();
     				gwin.stopActor();
@@ -471,8 +473,8 @@ public class ExultActivity extends Activity {
     				}
     				if (clickPoint != null) {
     					if (targeting || clickTrack != null ||
-    					   (leftDownX - 1 <= x && x <= leftDownX + 1 &&
-    						leftDownY - 1 <= y && y <= leftDownY + 1)) {
+    					   (leftDownX - clickDist <= x && x <= leftDownX + clickDist &&
+    						leftDownY - clickDist <= y && y <= leftDownY + clickDist)) {
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
     					}
@@ -487,8 +489,8 @@ public class ExultActivity extends Activity {
     				}
     				if (GameTime - lastB1Click < 500 &&
     						UsecodeMachine.running <= 0 &&
-    						leftDownX - 1 <= x && x <= leftDownX + 1 &&
-    						leftDownY - 1 <= y && y <= leftDownY + 1) {
+    						leftDownX - clickDist <= x && x <= leftDownX + clickDist &&
+    						leftDownY - clickDist <= y && y <= leftDownY + clickDist) {
     					dragging = dragged = false;
     					// This function handles the trouble of deciding what to
     					// do when the avatar cannot act.
@@ -501,8 +503,8 @@ public class ExultActivity extends Activity {
     					lastB1Click = GameTime;
     				if (!clickHandled && 
     						canAct &&
-    						leftDownX - 1 <= x && x <= leftDownX + 1 &&
-    						leftDownY - 1 <= y && y <= leftDownY + 1) {
+    						leftDownX - clickDist <= x && x <= leftDownX + clickDist &&
+    						leftDownY - clickDist <= y && y <= leftDownY + clickDist) {
     					showItemsX = x; showItemsY = y;
     					showItemsTime = GameTime + 500;
     				}
@@ -510,6 +512,7 @@ public class ExultActivity extends Activity {
     				dragging = dragged = false;
     				return true;
     			case MotionEvent.ACTION_MOVE:
+    				//System.out.println("action_move: " + x + ", " + y);
     				if (zoomX >= 0) {
     					float newDist = spacing(event);
     					if (newDist > 10f) {
@@ -540,11 +543,11 @@ public class ExultActivity extends Activity {
     						modal.mouseDrag(x, y);
     						return true;
     					}
-    					if (movingAvatar || x < leftDownX - 2 || x > leftDownX + 2 ||
-    										y < leftDownY - 2 || y > leftDownY + 2) {
+    					if (movingAvatar || x < leftDownX - (clickDist+2) || x > leftDownX + (clickDist+2) ||
+    										y < leftDownY - (clickDist+2) || y > leftDownY + (clickDist+2)) {
     						GameSingletons.mouse.setSpeedCursor(avatarStartX, avatarStartY);
-    						System.out.printf("Mouse moved from %1$d,%2$d to %3$d, %4$d\n",
-    								leftDownX, leftDownY, x, y);
+    						//System.out.printf("Mouse moved from %1$d,%2$d to %3$d, %4$d\n",
+    						//		leftDownX, leftDownY, x, y);
     						movingAvatar = true;
     						avatarMotion.setLocation(sx, sy);
     						gwin.startActor(avatarStartX, avatarStartY, x, y, 
@@ -575,6 +578,7 @@ public class ExultActivity extends Activity {
     					clickTrack.onMotion(x, y);
     				return true;
     			case MotionEvent.ACTION_POINTER_DOWN:
+    				//System.out.println("action_pointer_down: " + x + ", " + y);
     				oldZoomDist = spacing(event);
     				System.out.printf("oldZoomDist = %1$f\n", oldZoomDist);
     				if (!dragging && oldZoomDist > 10f) {
@@ -587,7 +591,7 @@ public class ExultActivity extends Activity {
     				}
     				return true;    			
     			case MotionEvent.ACTION_POINTER_UP:
-    				System.out.println("ACTION_POINTER_UP");
+    				//System.out.println("ACTION_POINTER_UP");
     				zoomX = -1;
     				return true;
     			case MotionEvent.ACTION_CANCEL:
