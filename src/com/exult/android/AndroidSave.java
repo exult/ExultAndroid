@@ -37,7 +37,7 @@ public class AndroidSave extends GameSingletons {
 	private ListView filesView;
 	private EditText editView;
 	private Button saveBtn, loadBtn, deleteBtn, cancelBtn;
-	private ImageView saveMiniScreen;
+	private ImageView saveMiniScreen, saveParty;
 	private TextView saveDetails;
 	private Activity exult;
 	private SaveInfo	games[];		// The list of savegames
@@ -57,8 +57,8 @@ public class AndroidSave extends GameSingletons {
 	private SaveGameParty gd_party[];	// Parts in Gamedat
 
 	private VgaFile.ShapeFile screenshot;		// The picture to be drawn
-	private ImageBuf shotWin;			// For converting to a bitmap.
-	private Bitmap shotBitmap;
+	private ImageBuf shotWin, partyWin;			// For converting to a bitmap.
+	private Bitmap shotBitmap, partyBitmap;
 	private SaveGameDetails details;	// The game details to show
 	private SaveGameParty party[];		// The party to show
 	private boolean is_readable;		// Is the save game readable
@@ -83,6 +83,7 @@ public class AndroidSave extends GameSingletons {
 		editView = (EditText) exult.findViewById(R.id.sr_editname);
 		editView.setText("");
 		saveMiniScreen = (ImageView) exult.findViewById(R.id.save_miniscreen);
+		saveParty = (ImageView) exult.findViewById(R.id.save_party);
 		saveDetails = (TextView) exult.findViewById(R.id.save_details);
 		saveDetails.setText("");
 		this.exult = exult;
@@ -183,21 +184,29 @@ public class AndroidSave extends GameSingletons {
 			}
 			frame.paint(shotWin, 0, 0);
 			shotWin.blit(shotBitmap);
-			System.out.println("miniscreen: " + frame.getWidth() + ", " + frame.getHeight());
 			saveMiniScreen.setImageBitmap(shotBitmap);
 		}
 		String filename = selected >= 0 ? games[selected].filename : null;
 		if (details != null && party != null) {
-			/*+++++++++FINISH
+			if (partyWin == null) {
+				// for some reason, partyWin starts out with w, h == 0.
+				int w = shotWin.getWidth(), h = win.getHeight()/3;
+				System.out.println("saveParty: " + w + ", " + h);
+				partyWin = new ImageBuf(w, h);
+				partyWin.setPalette(win);
+				partyBitmap = Bitmap.createBitmap(w, h, Config.ARGB_8888);
+			}
 			int i;
 			for (i=0; i<4 && i<details.party_size; i++) {
 				ShapeFrame shape = party[i].shape_file.getShape(party[i].shape, 16);
-				shape.paint(win, x + 249 + i*23, y + 169);
+				shape.paint(partyWin, 26 + i*23, 28);
 			}
 			for (i=4; i<8 && i<details.party_size; i++) {
 				ShapeFrame shape = party[i].shape_file.getShape(party[i].shape, 16);
-				shape.paint(win, x + 249 + (i-4)*23, y + 198);
-			} */
+				shape.paint(win, 26 + (i-4)*23, 58);
+			}
+			partyWin.blit(partyBitmap);
+			saveParty.setImageBitmap(partyBitmap);
 			String suffix = "th";
 
 			if ((details.real_day%10) == 1 && details.real_day != 11)

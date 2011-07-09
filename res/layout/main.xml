@@ -161,7 +161,8 @@
         		android:layout_weight="1">
     			</TextView>
     			<ImageView
-    			android:id="@+id/save_party"
+    			android:id="@+id/save_party"    			
+    			android:scaleType="fitXY"
     			android:layout_width="fill_parent"
         		android:layout_height="0px"
         		android:layout_weight="1">
