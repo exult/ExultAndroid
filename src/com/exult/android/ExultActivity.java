@@ -174,6 +174,8 @@ public class ExultActivity extends Activity {
     @Override
 	public void onBackPressed() {
 		// Keeps program from exiting.
+    	if (AndroidSave.instance != null)
+    		AndroidSave.instance.close();
 	}
     /*
      * Button handlers:

@@ -34,6 +34,7 @@ import com.exult.android.NewFileGump.SaveInfo;
  * A native Android save/restore screen.
  */
 public class AndroidSave extends GameSingletons {
+	public static AndroidSave instance;
 	private View myView, mainView;
 	private ListView filesView;
 	private EditText editView;
@@ -94,6 +95,7 @@ public class AndroidSave extends GameSingletons {
 		LoadSaveGameDetails();
 		showGameInfo();
 		setListHandler();
+		instance = this;
 	}
 	private void setListHandler() {
 		filesView.setOnItemClickListener(new ListView.OnItemClickListener() {
@@ -266,7 +268,8 @@ public class AndroidSave extends GameSingletons {
 			}
 		}
 	}
-	private void close() {
+	public void close() {
+		instance = null;
 		tqueue.resume(TimeQueue.ticks);
 		switchScreen(true);
 	}
