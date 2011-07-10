@@ -415,6 +415,10 @@ public class ExultActivity extends Activity {
     			win.rotateColors(0xe0, 8);
     			gwin.setPainted();
     	}
+    	private void moveAvatarMouse(int x, int y) {
+    		gwin.getShapeLocation(movePoint, gwin.getMainActor());
+    		GameSingletons.mouse.move((x + movePoint.x)/2, (y + movePoint.y)/2);
+    	}
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
     			if (gwin.busyMessage != null)
@@ -558,6 +562,7 @@ public class ExultActivity extends Activity {
     						avatarMotion.setLocation(sx, sy);
     						gwin.startActor(avatarStartX, avatarStartY, x, y, 
     							GameSingletons.mouse.avatarSpeed);
+    						moveAvatarMouse(x, y);
     					}
     				} else if (dragging) {
     					dragged = GameSingletons.drag.moved(x, y);
