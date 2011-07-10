@@ -176,6 +176,10 @@ public class ExultActivity extends Activity {
 		// Keeps program from exiting.
     	if (AndroidSave.instance != null)
     		AndroidSave.instance.close();
+    	else if (GameSingletons.gumpman.gumpMode())
+			GameSingletons.gumpman.closeAllGumps(false);
+    	else
+    		askToQuit();
 	}
     /*
      * Button handlers:
@@ -210,6 +214,16 @@ public class ExultActivity extends Activity {
     public static void quit() {
     	instance.finish();
     }
+    public static void askToQuit() {
+		Observer o = new Observer() {
+			public void update(Observable o, Object arg) {
+				if (((YesNoGump)arg).getAnswer())
+					ExultActivity.quit();
+			}
+		};
+		YesNoGump.ask(o,
+				"Do you really want to quit?");
+	}
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -302,6 +316,7 @@ public class ExultActivity extends Activity {
     	private boolean movingAvatar = false;
     	private int avatarStartX, avatarStartY;
     	private float oldZoomDist = -1, zoomX = -1, zoomY = -1, oldZoomFactor;
+    	private boolean wasZooming;
     	private Point movePoint = new Point();	// A temp.
     	@Override
     	protected void  onSizeChanged(int w, int h, int oldw, int oldh) {
@@ -477,8 +492,9 @@ public class ExultActivity extends Activity {
     				gwin.stopActor();
     				avatarMotion = null;
     				movingAvatar = false;
-    				if (zoomX >= 0) {
+    				if (zoomX >= 0 || wasZooming) {	// Don't want to cancel targetting if we were zooming.
     					zoomX = -1;
+    					wasZooming = false;
     					return true;
     				}
     				if (clickPoint != null) {
@@ -518,7 +534,6 @@ public class ExultActivity extends Activity {
     					showItemsX = x; showItemsY = y;
     					showItemsTime = GameTime + 500;
     				}
-    				zoomX = -1;
     				dragging = dragged = false;
     				return true;
     			case MotionEvent.ACTION_MOVE:
@@ -599,6 +614,7 @@ public class ExultActivity extends Activity {
     					gwin.stopActor();
         				avatarMotion = null;
         				movingAvatar = false;
+        				wasZooming = true;
     				}
     				return true;    			
     			case MotionEvent.ACTION_POINTER_UP:
@@ -626,6 +642,7 @@ public class ExultActivity extends Activity {
     			Gump.Modal modal = GameSingletons.gumpman.getModal();
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {
 		        	if (modal != null) {
+		        		modal.keyDown(keyCode);
 		        		modal.textInput(keyCode, event.getUnicodeChar());
 		        		return true;
 		        	}
@@ -633,10 +650,6 @@ public class ExultActivity extends Activity {
 		        		keyCode == KeyEvent.KEYCODE_SHIFT_RIGHT)
 		        		return false;		// Weed these out for performance.
 		        	switch (keyCode) {
-		        	case KeyEvent.KEYCODE_BACK:
-		        		if (GameSingletons.gumpman.gumpMode())
-		        			GameSingletons.gumpman.closeAllGumps(false);
-		        		return true;
 		        	case KeyEvent.KEYCODE_DPAD_RIGHT:
 		        		for (int i = 0; i < 4; ++i)
 		        			gwin.shiftViewHoriz(false, true); 

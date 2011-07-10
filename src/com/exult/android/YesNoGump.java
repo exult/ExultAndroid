@@ -64,7 +64,7 @@ public class YesNoGump extends Gump.Modal {
 	public void keyDown(int chr) { // Character typed.
 		if (chr == 'y' || chr == 'Y' || chr == KeyEvent.KEYCODE_ENTER)
 			setAnswer(true);
-		else if (chr == 'n' || chr == 'N')
+		else if (chr == 'n' || chr == 'N' || chr == KeyEvent.KEYCODE_BACK)
 			setAnswer(false);
 	}
 	public static void ask(Observer c, String txt) {	// Ask question, get answer.

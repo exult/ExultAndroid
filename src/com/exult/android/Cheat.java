@@ -1,5 +1,7 @@
 package com.exult.android;
 
+import android.view.KeyEvent;
+
 public final class Cheat extends GameSingletons {
 	private boolean hackMover;
 	private boolean godMode;
@@ -81,6 +83,11 @@ public final class Cheat extends GameSingletons {
 			ExultActivity.showToast("Teleport!!!");
 			close();
 			return true;
+		}
+		@Override
+		public void keyDown(int chr) { // Character typed.
+			if (chr == KeyEvent.KEYCODE_BACK)
+				close();
 		}
 		private static final int border=2;			// For showing map.
 		private static final int worldsize = EConst.c_tiles_per_chunk * EConst.c_num_chunks;
