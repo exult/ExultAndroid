@@ -267,7 +267,7 @@ public abstract class Animator extends TimeSensitive.Timer {
 	 *	A class for playing sound effects when certain objects are nearby.
 	 */
 	public static class ShapeSfx extends GameSingletons {
-		public static boolean off = true;//+++++++++FOR NOW
+		public static boolean off = false;	// To disable all SFX.
 		private static Rectangle rangeRect = new Rectangle();	// Temp.
 		private static Tile pos = new Tile(), cent = new Tile();// Temps.
 		private GameObject obj;		// Object that caused the sound.

@@ -1674,8 +1674,9 @@ public class GameWindow extends GameSingletons {
 	 *	Restore game by reading in 'gamedat'.
 	 */
 	public void read() {
+		
+		audio.cancelStreams();
 		/* +++++++++FINISH
-		Audio.get_ptr().cancel_streams();
 	#ifdef RED_PLASMA
 		// Display red plasma during load...
 		setup_load_palette();
