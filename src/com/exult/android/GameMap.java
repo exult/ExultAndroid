@@ -579,44 +579,33 @@ public class GameMap extends GameSingletons {
 	 */
 	private void getIregObjects(int schunk) { 	// Superchunk # (0-143).
 		InputStream ireg;
-
-		/* +++++FINISH
-		if (schunk_cache[schunk] && schunk_cache_sizes[schunk] >= 0) {
-			// No items
-			if (schunk_cache_sizes[schunk] == 0) return;
-			ireg = new BufferDataSource (schunk_cache[schunk], schunk_cache_sizes[schunk]);
-		}
 		
 		if (false)
 			;
-		else */ try {
-			ireg = EUtil.U7openStream(getSchunkFileName(EFile.U7IREG, schunk));
+		try {
+			byte cache[] = schunkCache[schunk];
+			if (cache != null) {
+				// No items
+				if (cache.length == 0) return;
+				ireg = new ByteArrayInputStream(cache);
+			} else 
+				ireg = EUtil.U7openStream(getSchunkFileName(EFile.U7IREG, schunk));
 			int scy = 16*(schunk/12);	// Get abs. chunk coords.
 			int scx = 16*(schunk%12);
 			readIregObjects(ireg, scx, scy, null, 0);
 			ireg.close();
 		} catch(IOException e) {
 			return;			// Just don't show them.
-		}
-		
-		/*	
+		}	
 						// A fixup:
-		if (schunk == 10*12 + 11 && Game::get_game_type() == SERPENT_ISLE)
-			{			// Lever in SilverSeed:
-			Game_object_vector vec;
-			if (Game_object::find_nearby(vec, Tile_coord(2936, 2726, 0),
-						787, 0, 0, c_any_qual, 5))
-				vec[0].move(2937, 2727, 2);
-			}
-		*/
-		
-		/*
-		if (schunk_cache[schunk]) {
-			delete [] schunk_cache[schunk];
-			schunk_cache[schunk] = 0;
-			schunk_cache_sizes[schunk] = -1;
+		if (schunk == 10*12 + 11 && game.isSI()) {
+						// Lever in SilverSeed:
+			Vector<GameObject> vec = new Vector<GameObject>();
+			if (findNearby(vec, new Tile(2936, 2726, 0),
+						787, 0, 0, EConst.c_any_qual, 5) > 0)
+				vec.firstElement().move(2937, 2727, 2);
 		}
-		*/
+		schunkCache[schunk] = null;
 	}
 	private void getSuperchunkObjects(int schunk) {
 		getMapObjects(schunk);	// Get map objects/scenery.
@@ -682,15 +671,15 @@ public class GameMap extends GameSingletons {
 		// Write each superchunk to Iregxx.
 		for (int schunk = 0; schunk < EConst.c_num_schunks*EConst.c_num_schunks; schunk++) {
 						// Only write what we've read.
-			/* +++++++++FINISH
-			if (schunk_cache[schunk] && schunk_cache_sizes[schunk] >= 0) {
+			byte cache[] = schunkCache[schunk];
+			if (cache != null) {
 				// It's loaded in a memory buffer
-				char fname[128];		// Set up name.
-				ofstream ireg_stream;
-				U7open(ireg_stream, get_schunk_file_name(U7IREG, schunk, fname));
-				ireg_stream.write(schunk_cache[schunk], schunk_cache_sizes[schunk]);
+				OutputStream ireg_stream =
+					EUtil.U7create(getSchunkFileName(EFile.U7IREG, schunk));
+				ireg_stream.write(cache);
+				ireg_stream.close();
 			}
-			else */ if (schunkRead[schunk]) {
+			else if (schunkRead[schunk]) {
 				// It's active
 				writeIregObjects(schunk);
 			}
