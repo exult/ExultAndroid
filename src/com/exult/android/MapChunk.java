@@ -252,7 +252,7 @@ public final class MapChunk extends GameSingletons {
 			    !egg.isDormant() &&
 			    egg.isActive(obj, tx, ty, tz, from_tx, from_ty)) {
 				egg.hatch(obj, now);
-				/*++++++STILL NEEDED?
+				/*++STILL NEEDED?
 				if (chunk.get_cache() != this)
 					return;	// A teleport could have deleted us!
 				*/
@@ -267,7 +267,7 @@ public final class MapChunk extends GameSingletons {
 				EggObject egg = eggObjects.elementAt(i);
 				if (egg != null && egg.isActive(obj, tx, ty, tz, from_tx, from_ty)) {
 					egg.hatch(obj, now);
-					/* ++++++NEEDED?
+					/* ++NEEDED?
 					if (chunk.get_cache() != this)
 						return;	// A teleport could have deleted us!	
 					*/		
@@ -1195,6 +1195,38 @@ public final class MapChunk extends GameSingletons {
 		if (height == -1) return 255;
 		return height;
 	}
+	//	Remove some cached data we can recreate.
+	public void killCache() {
+		// Get rid of terrain
+		if (terrain != null) terrain.removeClient();
+		terrain = null;
+		// Delete dungeon bits
+		dungeonLevels = null;
+	}
+	//	Return all the objects and actors, plus their IREG total size.
+	public int getObjActors(Vector<GameObject> removes, Vector<Actor> actors) {
+		int bufSize = 0;
+		boolean failed = false;
+
+		ObjectList.ObjectIterator iter = new ObjectList.ObjectIterator(objects);
+		GameObject each;
+		while ((each = iter.next()) != null) {
+			Actor actor = each.asActor();
+			// Normal objects and monsters
+			if (actor == null || (each instanceof MonsterActor && each.getFlag(GameObject.is_temporary))) {
+				removes.add(each);
+				int ireg_size = each.getIregSize();
+
+				if (ireg_size < 0) failed = true;
+				else bufSize += ireg_size;
+			} else {
+				actors.add(actor);
+			}
+		}
+
+		return failed?-1:bufSize;
+	}
+
 	/*
 	 *	Here's an iterator that takes a rectangle of tiles, and sequentially
 	 *	returns the interesection of that rectangle with each chunk that it

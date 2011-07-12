@@ -11,6 +11,7 @@ import java.io.IOException;
 public class GameMap extends GameSingletons {
 	private int num;			// Map #.  Index in gwin.maps.
 	private static int iregCount, ifixCount;			// Just for information.
+	public static final boolean debug = false;
 	private static Vector<ChunkTerrain> chunkTerrains;
 	private static RandomAccessFile chunks;	// "u7chunks" file.
 	private static boolean v2Chunks;		// True if 3 bytes/entry.
@@ -18,6 +19,7 @@ public class GameMap extends GameSingletons {
 	private short terrainMap[];				// ChunkTerrains index for each chunk.
 	private MapChunk objects[];				// List of objects for each chunk.
 	private boolean schunkRead[];			// 12x12, a flag for each superchunk.
+	private byte[] schunkCache[];
 	private static Rectangle worldRect = new Rectangle(0, 0, 
 							EConst.c_num_chunks*EConst.c_tiles_per_chunk, 
 							EConst.c_num_chunks*EConst.c_tiles_per_chunk);
@@ -64,6 +66,7 @@ public class GameMap extends GameSingletons {
 		terrainMap = new short[EConst.c_num_chunks*EConst.c_num_chunks];
 		objects = new MapChunk[EConst.c_num_chunks * EConst.c_num_chunks];
 		schunkRead = new boolean[12*12];
+		schunkCache = new byte[12*12][];
 	}
 	public final int getNum() {
 		return num;
@@ -862,4 +865,104 @@ public class GameMap extends GameSingletons {
 		return olist.spotAvailable(height, tx%EConst.c_tiles_per_chunk, 
 				ty%EConst.c_tiles_per_chunk, lift, move_flags, max_drop, max_rise);
 	}
+	/*
+	 *	Do a cache out. (x, y) is the center.
+	 *	If x == -1, cache out whole map.
+	 */
+	public void cacheOut(int cx, int cy) {
+		int sx = cx / EConst.c_chunks_per_schunk;
+		int sy = cy / EConst.c_chunks_per_schunk;
+		boolean chunkFlags[] = new boolean[144];
+
+		if (debug) {
+			if (cx == -1)
+				System.out.println("Want to cache out entire map #" + num);
+			else
+				System.out.println("Want to cache out around super chunk: " + 
+						(sy*12 + sx) + " = "  + sx + ", " + sy);
+		}
+		// We cache out all but the 9 directly around the pov
+		if (cx != -1 && cy != -1) {
+			chunkFlags[((sy+11)%12)*12 + (sx+11)%12] = true;
+			chunkFlags[((sy+11)%12)*12 + sx] = true;
+			chunkFlags[((sy+11)%12)*12 + (sx+1)%12] = true;
+
+			chunkFlags[sy*12 + (sx+11)%12] = true;
+			chunkFlags[sy*12 + sx] = true;
+			chunkFlags[sy*12 + (sx+1)%12] = true;
+
+			chunkFlags[((sy+1)%12)*12 + (sx+11)%12] = true;
+			chunkFlags[((sy+1)%12)*12 + sx] = true;
+			chunkFlags[((sy+1)%12)*12 + (sx+1)%12] = true;
+			}
+		for (sy = 0; sy < 12; sy++) for (sx = 0; sx < 12; sx++) {
+			if (chunkFlags[sy*12 + sx]) continue;
+
+			int schunk = sy*12 + sx;
+			if (schunkRead[schunk]) 
+				cacheOutSchunk(schunk);
+		}
+	}
+
+	private void cacheOutSchunk(int schunk)
+	{
+		// Get abs. chunk coords.
+		int scy = 16*(schunk/12);
+		int scx = 16*(schunk%12);
+		int cy, cx;
+		
+		// Our vectors
+		Vector<GameObject> removes = new Vector<GameObject>();
+		Vector<Actor> actors = new Vector<Actor>();
+
+		int bufSize = 0;
+
+		if (debug)
+			System.out.println("Killing superchunk: " + schunk);
+
+		// Go through chunks and get all the items
+		for (cy = 0; cy < 16; cy++) for (cx = 0; cx < 16; cx++) {
+			MapChunk chunk = getChunk(scy + cy, scx + cx);
+			int size = chunk.getObjActors(removes, actors);
+
+			if (size < 0) {
+				if (debug)
+					System.out.println("Failed attempting to kill superchunk");
+				return;
+			}
+			bufSize += size + 2;
+		}
+		schunkRead[schunk] = false;
+		if (debug)
+			System.out.println("Buffer size of " + bufSize + " bytes required to store super chunk");
+
+		// Clear old (this shouldn't happen)
+		if (schunkCache[schunk] != null) {
+			schunkCache[schunk] = null;
+		}
+		// Create new
+		ByteArrayOutputStream ds = new ByteArrayOutputStream(bufSize);
+		try {
+			writeIregObjects(schunk, ds);
+		} catch (IOException e) { }		// Don't expect this to happen.
+		schunkCache[schunk] = ds.toByteArray();
+		if (debug)
+			System.out.println("Wrote " + schunkCache[schunk].length + " bytes");
+
+		// Now remove the objects
+		for (GameObject each : removes) {
+			each.deleteContents();
+			each.removeThis();
+		}
+		// Now disable the actors
+		for (Actor act : actors)
+			act.cacheOut();
+		// Go through chunks and finish up
+		for (cy = 0; cy < 16; cy++) for (cx = 0; cx < 16; cx++) {
+			MapChunk chunk = getChunk(scy + cy, scx + cx);
+			chunk.killCache();
+		}
+	}
+
+	
 }

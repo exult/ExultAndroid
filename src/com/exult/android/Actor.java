@@ -2387,6 +2387,15 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		return false;
 	}
+	/*
+	 *  Cache out an actor. 
+	 *  Resets the schedule, and makes the actor dormant
+	 */
+	public void cacheOut() {
+		// This is a bit of a hack, but it works well enough
+		if (getScheduleType() != Schedule.walk_to_schedule)
+			setScheduleType(getScheduleType());
+	}
 	public final boolean addDirty(boolean figureWeapon) {
 		if (!gwin.addDirty(this))
 			return false;
