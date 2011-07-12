@@ -617,6 +617,20 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	public int getAttribute(String nm) {
 		return 0;	// +++++++LATER
 	}
+	//	Parse attribute/value pairs.
+	public void readAttributes(byte buf[]) {
+		int i = 0, cnt = buf.length;
+		while (i < cnt) {
+			int end = i;
+			while (buf[end] != 0)
+				++end;
+			String att = new String(buf, i, end);
+			i = end + 1;
+			int val = EUtil.Read2(buf, i);
+			i += 2;
+			setAttribute(att, val);
+		}
+	}
 	public void setSchedules(Schedule.ScheduleChange scheds[]) {
 		// Overloaded.
 	}

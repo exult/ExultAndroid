@@ -1235,6 +1235,8 @@ public abstract class GameObject extends ShapeID {
 	public BargeObject asBarge() {
 		return null;
 	}
+	void readAttributes(byte buf[]) {
+	}
 	//	Containers should override these.
 	public int countObjects(int shapenum, int qual, int framenum) {
 		return 0;

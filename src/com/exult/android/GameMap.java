@@ -94,7 +94,7 @@ public class GameMap extends GameSingletons {
 		int hdrsize = 0, chunksz = EConst.c_tiles_per_chunk*EConst.c_tiles_per_chunk*2;
 		try {
 			if (chunks != null)
-			chunks.close();
+				chunks.close();
 			String nm = EUtil.U7exists(EFile.PATCH_U7CHUNKS);
 			if (nm != null)
 				chunks = new RandomAccessFile(EFile.PATCH_U7CHUNKS, "r");
@@ -113,7 +113,7 @@ public class GameMap extends GameSingletons {
 			numChunkTerrains = ((int)chunks.length() - hdrsize)/chunksz;
 		} catch (IOException e) {
 			numChunkTerrains = 0;
-			//CRASH+++++
+			ExultActivity.fileFatal(EFile.U7CHUNKS);
 		}
 
 		if (chunkTerrains == null)
@@ -128,8 +128,13 @@ public class GameMap extends GameSingletons {
 	 *			"<GAMEDAT>/map03/ireg".
 	 */
 	public String getMappedName(String from) {
-		//++++FINISH, using 'num'
-		return from;
+		if (num == 0)
+			return from;
+		int sep = from.lastIndexOf('/');
+		int lb = num%16;
+		String result = from.substring(0, sep) + EFile.MULTIMAP_DIR + (char)('0' + num/16) +
+							(char)(lb < 10 ? ('0' + lb) : ('a' + (lb - 10)));
+		return result;
 	}
 	// Init. for new/restored game.
 	public void init() {
@@ -168,7 +173,6 @@ public class GameMap extends GameSingletons {
 		} catch (IOException e) {
 			Arrays.fill(terrainMap, (short)0);
 		}
-	// Would fill various buffers here++++++++++++
 	}
 	/*
 	 * Read in superchunk data to cover the screen.
@@ -314,7 +318,7 @@ public class GameMap extends GameSingletons {
 				scr.start(scr.getDelay());
 			}
 		} else if (type == IREG_ATTS) {	// Attribute/value pairs?
-			//+++++++++++FINISH obj.readAttributes(buf, len);
+			obj.readAttributes(buf);
 		} else if (type == IREG_STRING) {	// IE, Usecode egg function name?
 			if (obj.isEgg())
 				((EggObject)(obj)).setStr1(new String(buf));
