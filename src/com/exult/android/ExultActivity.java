@@ -318,7 +318,7 @@ public class ExultActivity extends Activity {
     	public static int stdDelay = 200;	// Frame delay in msecs.
     	private int showItemsX = -1, showItemsY = -1;
     	private long showItemsTime = 0, lastB1Click;
-    	private MouseClick lastMouse = new MouseClick();
+    	private MousePos downMouse = new MousePos(), trackMouse = new MousePos();
     	private final static int clickDist = 5;		// Max. distance in movement to consider a click.
     	private boolean dragging = false, dragged = false;
     	private boolean movingAvatar = false;
@@ -439,7 +439,7 @@ public class ExultActivity extends Activity {
     	/*
          * 	Store info about a mouse event.
          */
-        private static final class MouseClick {
+        private static final class MousePos {
         	int x, y;					// Location on screen.
         	public void set(int mx, int my) {
         		x = mx; y = my;
@@ -470,6 +470,8 @@ public class ExultActivity extends Activity {
     				//System.out.println("action_down: " + x + ", " + y);
     				if (!tracking)
     					mouse.move(x, y);
+    				else
+    					trackMouse.set(x, y);
     				if (modal != null && clickPoint == null) {
     					modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
     					return true;
@@ -501,7 +503,7 @@ public class ExultActivity extends Activity {
     					}
     				} else if (clickPoint != null && clickTrack != null) 
     					clickTrack.onMotion(mouse.getX(), mouse.getY());
-    				lastMouse.set(x, y);
+    				downMouse.set(x, y);
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
@@ -517,7 +519,9 @@ public class ExultActivity extends Activity {
     					return true;
     				}
     				if (clickPoint != null) {
-    					if (tracking || clickTrack != null || lastMouse.pointNear(x, y)) {
+    					//System.out.println("action_up: " + x + ", " + y + ", last= " + downMouse.x + ", " + downMouse.y);
+    					//+++++OLD if (tracking || clickTrack != null || downMouse.pointNear(x, y)) {
+    					if (downMouse.pointNear(x, y)) {
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
     					}
@@ -530,18 +534,17 @@ public class ExultActivity extends Activity {
     				if (dragging) {
     					clickHandled = GameSingletons.drag.drop(x, y, dragged);
     				}
-    				if (UsecodeMachine.running <= 0 && GameTime < lastB1Click + 500 && lastMouse.pointNear(x, y)) {
+    				if (UsecodeMachine.running <= 0 && GameTime < lastB1Click + 500 && downMouse.pointNear(x, y)) {
     					dragging = dragged = false;
     					// This function handles the trouble of deciding what to
     					// do when the avatar cannot act.
     					gwin.doubleClicked(x, y);
-    					// +++++ Mouse::mouse.set_speed_cursor();
     					showItemsX = -1000;
     					return true;
     				}	
     				if (!dragging || !dragged)
     					lastB1Click = GameTime;
-    				if (!clickHandled && canAct && lastMouse.pointNear(x, y)) {
+    				if (!clickHandled && canAct && downMouse.pointNear(x, y)) {
     					showItemsX = x; showItemsY = y;
     					showItemsTime = GameTime + 500;
     				}
@@ -579,7 +582,7 @@ public class ExultActivity extends Activity {
     						modal.mouseDrag(x, y);
     						return true;
     					}
-    					if (movingAvatar || !lastMouse.pointNear(x, y, clickDist + 2)) {
+    					if (movingAvatar || !downMouse.pointNear(x, y, clickDist + 2)) {
     						GameSingletons.mouse.setSpeedCursor(avatarStartX, avatarStartY);
     						//System.out.printf("Mouse moved from %1$d,%2$d to %3$d, %4$d\n",
     						//		leftDownX, leftDownY, x, y);
@@ -593,7 +596,7 @@ public class ExultActivity extends Activity {
     					dragged = GameSingletons.drag.moved(x, y);
     				} else if (tracking) {
     					// Move the mouse to follow the touch.
-    					int deltax = x - lastMouse.x, deltay = y - lastMouse.y;
+    					int deltax = x - trackMouse.x, deltay = y - trackMouse.y;
     					int mx = mouse.getX() + deltax, my = mouse.getY() + deltay;
     					mouse.move(mx, my);
     					if (clickTrack != null)
@@ -613,7 +616,7 @@ public class ExultActivity extends Activity {
     							GameWindow.targetObj = obj;
     						}
     					}
-    					lastMouse.x = x; lastMouse.y = y;
+    					trackMouse.set(x, y);
     				} 
     				return true;
     			case MotionEvent.ACTION_POINTER_DOWN:
