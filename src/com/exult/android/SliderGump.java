@@ -97,14 +97,7 @@ public class SliderGump extends Gump.Modal {
 	}
 	//	Clicktracker
 	@Override
-	public void onDown(int x, int y) { 
-		mouseDown(x, y, 1);
-	}
-						// Handle events:
-	@Override
-	public boolean mouseDown(int mx, int my, int button) {
-		if (button != 1) return false;
-
+	public void onDown(int mx, int my) {
 		dragging = false;
 		GumpWidget.Button btn = super.onButton(mx, my);
 		if (btn != null)
@@ -112,9 +105,9 @@ public class SliderGump extends Gump.Modal {
 		else
 			pushed = null;
 		if (pushed != null) {
-			if (!pushed.push(button != 0)) 
+			if (!pushed.push(true)) 
 				pushed = null;
-			return true;
+			return;
 		}
 						// See if on diamond.
 		ShapeFrame d_shape = diamond.getShape();
@@ -124,7 +117,7 @@ public class SliderGump extends Gump.Modal {
 			prev_dragx = mx;
 		} else {
 			if(my-getY()<diamondy || my-getY()>diamondy+d_shape.getHeight())
-				return true;
+				return;
 			diamondx = mx-getX();
 			if(diamondx<xmin)
 				diamondx = xmin;
@@ -136,11 +129,9 @@ public class SliderGump extends Gump.Modal {
 			delta -= delta%step_val;
 			pushed_newval = min_val + delta;
 		}
-		return true;
 	}
 	@Override
-	public boolean mouseUp(int mx, int my, int button) {
-		if (button != 1) return false;
+	public void onUp(int mx, int my) {
 		int newval = pushed_newval;
 		pushed_newval = -1;
 		if (dragging) {			// Done dragging?
@@ -154,17 +145,12 @@ public class SliderGump extends Gump.Modal {
 				val = newval;
 				paint();
 			}
-			return true;
+			return;
 		}
-		pushed.unpush(button != 0);
+		pushed.unpush(true);
 		if (pushed.onButton(mx, my) != null)
-			pushed.activate(button != 0);
+			pushed.activate(true);
 		pushed = null;
-		return true;
-	}
-	@Override
-	public void mouseDrag(int mx, int my) {
-		
 	}
 	@Override
 	public void keyDown(int chr) { // Character typed.

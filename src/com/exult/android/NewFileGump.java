@@ -472,11 +472,8 @@ public final class NewFileGump extends Gump.Modal {
 			gwin.paintBusy();	// ie, "Saving Game".
 		}
 	}
-					// Handle events:
-	public boolean mouseDown(int mx, int my, int button) {
-		if (button == 0)
-			return false;
-
+	@Override				// Handle events for ClickTracker
+	public void onDown(int mx, int my) {
 		slide_start = -1;
 		pushed = super.onButton(mx, my);
 					// Try buttons at bottom.
@@ -491,7 +488,7 @@ public final class NewFileGump extends Gump.Modal {
 		if (pushed != null) {			// On a button?
 			if (!pushed.push(true)) 
 				pushed = null;
-			return true;
+			return;
 		}
 		int gx = mx - x;
 		int gy = my - y;
@@ -506,21 +503,21 @@ public final class NewFileGump extends Gump.Modal {
 			if (gy < pos+scrolly) {
 				scroll_page(-1);
 				paintThis();
-				return true;
+				return;
 			}
 			// Pressed below it
 			else if (gy >= pos+scrolly+sliderh) {
 				scroll_page(1);
 				paintThis();
-				return true;
+				return;
 			} else { // Pressed on it
 				slide_start = gy;
-				return true;
+				return;
 			}
 		}
 		// Now check for text fields
 		if (gx < fieldx || gx >= fieldx+fieldw)
-			return true;
+			return;
 
 		int	hit = -1;
 		int	i;
@@ -532,10 +529,10 @@ public final class NewFileGump extends Gump.Modal {
 			}
 		}
 		if (hit == -1) 
-			return true;
+			return;
 		if (hit+list_position >= num_games || hit+list_position < -2 || 
 				selected == hit+list_position) 
-			return true;
+			return;
 		selected = hit+list_position;
 		boolean want_load = true;
 		boolean want_delete = true;
@@ -591,11 +588,9 @@ public final class NewFileGump extends Gump.Modal {
 		}
 		paintThis();			// Repaint.
 		gwin.setPainted();
-		return true;
 	}
-	public boolean mouseUp(int mx, int my, int button) {
-		if (button == 0) 
-			return false;
+	@Override
+	public void onUp(int mx, int my) {
 		slide_start = -1;
 		if (pushed != null) {			// Pushing a button?
 			pushed.unpush(true);
@@ -603,7 +598,6 @@ public final class NewFileGump extends Gump.Modal {
 				pushed.activate(true);
 			pushed = null;
 		}
-		return true;
 	}
 	public void mouseDrag(int mx, int my) {
 		// If not sliding don't do anything

@@ -399,15 +399,9 @@ public abstract class Gump extends GameSingletons {
 			return done;
 		}
 		// Handle events:
-		public boolean mouseDown(int mx, int my, int button) {
-			return false;
-		}
-		public boolean mouseUp(int mx, int my, int button) {
+		public void onUp(int mx, int my) {
 			close();
-			return true;
 		}
-		public void mouseDrag(int mx, int my)
-			{  }
 		public void keyDown(int chr) // Key pressed
 			{  }
 		public void textInput(int chr, int unicode) // Character typed (unicode)
@@ -429,7 +423,7 @@ public abstract class Gump extends GameSingletons {
 		    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
 				while (!gump.isDone()) {
 					ExultActivity.getClick(p, gump, Mouse.hand);
-					gump.mouseUp(p.x, p.y, 1);	// Don't really need button anymore.
+					gump.onUp(p.x, p.y);
 				}
 			}
 		}

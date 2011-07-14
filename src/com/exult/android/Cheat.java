@@ -1,6 +1,5 @@
 package com.exult.android;
 
-import android.graphics.Point;
 import android.view.KeyEvent;
 
 public final class Cheat extends GameSingletons {
@@ -64,11 +63,9 @@ public final class Cheat extends GameSingletons {
 		CheatMapGump(ShapeFrame map) {
 			super(map);	// Manage everything here.
 		}
-		// Handle events:
-		public boolean mouseDown(int mx, int my, int button) {
-			return true;
-		}
-		public boolean mouseUp(int mx, int my, int button) {	
+		// Handle events for ClickTracker
+		@Override
+		public void onUp(int mx, int my) {	
 			mx -= x - shape.getXLeft() + border;
 			my -= y - shape.getYAbove() + border;
 			
@@ -84,7 +81,6 @@ public final class Cheat extends GameSingletons {
 			ExultActivity.showToast("Teleport!!!");
 			gwin.teleportParty(t, false, -1);
 			close();
-			return true;
 		}
 		@Override
 		public void keyDown(int chr) { // Character typed.

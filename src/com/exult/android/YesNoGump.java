@@ -44,27 +44,17 @@ public class YesNoGump extends Gump.Modal {
 	//	Clicktracker
 	@Override
 	public void onDown(int x, int y) { 
-		mouseDown(x, y, 1);
-	}
-					// Handle events:
-	public boolean mouseDown(int mx, int my, int button) {
-		if (button != 1) 
-			return false;
-		pushed = onButton(mx, my);
+		pushed = onButton(x, y);
 		if (pushed != null)
 			pushed.push(true);		// Show it.
-		return true;
 	}
-	public boolean mouseUp(int mx, int my, int button) {
-		if (button != 1) 
-			return false;
+	public void onUp(int mx, int my) {
 		if (pushed != null) {			// Pushing a button?
 			pushed.unpush(true);
 			if (pushed.onButton(mx, my) != null)
 				pushed.activate(true);
 			pushed = null;
 		}
-		return true;
 	}
 	public void keyDown(int chr) { // Character typed.
 		if (chr == 'y' || chr == 'Y' || chr == KeyEvent.KEYCODE_ENTER)

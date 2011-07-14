@@ -462,7 +462,6 @@ public class ExultActivity extends Activity {
     			float sx = event.getX(), sy = event.getY();
     			int x = (int)gwin.getWin().screenToGameX(sx), 
     				y = (int)gwin.getWin().screenToGameY(sy);
-    			Gump.Modal modal = GameSingletons.gumpman.getModal();
     			Mouse mouse = GameSingletons.mouse;
     			boolean canAct = gwin.mainActorCanAct();
     			// int state = event.getMetaState();
@@ -473,10 +472,6 @@ public class ExultActivity extends Activity {
     					mouse.move(x, y);
     				else
     					trackMouse.set(x, y);
-    				if (modal != null && clickPoint == null) {
-    					modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
-    					return true;
-    				}
     				if (gwin.wizardEye) {
     					gwin.shiftWizardEye(x, y);
     					return true;
@@ -530,10 +525,6 @@ public class ExultActivity extends Activity {
     					}
     					return true;
     				}
-    				if (modal != null && clickPoint != null) {
-    					modal.mouseUp(x, y, 1);	// FOR NOW, button = 1.
-    					return true;
-    				}
     				if (dragging) {
     					clickHandled = GameSingletons.drag.drop(x, y, dragged);
     				}
@@ -581,10 +572,6 @@ public class ExultActivity extends Activity {
     					return true;
     				}
     				if (avatarMotion != null && clickPoint == null) {
-    					if (modal != null) {
-    						modal.mouseDrag(x, y);
-    						return true;
-    					}
     					if (movingAvatar || !downMouse.pointNear(x, y, clickDist + 2)) {
     						GameSingletons.mouse.setSpeedCursor(avatarStartX, avatarStartY);
     						//System.out.printf("Mouse moved from %1$d,%2$d to %3$d, %4$d\n",
