@@ -1,5 +1,6 @@
 package com.exult.android;
 import java.util.Vector;
+
 import android.graphics.Point;
 
 public abstract class Gump extends GameSingletons {
@@ -390,6 +391,10 @@ public abstract class Gump extends GameSingletons {
 		public Modal(int shnum) {
 			super(shnum);
 		}
+		public void close() {
+			super.close();
+			done = true;
+		}
 		public final boolean isDone() {
 			return done;
 		}
@@ -409,5 +414,27 @@ public abstract class Gump extends GameSingletons {
 			{ }
 		public boolean isModal()
 			{ return true; }
+		private static class GumpThread extends Thread {
+			private Gump.Modal gump;
+			private Point p = new Point();
+			public GumpThread(Gump.Modal g) {
+				gump = g;
+			}
+			@Override
+			public void run() {
+		    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
+				while (!gump.isDone()) {
+					ExultActivity.getClick(p);
+					gump.mouseUp(p.x, p.y, 1);	// Don't really need button anymore.
+				}
+			}
+		}
+		/*
+		 * This allows user to push a mouse around like when targeting.
+		 */
+		public void track() {
+			GumpThread t = new GumpThread(this);
+			t.start();
+		}
 	}
 }

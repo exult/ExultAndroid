@@ -527,7 +527,7 @@ public class ExultActivity extends Activity {
     					}
     					return true;
     				}
-    				if (modal != null) {
+    				if (modal != null && clickPoint != null) {
     					modal.mouseUp(x, y, 1);	// FOR NOW, button = 1.
     					return true;
     				}

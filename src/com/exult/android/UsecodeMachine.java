@@ -1619,12 +1619,10 @@ public class UsecodeMachine extends GameSingletons {
 	 *	Wait for user to click inside a conversation.
 	 */
 	private void click_to_continue() {
-		//UNUSED char c;
-		/* +++++ if (!gwin.getPal().is_faded_out()) */ // If black screen, skip!
-			{
+		if (!gwin.getPal().isFadedOut()) { // If black screen, skip!
 			gwin.paint();		// Repaint scenery.
 			ExultActivity.getClick(null);
-			}
+		}
 		conv.clearTextPending();
 		//	user_choice = 0;		// Clear it.
 		}

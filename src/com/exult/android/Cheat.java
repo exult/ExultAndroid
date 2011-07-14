@@ -1,5 +1,6 @@
 package com.exult.android;
 
+import android.graphics.Point;
 import android.view.KeyEvent;
 
 public final class Cheat extends GameSingletons {
@@ -55,7 +56,8 @@ public final class Cheat extends GameSingletons {
 			int shnum = game.getShape("sprites/cheatmap");
 			map = ShapeFiles.GAME_FLX.getShape(shnum, 1);
 		}
-		new CheatMapGump(map);
+		CheatMapGump g = new CheatMapGump(map);
+		g.track();
 	}
 	private static class CheatMapGump extends Gump.Modal {
 		Tile t = new Tile();	// For Avatar's pos.
@@ -78,9 +80,9 @@ public final class Cheat extends GameSingletons {
 			t.tx = (short)((t.tx + EConst.c_num_tiles)%EConst.c_num_tiles);
 			t.ty = (short)((t.ty + EConst.c_num_tiles)%EConst.c_num_tiles);
 			System.out.println("Teleporting to " + t.tx + "," + t.ty + "!");
-			t.tz = 0;
-			gwin.teleportParty(t, false, -1);
+			t.tz = 0;			
 			ExultActivity.showToast("Teleport!!!");
+			gwin.teleportParty(t, false, -1);
 			close();
 			return true;
 		}
