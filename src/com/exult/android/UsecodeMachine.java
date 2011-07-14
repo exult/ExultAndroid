@@ -1296,7 +1296,7 @@ public class UsecodeMachine extends GameSingletons {
 		do {
 			//UNUSED char chr;		// Allow '1', '2', etc.
 			gwin.paint();		// Paint scenery.
-			ExultActivity.getClick(clickPoint, track);
+			ExultActivity.getClick(clickPoint, track, Mouse.hand);
 			//System.out.println("clickPoint in get_user_choice_num: x = " + clickPoint.x + ", y = " + clickPoint.y);
 			/*  +++++++++
 			int result=Get_click(x, y, Mouse::hand, &chr, false, conv, true);
@@ -1532,7 +1532,7 @@ public class UsecodeMachine extends GameSingletons {
 		if (book != null) {			// Book mode?
 			while (book.showNextPage()) /* ++++++ && 
 					Get_click(x, y, Mouse::hand, 0, false, book, true)) */
-				ExultActivity.getClick(clickPoint);
+				ExultActivity.getClick(null);
 			gwin.setAllDirty();
 		}
 						// Normal conversation:
@@ -1623,7 +1623,7 @@ public class UsecodeMachine extends GameSingletons {
 		/* +++++ if (!gwin.getPal().is_faded_out()) */ // If black screen, skip!
 			{
 			gwin.paint();		// Repaint scenery.
-			ExultActivity.getClick(clickPoint);
+			ExultActivity.getClick(null);
 			}
 		conv.clearTextPending();
 		//	user_choice = 0;		// Clear it.

@@ -1349,7 +1349,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 		// Paint sprite #10 over it, transparently.	
 		GameRender.paintWizardEye();	
 					// Wait for click.
-		ExultActivity.getClick(new Point());
+		ExultActivity.getClick(null);
 		gwin.setInDungeon(save_dungeon);
 			// BG orrery viewer needs this because it also calls UI_view_tile:
 		Actor a = gwin.getMainActor();
@@ -1860,7 +1860,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 						 fr = UsecodeValue.getZero();
 			showNpcFace(sh, fr, -1);
 			// Wait for click.
-			ExultActivity.getClick(new Point() /*, Mouse::hand*/);
+			ExultActivity.getClick(null);
 			removeNpcFace(sh);
 			}
 		}

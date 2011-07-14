@@ -25,9 +25,10 @@ import android.widget.Toast;
 
 public class ExultActivity extends Activity {
 	private static Point clickPoint;	// Non-null if getClick() is active.
+	private static Point clickIgnore;	// For waiting for a click, but don't care where.
 	private static ClickTracker clickTrack;
 	private static final Semaphore clickWait = new Semaphore(1, true);
-	private static boolean targeting;
+	private static boolean targeting, tracking, trackingMouse;
 	private static ExultActivity instance;
 	private static GameWindow gwin;
 	public static boolean restartFlag;
@@ -126,15 +127,21 @@ public class ExultActivity extends Activity {
     public static abstract class ClickTracker {
     	public abstract void onMotion(int x, int y);
     }
-    public static GameObject waitForClick(Point p, Boolean target, ClickTracker track) {
+    public static GameObject waitForClick(Point p, ClickTracker track, int mouseShape) {
+    	if (p == null) {
+    		if (clickIgnore == null)
+    			clickIgnore = new Point();
+    		p = clickIgnore;
+    	}
     	p.x = -1;
-    	
     	GameWindow.targetObj = null;
     	try {clickWait.acquire();} catch (InterruptedException e) {
     		return null;	// Failed.
     	}
-    	targeting = target;
-    	GameSingletons.mouse.setShape(Mouse.greenselect);
+    	tracking = (p != null);
+    	trackingMouse = tracking && mouseShape >= 0;
+    	if (mouseShape >= 0)
+    		GameSingletons.mouse.setShape(mouseShape);
     	Point save = clickPoint;	// Don't expect this to happen.
     	ClickTracker trackSave = clickTrack;
     	clickPoint = p;
@@ -150,18 +157,20 @@ public class ExultActivity extends Activity {
     	if (ret != null)
     		gwin.addDirty(ret);
     	GameWindow.targetObj = null;
-    	targeting = false;
+    	tracking = targeting = trackingMouse = false;
+    	GameSingletons.mouse.hide();
     	return ret;
     }
     public static void getClick(Point p) {
-    	waitForClick(p, false, null);
+    	waitForClick(p, null, p == null ? -1 : Mouse.greenselect);
     }
-    public static void getClick(Point p, ClickTracker t) {
-    	waitForClick(p, false, t);
+    public static void getClick(Point p, ClickTracker t, int mouseShape) {
+    	waitForClick(p, t, mouseShape);
     }
     public static GameObject getTarget(Point p) {
     	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
-    	return waitForClick(p, true, null);
+    	targeting = true;
+    	return waitForClick(p, null, Mouse.greenselect);
     }
     public static void setInCombat() {
     	instance.runOnUiThread(new Runnable() {
@@ -304,13 +313,12 @@ public class ExultActivity extends Activity {
     	private MySurfaceThread thread;
     	private MotionEvent avatarMotion;	// When moving Avatar.
     	public ImageBuf ibuf;
-    	public long GameTime;
+    	public static long GameTime;
     	public long nextTickTime;
     	public static int stdDelay = 200;	// Frame delay in msecs.
     	private int showItemsX = -1, showItemsY = -1;
-    	private long showItemsTime = 0;
-    	private long lastB1Click = 0;
-    	private int leftDownX = -1, leftDownY = -1;
+    	private long showItemsTime = 0, lastB1Click;
+    	private MouseClick lastMouse = new MouseClick();
     	private final static int clickDist = 5;		// Max. distance in movement to consider a click.
     	private boolean dragging = false, dragged = false;
     	private boolean movingAvatar = false;
@@ -358,7 +366,7 @@ public class ExultActivity extends Activity {
                 	gwin.paintDirty();
                 }
                 synchronized (gwin.getWin()) {
-                	if (dragging || movingAvatar || targeting)
+                	if (dragging || movingAvatar || trackingMouse)
                 		GameSingletons.mouse.show();
                 	if (TimeQueue.ticks%3 == 0)
                 		rotatePalette();
@@ -407,12 +415,6 @@ public class ExultActivity extends Activity {
     		requestFocus();
     		ItemNames.init(false, false);
     		TimeQueue.tickMsecs = stdDelay;
-    		/* +++++++++NEEDED
-    		android.view.Display display = ((android.view.WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-    		int width = display.getWidth(), height = display.getHeight();
-    		
-    		gwin.getWin().setToScale(width, height);
-    		*/
     		gwin = new GameWindow(EConst.c_game_w, EConst.c_game_h);	// Standard U7 dims.
     		gwin.initFiles(false);
     		gwin.readGwin();
@@ -434,6 +436,23 @@ public class ExultActivity extends Activity {
     		gwin.getShapeLocation(movePoint, gwin.getMainActor());
     		GameSingletons.mouse.move((x + movePoint.x)/2, (y + movePoint.y)/2);
     	}
+    	/*
+         * 	Store info about a mouse event.
+         */
+        private static final class MouseClick {
+        	int x, y;					// Location on screen.
+        	public void set(int mx, int my) {
+        		x = mx; y = my;
+        	}
+        	public boolean pointNear(int px, int py) {
+        		return 	x - clickDist <= px && px <= x + clickDist &&
+    					y - clickDist <= py && py <= y + clickDist; 
+        	}
+        	public boolean pointNear(int px, int py, int dist) {
+        		return 	x - dist <= px && px <= x + dist &&
+						y - dist <= py && py <= y + dist; 
+	}
+        };
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
     			if (gwin.busyMessage != null)
@@ -449,7 +468,7 @@ public class ExultActivity extends Activity {
     			switch (event.getAction() & MotionEvent.ACTION_MASK) {
     			case MotionEvent.ACTION_DOWN:
     				//System.out.println("action_down: " + x + ", " + y);
-    				if (!targeting)
+    				if (!tracking)
     					mouse.move(x, y);
     				if (modal != null && clickPoint == null) {
     					modal.mouseDown(x, y, 1);	// FOR NOW, button = 1.
@@ -481,13 +500,13 @@ public class ExultActivity extends Activity {
     						}
     					}
     				} else if (clickPoint != null && clickTrack != null) 
-    					clickTrack.onMotion(x, y);
-    				leftDownX = x; leftDownY = y;
+    					clickTrack.onMotion(mouse.getX(), mouse.getY());
+    				lastMouse.set(x, y);
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
     				//System.out.println("action_up: " + x + ", " + y);
-    				if (!targeting)
+    				if (!tracking)
     					mouse.hide();
     				gwin.stopActor();
     				avatarMotion = null;
@@ -498,9 +517,7 @@ public class ExultActivity extends Activity {
     					return true;
     				}
     				if (clickPoint != null) {
-    					if (targeting || clickTrack != null ||
-    					   (leftDownX - clickDist <= x && x <= leftDownX + clickDist &&
-    						leftDownY - clickDist <= y && y <= leftDownY + clickDist)) {
+    					if (tracking || clickTrack != null || lastMouse.pointNear(x, y)) {
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
     					}
@@ -513,10 +530,7 @@ public class ExultActivity extends Activity {
     				if (dragging) {
     					clickHandled = GameSingletons.drag.drop(x, y, dragged);
     				}
-    				if (GameTime - lastB1Click < 500 &&
-    						UsecodeMachine.running <= 0 &&
-    						leftDownX - clickDist <= x && x <= leftDownX + clickDist &&
-    						leftDownY - clickDist <= y && y <= leftDownY + clickDist) {
+    				if (UsecodeMachine.running <= 0 && GameTime < lastB1Click + 500 && lastMouse.pointNear(x, y)) {
     					dragging = dragged = false;
     					// This function handles the trouble of deciding what to
     					// do when the avatar cannot act.
@@ -527,10 +541,7 @@ public class ExultActivity extends Activity {
     				}	
     				if (!dragging || !dragged)
     					lastB1Click = GameTime;
-    				if (!clickHandled && 
-    						canAct &&
-    						leftDownX - clickDist <= x && x <= leftDownX + clickDist &&
-    						leftDownY - clickDist <= y && y <= leftDownY + clickDist) {
+    				if (!clickHandled && canAct && lastMouse.pointNear(x, y)) {
     					showItemsX = x; showItemsY = y;
     					showItemsTime = GameTime + 500;
     				}
@@ -556,7 +567,7 @@ public class ExultActivity extends Activity {
     					}
     					return true;
     				}
-    				if (!targeting)
+    				if (!tracking)
     					mouse.move(x, y);
     				Mouse.mouseUpdate = true;
     				if (gwin.wizardEye) {
@@ -568,8 +579,7 @@ public class ExultActivity extends Activity {
     						modal.mouseDrag(x, y);
     						return true;
     					}
-    					if (movingAvatar || x < leftDownX - (clickDist+2) || x > leftDownX + (clickDist+2) ||
-    										y < leftDownY - (clickDist+2) || y > leftDownY + (clickDist+2)) {
+    					if (movingAvatar || !lastMouse.pointNear(x, y, clickDist + 2)) {
     						GameSingletons.mouse.setSpeedCursor(avatarStartX, avatarStartY);
     						//System.out.printf("Mouse moved from %1$d,%2$d to %3$d, %4$d\n",
     						//		leftDownX, leftDownY, x, y);
@@ -581,27 +591,30 @@ public class ExultActivity extends Activity {
     					}
     				} else if (dragging) {
     					dragged = GameSingletons.drag.moved(x, y);
-    				} else if (targeting) {
-    					GameObject obj;
+    				} else if (tracking) {
     					// Move the mouse to follow the touch.
-    					int deltax = x - leftDownX, deltay = y - leftDownY;
+    					int deltax = x - lastMouse.x, deltay = y - lastMouse.y;
     					int mx = mouse.getX() + deltax, my = mouse.getY() + deltay;
     					mouse.move(mx, my);
-    					Gump gump = GameSingletons.gumpman.findGump(mx, my);
-    					if (gump != null)
-    						obj = gump.findObject(mx, my);
-    					else
-    						obj = gwin.findObject(mx, my);
-    					if (obj != GameWindow.targetObj) {
-    						if (GameWindow.targetObj != null)
-    							gwin.addDirty(GameWindow.targetObj);
-    						if (obj != null)
-    							gwin.addDirty(obj);
-    						GameWindow.targetObj = obj;
+    					if (clickTrack != null)
+    						clickTrack.onMotion(mx, my);
+    					if (targeting) {
+    						GameObject obj;
+    						Gump gump = GameSingletons.gumpman.findGump(mx, my);
+    						if (gump != null)
+    							obj = gump.findObject(mx, my);
+    						else
+    							obj = gwin.findObject(mx, my);
+    						if (obj != GameWindow.targetObj) {
+    							if (GameWindow.targetObj != null)
+    								gwin.addDirty(GameWindow.targetObj);
+    							if (obj != null)
+    								gwin.addDirty(obj);
+    							GameWindow.targetObj = obj;
+    						}
     					}
-    					leftDownX = x; leftDownY = y;
-    				} else if (clickTrack != null)
-    					clickTrack.onMotion(x, y);
+    					lastMouse.x = x; lastMouse.y = y;
+    				} 
     				return true;
     			case MotionEvent.ACTION_POINTER_DOWN:
     				//System.out.println("action_pointer_down: " + x + ", " + y);

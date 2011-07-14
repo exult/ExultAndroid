@@ -268,7 +268,7 @@ public final class Conversation extends GameSingletons {
 						// More to do?
 			String nxtMsg = msg.substring(-height, info.curText.length());
 			gwin.addDirty(info.textRect);
-			ExultActivity.getClick(clicked);
+			ExultActivity.getClick(null);
 			info.curText = nxtMsg;
 			gwin.addDirty(info.textRect);
 		}
