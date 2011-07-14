@@ -1292,6 +1292,7 @@ public class UsecodeMachine extends GameSingletons {
 				conv.setHighlighted(num);
 				//if (num >= 0) System.out.println("track: num = " + num);
 			}
+			public void onDown(int x, int y) { }
 		};
 		do {
 			//UNUSED char chr;		// Allow '1', '2', etc.

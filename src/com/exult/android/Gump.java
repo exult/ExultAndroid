@@ -374,7 +374,7 @@ public abstract class Gump extends GameSingletons {
 			}
 		}
 	}
-	public static abstract class Modal extends Gump {
+	public static abstract class Modal extends Gump implements ExultActivity.ClickTracker {
 		protected boolean done;				// true when user clicks checkmark.
 		protected GumpWidget.Button pushed;	// Button currently being pushed.
 		
@@ -412,6 +412,10 @@ public abstract class Gump extends GameSingletons {
 			{  }
 		public void textInput(int chr, int unicode) // Character typed (unicode)
 			{ }
+		//	Clicktracker
+		@Override
+		public void onMotion(int x, int y) { }
+		public void onDown(int x, int y) { }
 		public boolean isModal()
 			{ return true; }
 		private static class GumpThread extends Thread {
@@ -424,7 +428,7 @@ public abstract class Gump extends GameSingletons {
 			public void run() {
 		    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
 				while (!gump.isDone()) {
-					ExultActivity.getClick(p);
+					ExultActivity.getClick(p, gump, Mouse.hand);
 					gump.mouseUp(p.x, p.y, 1);	// Don't really need button anymore.
 				}
 			}

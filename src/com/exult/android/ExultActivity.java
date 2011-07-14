@@ -124,8 +124,9 @@ public class ExultActivity extends Activity {
     public static void askYesNo(Observer c, String txt) {
     	instance.runOnUiThread(new YesNoDialog(c, txt));
     }
-    public static abstract class ClickTracker {
+    public static interface ClickTracker {
     	public abstract void onMotion(int x, int y);
+    	public void onDown(int x, int y);
     }
     public static GameObject waitForClick(Point p, ClickTracker track, int mouseShape) {
     	if (p == null) {
@@ -501,8 +502,10 @@ public class ExultActivity extends Activity {
     							avatarStartX = movePoint.x; avatarStartY = movePoint.y;
     						}
     					}
-    				} else if (clickPoint != null && clickTrack != null) 
+    				} else if (clickPoint != null && clickTrack != null) {
+    					clickTrack.onDown(mouse.getX(), mouse.getY());
     					clickTrack.onMotion(mouse.getX(), mouse.getY());
+    				}
     				downMouse.set(x, y);
     				return true;
     			case MotionEvent.ACTION_UP:

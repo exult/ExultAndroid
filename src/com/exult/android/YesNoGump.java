@@ -41,6 +41,11 @@ public class YesNoGump extends Gump.Modal {
 				x + areax, y + areay, areaw, areah, 2, false, false);
 		gwin.setPainted();
 	}
+	//	Clicktracker
+	@Override
+	public void onDown(int x, int y) { 
+		mouseDown(x, y, 1);
+	}
 					// Handle events:
 	public boolean mouseDown(int mx, int my, int button) {
 		if (button != 1) 
@@ -70,6 +75,7 @@ public class YesNoGump extends Gump.Modal {
 	public static void ask(Observer c, String txt) {	// Ask question, get answer.
 		YesNoGump g = new YesNoGump(txt);
 		g.reporter.addObserver(c);
+		g.track();
 	}
 	/*
 	 *	A 'yes' or 'no' button.

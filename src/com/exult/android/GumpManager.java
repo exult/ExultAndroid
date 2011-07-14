@@ -300,6 +300,7 @@ public final class GumpManager extends GameSingletons {
 		try {wait.acquire();} catch (InterruptedException e) {
 			return 0;	// Failed.
 		}
+		slider.track();
 		System.out.println("promptForNumber: waiting");
 		// Now wait for the answer.
 		try {wait.acquire();} catch (InterruptedException e) {

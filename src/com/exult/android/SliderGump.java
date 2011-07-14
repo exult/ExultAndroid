@@ -12,6 +12,7 @@ public class SliderGump extends Gump.Modal {
 	protected int val;			// Current value.
 	protected boolean dragging;		// 1 if dragging the diamond.
 	protected int prev_dragx;			// Prev. x-coord. of mouse.
+	protected int pushed_newval = -1;	// For pressing on the slider.
 	protected void setVal(int newval) {	// Set to new value.
 		val = newval;
 		int xdist = xmax - xmin;
@@ -94,6 +95,11 @@ public class SliderGump extends Gump.Modal {
 		setDone();
 		done = true; 
 	}
+	//	Clicktracker
+	@Override
+	public void onDown(int x, int y) { 
+		mouseDown(x, y, 1);
+	}
 						// Handle events:
 	@Override
 	public boolean mouseDown(int mx, int my, int button) {
@@ -128,25 +134,28 @@ public class SliderGump extends Gump.Modal {
 			int delta = (diamondx - xmin)*(max_val - min_val)/xdist;
 						// Round down to nearest step.
 			delta -= delta%step_val;
-			int newval = min_val + delta;
-			if (newval != val)		// Set value.
-				val = newval;
-			paint();
+			pushed_newval = min_val + delta;
 		}
 		return true;
 	}
 	@Override
 	public boolean mouseUp(int mx, int my, int button) {
 		if (button != 1) return false;
-
+		int newval = pushed_newval;
+		pushed_newval = -1;
 		if (dragging) {			// Done dragging?
 			setVal(val);		// Set diamond in correct pos.
 			paint();
 			gwin.setPainted();
 			dragging = false;
 		}
-		if (pushed == null)
+		if (pushed == null) {
+			if (newval >= 0 && newval != val) {
+				val = newval;
+				paint();
+			}
 			return true;
+		}
 		pushed.unpush(button != 0);
 		if (pushed.onButton(mx, my) != null)
 			pushed.activate(button != 0);
