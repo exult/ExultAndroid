@@ -6,7 +6,6 @@ public final class Mouse extends GameSingletons {
 	private VgaFile.ShapeFile pointers; // Pointers from 'pointers.shp'.
 	private int maxw, maxh;	// Max size.  Used as size of 'backup'.
 	private byte backup[];	// Stores image below mouse shape.Rectangle box;			// Area backed up.
-	private Rectangle dirty;		// Dirty area from mouse move.
 	private Rectangle box;			// Area backed up.
 	private Point avLoc;
 	private int mousex, mousey;		// Last place where mouse was.
@@ -30,10 +29,8 @@ public final class Mouse extends GameSingletons {
 						// Set backup box to cover mouse.
 		box.x = mousex - cur.getXLeft();
 		box.y = mousey - cur.getYAbove();
-		dirty.add(box);		// Update dirty area.
 	}
 	private void init() {
-		dirty = new Rectangle();
 		box = new Rectangle();
 		avLoc = new Point();
 		int cnt = pointers.getNumFrames();
@@ -126,8 +123,6 @@ public final class Mouse extends GameSingletons {
 			synchronized(gwin.getWin()) {
 				gwin.getWin().put(backup, maxw, maxh, box.x, box.y);
 			}
-			//gwin.addDirty(box);//+++++SLOW but reliable.
-			dirty.set(box);	// Init. dirty to box.
 			}
 	}
 	public void setShape(int framenum) {	// Set to desired shape.
@@ -140,7 +135,6 @@ public final class Mouse extends GameSingletons {
 		hide();
 		// Shift to new position.
 		box.shift(x - mousex, y - mousey);
-		dirty.add(box);	// Enlarge dirty area.
 		mousex = x;
 		mousey = y;
 	}
