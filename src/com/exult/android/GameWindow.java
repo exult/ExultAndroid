@@ -1203,6 +1203,7 @@ public class GameWindow extends GameSingletons {
 	}
 	public void paint(int x, int y, int w, int h) {
 		// if (!win.ready()) return;
+		//System.out.println("Paint: " + x + ", " + y + ", " + w + ", " + h);
 		int gx = x, gy = y, gw = w, gh = h;
 		if (gx < 0) { gw+=x; gx = 0; }
 		if ((gx+gw) > win.getWidth()) gw = win.getWidth()-gx;

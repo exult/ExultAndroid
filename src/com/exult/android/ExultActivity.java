@@ -372,9 +372,6 @@ public class ExultActivity extends Activity {
                 	if (TimeQueue.ticks%3 == 0)
                 		rotatePalette();
                 	if (!gwin.show(canvas, false)) {	
-                		if (Mouse.mouseUpdate)
-                			GameSingletons.mouse.blitDirty(canvas);
-                		Mouse.mouseUpdate = false;
                 		gwin.getWin().blit(canvas);
                 	}
                 }
@@ -566,7 +563,6 @@ public class ExultActivity extends Activity {
     				}
     				if (!tracking)
     					mouse.move(x, y);
-    				Mouse.mouseUpdate = true;
     				if (gwin.wizardEye) {
     					gwin.shiftWizardEye(x, y);
     					return true;

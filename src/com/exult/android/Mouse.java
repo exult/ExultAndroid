@@ -99,8 +99,6 @@ public final class Mouse extends GameSingletons {
 		fast = 1;
 	public int avatarSpeed;	// One of the above.
 
-	public static boolean mouseUpdate;
-
 	Mouse() {
 		pointers = new VgaFile.ShapeFile(EFile.POINTERS);
 		init();
@@ -146,12 +144,6 @@ public final class Mouse extends GameSingletons {
 		mousex = x;
 		mousey = y;
 	}
-	void blitDirty(Canvas c) {	// Blit dirty area.
-		/* +++++++++++  Looks like this isnt' needed (and never worked).
-		gwin.getWin().show(c , dirty.x - 1, dirty.y - 1, dirty.w + 2, 
-							dirty.h + 2); 
-		*/
-		}
 	void setLocation(int x, int y) {// Set to given location.
 		mousex = x;
 		mousey = y;
