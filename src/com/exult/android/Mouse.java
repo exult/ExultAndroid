@@ -1,5 +1,4 @@
 package com.exult.android;
-import android.graphics.Canvas;
 import android.graphics.Point;
 
 public final class Mouse extends GameSingletons {
@@ -106,7 +105,7 @@ public final class Mouse extends GameSingletons {
 	public int getY() {
 		return mousey;
 	}
-	void show() { // Paint it.
+	boolean show() { // Paint it.
 		if (!onscreen){
 			onscreen = true;
 			synchronized(gwin.getWin()) {
@@ -115,7 +114,9 @@ public final class Mouse extends GameSingletons {
 						// Paint new location.
 				cur.paintRle(gwin.getWin(), mousex, mousey);
 			}
-		}
+			return true;
+		} else
+			return false;
 	}
 	void hide() {			// Restore area under mouse.
 		if (onscreen) {

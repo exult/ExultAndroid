@@ -1163,9 +1163,9 @@ public class GameWindow extends GameSingletons {
 	public final int getHeight() {
 		return win.getHeight();
 	}
-	public void setPainted()
+	public final void setPainted()
 		{ painted = true; }
-	public boolean wasPainted()
+	public final boolean wasPainted()
 		{ return painted; }
 	public boolean show(Canvas c, boolean force) {	// Returns true if blit occurred.
 		if (painted || force) {

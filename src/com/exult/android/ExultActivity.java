@@ -367,8 +367,10 @@ public class ExultActivity extends Activity {
                 	gwin.paintDirty();
                 }
                 synchronized (gwin.getWin()) {
-                	if (dragging || movingAvatar || trackingMouse)
-                		GameSingletons.mouse.show();
+                	if (dragging || movingAvatar || trackingMouse) {
+                		if (GameSingletons.mouse.show())
+                			gwin.setPainted();
+                	}
                 	if (TimeQueue.ticks%3 == 0)
                 		rotatePalette();
                 	if (!gwin.show(canvas, false)) {	
