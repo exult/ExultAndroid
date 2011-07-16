@@ -363,6 +363,10 @@ public class ExultActivity extends Activity {
                 	System.out.println("Keep moving");
                 	gwin.startActor(avatarStartY, avatarStartY, x, y, 
                 			GameSingletons.mouse.avatarSpeed);
+                } else if (downMouse.down && !tracking && !movingAvatar && GameTime > downMouse.setTime + 800) {
+                	// Long press.
+                	trackMouse.set(downMouse.x, downMouse.y);
+                	Shortcuts.target();
                 }
                 // Handle delayed showing of items clicked on.
                 if (showItemsX >= 0 && GameTime > showItemsTime) {
@@ -451,9 +455,16 @@ public class ExultActivity extends Activity {
          * 	Store info about a mouse event.
          */
         private static final class MousePos {
+        	boolean down;
         	int x, y;					// Location on screen.
+        	long setTime;				// When mouse 'pressed'.
         	public void set(int mx, int my) {
         		x = mx; y = my;
+        	}
+        	public void setDown(int mx, int my, long time) {
+        		x = mx; y = my;
+        		setTime = time;
+        		down = true;
         	}
         	public boolean pointNear(int px, int py) {
         		return 	x - clickDist <= px && px <= x + clickDist &&
@@ -511,7 +522,7 @@ public class ExultActivity extends Activity {
     					clickTrack.onDown(mouse.getX(), mouse.getY());
     					clickTrack.onMotion(mouse.getX(), mouse.getY());
     				}
-    				downMouse.set(x, y);
+    				downMouse.setDown(x, y, GameTime);
     				return true;
     			case MotionEvent.ACTION_UP:
     				boolean clickHandled = false;
@@ -521,6 +532,7 @@ public class ExultActivity extends Activity {
     				gwin.stopActor();
     				avatarMotion = null;
     				movingAvatar = false;
+    				downMouse.down = false;
     				if (zoomX >= 0 || wasZooming) {	// Don't want to cancel targetting if we were zooming.
     					zoomX = -1;
     					wasZooming = false;
