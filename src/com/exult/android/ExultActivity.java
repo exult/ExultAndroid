@@ -366,6 +366,7 @@ public class ExultActivity extends Activity {
                 } else if (downMouse.down && !tracking && !movingAvatar && GameTime > downMouse.setTime + 800) {
                 	// Long press.
                 	trackMouse.set(downMouse.x, downMouse.y);
+                	downMouse.longPress = true;
                 	Shortcuts.target();
                 }
                 // Handle delayed showing of items clicked on.
@@ -455,7 +456,7 @@ public class ExultActivity extends Activity {
          * 	Store info about a mouse event.
          */
         private static final class MousePos {
-        	boolean down;
+        	boolean down, longPress;
         	int x, y;					// Location on screen.
         	long setTime;				// When mouse 'pressed'.
         	public void set(int mx, int my) {
@@ -465,6 +466,9 @@ public class ExultActivity extends Activity {
         		x = mx; y = my;
         		setTime = time;
         		down = true;
+        	}
+        	public void up() {
+        		down = longPress = false;
         	}
         	public boolean pointNear(int px, int py) {
         		return 	x - clickDist <= px && px <= x + clickDist &&
@@ -532,7 +536,9 @@ public class ExultActivity extends Activity {
     				gwin.stopActor();
     				avatarMotion = null;
     				movingAvatar = false;
-    				downMouse.down = false;
+    				boolean wasLongPress = downMouse.longPress;
+    				downMouse.up();
+    				trackMouse.up();
     				if (zoomX >= 0 || wasZooming) {	// Don't want to cancel targetting if we were zooming.
     					zoomX = -1;
     					wasZooming = false;
@@ -540,8 +546,7 @@ public class ExultActivity extends Activity {
     				}
     				if (clickPoint != null) {
     					//System.out.println("action_up: " + x + ", " + y + ", last= " + downMouse.x + ", " + downMouse.y);
-    					//+++++OLD if (tracking || clickTrack != null || downMouse.pointNear(x, y)) {
-    					if (downMouse.pointNear(x, y)) {
+    					if (!wasLongPress && downMouse.pointNear(x, y)) {
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
     					}
