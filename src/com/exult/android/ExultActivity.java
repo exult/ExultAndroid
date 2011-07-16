@@ -361,7 +361,7 @@ public class ExultActivity extends Activity {
                 	int x = (int)gwin.getWin().screenToGameX(avatarMotion.getX()), 
     					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
                 	System.out.println("Keep moving");
-                	gwin.startActor(avatarStartY, avatarStartY, x, y, 
+                	gwin.startActor(avatarStartX, avatarStartY, x, y, 
                 			GameSingletons.mouse.avatarSpeed);
                 } else if (downMouse.down && !tracking && !movingAvatar && GameTime > downMouse.setTime + 800) {
                 	// Long press.
@@ -493,9 +493,7 @@ public class ExultActivity extends Activity {
     			switch (event.getAction() & MotionEvent.ACTION_MASK) {
     			case MotionEvent.ACTION_DOWN:
     				//System.out.println("action_down: " + x + ", " + y);
-    				if (!tracking)
-    					mouse.move(x, y);
-    				else
+    				if (tracking)
     					trackMouse.set(x, y);
     				if (gwin.wizardEye) {
     					gwin.shiftWizardEye(x, y);
@@ -591,8 +589,6 @@ public class ExultActivity extends Activity {
     					}
     					return true;
     				}
-    				if (!tracking)
-    					mouse.move(x, y);
     				if (gwin.wizardEye) {
     					gwin.shiftWizardEye(x, y);
     					return true;
