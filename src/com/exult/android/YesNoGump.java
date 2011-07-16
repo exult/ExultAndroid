@@ -65,7 +65,7 @@ public class YesNoGump extends Gump.Modal {
 	public static void ask(Observer c, String txt) {	// Ask question, get answer.
 		YesNoGump g = new YesNoGump(txt);
 		g.reporter.addObserver(c);
-		g.track();
+		g.track(Mouse.hand);
 	}
 	/*
 	 *	A 'yes' or 'no' button.

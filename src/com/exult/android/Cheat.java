@@ -56,7 +56,7 @@ public final class Cheat extends GameSingletons {
 			map = ShapeFiles.GAME_FLX.getShape(shnum, 1);
 		}
 		CheatMapGump g = new CheatMapGump(map);
-		g.track();
+		g.track(mouse.getShortArrow(EConst.northeast));
 	}
 	private static class CheatMapGump extends Gump.Modal {
 		Tile t = new Tile();	// For Avatar's pos.

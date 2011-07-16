@@ -415,14 +415,16 @@ public abstract class Gump extends GameSingletons {
 		private static class GumpThread extends Thread {
 			private Gump.Modal gump;
 			private Point p = new Point();
-			public GumpThread(Gump.Modal g) {
+			private int mouseShape;
+			public GumpThread(Gump.Modal g, int mouse) {
 				gump = g;
+				mouseShape = mouse;
 			}
 			@Override
 			public void run() {
 		    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
 				while (!gump.isDone()) {
-					ExultActivity.getClick(p, gump, Mouse.hand);
+					ExultActivity.getClick(p, gump, mouseShape);
 					gump.onUp(p.x, p.y);
 				}
 			}
@@ -430,8 +432,8 @@ public abstract class Gump extends GameSingletons {
 		/*
 		 * This allows user to push a mouse around like when targeting.
 		 */
-		public void track() {
-			GumpThread t = new GumpThread(this);
+		public void track(int mouseShape) {
+			GumpThread t = new GumpThread(this, mouseShape);
 			t.start();
 		}
 	}

@@ -11,6 +11,7 @@ import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -32,7 +33,8 @@ public class ExultActivity extends Activity {
 	private static ExultActivity instance;
 	private static GameWindow gwin;
 	public static boolean restartFlag;
-	
+	public static Vibrator vibrator; 
+
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -54,6 +56,11 @@ public class ExultActivity extends Activity {
     	if (GameSingletons.audio != null)
     		GameSingletons.audio.stop();
     	super.onDestroy();
+    }
+    public void vibrate() {
+    	if (vibrator == null)
+    		vibrator = (Vibrator)getSystemService(VIBRATOR_SERVICE);
+    	vibrator.vibrate(100);
     }
     static class MessageDisplayer implements Runnable {
     	String msg;
@@ -168,10 +175,11 @@ public class ExultActivity extends Activity {
     public static void getClick(Point p, ClickTracker t, int mouseShape) {
     	waitForClick(p, t, mouseShape);
     }
-    public static GameObject getTarget(Point p) {
+    public static GameObject getTarget(Point p, int mouseShape) {
     	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
     	targeting = true;
-    	return waitForClick(p, null, Mouse.greenselect);
+    	instance.vibrate();
+    	return waitForClick(p, null, mouseShape);
     }
     public static void setInCombat() {
     	instance.runOnUiThread(new Runnable() {

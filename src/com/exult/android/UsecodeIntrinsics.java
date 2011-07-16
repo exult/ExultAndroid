@@ -962,7 +962,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			//if (!Get_click(x, y, Mouse.greenselect, 0, true))
 				//return Usecode_value(0);
 			Point p = new Point();
-			obj = ExultActivity.getTarget(p);
+			obj = ExultActivity.getTarget(p, Mouse.greenselect);
 						// Get abs. tile coords. clicked on.
 			t = new Tile(gwin.getScrolltx() + p.x/EConst.c_tilesize,
 						 gwin.getScrollty() + p.y/EConst.c_tilesize, 0);
