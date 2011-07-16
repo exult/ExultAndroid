@@ -378,7 +378,11 @@ public class ExultActivity extends Activity {
                 	}
                 }
     		} else synchronized (gwin.getWin()) {
-    			gwin.getWin().blit(canvas);
+    			// This makes for much smoother mouse tracking:
+    			if (trackingMouse && GameSingletons.mouse.show())
+    				gwin.show(canvas, true);
+    			else
+    				gwin.getWin().blit(canvas);
     		}
     	}
     	// For direct instantiation.

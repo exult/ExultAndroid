@@ -127,7 +127,7 @@ public abstract class Gump extends GameSingletons {
 		(
 		int mx, int my			// Point in window.
 		) {
-		int cnt = elems.size();
+		int cnt = elems != null ? elems.size() : 0;
 		for (int i = 0; i < cnt; ++i) {
 			GumpWidget w = elems.elementAt(i);
 			GumpWidget.Button b = w.onButton(mx, my);
