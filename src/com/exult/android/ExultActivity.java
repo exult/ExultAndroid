@@ -227,12 +227,11 @@ public class ExultActivity extends Activity {
     public static void askToQuit() {
 		Observer o = new Observer() {
 			public void update(Observable o, Object arg) {
-				if (((YesNoGump)arg).getAnswer())
+				if ((Boolean)arg)
 					ExultActivity.quit();
 			}
 		};
-		YesNoGump.ask(o,
-				"Do you really want to quit?");
+		ExultActivity.askYesNo(o, "Do you really want to quit?");
 	}
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
