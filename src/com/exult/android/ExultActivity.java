@@ -328,6 +328,7 @@ public class ExultActivity extends Activity {
     	public static int stdDelay = 200;	// Frame delay in msecs.
     	private int showItemsX = -1, showItemsY = -1;
     	private long showItemsTime = 0, lastB1Click;
+    	// downMouse saves pos. on 'down' event, trackMouse has current pos.
     	private MousePos downMouse = new MousePos(), trackMouse = new MousePos();
     	private final static int clickDist = 5;		// Max. distance in movement to consider a click.
     	private boolean dragging = false, dragged = false;
@@ -343,11 +344,12 @@ public class ExultActivity extends Activity {
     	}
     	@Override
     	protected void onDraw(Canvas canvas){
+    		Mouse mouse = GameSingletons.mouse;
     		GameTime = System.currentTimeMillis();
     		if (GameTime > nextTickTime) {
                 nextTickTime = GameTime + stdDelay;
                 TimeQueue.ticks +=1;
-                GameSingletons.mouse.hide();
+                mouse.hide();
                 if (restartFlag) {
                 	restartFlag = false;
                 	gwin.read();
@@ -362,13 +364,19 @@ public class ExultActivity extends Activity {
                 	int x = (int)gwin.getWin().screenToGameX(avatarMotion.getX()), 
     					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
                 	System.out.println("Keep moving");
-                	gwin.startActor(avatarStartX, avatarStartY, x, y, 
-                			GameSingletons.mouse.avatarSpeed);
-                } else if (downMouse.down && !tracking && !movingAvatar && GameTime > downMouse.setTime + 800) {
+                	gwin.startActor(avatarStartX, avatarStartY, x, y, mouse.avatarSpeed);
+                } else if (!dragging && !movingAvatar && downMouse.isLongPress(trackMouse.x, trackMouse.y)) {
                 	// Long press.
-                	trackMouse.set(downMouse.x, downMouse.y);
-                	downMouse.longPress = true;
-                	Shortcuts.target();
+                	if (!tracking) {	// Initial longpress:  target.
+                		trackMouse.set(downMouse.x, downMouse.y);
+                		downMouse.longPress = true;
+                		Shortcuts.target();
+                	} else if (targeting && !downMouse.longPress && GameWindow.targetObj != null) {
+                		instance.vibrate();
+                		downMouse.longPress = true;
+                		dragging = DraggingInfo.startDragging(mouse.getX(), mouse.getY());
+    					dragged = false;
+                	}
                 }
                 // Handle delayed showing of items clicked on.
                 if (showItemsX >= 0 && GameTime > showItemsTime) {
@@ -381,7 +389,7 @@ public class ExultActivity extends Activity {
                 }
                 synchronized (gwin.getWin()) {
                 	if (dragging || movingAvatar || trackingMouse) {
-                		if (GameSingletons.mouse.show())
+                		if (mouse.show())
                 			gwin.setPainted();
                 	}
                 	if (TimeQueue.ticks%3 == 0)
@@ -392,7 +400,7 @@ public class ExultActivity extends Activity {
                 }
     		} else synchronized (gwin.getWin()) {
     			// This makes for much smoother mouse tracking:
-    			if (trackingMouse && GameSingletons.mouse.show())
+    			if (trackingMouse && mouse.show())
     				gwin.show(canvas, true);
     			else
     				gwin.getWin().blit(canvas);
@@ -457,7 +465,7 @@ public class ExultActivity extends Activity {
          * 	Store info about a mouse event.
          */
         private static final class MousePos {
-        	boolean down, longPress;
+        	boolean down, longPress, maybeLong;
         	int x, y;					// Location on screen.
         	long setTime;				// When mouse 'pressed'.
         	public void set(int mx, int my) {
@@ -466,7 +474,8 @@ public class ExultActivity extends Activity {
         	public void setDown(int mx, int my, long time) {
         		x = mx; y = my;
         		setTime = time;
-        		down = true;
+        		down = maybeLong = true;
+        		longPress = false;
         	}
         	public void up() {
         		down = longPress = false;
@@ -478,7 +487,15 @@ public class ExultActivity extends Activity {
         	public boolean pointNear(int px, int py, int dist) {
         		return 	x - dist <= px && px <= x + dist &&
 						y - dist <= py && py <= y + dist; 
-	}
+        	}
+        	public boolean isLongPress(int px, int py) {
+        		if (down && maybeLong && GameTime > setTime + 800) {
+        			if (GameTime < setTime + 1500 && pointNear(px, py, clickDist + 2))
+        				return true;
+        			maybeLong = false;	// Move too far or waited too long.
+        		}
+        		return false;
+        	}
         };
     	private OnTouchListener touchListener = new OnTouchListener() {
     		public boolean onTouch(View v, MotionEvent event) {
@@ -501,7 +518,6 @@ public class ExultActivity extends Activity {
     					return true;
     				}
     				if (clickPoint == null && UsecodeMachine.running <= 0) {
-    					
     					dragging = DraggingInfo.startDragging(x, y);
     					dragged = false;
     					GameObject obj = dragging?DraggingInfo.getObject():null;
@@ -543,27 +559,23 @@ public class ExultActivity extends Activity {
     					wasZooming = false;
     					return true;
     				}
+    				if (dragging) {
+    					clickHandled = GameSingletons.drag.drop(x, y, dragged);
+    					GameWindow.targetObj = null;
+    				}
     				if (clickPoint != null) {
     					//System.out.println("action_up: " + x + ", " + y + ", last= " + downMouse.x + ", " + downMouse.y);
-    					if (!wasLongPress && downMouse.pointNear(x, y)) {
+    					if (dragging || (!wasLongPress && downMouse.pointNear(x, y))) {	// Dropped, or clicked.
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
     					} else if (targeting && GameWindow.targetObj != null)
     						gwin.showObjName(GameWindow.targetObj);
-    					return true;
-    				}
-    				if (dragging) {
-    					clickHandled = GameSingletons.drag.drop(x, y, dragged);
-    				}
-    				if (UsecodeMachine.running <= 0 && GameTime < lastB1Click + 500 && downMouse.pointNear(x, y)) {
-    					dragging = dragged = false;
-    					// This function handles the trouble of deciding what to
-    					// do when the avatar cannot act.
+    					clickHandled = true;
+    				} else if (UsecodeMachine.running <= 0 && GameTime < lastB1Click + 500 && downMouse.pointNear(x, y)) {
     					gwin.doubleClicked(x, y);
     					showItemsX = -1000;
-    					return true;
-    				}	
-    				if (!dragging || !dragged)
+    					clickHandled = true;
+    				} else if (!dragging || !dragged)
     					lastB1Click = GameTime;
     				if (!clickHandled && canAct && downMouse.pointNear(x, y)) {
     					showItemsX = x; showItemsY = y;
@@ -606,8 +618,6 @@ public class ExultActivity extends Activity {
     							GameSingletons.mouse.avatarSpeed);
     						moveAvatarMouse(x, y);
     					}
-    				} else if (dragging) {
-    					dragged = GameSingletons.drag.moved(x, y);
     				} else if (tracking) {
     					// Move the mouse to follow the touch.
     					int deltax = x - trackMouse.x, deltay = y - trackMouse.y;
@@ -615,7 +625,9 @@ public class ExultActivity extends Activity {
     					mouse.move(mx, my);
     					if (clickTrack != null)
     						clickTrack.onMotion(mx, my);
-    					if (targeting) {
+    					if (dragging) {	// From longpress
+    						dragged = GameSingletons.drag.moved(mx, my);
+    					} else if (targeting) {
     						GameObject obj;
     						Gump gump = GameSingletons.gumpman.findGump(mx, my);
     						if (gump != null)
@@ -630,8 +642,9 @@ public class ExultActivity extends Activity {
     							GameWindow.targetObj = obj;
     						}
     					}
-    					trackMouse.set(x, y);
-    				} 
+    				} else if (dragging)
+    					dragged = GameSingletons.drag.moved(x, y);
+    				trackMouse.set(x, y);
     				return true;
     			case MotionEvent.ACTION_POINTER_DOWN:
     				//System.out.println("action_pointer_down: " + x + ", " + y);
