@@ -559,12 +559,12 @@ public class ExultActivity extends Activity {
     					wasZooming = false;
     					return true;
     				}
+    				System.out.println("action_up: " + x + ", " + y + ", mouse = " + mouse.getX() + ", " + mouse.getY());
     				if (dragging) {
-    					clickHandled = GameSingletons.drag.drop(x, y, dragged);
+    					clickHandled = GameSingletons.drag.drop(mouse.getX(), mouse.getY(), dragged);
     					GameWindow.targetObj = null;
     				}
     				if (clickPoint != null) {
-    					//System.out.println("action_up: " + x + ", " + y + ", last= " + downMouse.x + ", " + downMouse.y);
     					if (dragging || (!wasLongPress && downMouse.pointNear(x, y))) {	// Dropped, or clicked.
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
