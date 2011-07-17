@@ -117,7 +117,9 @@ public final class GumpManager extends GameSingletons {
 	// Add to end of list.
 	public void addGump(Gump g) {
 		setKbdFocus(g);
-		openGumps.addLast(g);	
+		synchronized(openGumps) {
+			openGumps.addLast(g);	
+		}
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 			// And pause the game, if we want it
 			nonPersistentCount++;
@@ -202,7 +204,9 @@ public final class GumpManager extends GameSingletons {
 			return;
 		if (g == kbdFocus)
 			kbdFocus = null;
-		openGumps.remove(g);	
+		synchronized(openGumps) {
+			openGumps.remove(g);	
+		}
 		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
 				// And resume queue if last.
 				// Gets messed up upon 'load'.
@@ -258,11 +262,13 @@ public final class GumpManager extends GameSingletons {
 			gmp.updateGump();
 	}
 	public void paint(boolean modal) {
-		ListIterator<Gump> iter = openGumps.listIterator();
-		while (iter.hasNext()) {
-			Gump g = iter.next();
-			if (g.isModal() == modal)
-				g.paint();
+		synchronized(openGumps) {
+			ListIterator<Gump> iter = openGumps.listIterator();
+			while (iter.hasNext()) {
+				Gump g = iter.next();
+				if (g.isModal() == modal)
+					g.paint();
+			}
 		}
 	}
 	/*

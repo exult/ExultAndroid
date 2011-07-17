@@ -642,8 +642,10 @@ public class ExultActivity extends Activity {
     							GameWindow.targetObj = obj;
     						}
     					}
-    				} else if (dragging)
+    				} else if (dragging) {
+    					mouse.move(x, y);
     					dragged = GameSingletons.drag.moved(x, y);
+    				}
     				trackMouse.set(x, y);
     				return true;
     			case MotionEvent.ACTION_POINTER_DOWN:
