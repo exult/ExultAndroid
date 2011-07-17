@@ -77,9 +77,9 @@ public class GameWindow extends GameSingletons {
 		busyMessage = s;
 		setAllDirty();
 		if (s != null)
-			tqueue.pause(TimeQueue.ticks);
+			tqueue.pause();
 		else
-			tqueue.resume(TimeQueue.ticks);
+			tqueue.resume();
 	}
 	static public GameWindow instanceOf() {
 		return instance;
@@ -1064,18 +1064,7 @@ public class GameWindow extends GameSingletons {
 			if (obj instanceof Actor)
 				System.out.printf("Npc #%1$d, sched=%2$d\n",
 					((Actor)obj).getNpcNum(), ((Actor)obj).getScheduleType());
-			// ++++ String namestr = Get_object_name(obj);
-				// Combat and an NPC?
-			/* ++MAYBE LATER
-			if (in_combat() && Combat.mode != Combat.original && npc)
-				{
-				char buf[128];
-				sprintf(buf, "%s (%d)", objname, 
-						npc.getProperty(Actor.health));
-				objname = &buf[0];
-				}
-			*/
-			effects.addText(/* objname*/ obj.getName() , obj);
+			showObjName(obj);
 		}
 		/*
 		// If it's an actor and we want to grab the actor, grab it.
@@ -1083,6 +1072,20 @@ public class GameWindow extends GameSingletons {
 		    (npc.get_npc_num() || npc==mainActor))
 			cheat.set_grabbed_actor (npc);
 		*/
+	}
+	void showObjName(GameObject obj) {
+		// ++++ String namestr = Get_object_name(obj);
+		// Combat and an NPC?
+		/* ++MAYBE LATER
+		if (in_combat() && Combat.mode != Combat.original && npc)
+		{
+		char buf[128];
+		sprintf(buf, "%s (%d)", objname, 
+				npc.getProperty(Actor.health));
+		objname = &buf[0];
+		}
+		 */
+		effects.addText(/* objname*/ obj.getName() , obj);
 	}
 	/*
 	 *	Handle a double-click.

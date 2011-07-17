@@ -125,7 +125,7 @@ public final class GumpManager extends GameSingletons {
 			if (g.isModal())
 				modal = (Gump.Modal)g;
 			if (!dontPauseGame || g.isModal()) 
-				tqueue.pause(TimeQueue.ticks);
+				tqueue.pause();
 		}
 		gwin.setAllDirty();
 	}
@@ -209,7 +209,7 @@ public final class GumpManager extends GameSingletons {
 			if (nonPersistentCount > 0)
 				nonPersistentCount--;
 			if (!dontPauseGame || g.isModal()) 
-				tqueue.resume(TimeQueue.ticks);
+				tqueue.resume();
 			if (g == modal) {
 				gwin.setAllDirty();
 				if (!openGumps.isEmpty() && openGumps.getLast().isModal())
@@ -230,7 +230,7 @@ public final class GumpManager extends GameSingletons {
 			// Don't delete if persistant or modal.
 			if ((!gump.isPersistent() || pers) && !gump.isModal()) {
 				if (!gump.isPersistent())
-					tqueue.resume(TimeQueue.ticks);
+					tqueue.resume();
 				iter.remove();
 				removed = true;
 			}

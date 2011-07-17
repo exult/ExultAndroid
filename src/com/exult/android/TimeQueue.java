@@ -101,6 +101,9 @@ public class TimeQueue {
 	if (paused++ == 0)
 		pauseTime = ctime;
 	}
+	public void pause() {
+		pause(ticks);
+	}
 	public void resume(int ctime) {
 		if (paused == 0 || --paused > 0)	// Only unpause when stack empty.
 			return;			// Not paused.
@@ -112,10 +115,13 @@ public class TimeQueue {
 			ListIterator<QueueEntry> it = entries.listIterator();
 			while (it.hasNext()) {
 				QueueEntry ent = it.next();
-				if (ent.handler.alwaysHandle())
+				if (!ent.handler.alwaysHandle())
 					ent.time += diff;	// Push entries ahead.
 			}
 		}
+	}
+	public void resume() {
+		resume(ticks);
 	}
 	/*
 	 *	Remove first entry containing a given object.

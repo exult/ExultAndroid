@@ -146,6 +146,7 @@ public class ExultActivity extends Activity {
     	try {clickWait.acquire();} catch (InterruptedException e) {
     		return null;	// Failed.
     	}
+    	GameSingletons.tqueue.pause();
     	tracking = (p != null);
     	trackingMouse = tracking && mouseShape >= 0;
     	if (mouseShape >= 0)
@@ -167,6 +168,7 @@ public class ExultActivity extends Activity {
     	GameWindow.targetObj = null;
     	tracking = targeting = trackingMouse = false;
     	GameSingletons.mouse.hide();
+    	GameSingletons.tqueue.resume();
     	return ret;
     }
     public static void getClick(Point p) {
@@ -350,8 +352,7 @@ public class ExultActivity extends Activity {
                 	restartFlag = false;
                 	gwin.read();
                 }
-                if (!dragging && clickPoint == null && 
-                						UsecodeMachine.running == 0) {
+                if (!dragging && UsecodeMachine.running == 0) {
                 	synchronized (gwin.getTqueue()) {
                 		gwin.getTqueue().activate(TimeQueue.ticks);
                 	}
@@ -547,7 +548,8 @@ public class ExultActivity extends Activity {
     					if (!wasLongPress && downMouse.pointNear(x, y)) {
     						clickPoint.set(mouse.getX(), mouse.getY());
     						clickWait.release();
-    					}
+    					} else if (targeting && GameWindow.targetObj != null)
+    						gwin.showObjName(GameWindow.targetObj);
     					return true;
     				}
     				if (dragging) {
