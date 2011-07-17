@@ -938,6 +938,7 @@ public final class EffectsManager extends GameSingletons {
 		}
 							// At timeout, remove from screen.
 		public void handleEvent(int ctime, Object udata) {
+			//System.out.println("TextEffect: numTicks = " + numTicks + ", qcnt = " + timeQueueCount + ", this = " + toString());
 			if (++numTicks == 10) {		// About 1-2 seconds.
 				// All done.
 				addDirty();

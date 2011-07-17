@@ -71,9 +71,10 @@ public class TimeQueue {
 					return;
 				TimeSensitive obj = ent.handler;
 				if (obj.alwaysHandle()) {
+					//System.out.println("tqueue.activateAlways: ent.time = " + ent.time + ", obj = " + obj.toString());
 					obj.removedFromQueue();
 					Object udata = ent.udata;
-					entries.remove();
+					it.remove();
 					obj.handleEvent(ctime, udata);
 					tryAgain = true;
 					break;	// So we don't crash on the iterator.
@@ -108,6 +109,7 @@ public class TimeQueue {
 		if (paused == 0 || --paused > 0)	// Only unpause when stack empty.
 			return;			// Not paused.
 		int diff = ctime - pauseTime;
+		//System.out.println("tqueue.resume: ctime = " + ctime + ", pauseTime = " + pauseTime + ", diff = " + diff);
 		pauseTime = 0;
 		if (diff < 0)			// Should not happen.
 			return;
@@ -115,8 +117,10 @@ public class TimeQueue {
 			ListIterator<QueueEntry> it = entries.listIterator();
 			while (it.hasNext()) {
 				QueueEntry ent = it.next();
-				if (!ent.handler.alwaysHandle())
+				if (!ent.handler.alwaysHandle()) {
 					ent.time += diff;	// Push entries ahead.
+					//System.out.println("tqueue.resume:  ent.time = " + ent.time);
+				}
 			}
 		}
 	}
