@@ -34,6 +34,7 @@ public class GameWindow extends GameSingletons {
 	private Point tempPoint = new Point();
 	private Tile tempTile = new Tile(), tempTile2 = new Tile();
 	private Tile SRTempTile = new Tile();	// For getShapeRect.
+	private Tile cacheTile = new Tile();	// For emulateCache.
 	private ImageBuf win;
 	private Palette pal;
 	private PlasmaThread plasmaThread;
@@ -979,6 +980,100 @@ public class GameWindow extends GameSingletons {
 			if (!gumpman.gumpMode())
 					mainActor.getFollowers();
 		}
+	}
+	/*
+	 *	Chunk caching emulation:  swap out chunks which are now at least
+	 *	3 chunks away.
+	 */
+	public void emulateCache(MapChunk olist, MapChunk nlist) {
+		if (olist == null)
+			return;			// Seems like there's nothing to do.
+						// Cancel weather from eggs that are
+						//   far away.
+		effects.removeWeatherEffects(120);
+		int newx = nlist.getCx(), newy = nlist.getCy(),
+		    oldx = olist.getCx(), oldy = olist.getCy();
+		GameMap omap = olist.getMap(), nmap = nlist.getMap();
+						// Cancel scripts 4 chunks from this.
+		cacheTile.set(newx*EConst.c_tiles_per_chunk, newy*EConst.c_tiles_per_chunk, 0);
+		UsecodeScript.purge(cacheTile, 4*EConst.c_tiles_per_chunk);
+		int nearby[] = new int[25];		// Chunks within 3.
+		int x, y;
+						// Figure old range.
+		int old_minx = EConst.c_num_chunks + oldx - 2, 
+		    old_maxx = EConst.c_num_chunks + oldx + 2;
+		int old_miny = EConst.c_num_chunks + oldy - 2, 
+		    old_maxy = EConst.c_num_chunks + oldy + 2;
+		if (nmap == omap) {		// Same map?
+						// Figure new range.
+			int new_minx = EConst.c_num_chunks + newx - 2, 
+			    new_maxx = EConst.c_num_chunks + newx + 2;
+			int new_miny = EConst.c_num_chunks + newy - 2, 
+			    new_maxy = EConst.c_num_chunks + newy + 2;
+			// Now we write what we are now near
+			for (y = new_miny; y <= new_maxy; y++)  {
+				if (y > old_maxy)
+					break;		// Beyond the end.
+				int dy = y - old_miny;
+				if (dy < 0)
+					continue;
+				assert(dy < 5);
+				for (x = new_minx; x <= new_maxx; x++) {
+					if (x > old_maxx)
+						break;
+					int dx = x - old_minx;
+					if (dx >= 0) {
+						assert(dx < 5);
+						nearby[dy*5 + dx] = 1;
+					}
+				}
+			}
+		}
+		// Swap out chunks no longer nearby (0).
+		Vector<GameObject> removes = new Vector<GameObject>(30);
+		for (y = 0; y < 5; y++) {
+			for (x = 0; x < 5; x++) {
+				if (nearby[y*5 + x] != 0)
+					continue;
+				MapChunk list = omap.getChunk(
+					(old_minx + x)%EConst.c_num_chunks,
+					(old_miny + y)%EConst.c_num_chunks);
+				if (list == null) continue;
+				ObjectList.ObjectIterator it = new ObjectList.ObjectIterator(list.getObjects());
+				GameObject each;
+				while ((each = it.next()) != null) {
+					if (each.isEgg())
+						((EggObject) each).reset();
+					else if (each.getFlag(GameObject.is_temporary))
+						removes.add(each);
+				}
+			}
+		}
+		for (GameObject obj : removes) {
+			obj.deleteContents();  // first delete item's contents
+			obj.removeThis();
+		}
+		if (omap == nmap)
+			omap.cacheOut(newx, newy);
+		else					// Going to new map?
+			omap.cacheOut(-1, -1);	// Cache out whole of old map.
+	}
+	// Tests to see if a move goes out of range of the actors superchunk
+	public boolean emulateIsMoveAllowed(int tx, int ty) {
+		int ax = cameraActor.getCx() / EConst.c_chunks_per_schunk;
+		int ay = cameraActor.getCy() / EConst.c_chunks_per_schunk;
+		tx /= EConst.c_tiles_per_schunk;
+		ty /= EConst.c_tiles_per_schunk;
+		int difx = ax - tx;
+		int dify = ay - ty;
+		if (difx < 0) difx = -difx;
+		if (dify < 0) dify = -dify;
+		// Is it within 1 superchunk range?
+		if ((difx == 0 || difx == 1 || difx == EConst.c_num_schunks || difx == EConst.c_num_schunks-1) && 
+			(dify == 0 || dify == 1 || dify == EConst.c_num_schunks || dify == EConst.c_num_schunks-1))
+			return true;
+
+		return false;
 	}
 	/*
 	 *	Find the top object that can be selected, dragged, or activated.
