@@ -35,7 +35,9 @@ public class PlasmaThread extends Thread {
 			startColor = SI_PLASMA_START_COLOR;
 			cycleRange = SI_PLASMA_CYCLE_RANGE;
 		}
-		plasma(gwin.getWidth(), gwin.getHeight(), 0, 0, startColor, startColor + cycleRange - 1);
+		synchronized(gwin.getWin()) {
+			plasma(gwin.getWidth(), gwin.getHeight(), 0, 0, startColor, startColor + cycleRange - 1);
+		}
 		// Load the palette
 		if (GameSingletons.game.isBG())
 			pal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 2);
@@ -45,15 +47,16 @@ public class PlasmaThread extends Thread {
 	}
 	@Override
 	public void run() {
-		for(int i = 0; i < 4; ++i)
-			gwin.getWin().rotateColors(startColor, cycleRange);
+		System.out.println("PlasmaThread: run: started: " + GameSingletons.tqueue.ticks);
 		while (!finish) {
+			for(int i = 0; i < 4; ++i)
+				gwin.getWin().rotateColors(startColor, cycleRange);
+			gwin.setPainted();
 			try {
 				sleep(100);
 			} catch (InterruptedException e) {
 				finish = true;
 			}
-			gwin.setPainted();
 		}
 	}
 }

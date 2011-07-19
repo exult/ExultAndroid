@@ -275,6 +275,7 @@ public class AndroidSave extends GameSingletons {
 	}
 	public void load() {			// 'Load' was clicked.
 		// Aborts if unsuccessful.
+		gwin.startPlasma();
 		if (selected != -1) 
 			gwin.read(games[selected].num);
 		else // Read Gamedat

@@ -36,6 +36,7 @@ public class GameWindow extends GameSingletons {
 	private Tile SRTempTile = new Tile();	// For getShapeRect.
 	private ImageBuf win;
 	private Palette pal;
+	private PlasmaThread plasmaThread;
 	// Gameplay objects.
 	private MainActor mainActor;
 	private Actor cameraActor;		// What to center view on.
@@ -1185,7 +1186,7 @@ public class GameWindow extends GameSingletons {
 	public void clearDirty()		// Clear dirty rectangle.
 		{ dirty.w = 0; }
 	public boolean isDirty()
-		{ return dirty.w > 0; }
+		{ return dirty.w > 0 && plasmaThread == null; }
 	public void addDirty(Rectangle r) {	// Add rectangle to dirty area.
 		if (dirty.w > 0)
 			dirty.add(r);
@@ -1340,6 +1341,8 @@ public class GameWindow extends GameSingletons {
 		}
 	}
 	public void initFiles(boolean cycle) {
+		if (cycle)
+			startPlasma();
 		ShapeID.loadStatic();
 		tqueue.add(TimeQueue.ticks, clock, this);	// Start clock.
 	}
@@ -1359,14 +1362,10 @@ public class GameWindow extends GameSingletons {
 			System.out.println("FAILED to read NPCs!");
 		}
 		System.out.println("setupGame: finished initActors");
-		// CYCLE_RED_PLASMA();
 		/* ++++++++++FINISH 
 		Notebook_gump.initialize();		// Read in journal.
 		*/
 		usecode.read();		// Read the usecode flags
-		/*
-		CYCLE_RED_PLASMA();
-		*/
 		if (game.isBG()) {
 			/* +++++++FINISH
 			string yn;		// Override from config. file.
@@ -1385,15 +1384,11 @@ public class GameWindow extends GameSingletons {
 				mainActor.setFlag(GameObject.bg_dont_render);
 		}
 		/* +++++++++++FINISH
-		CYCLE_RED_PLASMA();
-
 		// Fade out & clear screen before palette change
 		pal.fade_out(c_fade_out_time);
 		clear_screen(true);
-	#ifdef RED_PLASMA
-		load_palette_timer = 0;
-	#endif
 		*/
+		stopPlasma();
 		// note: we had to stop the plasma here already, because init_readied
 		// and activate_eggs may update the screen through usecode functions
 		// (Helm of Light, for example)
@@ -1449,7 +1444,6 @@ public class GameWindow extends GameSingletons {
 				actor.setScheduleType(Schedule.wait);
 			} else
 				actor.restoreSchedule();
-			//+++++++CYCLE_RED_PLASMA();
 		}
 		nfile.close();
 		mainActor.setActorShape();
@@ -1469,7 +1463,6 @@ public class GameWindow extends GameSingletons {
 				MonsterActor act = MonsterActor.create(shnum);
 				act.read(nfile2, -1, false);
 				act.restoreSchedule();
-				// CYCLE_RED_PLASMA();
 			}
 			nfile2.close();
 		} catch (IOException e) {
@@ -1566,7 +1559,6 @@ public class GameWindow extends GameSingletons {
 						// Avatar isn't included here.
 			Actor npc = npcs.elementAt(i + 1);
 			readASchedule(sfile, i + 1, npc, entsize, offsets, ent);
-			//+++++++ CYCLE_RED_PLASMA();
 		}
 		sfile.close();
 	}
@@ -1660,7 +1652,8 @@ public class GameWindow extends GameSingletons {
 			num = n;
 		}
 		public void run() {
-			try {
+			try {		
+				gwin.startPlasma();
 				gwin.restoreGamedat(num);
 				gwin.read();
 			} catch (IOException e) {
@@ -1669,8 +1662,28 @@ public class GameWindow extends GameSingletons {
 			gwin.setBusyMessage(null);
 		}
 	}	
+	//	Start displaying the 'plasma' during load.  May be called more than once.
+	public void startPlasma() {
+		if (plasmaThread == null) {
+			System.out.println("startPlasma");
+			plasmaThread = new PlasmaThread(pal);
+			plasmaThread.start();
+		}
+		Thread.yield();	// In any case, give it a chance to run.
+	}
+	public void stopPlasma() {
+		if (plasmaThread != null) {
+			plasmaThread.finish = true;
+			try {
+				plasmaThread.join();
+			} catch (InterruptedException e) { }
+			plasmaThread = null;
+			setAllDirty();
+		}
+	}
 	public void read(int num) {
-		setBusyMessage("Restoring Game");
+		setBusyMessage("Restoring Game");	
+		startPlasma();			
 		Thread t = new RestoreThread(num);
 		t.start();
 	}
@@ -1680,12 +1693,7 @@ public class GameWindow extends GameSingletons {
 	public void read() {
 		
 		audio.cancelStreams();
-		/* +++++++++FINISH
-	#ifdef RED_PLASMA
-		// Display red plasma during load...
-		setup_load_palette();
-	#endif
-		*/
+		startPlasma();
 		clearWorld();			// Wipe clean.
 		readGwin();			// Read our data.
 						// DON'T do anything that might paint()
@@ -1920,11 +1928,8 @@ public class GameWindow extends GameSingletons {
 			if (!ok)
 				return;
 			}
-		#ifdef RED_PLASMA
-		// Display red plasma during load...
-		setup_load_palette();
-		#endif
-		 */								
+		 */
+		startPlasma();
 		EUtil.U7mkdir("<GAMEDAT>");		// Create dir. if not already there. Don't
 										// use GAMEDAT define cause that's got a
 										// trailing slash
@@ -1943,10 +1948,7 @@ public class GameWindow extends GameSingletons {
 			return;
 		}
 		in.close();
-	/* #ifdef RED_PLASMA
-		load_palette_timer = 0;
-	#endif
-	 */
+		stopPlasma();
 	}
 	/*
 	 *	Write files from flex assuming first 13 characters of
@@ -1992,8 +1994,6 @@ public class GameWindow extends GameSingletons {
 														EUtil.getSystemPath(fname)));
 				return;
 			}
-			
-			// CYCLE_RED_PLASMA();
 		}
 	}
 	private boolean restoreGamedatZip(String fname) {
@@ -2036,9 +2036,7 @@ public class GameWindow extends GameSingletons {
 				//System.out.println("Entry " + fnm + ", done");
 				out.close();
 				zin.closeEntry();
-			} 
-			// CYCLE_RED_PLASMA();
-	        
+			} 	        
 	        zin.close();
 	        System.out.println("restoreGamedatZip completed");
 	    } catch (IOException e) {

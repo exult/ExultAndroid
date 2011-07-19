@@ -441,7 +441,7 @@ public class ExultActivity extends Activity {
     		ItemNames.init(false, false);
     		TimeQueue.tickMsecs = stdDelay;
     		gwin = new GameWindow(EConst.c_game_w, EConst.c_game_h);	// Standard U7 dims.
-    		gwin.initFiles(false);
+    		gwin.initFiles(true);
     		gwin.readGwin();
     		gwin.setupGame();
     		gwin.setAllDirty();
