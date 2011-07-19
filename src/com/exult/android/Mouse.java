@@ -55,7 +55,7 @@ public final class Mouse extends GameSingletons {
 		box.h = maxh;
 		
 		onscreen = false;                   // initially offscreen
-		setShape(getShortArrow(EConst.east));		// +++++For now.
+		setShape(getShortArrow(EConst.east));		// For now.
 	}
 	public static final int // enum int :List of shapes' frame #'s.
 		dontchange = 1000,	// Flag to not change.
@@ -180,13 +180,6 @@ public final class Mouse extends GameSingletons {
 		else if (gumpman.gumpMode()) {
 			cursor = hand;
 		}
-/* +++++++FINISH
-		else if (gwin.getDraggingGump()) 
-			cursor = hand;
-		
-		else if (Combat::is_paused())
-			cursor = shortCombat_arrows[0];	// Short N red arrow.
-		*/
 		if (cursor == dontchange) {
 			BargeObject barge = gwin.getMovingBarge();
 			if (barge != null) {	// Use center of barge.

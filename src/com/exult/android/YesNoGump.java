@@ -21,7 +21,7 @@ public class YesNoGump extends Gump.Modal {
 	}
 	private void init(String txt, String fontname) {
 		text = txt;
-		font = 2;	// +++++FOR NOW.  Lookup fontname.  Default is "SMALL_BLACK_FONT".
+		font = 2;	// FOR NOW.  Lookup fontname.  Default is "SMALL_BLACK_FONT".
 	}
 	private YesNoGump(String txt) {
 		

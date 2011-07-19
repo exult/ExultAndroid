@@ -1,7 +1,10 @@
 package com.exult.android;
-import java.util.Vector;
 import java.util.LinkedList;
+import java.util.Vector;
+
 import android.graphics.Point;
+
+import com.exult.android.shapeinf.ShapeInfoLookup;
 
 public final class Conversation extends GameSingletons {
 	private NpcFaceInfo faceInfo[];	// NPC's on-screen faces in convers.
@@ -301,7 +304,7 @@ public final class Conversation extends GameSingletons {
 	 */
 	public void showAvatarChoices() {
 		boolean SI = game.isSI();
-		// Actor mainActor = gwin.getMainActor();
+		Actor mainActor = gwin.getMainActor();
 		int maxFaces = faceInfo.length;
 						// Get screen rectangle.
 		Rectangle sbox = new Rectangle(0, 0, gwin.getWidth(), gwin.getHeight());
@@ -310,23 +313,18 @@ public final class Conversation extends GameSingletons {
 		int spaceWidth = fonts.getTextWidth(0, " ");
 
 		// Get main actor's portrait, checking for Petra flag.
-		int shape = 0; // +++++++FINISH Shapeinfo_lookup::GetFaceReplacement(0);
+		int shape = ShapeInfoLookup.getFaceReplacement(0);
 		int frame = 0;
-		/* +++++++++FINISH
 		if (shape == 0) {
-			Skin_data *skin = Shapeinfo_lookup::GetSkinInfoSafe(MainActor); 
-			if (MainActor.getFlag(GameObject.tattooed))
-				{
-				shape = skin.alterFace_shape;
+			ShapeInfoLookup.SkinData skin = ShapeInfoLookup.getSkinInfoSafe(mainActor); 
+			if (mainActor.getFlag(GameObject.tattooed)) {
+				shape = skin.alterFaceShape;
 				frame = skin.alterFaceFrame;
-				}
-			else
-				{
-				shape = skin.face_shape;
+			} else {
+				shape = skin.faceShape;
 				frame = skin.faceFrame;
-				}
 			}
-		*/
+		}
 		ShapeID faceSid = new ShapeID(shape, frame, ShapeFiles.FACES_VGA);
 		ShapeFrame face = faceSid.getShape();
 		int empty;			// Find face prev. to 1st empty slot.

@@ -376,7 +376,6 @@ public abstract class UsecodeValue {
 			obj = o;
 		}
 		public int needIntValue() {
-			//++++++++???
 			return 0;
 		}
 		public String toString() {

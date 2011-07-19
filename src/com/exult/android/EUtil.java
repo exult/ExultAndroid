@@ -141,6 +141,16 @@ public class EUtil {
 			i = -i;
 		return digits > 0 ? i : def;
 	}
+	
+	public static final String ReadStr(InputStream in) {
+		StringBuffer buf = new StringBuffer(50);
+		int c;
+		try {
+			while ((c = in.read()) != '/' && c != -1)
+				buf.append((char) c);
+		} catch (IOException e) { }
+		return buf.toString();
+	}
 	private static String baseToUppercase(String str, int count) {
 		if (count <= 0) return str;
 		int todo = count, i;

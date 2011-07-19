@@ -319,7 +319,7 @@ public class ShapeInfoLookup extends GameSingletons {
 			else if (line == "si")
 				table.add(new StringIntPair("<SERPENT_STATIC>/paperdol.vga", -1));
 			else if (game.isSI() && line == "flx")
-				// ++++ FIMXME: Implement in the future for SI paperdoll patches.
+				// +++ FIMXME: Implement in the future for SI paperdoll patches.
 				System.out.println("Paperdoll source file '" + line +
 						"' is not implemented yet.");
 			else if (game.isBG() && line == "flx") {

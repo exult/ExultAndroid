@@ -43,7 +43,7 @@ public class AudioSample {
 		InputStream in = new ByteArrayInputStream(data, 0, size);
 		if (VocAudioSample.isThis(in))
 			return new VocAudioSample(data,size);
-		//+++++MORE
+		//++MORE
 		else
 			return null;
 	}

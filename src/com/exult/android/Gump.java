@@ -282,8 +282,8 @@ public abstract class Gump extends GameSingletons {
 		 */
 		public boolean add(GameObject obj, int mx, int my,
 				int sx, int sy, boolean dont_check, boolean combine) {
-			if (container == null /*++++++ || (!cheat.in_hack_mover() &&
-					!dont_check && !container.has_room(obj))*/)
+			if (container == null || (!cheat.inHackMover() &&
+					!dont_check && !container.hasRoom(obj)))
 				return false;		// Full.
 							// Dropping on same thing?
 			GameObject onobj = findObject(mx, my);

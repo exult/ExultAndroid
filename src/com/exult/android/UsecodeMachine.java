@@ -164,7 +164,7 @@ public class UsecodeMachine extends GameSingletons {
 	/*
 	 *	This is the main entry for outside callers.
 	 *
-	 *	Output:	-1 if not found. +++++ CURRENTLY always returns 1 or 0.
+	 *	Output:	-1 if not found. CURRENTLY always returns 1 or 0.
 	 *		0 if can't execute now or if aborted.
 	 *		1 otherwise.
 	 */

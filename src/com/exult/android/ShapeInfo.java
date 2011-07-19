@@ -481,18 +481,16 @@ public final class ShapeInfo {
 				boolean binary) {
 			PushbackInputStream txtin = (PushbackInputStream)in;
 			if (EUtil.peek(txtin) == '%') {
-				/* ++++FINISH
 				String key = EUtil.ReadStr(txtin);
 					// We need these for Exult, but not for ES.
 					// For now, a compromise/hack in that ES defines
 					// a version of this function which always returns
 					// -1, while Exult has another which forwards to
 					// Shapeinfo_lookup::get_skinvar
-				int id = getSkinvar(key);
+				// +++++FINISH: crashes  int id = ShapeInfoLookup.getSkinvar(key);
+				int id = -1; //+++++
 				return id < 0 ? -1 : id;
-				*/ return -1;//+++
-				}
-			else
+			} else
 				return EUtil.ReadInt(txtin);
 			}
 		};

@@ -17,7 +17,6 @@ public final class DraggingInfo extends GameSingletons {
 	private int mousex, mousey;
 	//UNUSED private int mouseShape;			// Save starting mouse shape.
 	private Point paint;
-	//+++++Mouse::Mouse_shapes mouse_shape;// Save starting mouse shape.
 	private Rectangle rect;			// Rectangle to repaint.
 	private Rectangle paintRect;
 	private boolean possible_theft;		// Moved enough to be 'theft'.
@@ -471,7 +470,6 @@ public final class DraggingInfo extends GameSingletons {
 	 */
 	public boolean drop(int x, int y, boolean moved) {
 		boolean handled = moved;
-		// ++++MAYBE not needed anymore. mouse.setShape(mouseShape);
 		if (button != null) {
 			button.unpush(true);
 			if (button.onWidget(x, y))

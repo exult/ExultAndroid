@@ -184,12 +184,6 @@ public class MainActor extends Actor {
 			gwin.toggleCombat();	// Hope this is safe....
 		super.setFlag(GameObject.dead);
 		gumpman.closeAllGumps(false);	// Obviously.
-		/*+++++FOR NOW:  DELETE if the below works.
-		if (game.isBG())
-			ucmachine.callUsecode(0x60e, this, UsecodeMachine.weapon);
-		else
-			ucmachine.callUsecode(0x400, this, UsecodeMachine.died);
-		*/
 						// Special function for dying:
 		ShapeInfoLookup.UsecodeFunctionData info = ShapeInfoLookup.getAvUsecode(0);
 		ucmachine.callUsecode(info.funId, this, info.eventId);

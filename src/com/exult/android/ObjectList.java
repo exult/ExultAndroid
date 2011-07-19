@@ -11,7 +11,7 @@ public class ObjectList {
 	}
 	public ObjectList() { }
 	public void reportProblem() {
-		//++++++FINISH
+		//++FINISH?
 	}
 	public boolean isEmpty()
 		{ return first == null; }

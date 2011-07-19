@@ -307,13 +307,8 @@ public class BargeObject extends ContainerGameObject implements TimeSensitive {
 			ChunkTerrain ter = chunk.getTerrain();
 			int flatShape = ter.getShapeNum(center.tx%EConst.c_tiles_per_chunk,
 					center.ty%EConst.c_tiles_per_chunk);
-			
-			/* ++++++ NEEDED? if (flat.is_invalid())
-				boat = 0;
-			else */ {
-				ShapeInfo info = ShapeID.getInfo(flatShape);
-				boat = info.isWater() ? 1 : 0;
-			}
+			ShapeInfo info = ShapeID.getInfo(flatShape);
+			boat = info.isWater() ? 1 : 0;
 		}
 		gathered = true;
 	}

@@ -115,6 +115,9 @@ public final class Audio extends GameSingletons {
 	public int updateSfx(int ind, GameObject obj) {
 		return ind; //++++++FINISH
 	}
+	public int updateSfx(int ind, Tile t) {
+		return ind; //++++++FINISH
+	}
 	public static boolean isPlaying(MediaPlayer p) {
 		try {
 			return p != null && p.isPlaying();

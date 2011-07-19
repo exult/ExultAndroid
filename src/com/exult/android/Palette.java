@@ -165,6 +165,25 @@ public class Palette {
 		brightness = b;
 	}
 	/*
+	 *	A class whose whole purpose is to clear the 'flashRed' palette.
+	 */
+	private static class RestoreFromRed extends TimeSensitive.Timer {
+		public void handleEvent(int curtime, Object udata) {
+			gwin.getPal().set((Integer)udata);
+			gwin.setPainted();
+		}
+	}
+	/*
+	 *	Flash the current palette red.
+	 */
+	public void flashRed() {
+		int savePal = palette;
+		RestoreFromRed res = new RestoreFromRed();
+		set(PALETTE_RED);		// Palette 8 is the red one.
+		GameSingletons.gwin.setPainted();
+		GameSingletons.tqueue.add(TimeQueue.ticks + 1, res, new Integer(savePal));
+	}
+	/*
 	 * Read in a palette.
 	 */
 	public void set

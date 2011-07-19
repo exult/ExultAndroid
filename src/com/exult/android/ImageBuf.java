@@ -229,39 +229,6 @@ public final class ImageBuf {
 	public boolean isVisible(int x, int y, int w, int h)
 		{ return (!(x >= clipx + clipw || y >= clipy + cliph ||
 			x + w <= clipx || y + h <= clipy)); }
-	/* +++++++NOT USED
-	public synchronized void show(Canvas c, int x, int y, int w, int h) {
-		Rectangle rect = tempShowRect;
-		rect.set(x, y, w, h);
-		rect.enlarge(4, 4, 4, 4, width, height);	// Increase area by 4.
-		x = rect.x; y = rect.y; w = rect.w; h = rect.h;
-		// Make it 4 pixel aligned too
-		int dx = x&3;
-		int dy = y&3;
-		x -= dx;
-		w += dx;
-		y -= dy;
-		h += dy;
-		if ((w&3) != 0) w += 4-(w&3);
-		if ((h&3) != 0) h += 4-(h&3);
-		if (w + x > width) w = width - x;
-		if (h + y > height) h = height - y;
-		w &= ~3;
-		h &= ~3;
-		// Fill RGBA using palette.
-		int ind = y*width + x, hcnt = h;
-		while (hcnt-- > 0) {
-			for (int i = 0; i < w; ++i) {
-				rgba[ind++] = pal[(int)pixels[ind++]&0xff];
-			}
-			ind += width - w;
-		}
-		if (toScale == null)
-			c.drawBitmap(rgba, 0, w, x, y, w, h, false, null);
-		else 
-			blit(c);// +++++++++FOR NOW.
-	}
-	*/
 	//	Just update the bitmap.
 	public void blit(Bitmap b) {
 		int cnt = width*height;
@@ -338,7 +305,7 @@ public final class ImageBuf {
 			return;
 		int to = tempClipDest.y*width + tempClipDest.x;
 		int from = start + tempClipSrc.y*src_width + tempClipSrc.x;
-		// int dlen = pixels.length; int slen = src_pixels.length; //++++DEBUGGING
+		// int dlen = pixels.length; int slen = src_pixels.length; //DEBUGGING
 		while (tempClipSrc.h-- > 0) {
 			System.arraycopy(src_pixels, from, pixels, to, tempClipSrc.w);
 			from += src_width;

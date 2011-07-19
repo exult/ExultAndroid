@@ -120,22 +120,21 @@ public class ActorGump extends Container {
 		super.paint();			// Paint gump & objects.
 
 		// Paint over blue lines for 2 handed
-		/* +++++++++FINISH
 		Actor actor = container.asActor();
 		if (actor != null) {
-			if (actor->is_two_fingered()) {
+			if (actor.isTwoFingered()) {
 				int sx = x + 36,	// Note this is the right finger slot shifted slightly
 					sy = y + 70;
-				ShapeID sid(TWO_FINGER_BROWN_SHAPE, TWO_FINGER_BROWN_FRAME, SF_GUMPS_VGA);
-				sid.paint_shape (sx,sy);
+				ShapeFrame s = ShapeFiles.GUMPS_VGA.getShape(TWO_FINGER_BROWN_SHAPE, TWO_FINGER_BROWN_FRAME);
+				s.paint(win, sx, sy);
 			}
 			if (actor.isTwoHanded()) {
 				int sx = x + 36,	// Note this is the right hand slot shifted slightly
 					sy = y + 55;
-				ShapeID sid(TWO_HANDED_BROWN_SHAPE, TWO_HANDED_BROWN_FRAME, SF_GUMPS_VGA);
-				sid.paint_shape (sx,sy);
+				ShapeFrame s = ShapeFiles.GUMPS_VGA.getShape(TWO_HANDED_BROWN_SHAPE, TWO_HANDED_BROWN_FRAME);
+				s.paint(win, sx, sy);
 			}
-		} */
+		}
 					// Show weight.
 		int max_weight = container.getMaxWeight();
 		int weight = container.getWeight()/10;

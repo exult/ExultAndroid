@@ -1,10 +1,17 @@
 package com.exult.android;
-import com.exult.android.shapeinf.*;
-import java.util.Vector;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
+import java.util.TreeMap;
+import java.util.Vector;
 import android.graphics.Point;
+
+import com.exult.android.shapeinf.AmmoInfo;
+import com.exult.android.shapeinf.ArmorInfo;
+import com.exult.android.shapeinf.FrameFlagsInfo;
+import com.exult.android.shapeinf.MonsterInfo;
+import com.exult.android.shapeinf.ShapeInfoLookup;
+import com.exult.android.shapeinf.WeaponInfo;
 
 public abstract class Actor extends ContainerGameObject implements TimeSensitive {
 	protected String name;			// Its name.
@@ -16,6 +23,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	protected short faceNum;			// Which shape for conversations.
 	protected short partyId;			// Index in party, or -1.
 	protected int properties[] = new int[12];		// Properties set/used in 'usecode'.
+	protected ActorAttributes atts;
 	protected byte temperature;	// Measure of coldness (0-63).
 	protected short shapeSave;		// Our old shape, or -1.
 	protected short oppressor;		// NPC ID (>= 0) of oppressor, or -1.
@@ -612,10 +620,12 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		dormant = true;
 	}
 	public void setAttribute(String nm, int val) {
-		//++++++++++LATER
+		if (atts == null)
+			atts = new ActorAttributes();
+		atts.set(nm, val);
 	}
 	public int getAttribute(String nm) {
-		return 0;	// +++++++LATER
+		return atts != null ? atts.get(nm) : 0;
 	}
 	//	Parse attribute/value pairs.
 	public void readAttributes(byte buf[]) {
@@ -778,7 +788,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 					schedule = new Scripted_schedule(this,
 								newScheduleType);
 				*/
-				schedule = new Schedule.Loiter(this);	//+++++++FOR NOW.
+				schedule = new Schedule.Loiter(this);
 				break;
 			}
 		}
@@ -2008,7 +2018,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				(delta >= maxhp/3 || oldhp < maxhp/4 ||
 						// Or if lightning damage.
 				type == WeaponInfo.lightning_damage))
-			; //+++++++++FINISH gwin.getPal().flashRed();
+			gwin.getPal().flashRed();
 		else {
 			hit = true;		// Flash red outline.
 			addDirty();
@@ -2524,6 +2534,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		}
 		return (cnt);
 	}
+	public final boolean isTwoHanded() { return twoHanded; }
+	public final boolean isTwoFingered() { return twoFingered; }
 	public final boolean hasLightSource() 	// Carrying a torch?
 		{ return lightSources > 0; }
 	public final void addLightSource()	// Add a torch
@@ -4053,5 +4065,24 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return size < 0 ? size : size + 1;
 		}
 	}
+	/**
+	 *	Provides attribute/value pairs.
+	 */
+	protected static class ActorAttributes {
+		TreeMap<String,Integer> map;
+		ActorAttributes() {
+			map = new TreeMap<String,Integer>();
+		}
+		//	Sets an attribute's value and, if needed, adds it to
+		//	the attribute name list.
+		void set(String nm, int val) {
+			map.put(nm, val);
+		}
+		///	Gets an attribute's value, if it is in the list, or 0 otherwise.
+		int get(String nm) {		// Returns 0 if not set.
+			Integer i = map.get(nm);
+			return i == null ? 0 : i;
+		}
+	};
 }
 

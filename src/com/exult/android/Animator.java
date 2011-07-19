@@ -96,8 +96,6 @@ public abstract class Animator extends TimeSensitive.Timer {
 		}
 		int getNextFrame() {
 			// Re-init if it's outside the range.
-			// ++++++Should we do this for the other cases (jsf)?
-			// ++++++Seeing if it breaks anything (marzo)
 			int curframe = obj.getFrameNum();
 			if (curframe < first_frame ||
 				curframe >= first_frame + nframes)

@@ -231,7 +231,6 @@ abstract public class ActorAction extends GameSingletons {
 			reached_end = false;		// Starting new path.
 			getParty = false;
 			from_offscreen = false;
-						//+++++Should dist be used below??:
 							// Set up new path.
 							// Don't care about 1 coord.?
 			if (dest.tx == -1 || dest.ty == -1) {
@@ -453,10 +452,6 @@ abstract public class ActorAction extends GameSingletons {
 				if (failure != null) {
 					failed = true;
 					delay = failure.handleEvent(actor);
-					/*++++++++STILL NEED this?
-					if (del)	// Are we gone?
-						return 0;
-					*/
 				}
 			} else {				// Success.
 				if (success != null) {
@@ -595,7 +590,6 @@ abstract public class ActorAction extends GameSingletons {
 			if (index >= actions.length || actions[index] == null)		// Done?
 				return (0);
 							// Do current action.
-			// +++++STILL NEEDED  boolean deleted;
 			int delay = actions[index].handleEvent(actor);
 			if (delay == 0) {
 				index++;		// That one's done now.

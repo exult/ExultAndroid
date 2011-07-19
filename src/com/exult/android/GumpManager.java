@@ -241,7 +241,7 @@ public final class GumpManager extends GameSingletons {
 		}
 		nonPersistentCount = 0;
 		setKbdFocus(null);
-		/* +++++FINISH
+		/* ++FINISH NEEDED?
 		gwin.get_npc_prox().wait(4);		// Delay "barking" for 4 secs.
 		*/
 		if (removed) 
@@ -319,7 +319,7 @@ public final class GumpManager extends GameSingletons {
 	public GameObject doubleClicked(Gump gump, int x, int y) {	
 		// If avatar cannot act, a double-click will only close gumps, and
 		// nothing else.
-		/* ++++++MAYBE LATER
+		/* ++MAYBE LATER
 		if (!gwin.mainActorCanAct() && gwin.get_double_click_closes_gumps()) {
 			gump.close();
 			gwin.paint();
@@ -331,7 +331,7 @@ public final class GumpManager extends GameSingletons {
 		if (obj == null) {		// Maybe it's a spell.
 		 	GumpWidget.Button btn = gump.onButton(x, y);
 			if (btn != null) btn.doubleClicked(x, y);
-			/* ++++++++++++
+			/* ++ MAYBE
 			else if (gwin.get_double_click_closes_gumps())
 				{
 				gump.close();

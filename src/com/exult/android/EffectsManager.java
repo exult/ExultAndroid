@@ -761,12 +761,10 @@ public final class EffectsManager extends GameSingletons {
 					if (target != null)
 						offz = target.getInfo().get3dHeight()/2;
 					tempDest.set(pos.tx, pos.ty, pos.tz + offz);
-					/* +++++++++FINISH
 					if (ainf != null && ainf.isHoming())
-						;
 						eman.addEffect(new HomingProjectile(weapon,
 								attacker, target, pos, tempDest));
-					else */
+					else
 						eman.addEffect(new ExplosionEffect(tempDest,
 								null, 0, weapon, projectileShape, attacker));
 					target = null;	// Takes care of attack.
@@ -863,6 +861,139 @@ public final class EffectsManager extends GameSingletons {
 			addDirty();			// Paint immediately.
 		}
 	}
+	/*
+	 *	'Death Vortex' and 'Energy Mist', as the spells.  (Maybe this could be a
+	 *	Sprites_effect.)
+	 *	A better name is welcome...
+	 */
+	public static class HomingProjectile extends SpecialEffect {
+		ShapeID sprite;
+		int weapon;		// The weapon's shape number.
+		GameObject attacker;	// Who is responsible for the attack.
+		Actor target;			// We'll follow this around if not 0.
+		Tile pos;			// Current position.
+		Tile dest;		// Destination pos for when there is no target.
+		Tile tpos = new Tile();	// Temp.
+		boolean stationary;		// If the effect should seek new targets.
+		int frames;			// # frames.
+		int stopTime;		// Time in 1/1000 secs. to stop.
+		int nextDamageTime;	// When to check for NPC's beneath us.
+		int sfx;
+		int channel;
+		Rectangle area = new Rectangle();
+		Vector<GameObject> npcs = new Vector<GameObject>();
+		int addDirty() {
+			ShapeFrame shape = sprite.getShape();
+			int liftpix = pos.tz*EConst.c_tilesize/2;
+			gwin.getShapeRect(area, shape,
+					(pos.tx - gwin.getScrolltx())*EConst.c_tilesize - liftpix,
+					(pos.ty - gwin.getScrollty())*EConst.c_tilesize - liftpix
+				).enlarge(EConst.c_tilesize/2);
+			gwin.clipToWin(area);
+			gwin.addDirty(area);
+			return shape.getWidth();
+		}
+		public HomingProjectile(int shnum, GameObject att, GameObject trg, Tile sp, Tile tp) {
+			sprite = new ShapeID(ShapeID.getInfo(shnum).getExplosionSprite(), 0, ShapeFiles.SPRITES_VGA);
+			sfx = ShapeID.getInfo(shnum).getExplosionSfx();
+			channel = -1;
+			weapon = shnum;
+			attacker = att;
+			pos = sp;
+			dest = tp;
+			target = trg != null ? trg.asActor() : null;
+			stationary = target != null ? false : true;	//If true, the sprite will 'park' at dest
+			frames = sprite.getNumFrames();
+							// Go for 20 seconds.
+			stopTime = TimeQueue.ticks + (20*1000)/TimeQueue.tickMsecs;
+							// Start immediately.
+			tqueue.add(TimeQueue.ticks, this, 0L);
+			channel = audio.playSfx(sfx, pos, Audio.MAX_VOLUME, 0);
+		}
+						// For Time_sensitive:
+		@Override
+		public void handleEvent(int curtime, Object udata) {
+			int width = addDirty();	// Repaint old area.
+			
+			if ((target != null && !target.isDead()) || stationary) {
+							//Move to target/destination if needed
+				if (stationary)
+					tpos.set(dest);
+				else target.getTile(tpos);
+				int deltax = tpos.tx - pos.tx, deltay = tpos.ty - pos.ty,
+					deltaz = tpos.tz +
+						(stationary ? 0 : target.getInfo().get3dHeight()/2) - pos.tz;
+				int absx = deltax >= 0 ? deltax : -deltax;
+				int absy = deltay >= 0 ? deltay : -deltay;
+				int absz = deltaz >= 0 ? deltaz : -deltaz;
+				int dist = absx*absx + absy*absy + absz*absz;
+				if (dist > 1) {
+					if (deltax != 0)
+						pos.tx += deltax/absx;
+					if (deltay != 0)
+						pos.ty += deltay/absy;
+					if (deltaz != 0)
+						pos.tz += deltaz/absz;
+				}
+			} else {
+				//The target has been killed; find another one
+				npcs.clear();	// Find NPC's.
+				gmap.findNearby(npcs, pos, -1, 30, 8);
+				Actor nearest = null;
+				int bestdist = 100000;
+				for (GameObject obj : npcs) {
+					Actor npc = obj.asActor();
+					if (npc != null && !npc.getFlag(GameObject.in_party) && !npc.isDead() &&
+							(npc.getEffectiveAlignment() >= Actor.hostile)) {
+						int dx = npc.getTileX() - pos.tx, dy = npc.getTileY() - pos.ty, dz = npc.getLift() - pos.tz;
+						int dist = dx*dx + dy*dy + dz*dz;
+						if (dist < bestdist) {
+							bestdist = dist;
+							nearest = npc;
+						}
+					}
+				}
+				target = nearest;
+			}
+			if (curtime > nextDamageTime) {	// Time to cause damage.
+							// Do it every second.
+				nextDamageTime = curtime + 1000/TimeQueue.tickMsecs;
+				npcs.clear();	// Find NPC's.
+				gmap.findNearby(npcs, pos, -1, width/(2*EConst.c_tilesize), 8);
+				for (GameObject obj : npcs) {
+					Actor npc = obj.asActor();
+					if (npc != null && !npc.getFlag(GameObject.in_party))
+						//Still powerful, but no longer overkill...
+						//also makes the enemy react, which is good
+						npc.attacked(attacker, weapon, weapon, true);
+				}
+			}
+			sprite.setFrame((sprite.getFrameNum() + 1)%frames);
+
+			addDirty();			// Paint new.
+			if (curtime < stopTime) {	// Keep going?
+				tqueue.add(curtime + 1, this, udata);
+				if (channel < 0)
+					return;
+				channel = audio.updateSfx(channel, pos);
+			} else {
+				if (channel >= 0) {
+					audio.stopSfx(channel);
+					channel = -1;
+				}
+				gwin.setAllDirty();
+				eman.removeEffect(this);
+			}
+		}
+		@Override
+		public void paint() {
+			int liftpix = pos.tz*EConst.c_tilesize/2;
+			sprite.paintShape(
+				(pos.tx - gwin.getScrolltx())*EConst.c_tilesize - liftpix,
+				(pos.ty - gwin.getScrollty())*EConst.c_tilesize - liftpix);
+		}
+	};
+
 	/*
 	 *	A text object is a message that stays on the screen for just a couple
 	 *	of seconds.  These are all kept in a single list, and managed by

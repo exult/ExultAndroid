@@ -133,16 +133,6 @@ public class AStarPathFinder extends PathFinder {
 	 */
 	static class NodeComparator implements Comparator<SearchNode> {
 		public int compare(SearchNode n1, SearchNode n2) {
-			/* ++++++++THINK I was confused.
-			Tile t1 = n1.tile, t2 = n2.tile;
-			if (t1.tx < t2.tx) return -1;
-			else if (t1.tx > t2.tx) return 1;
-			else if (t1.ty < t2.ty) return -1;
-			else if (t1.ty > t2.ty) return 1;
-			else if (t1.tz < t2.tz) return -1;
-			else if (t1.tz > t2.tz) return 1;
-			else return 0;
-			*/
 			return n1.totalCost - n2.totalCost;
 		}
 	}

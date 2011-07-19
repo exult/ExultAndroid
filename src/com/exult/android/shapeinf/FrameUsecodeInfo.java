@@ -27,7 +27,7 @@ public class FrameUsecodeInfo extends BaseInfo.FrameInfo {
 			quality &= 255;
 		boolean type = EUtil.ReadInt(txtin) != 0;
 		if (type) {
-			usecodeName = null; //+++++++++FINISH ReadStr(in);
+			usecodeName = EUtil.ReadStr(in);
 			usecode = -1;
 		} else {
 			usecode = EUtil.ReadInt(txtin, -1);
