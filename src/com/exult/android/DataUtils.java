@@ -59,25 +59,13 @@ public final class DataUtils {
 			static_version = readTextMsgFileSections(ds,
 					static_strings, sections);
 			txtobj.close();
-		} /* +++++++++FINISH
-		else
-			{
-			try
-				{
-				snprintf(buf, 50, "<STATIC>/%s.txt", fname);
-				std::ifstream in;
-				U7open(in, buf, false);
+		} else {
+			String name = String.format("<STATIC>/%1$s.txt", fname);
+				InputStream in = EUtil.U7openStream(name);
 				static_version = readTextMsgFileSections(in,
-						static_strings, sections, numsections);
+						static_strings, sections);
 				in.close();
-				}
-			catch (std::exception &e)
-				{
-				if (!editing)
-					throw e;
-				static_strings.resize(numsections);
-				}
-		} */
+		}
 		patch_strings.setSize(numsections);
 		String buf = String.format("<PATCH>/%1$s.txt", fname);
 		if (EUtil.U7exists(buf) != null) {

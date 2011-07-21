@@ -76,10 +76,8 @@ public class MonsterActor extends NpcActor {
 		) {
 		// If move not allowed do I remove or change destination?
 		// I'll do nothing for now
-		/* ++++++FINISH
 		if (!gwin.emulateIsMoveAllowed(t.tx, t.ty))
 			return false;
-		*/
 		if (getFlag(GameObject.paralyzed) || getMap() != gmap)
 			return false;
 						// Get old chunk.
@@ -156,10 +154,9 @@ public class MonsterActor extends NpcActor {
 	public static MonsterActor create(int shnum) {
 		// Get usecode for shape.
 		int ucnum = ucmachine.getShapeFun(shnum);
-		/* +++++++FINISH
 		if (shnum == 529)		// Slime?
-			return new Slime_actor("", shnum, -1, ucnum);
-		else */
+			return new Slime("", shnum, -1, ucnum);
+		else 
 			return new MonsterActor("", shnum, -1, ucnum);
 	}
 	/*

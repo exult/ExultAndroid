@@ -82,11 +82,9 @@ public final class GumpManager extends GameSingletons {
 			if (g.getContainer() == owner)
 				return (g);
 		}
-		/* ++++++++FINISH
-		Gump *dragged = gwin.get_dragging_gump();
-		if (dragged && dragged.get_container() == owner)
+		Gump dragged = drag != null ? drag.getGump() : null;
+		if (dragged != null && dragged.getContainer() == owner)
 			return dragged;
-		*/
 		return null;
 	}
 	/*
@@ -105,13 +103,11 @@ public final class GumpManager extends GameSingletons {
 			     g.getShapeNum() == shapenum))
 				return g;
 		}
-		/* ++++++++++FINISH
-		Gump *dragged = gwin.get_dragging_gump();
-		if (dragged && dragged.getOwner() == owner &&
+		Gump dragged = drag != null ? drag.getGump() : null;
+		if (dragged != null && dragged.getContainer() == owner &&
 			    (shapenum == EConst.c_any_shapenum || 
 				 dragged.getShapenum() == shapenum))
 			return dragged;
-		*/
 		return null;
 	}
 	// Add to end of list.
@@ -135,15 +131,13 @@ public final class GumpManager extends GameSingletons {
 								boolean actorgump) {
 		boolean paperdoll = false;
 		// overide for paperdolls
-		/* ++++++++FINISH
-		if (actorgump && (sman.can_use_paperdolls() && sman.are_paperdolls_enabled()))
+		if (actorgump && (ShapeID.canUsePaperdolls() && ShapeID.arePaperdollsEnabled()))
 			paperdoll = true;
-		Gump *dragged = gwin.get_dragging_gump();
+		Gump dragged = drag != null ? drag.getGump() : null;
 		// If we are dragging the same, just return
-		if (dragged && dragged.getOwner() == obj && 
+		if (dragged != null && dragged.getContainer() == obj && 
 			dragged.getShapenum() == shapenum)
 			return;
-		*/
 		ListIterator<Gump> iter = openGumps.listIterator();
 		Gump gump = null;
 		while (iter.hasNext()) {	// See if already open.

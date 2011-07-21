@@ -49,6 +49,9 @@ public abstract class Gump extends GameSingletons {
 	}
 	public void updateGump() {	// Update if required.
 	}
+	public final int getShapenum() {
+		return shapeNum;
+	}
 	public final int getX() {
 		return x;
 	}

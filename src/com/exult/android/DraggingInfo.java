@@ -21,6 +21,9 @@ public final class DraggingInfo extends GameSingletons {
 	private Rectangle paintRect;
 	private boolean possible_theft;		// Moved enough to be 'theft'.
 	
+	public Gump getGump() {
+		return gump;
+	}
 	private boolean start(int x, int y) { // First motion.
 		int deltax = Math.abs(x - mousex),
 		deltay = Math.abs(y - mousey);

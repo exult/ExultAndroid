@@ -255,7 +255,7 @@ public class NpcTimers extends GameSingletons {
 		@Override
 		public void handleEvent(int curtime, Object udata) {
 			Actor npc = list.npc;
-			if (wearingRing(npc, 297, 0)) {	// ++++SI has an Amulet.
+			if (wearingRing(npc, 297, 0)) {	// SI has an Amulet.
 						// Wearing protection ring.
 				done();		// Don't need timer.
 				return;
