@@ -158,7 +158,7 @@ public class MainActor extends Actor {
 			}
 		*/
 		// If change in Superchunk number, apply Old Style caching emulation
-		// +++++FINISH gwin.emulate_cache(olist, nlist);
+		gwin.emulateCache(olist, nlist);
 	}
 	/*
 	 *	Move (teleport) to a new spot.
