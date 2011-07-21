@@ -75,10 +75,8 @@ public abstract class PathFinder {
 			int tx = to.tx%EConst.c_tiles_per_chunk;	// Get tile within chunk.
 			int ty = to.ty%EConst.c_tiles_per_chunk;
 			int cost = 1;
-			boolean /*++FINISH water, */ poison = false;		// Get tile info.
-			/* ++++++++FINISH
-			Actor.getTileInfo(0, gwin, olist, tx, ty, water, poison);
-			*/
+			int flags = Actor.getTileInfo(null, olist, tx, ty);
+			boolean poison = (flags&Actor.tilePoison) != 0; 
 			/*
 			System.out.printf("getStepCost: from %1$d,%2$d,%3$d to %4$d,%5$d,%6$d\n", 
 					from.tx, from.ty, from.tz, to.tx, to.ty, to.tz);

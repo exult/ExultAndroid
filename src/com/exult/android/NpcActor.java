@@ -108,10 +108,8 @@ public class NpcActor extends Actor {
 			dormant = true;
 			return false;
 		}
-		/* +++++++++FINISH
-		int water, poison;		// Get tile info.
-		get_tile_info(this, gwin, nlist, tx, ty, water, poison);
-		*/
+		int flags = getTileInfo(this, nlist, tx, ty);
+		boolean poison = (flags&Actor.tilePoison) != 0; 
 		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
 			if (isReallyBlocked(t, force)) {
 				if (schedule != null)		// Tell scheduler.
@@ -126,14 +124,8 @@ public class NpcActor extends Actor {
 				return false;		// Done.
 			}
 		}
-		/* ++++++++++++++
 		if (poison && t.tz == 0)
-			Actor::set_flag(static_cast<int>(GameObject.poisoned));
-		*/
-		/* ++++++++IS THIS NEEDED?
-						// Check for scrolling.
-		gwin.scroll_if_needed(this, t);
-		*/
+			setFlag(GameObject.poisoned);
 		addDirty(false);			// Set to repaint old area.
 						// Move it.
 		movef(olist, nlist, tx, ty, frame, t.tz);
@@ -145,7 +137,7 @@ public class NpcActor extends Actor {
 						// And > a screenful away?
 		    distance(gwin.getCameraActor()) > 
 						1 + EConst.c_screen_tile_size &&
-				//++++++++Try getting rid of the 'talk' line:
+				//+++Try getting rid of the 'talk' line:
 						getScheduleType() != Schedule.talk &&
 						getScheduleType() != Schedule.walk_to_schedule &&
 						getScheduleType() != Schedule.street_maintenance) {
@@ -165,16 +157,11 @@ public class NpcActor extends Actor {
 		setAction(null);
 	// Messes up resurrection	num_schedules = 0;
 		tqueue.remove(this);// Remove from time queue.
-		// +++++++++ FINISH gwin.remove_nearby_npc(this);	// Remove from nearby list.
 						// Store old chunk list.
 		MapChunk olist = getChunk();
 		super.removeThis();	// Remove, but don't ever delete an NPC
 		switchedChunks(olist, null);
 		setInvalid();
-		/* +++++ I think we don't need this.
-		if (!nodel && npc_num > 0)	// Really going?
-			unused = true;		// Mark unused if a numbered NPC.
-		*/
 	}
 	/*
 	 *	Move (teleport) to a new spot.
@@ -257,9 +244,5 @@ public class NpcActor extends Actor {
 			int curtime = TimeQueue.ticks;
 			tqueue.add(curtime + 3, this, gwin);
 		}
-		/* ++++++FINISH
-		if (!nearby)			// Make sure we're in 'nearby' list.
-			gwin.add_nearby_npc(this);
-		*/
 	}
 }

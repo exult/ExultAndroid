@@ -2038,7 +2038,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 				say(ItemNames.first_ouch, ItemNames.last_ouch);
 		}
 		// Create blood.
-		int blood = 912;		// ++++TAG for future de-hard-coding.
+		int blood = 912;		// ++TAG for future de-hard-coding.
 				// Bleed only for normal damage.
 		if (type == WeaponInfo.normal_damage && !minf.cantBleed()
 			// Trying something new. Seems to match originals better, but
@@ -3204,6 +3204,34 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		if (wait)			// Only wait ~1/5 sec.
 			waitForArrival(dest, 2);
 		return true;
+	}
+	/*
+	 *	Get information about a tile that an actor is about to step onto.
+	 */
+	public static final int tileWater = (1<<0), tilePoison = (1<<1);	// Returned flags.
+	public static int getTileInfo(Actor actor, MapChunk chunk, int tx, int ty) {	// tx, ty are 0-15, within chunk.
+		boolean poison = false, water = false;
+		ChunkTerrain ter = chunk.getTerrain();
+		int shapeNum = ter != null ? ter.getShapeNum(tx, ty) : -1;
+		if (shapeNum != -1) {
+			ShapeInfo finfo = ShapeID.getInfo(shapeNum);
+			water = finfo.isWater();
+			poison = finfo.isPoisonous();
+						// Check for swamp/swamp boots.
+			if (poison && actor != null) {
+				if ((actor.gearPowers &
+					(FrameFlagsInfo.swamp_safe|FrameFlagsInfo.poison_safe)) != 0)
+					poison = false;
+				else {		// Not protected by gear?
+						// Safe from poisoning?
+					MonsterInfo minf = 
+						actor.getInfo().getMonsterInfo();
+					if (minf != null && minf.poisonSafe())
+						poison = false;
+				}
+			}
+		}
+		return (water?tileWater:0) + (poison?tilePoison:0);
 	}
 	public final int getOppressor() {
 		return oppressor;

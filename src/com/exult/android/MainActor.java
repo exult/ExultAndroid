@@ -66,10 +66,8 @@ public class MainActor extends Actor {
 						// Get rel. tile coords.
 		int tx = t.tx%EConst.c_tiles_per_chunk, ty = t.ty%EConst.c_tiles_per_chunk;
 		MapChunk nlist = gmap.getChunk(cx, cy);
-		/*
-		boolean water, poison;		// Get tile info.
-		get_tile_info(this, gwin, nlist, tx, ty, water, poison);
-		*/
+		int flags = getTileInfo(this, nlist, tx, ty);
+		boolean poison = (flags&Actor.tilePoison) != 0; 
 		if (!areaAvailable(t, null, force ? EConst.MOVE_ALL : 0)) {
 			if (isReallyBlocked(t, force)) {
 				if (schedule != null)		// Tell scheduler.
@@ -78,10 +76,8 @@ public class MainActor extends Actor {
 				return false;
 			}
 		}
-		/*
 		if (poison && t.tz == 0)
-			Actor::set_flag(static_cast<int>(Obj_flags::poisoned));
-		*/
+			setFlag(GameObject.poisoned);
 						// Check for scrolling.
 		gwin.scrollIfNeeded(this, t);
 		addDirty(false);			// Set to update old location.
