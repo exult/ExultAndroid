@@ -1,4 +1,7 @@
 package com.exult.android;
+
+import java.lang.ref.SoftReference;
+
 /*
  *	The flat landscape, 16x16 tiles:
  */
@@ -9,85 +12,38 @@ public class ChunkTerrain {
 							//   chunks that point to us. Each entry
 							//   is of form 0x00ssssff, s=shape, f=frame.
 	private int numClients;		// # of Chunk's that point to us.
-	private byte renderedFlats[];	// Flats rendered for entire chunk.
-	// Most-recently used circular queue
-	//   for rendered_flats:
-	private static ChunkTerrain renderQueue = null;
-	private static int queueSize;
-	private ChunkTerrain renderQueueNext, renderQueuePrev;
+	private SoftReference<byte[]> renderedFlats;	// Flats rendered for entire chunk.
 	//   Kept only for nearby chunks.
-	private void insertInQueue() {		// Queue methods.
-		if (renderQueueNext != null) {		// In queue already?
-										// !!Assuming it's not at head!!
-			renderQueueNext.renderQueuePrev = renderQueuePrev;
-		renderQueuePrev.renderQueueNext = renderQueueNext;
-		} else
-			queueSize++;		// Adding, so increment count.
-		if (renderQueue == null)		// First?
-			renderQueueNext = renderQueuePrev = this;
-		else {
-			renderQueueNext = renderQueue;
-			renderQueuePrev = renderQueue.renderQueuePrev;
-			renderQueuePrev.renderQueueNext = this;
-			renderQueue.renderQueuePrev = this;
-		}
-		renderQueue = this;
-	}
-	/* UNUSED++
-	private void removeFromQueue() {
-		if (renderQueueNext == null)
-			return;			// Not in queue.
-		queueSize--;
-		if (renderQueueNext == this)	// Only element?
-			renderQueue = null;
-		else {
-			if (renderQueue == this)
-				renderQueue = renderQueueNext;
-			renderQueueNext.renderQueuePrev = renderQueuePrev;
-			renderQueuePrev.renderQueueNext = renderQueueNext;
-			}
-		renderQueueNext = renderQueuePrev = null;
-	}*/
+	
 	// Create rendered_flats.
 	private final void paintTile(int tilex, int tiley) {
 		ShapeFrame shape = getShape(tilex, tiley);
 		if (shape != null && !shape.isRle()) {		// Only do flat tiles.
 			byte src[] = shape.getData();
+			byte flats[] = renderedFlats.get();
 			int from = 0, to = tilex*EConst.c_tilesize + 
 							   tiley*EConst.c_tilesize*EConst.c_chunksize;
 			for (int y = 0; y < EConst.c_tilesize; ++y) {
-				System.arraycopy(src, from, renderedFlats, to, EConst.c_tilesize);
+				System.arraycopy(src, from, flats, to, EConst.c_tilesize);
 				from += EConst.c_tilesize;
 				to += EConst.c_chunksize;
 			}
 		}
 	}
-	private void freeRenderedFlats() {
-		renderedFlats = null;
-	}
 	private byte[] renderFlats() {
-		assert(renderedFlats == null);
-		if (queueSize > 100) {	// FOR NOW.
-								// Grown too big.  Remove last.
-			ChunkTerrain last = renderQueue.renderQueuePrev;
-			last.freeRenderedFlats();
-			renderQueue.renderQueuePrev = last.renderQueuePrev;
-			last.renderQueuePrev.renderQueueNext = renderQueue;
-			last.renderQueueNext = last.renderQueuePrev = null;
-			queueSize--;
-		}
-		renderedFlats = new byte[EConst.c_chunksize*EConst.c_chunksize];
+		byte flats[] = new byte[EConst.c_chunksize*EConst.c_chunksize];
+		assert(renderedFlats == null || renderedFlats.get() == null);
+		renderedFlats = new SoftReference<byte[]>(flats);
 					// Go through array of tiles.
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
 			for (int tilex = 0; tilex < EConst.c_tiles_per_chunk; tilex++)
 				paintTile(tilex, tiley);
-		return renderedFlats;
+		return flats;
 	}
 	// Create from 16x16x2 data:
 	public ChunkTerrain(byte []data, boolean v2_chunks) {
 		numClients = 0;
 		renderedFlats = null;
-		renderQueueNext = renderQueuePrev = null;
 		shapes = new int[16*16];
 		int ind = 0;
 		for (int tiley = 0; tiley < EConst.c_tiles_per_chunk; tiley++)
@@ -127,10 +83,12 @@ public class ChunkTerrain {
 		int n = shapes[16*tiley + tilex];
 		return ShapeFiles.SHAPES_VGA.getFile().getShape((n>>8)&0xffff, n&0xff);
 	}
-	public byte[] getRenderedFlats() {
-		if (renderQueue != this)// Not already first in queue?
-			// Move to front of queue.
-			insertInQueue();
-		return renderedFlats != null ? renderedFlats : renderFlats();
+	public final byte[] getRenderedFlats() {
+		if (renderedFlats == null)
+			return renderFlats();
+		else {
+			byte flats[] = renderedFlats.get();
+			return flats != null ? flats : renderFlats();
+		}
 	}
 }
