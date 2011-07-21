@@ -2,6 +2,7 @@ package com.exult.android;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
 import android.graphics.Point;
@@ -626,6 +627,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	}
 	public int getAttribute(String nm) {
 		return atts != null ? atts.get(nm) : 0;
+	}
+	public void getAttributes(Vector<AttributePair> attlist) {
+		attlist.clear();
+		if (atts != null)
+			atts.getAll(attlist);
 	}
 	//	Parse attribute/value pairs.
 	public void readAttributes(byte buf[]) {
@@ -3958,13 +3964,11 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		for ( ; namelen < 16; ++namelen)
 			out.write(0);
 		writeContents(out);		// Write what he holds.
-		/* ++++++++++FINISH
 		if (atts != null) {
-			Actor.Atts_vector attlist;
-			get_attributes(attlist);
+			Vector<AttributePair> attlist = new Vector<AttributePair>();
+			getAttributes(attlist);
 			GameMap.writeAttributes(out, attlist);
 		}
-		*/
 						// Write scheduled usecode.
 		GameMap.writeScheduled(out, this, true);
 	}
@@ -4106,10 +4110,22 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		void set(String nm, int val) {
 			map.put(nm, val);
 		}
-		///	Gets an attribute's value, if it is in the list, or 0 otherwise.
+		//	Gets an attribute's value, if it is in the list, or 0 otherwise.
 		int get(String nm) {		// Returns 0 if not set.
 			Integer i = map.get(nm);
 			return i == null ? 0 : i;
+		}
+		void getAll(Vector<AttributePair> attList) {
+			for (Map.Entry<String, Integer> entry : map.entrySet()) {
+				attList.add(new AttributePair(entry.getKey(), entry.getValue()));
+			}
+		}
+	};
+	public static class AttributePair {
+		public String name;
+		public int value;
+		public AttributePair(String s, int v) {
+			name = s; value = v;
 		}
 	};
 }

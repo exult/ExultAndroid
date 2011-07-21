@@ -579,9 +579,6 @@ public class GameMap extends GameSingletons {
 	 */
 	private void getIregObjects(int schunk) { 	// Superchunk # (0-143).
 		InputStream ireg;
-		
-		if (false)
-			;
 		try {
 			byte cache[] = schunkCache[schunk];
 			if (cache != null) {
@@ -620,6 +617,31 @@ public class GameMap extends GameSingletons {
 	public static ChunkTerrain getTerrain(int tnum) {
 		ChunkTerrain ter = (ChunkTerrain) chunkTerrains.elementAt(tnum);
 		return ter != null ? ter : readTerrain(tnum);
+	}
+	/*
+	 *	Write out attributes for an object.
+	 */
+	public static void writeAttributes(OutputStream ireg, Vector<Actor.AttributePair> attlist) throws IOException {
+		int len = 0;			// Figure total length.
+		int i, cnt = attlist.size();
+		if (cnt == 0)
+			return;
+		for (i = 0; i < cnt; ++i) {
+			String att = attlist.elementAt(i).name;
+			len += att.length() + 1 + 2;	// Name, NULL, val.
+		}
+		ireg.write(IREG_SPECIAL);
+		ireg.write(IREG_ATTS);
+		EUtil.Write2(ireg, len);
+		for (i = 0; i < cnt; ++i) {
+			Actor.AttributePair pair = attlist.elementAt(i);
+			String att = pair.name;
+			int val = pair.value;
+			byte nm[] = att.getBytes();
+			ireg.write(nm);
+			ireg.write(0);
+			EUtil.Write2(ireg, val);
+		}
 	}
 	/*
 	 *	Write out scheduled usecode for an object.
