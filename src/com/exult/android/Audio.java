@@ -291,7 +291,18 @@ public final class Audio extends GameSingletons {
 		return startMusic(num, repeat, EFile.MAINMUS);
 	}
 	public boolean startSpeech(int num) {
-		/* ++++++++EXPERIMENTING 
+		String basename = "<SPEECH>/";
+		String oggname = game.isBG() ?
+				String.format("vocbg%1$03d.ogg", num) : String.format("vocsi%1$03d.ogg", num);
+		
+		String fname = EUtil.U7exists(basename + oggname);
+		if (fname == null)
+			return false;
+		else {
+			System.out.println("startSpeech: " + fname);
+			return playFile(fname, false) >= 0;
+		}
+		/* +EXPERIMENTING 
 		String filename, patchfile;
 		if (game.isSI()) {
 			filename = EFile.SISPEECH;
@@ -342,7 +353,6 @@ public final class Audio extends GameSingletons {
 			return false;
 		}
 		*/
-		return false;
 	}
 	//	Returns channel/player index, or -1 if unsuccessful.
 	private int oggPlay(String filename, int num, boolean repeat) {
