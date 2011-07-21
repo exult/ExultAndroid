@@ -1169,24 +1169,28 @@ public class GameWindow extends GameSingletons {
 			cheat.set_grabbed_actor (npc);
 		*/
 	}
-	void showObjName(GameObject obj) {
-		// ++++ String namestr = Get_object_name(obj);
-		// Combat and an NPC?
-		/* ++MAYBE LATER
-		if (in_combat() && Combat.mode != Combat.original && npc)
-		{
-		char buf[128];
-		sprintf(buf, "%s (%d)", objname, 
-				npc.getProperty(Actor.health));
-		objname = &buf[0];
+	private String getObjectName(GameObject obj) {
+		if (obj == mainActor) {
+			if (game.isBG())
+				return ItemNames.misc[0x42];
+			else if (game.isSI())
+				return ItemNames.misc[0x4e];
 		}
-		 */
-		effects.addText(/* objname*/ obj.getName() , obj);
+	return obj.getName();
+	}
+	void showObjName(GameObject obj) {
+		String objName = getObjectName(obj);
+		// Combat and an NPC?
+		if (inCombat() && CombatSchedule.mode != CombatSchedule.original) {
+			Actor npc = obj.asActor();
+			if (npc != null)
+				objName = String.format("%1$s (%1$d)", objName, npc.getProperty(Actor.health));
+		}
+		effects.addText(objName, obj);
 	}
 	/*
 	 *	Handle a double-click.
 	 */
-
 	public void doubleClicked
 		(
 		int x, int y			// Coords in window.
