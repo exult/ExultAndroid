@@ -238,7 +238,8 @@ public class EUtil {
 		String bgbase = base + "/blackgate";	// FOR NOW.
 		addSystemPath("<DATA>", base);
 		addSystemPath("<MUSIC>", base + "/MUSIC");
-		addSystemPath("<SPEECH>", base + "/SPEECH");
+		addSystemPath("<SPEECH>", base + "/SPEECH");		
+		addSystemPath("<VIDEO>", base + "/VIDEO");
 		addSystemPath("<PATCH>", bgbase + "/PATCH");
 		addSystemPath("<STATIC>", bgbase + "/STATIC");
 		addSystemPath("<GAMEDAT>", bgbase + "/GAMEDAT");

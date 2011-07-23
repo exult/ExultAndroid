@@ -51,6 +51,7 @@
 				  android:id="@+id/pickpocket_button" 
 				  android:enabled="true" 
 				  android:checkable="true"></item>
+			<item android:id="@+id/intro_video_button" android:title="Intro Video" android:checkable="false" android:visible="true" android:enabled="true"></item>
 			</menu>
 	</item>
 </menu>

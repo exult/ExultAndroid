@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.Canvas;
 import android.graphics.Point;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.AttributeSet;
@@ -56,6 +57,9 @@ public class ExultActivity extends Activity {
     	if (GameSingletons.audio != null)
     		GameSingletons.audio.stop();
     	super.onDestroy();
+    }
+    public static Activity instanceOf() {
+    	return instance;
     }
     public void vibrate() {
     	if (vibrator == null)
@@ -198,7 +202,7 @@ public class ExultActivity extends Activity {
     		AndroidSave.instance.close();
     	else if (GameSingletons.gumpman.gumpMode())
 			GameSingletons.gumpman.closeAllGumps(false);
-    	else
+    	else if (!VideoPlayer.closeIfPlaying())
     		askToQuit();
 	}
     /*
@@ -282,6 +286,9 @@ public class ExultActivity extends Activity {
         case R.id.pickpocket_button:
         	cheat.togglePickpocket();
         	item.setChecked(cheat.inPickpocket());
+        	return true;
+        case R.id.intro_video_button:
+        	new VideoPlayer("u7bgintro.mp4", null);	// TESTING++
         	return true;
         default:
             return super.onOptionsItemSelected(item);
