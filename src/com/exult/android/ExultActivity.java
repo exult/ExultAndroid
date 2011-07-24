@@ -8,9 +8,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Point;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.AttributeSet;
@@ -261,6 +261,9 @@ public class ExultActivity extends Activity {
         case R.id.save_restore_button:
         	Shortcuts.save(instance);
             return true;
+        case R.id.Settings_button:
+        	startActivity(new Intent(this, Preferences.class));
+        	return true;
         case R.id.quit_button:
         	Shortcuts.quit();
             return true;

@@ -5,6 +5,11 @@
 		  android:id="@+id/save_restore_button" 
 		  android:alphabeticShortcut="S" 
 		  android:enabled="true"></item>
+	<item android:visible="true"
+		  android:titleCondensed="Settings" 
+		  android:title="Settings" 
+		  android:id="@+id/Settings_button" 
+		  android:enabled="true"></item>
 	<item android:visible="true" 
 		  android:titleCondensed="Quit" 
 		  android:title="Quit" android:id="@+id/quit_button" 

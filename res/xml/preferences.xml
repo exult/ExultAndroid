@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+        <PreferenceCategory
+                android:title="Gameplay">
+                <CheckBoxPreference
+                        android:title="Skip Intro"
+                        android:defaultValue="false"
+                        android:summary="Skip introductory video"
+                        android:key="skipIntroPref" />
+                  <CheckBoxPreference
+                        android:title="Shortcut buttons"
+                        android:defaultValue="true"
+                        android:summary="Show shortcuts on side of screen"
+                        android:key="showShortcutsPref" />      
+                <PreferenceScreen
+                android:key="DirsPrefScreen"
+                android:title="Directories"
+                android:summary="Game file directories">
+                <EditTextPreference
+                        android:name="Main Directory Preference"
+                        android:summary="Main exult directory"
+                        android:title="Exult directory"
+                        android:defaultValue="/sdcard/Games/exult"
+                        android:key="ExultDirPref" />
+        		</PreferenceScreen>
+        </PreferenceCategory>
+</PreferenceScreen>
