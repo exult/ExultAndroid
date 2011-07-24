@@ -10,20 +10,22 @@ public class VideoPlayer extends GameSingletons {
 	private View mainView, gameView;
 	private VideoView video;
 	private Activity exult;
+	private Thread onCompleteThread;
 	
-	public VideoPlayer(String fileName, MediaPlayer.OnCompletionListener onComplete) {
+	//	Play, and execute 'thread' when done.
+	public VideoPlayer(String fileName, Thread doneThread) {
 		instance = this;
+		onCompleteThread = doneThread;
 		exult = ExultActivity.instanceOf();
 		mainView = exult.findViewById(R.id.main_layout);		
 		gameView = exult.findViewById(R.id.game);
 		video = (VideoView) exult.findViewById(R.id.video_view);
-		if (onComplete == null)
-			onComplete = new MediaPlayer.OnCompletionListener() {
-				@Override
-				public void onCompletion(MediaPlayer mp) {
-					close();
-				}
-			};
+		MediaPlayer.OnCompletionListener onComplete = new MediaPlayer.OnCompletionListener() {
+			@Override
+			public void onCompletion(MediaPlayer mp) {
+				close();
+			}
+		};
 		video.setOnCompletionListener(onComplete);
 		video.setOnErrorListener(new MediaPlayer.OnErrorListener() {
 			@Override
@@ -62,6 +64,8 @@ public class VideoPlayer extends GameSingletons {
 		mainView.setVisibility(View.VISIBLE);			
 		gameView.setVisibility(View.VISIBLE);
 		video.setVisibility(View.GONE);
+		if (onCompleteThread != null)
+			onCompleteThread.start();
 		tqueue.resume();
 	}
 }

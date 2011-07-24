@@ -9,10 +9,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -35,7 +37,8 @@ public class ExultActivity extends Activity {
 	private static GameWindow gwin;
 	public static boolean restartFlag;
 	public static Vibrator vibrator; 
-
+	private static SharedPreferences prefs;
+	
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -47,8 +50,10 @@ public class ExultActivity extends Activity {
     	ShapeFiles.load();
         super.onCreate(savedInstanceState);
         //setContentView(new MySurfaceView(this));
+        prefs = PreferenceManager.getDefaultSharedPreferences(this);
         setContentView(R.layout.main);
         setButtonHandlers();
+        startupGame();
     }
     @Override
     public void onDestroy() {
@@ -61,6 +66,24 @@ public class ExultActivity extends Activity {
     public static Activity instanceOf() {
     	return instance;
     }
+    private void startupGame() {
+		boolean skipIntro = prefs.getBoolean("skipIntroPref", false);
+		System.out.println("skipIntro:  " + skipIntro);
+		Thread t = new Thread() {	// Run this way so plasma will display.
+			@Override
+			public void run() {
+				gwin.initFiles(true);
+				gwin.readGwin();
+				gwin.setupGame();
+				gwin.setAllDirty();
+			}
+		};
+		if (!skipIntro) {
+			String nm = GameSingletons.game.isBG() ? "u7bgintro.mp4" : "u7siintro.mp4";
+			new VideoPlayer(nm, t);
+		} else
+			t.start();
+	}
     public void vibrate() {
     	if (vibrator == null)
     		vibrator = (Vibrator)getSystemService(VIBRATOR_SERVICE);
@@ -451,16 +474,6 @@ public class ExultActivity extends Activity {
     		ItemNames.init(false, false);
     		TimeQueue.tickMsecs = stdDelay;
     		gwin = new GameWindow(EConst.c_game_w, EConst.c_game_h);	// Standard U7 dims.
-    		Thread t = new Thread() {	// Run this way so plasma will display.
-    			@Override
-    			public void run() {
-    				gwin.initFiles(true);
-    				gwin.readGwin();
-    				gwin.setupGame();
-    				gwin.setAllDirty();
-    			}
-    		};
-    		t.start();
     	}
     	private final void rotatePalette() {
     		ImageBuf win = gwin.getWin();
