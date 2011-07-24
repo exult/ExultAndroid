@@ -36,14 +36,15 @@ public class PlasmaThread extends Thread {
 			cycleRange = SI_PLASMA_CYCLE_RANGE;
 		}
 		synchronized(gwin.getWin()) {
+			// Load the palette
+			if (GameSingletons.game.isBG())
+				pal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 2);
+			else
+				pal.load(EFile.MAINSHP_FLX, EFile.PATCH_MAINSHP, 1);
+			pal.apply();
 			plasma(gwin.getWidth(), gwin.getHeight(), 0, 0, startColor, startColor + cycleRange - 1);
 		}
-		// Load the palette
-		if (GameSingletons.game.isBG())
-			pal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 2);
-		else
-			pal.load(EFile.MAINSHP_FLX, EFile.PATCH_MAINSHP, 1);
-		pal.apply();
+		
 	}
 	@Override
 	public void run() {

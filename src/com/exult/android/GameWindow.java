@@ -1452,7 +1452,7 @@ public class GameWindow extends GameSingletons {
 		if (EUtil.U7exists(EFile.IDENTITY) == null)
 			initGamedat(true);
 		getMap(0).init();
-		pal.set(Palette.PALETTE_DAY, -1, null);//+++++ALSO for testing.
+		//pal.set(Palette.PALETTE_DAY, -1, null);//++ALSO for testing.
 		try {
 			initActors();		// Set up actors if not already done.
 								// This also sets up initial 

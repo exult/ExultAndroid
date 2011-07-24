@@ -451,10 +451,16 @@ public class ExultActivity extends Activity {
     		ItemNames.init(false, false);
     		TimeQueue.tickMsecs = stdDelay;
     		gwin = new GameWindow(EConst.c_game_w, EConst.c_game_h);	// Standard U7 dims.
-    		gwin.initFiles(true);
-    		gwin.readGwin();
-    		gwin.setupGame();
-    		gwin.setAllDirty();
+    		Thread t = new Thread() {	// Run this way so plasma will display.
+    			@Override
+    			public void run() {
+    				gwin.initFiles(true);
+    				gwin.readGwin();
+    				gwin.setupGame();
+    				gwin.setAllDirty();
+    			}
+    		};
+    		t.start();
     	}
     	private final void rotatePalette() {
     		ImageBuf win = gwin.getWin();
