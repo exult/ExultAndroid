@@ -341,19 +341,21 @@ public final class DraggingInfo extends GameSingletons {
 			gump.setPos(paint.x, paint.y);
 		gwin.clipToWin(rect);
 		gwin.addDirty(rect);
-		// See if we're over something.
-		Gump onGump = gumpman.findGump(x, y);
-		GameObject onObj = null;
-		if (onGump != null)
-			onObj = onGump.findObject(x, y);
-		else
-			onObj = gwin.findObject(x, y);
-		if (onObj != GameWindow.onObj) {
-			if (GameWindow.onObj != null)
-				gwin.addDirty(GameWindow.onObj);
-			if (onObj != null)
-				gwin.addDirty(onObj);
-			GameWindow.onObj = onObj;
+		if (obj != null) {	// Dragging an object?
+			// See if we're over something.
+			Gump onGump = gumpman.findGump(x, y);
+			GameObject onObj = null;
+			if (onGump != null)
+				onObj = onGump.findObject(x, y);
+			else
+				onObj = gwin.findObject(x, y);
+			if (onObj != GameWindow.onObj) {
+				if (GameWindow.onObj != null)
+					gwin.addDirty(GameWindow.onObj);
+				if (onObj != null)
+					gwin.addDirty(onObj);
+				GameWindow.onObj = onObj;
+			}
 		}
 		return true;
 	}

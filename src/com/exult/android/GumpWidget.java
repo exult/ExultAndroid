@@ -99,6 +99,14 @@ public class GumpWidget extends ShapeID {
 			parent.close();
 			return true;
 		}
+		@Override
+		public boolean onWidget(int mx, int my) {
+			mx -= parent.getX() + x;	// Get point rel. to gump.
+			my -= parent.getY() + y;
+			ShapeFrame cshape = getShape();
+			// Check for box, as we're on a touch-screen
+			return cshape != null && cshape.boxHasPoint(mx, my);
+		}
 	}
 	/*
 	 *	A 'heart' button for bringing up stats.

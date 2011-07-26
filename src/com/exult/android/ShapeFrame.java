@@ -578,4 +578,13 @@ public class ShapeFrame {
 		}
 		return false;			// Never found it.
 	}
+	/*
+	 * Just check the rectangular area for the point.
+	 */
+	public final boolean boxHasPoint
+	(
+	int x, int y			// Relative to origin of shape.
+	) {
+	return x >= -xleft && x < xright && y >= -yabove && y < ybelow;
+	}
 }
