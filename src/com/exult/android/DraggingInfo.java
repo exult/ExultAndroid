@@ -403,6 +403,8 @@ public final class DraggingInfo extends GameSingletons {
 			lastDropped = obj;
 		obj = null;			// Clear so we don't paint them.
 		gump = null;
+		if (GameWindow.onObj != null)
+			gwin.addDirty(GameWindow.onObj);
 		GameWindow.onObj = null;
 		gwin.paint();
 		return ret;
