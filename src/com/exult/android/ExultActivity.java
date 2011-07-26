@@ -66,6 +66,14 @@ public class ExultActivity extends Activity {
     public static Activity instanceOf() {
     	return instance;
     }
+    //	Show main menu and wait until done.
+    private void showMainMenu() {
+    	Gump.Modal menu = GameSingletons.game.topMenu();//++++++TESTING
+		while (!menu.isDone())
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) { break; }
+    }
     private void startupGame() {
     	
 		boolean skipIntro = prefs.getBoolean("skipIntroPref", false);
@@ -73,7 +81,9 @@ public class ExultActivity extends Activity {
 		Thread t = new Thread() {	// Run this way so plasma will display.
 			@Override
 			public void run() {
-				//GameSingletons.game.topMenu();//++++++TESTING
+				boolean skipMenu = prefs.getBoolean("skipGameMenu", false);
+				if (!skipMenu)
+					showMainMenu();
 				gwin.initFiles(true);
 				gwin.readGwin();
 				gwin.setupGame();

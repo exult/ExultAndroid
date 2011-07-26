@@ -24,7 +24,16 @@ public class GameMenuGump extends Modal {
 			offset += offShape.getYBelow() + 3;
 		}
 	}
-	
+	// Handle events:
+	public void onUp(int mx, int my) {
+		audio.stopMusic();
+		gwin.getPal().fadeOut(EConst.c_fade_out_time);
+		close();//++++++TESTING
+	}
+	public void keyDown(int chr) // Key pressed
+		{  }
+	public void textInput(int chr, int unicode) // Character typed (unicode)
+		{ }
 	public static class MenuItem extends GumpWidget.Button {
 		public MenuItem(Gump par, ShapeFrame onShape, ShapeFrame offShape, int px, int py) {
 			super(par, onShape, offShape, px, py);

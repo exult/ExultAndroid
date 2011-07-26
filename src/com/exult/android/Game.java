@@ -78,7 +78,7 @@ public abstract class Game extends GameSingletons {
 		ExultActivity.fatal("Resource " + res + " not found!");
 		return null;
 	}
-	public abstract void topMenu();
+	public abstract Gump.Modal topMenu();
 	public static class BGGame extends Game {
 		public BGGame() {
 			gameType = EConst.BLACK_GATE;
@@ -221,12 +221,14 @@ public abstract class Game extends GameSingletons {
 			return menuShapes.getShape(0x2,0);
 		}
 		@Override
-		public void topMenu() {
+		public Gump.Modal topMenu() {
 			audio.startMusic(menu_midi, true, EFile.INTROMUS);
 			GameMenuGump menu = new GameMenuGump(getMenuShape());
 			Palette pal = gwin.getPal();
 			pal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 6);
-			pal.fadeIn(60);
+			pal.fadeIn(EConst.c_fade_in_time);
+			menu.track(Mouse.hand);	//+++++Use proper mouse.
+			return menu;
 		}
 	}
 }

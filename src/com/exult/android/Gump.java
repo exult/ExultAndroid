@@ -396,6 +396,7 @@ public abstract class Gump extends GameSingletons {
 			super(shnum);
 		}
 		public void close() {
+			System.out.println("Gump: close");
 			super.close();
 			done = true;
 		}
