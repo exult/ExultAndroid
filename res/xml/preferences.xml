@@ -8,6 +8,11 @@
                         android:summary="Skip introductory video"
                         android:key="skipIntroPref" />
                   <CheckBoxPreference
+                        android:title="Skip Menu"
+                        android:defaultValue="false"
+                        android:summary="Skip main menu"
+                        android:key="skipGameMenu" />
+                  <CheckBoxPreference
                         android:title="Shortcut buttons"
                         android:defaultValue="true"
                         android:summary="Show shortcuts on side of screen"
