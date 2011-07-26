@@ -65,7 +65,7 @@ public class Palette {
 			fadeOut(cycles);
 		fadedOut = !inout;		// Be sure to set flag.
 	}
-	private void fadeIn(int cycles) {
+	public void fadeIn(int cycles) {
 		if (cycles != 0 && fadesEnabled) {
 			byte fade_pal[] = new byte[768];
 			int ticks = TimeQueue.ticks + 1;

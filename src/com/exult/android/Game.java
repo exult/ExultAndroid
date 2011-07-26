@@ -11,7 +11,11 @@ public abstract class Game extends GameSingletons {
 	private int avSkin = -1;
 	private HashMap<String,Integer> shapes;
 	private HashMap<String,ShapeInfoLookup.StringIntPair> resources; 
+	protected VgaFile menuShapes;
+	private static final int menu_midi = 3;
+	
 	public Game() {
+		menuShapes = new VgaFile(EFile.MAINSHP_FLX, EFile.PATCH_MAINSHP);
 		shapes = new HashMap<String,Integer>();
 		resources = new HashMap<String,ShapeInfoLookup.StringIntPair>();
 		GameSingletons.game = this;
@@ -71,6 +75,7 @@ public abstract class Game extends GameSingletons {
 		ExultActivity.fatal("Resource " + res + " not found!");
 		return null;
 	}
+	public abstract void topMenu();
 	public static class BGGame extends Game {
 		public BGGame() {
 			gameType = EConst.BLACK_GATE;
@@ -208,6 +213,17 @@ public abstract class Game extends GameSingletons {
 			addResource("xforms/17", EFile.XFORMTBL, 17);
 			addResource("xforms/18", EFile.XFORMTBL, 18);
 			addResource("xforms/19", EFile.XFORMTBL, 19);
+		}	
+		public ShapeFrame getMenuShape() {
+			return menuShapes.getShape(0x2,0);
+		}
+		@Override
+		public void topMenu() {
+			audio.startMusic(menu_midi, true, EFile.INTROMUS);
+			GameMenuGump menu = new GameMenuGump(getMenuShape());
+			Palette pal = gwin.getPal();
+			pal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 6);
+			pal.fadeIn(60);
 		}
 	}
 }

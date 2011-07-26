@@ -99,6 +99,11 @@ public final class Mouse extends GameSingletons {
 		pointers = new VgaFile.ShapeFile(EFile.POINTERS);
 		init();
 	}
+	public Mouse(byte data[]) {
+		pointers = new VgaFile.ShapeFile(data);
+		init();
+		setShape0(0);
+	}
 	public int getX() {
 		return mousex;
 	}

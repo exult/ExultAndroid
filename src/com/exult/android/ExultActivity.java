@@ -45,8 +45,8 @@ public class ExultActivity extends Activity {
     	// start tracing to "/sdcard/calc.trace"
         //Debug.startMethodTracing("calc");
     	instance = this;
-    	new Game.BGGame();	// Stores itself in GameSingletons.
     	EUtil.initSystemPaths();
+    	new Game.BGGame();	// Stores itself in GameSingletons.
     	ShapeFiles.load();
         super.onCreate(savedInstanceState);
         //setContentView(new MySurfaceView(this));
@@ -67,11 +67,13 @@ public class ExultActivity extends Activity {
     	return instance;
     }
     private void startupGame() {
+    	
 		boolean skipIntro = prefs.getBoolean("skipIntroPref", false);
 		System.out.println("skipIntro:  " + skipIntro);
 		Thread t = new Thread() {	// Run this way so plasma will display.
 			@Override
 			public void run() {
+				//GameSingletons.game.topMenu();//++++++TESTING
 				gwin.initFiles(true);
 				gwin.readGwin();
 				gwin.setupGame();
