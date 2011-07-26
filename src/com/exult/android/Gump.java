@@ -40,7 +40,8 @@ public abstract class Gump extends GameSingletons {
 	// Centered, with given shape and no checkmark.
 	protected Gump(ShapeFrame s) {
 		shape = s;
-		shapeNum = -1;
+		shapeNum = -1;		
+		elems = new Vector<GumpWidget>();
 		setPos();
 		gumpman.addGump(this);
 	}

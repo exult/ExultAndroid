@@ -314,7 +314,7 @@ public class GameWindow extends GameSingletons {
 		 mainActor.getFlag(GameObject.dont_render));
 	}
 	public final boolean mainActorCanAct() {
-		return !wizardEye && mainActor.canAct();
+		return !wizardEye && mainActor != null && mainActor.canAct();
 	}
 	public final void scheduleNpcs(int hour, int backwards, boolean repaint) {
 		// Go through npc's, skipping Avatar.
@@ -975,10 +975,10 @@ public class GameWindow extends GameSingletons {
 	public final void stopActor() {
 		if (movingBarge != null)
 			movingBarge.stop();
-		else {
+		else if (mainActor != null) {
 			mainActor.stop();	// Stop and set resting state.
 			if (!gumpman.gumpMode())
-					mainActor.getFollowers();
+				mainActor.getFollowers();
 		}
 	}
 	/*

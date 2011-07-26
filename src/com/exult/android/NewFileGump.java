@@ -942,15 +942,14 @@ public final class NewFileGump extends Gump.Modal {
 		public boolean activate(boolean button) {	
 			if (!button) 
 				return false;
-			int shapenum = getShapeNum();
-			System.out.println("NewFileButton.activate: shape " + shapenum);
-			if (shapenum == EFile.EXULT_FLX_SAV_DOWNDOWN_SHP)
+			System.out.println("NewFileButton.activate: shape " + shapeNum);
+			if (shapeNum == EFile.EXULT_FLX_SAV_DOWNDOWN_SHP)
 				((NewFileGump) parent).scroll_page(1);
-			else if (shapenum == EFile.EXULT_FLX_SAV_DOWN_SHP)
+			else if (shapeNum == EFile.EXULT_FLX_SAV_DOWN_SHP)
 				((NewFileGump) parent).scroll_line(1);
-			else if (shapenum == EFile.EXULT_FLX_SAV_UP_SHP)
+			else if (shapeNum == EFile.EXULT_FLX_SAV_UP_SHP)
 				((NewFileGump) parent).scroll_line(-1);
-			else if (shapenum == EFile.EXULT_FLX_SAV_UPUP_SHP)
+			else if (shapeNum == EFile.EXULT_FLX_SAV_UPUP_SHP)
 				((NewFileGump) parent).scroll_page(-1);
 			return true;
 		}

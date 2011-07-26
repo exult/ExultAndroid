@@ -1,24 +1,44 @@
 package com.exult.android;
 
-public class GumpWidget extends ShapeID {
+public class GumpWidget extends GameSingletons {
 	protected Gump parent;
+	protected ShapeFrame shape;
+	protected int shapeNum, frameNum;
+	protected ShapeFiles shapeFile;
 	protected int x, y;	// Coords relative to parent.
 	
+	protected void initShape(int shnum, ShapeFiles file) {
+		shapeFile = file == null ? ShapeFiles.GUMPS_VGA : file;
+		frameNum = 0;
+		shapeNum = shnum;
+		shape = shapeFile.getShape(shapeNum, frameNum);
+	}
 	public GumpWidget(Gump par, int shnum, int px, int py) {
-		super(shnum, 0, ShapeFiles.GUMPS_VGA);
+		initShape(shnum, ShapeFiles.GUMPS_VGA);
 		parent = par;
 		x = px; y = py;
 	}
 	public GumpWidget(Gump par, int shnum, int px, int py, ShapeFiles file) {
-		super(shnum, 0, file);
+		initShape(shnum, file);
 		parent = par;
 		x = px; y = py;
+	}
+	public GumpWidget(Gump par, ShapeFrame s, int px, int py) {
+		parent = par;
+		shape = s;
+		x = px; y = py;
+	}
+	public ShapeFrame getShape() {
+		return shape;
+	}
+	public void setFrame(int f) {
+		frameNum = f;
+		shape = shapeFile.getShape(shapeNum, frameNum);
 	}
 	public boolean onWidget(int mx, int my) {
 		mx -= parent.getX() + x;	// Get point rel. to gump.
 		my -= parent.getY() + y;
-		ShapeFrame cshape = getShape();
-		return cshape != null && cshape.hasPoint(mx, my);
+		return shape != null && shape.hasPoint(mx, my);
 	}
 	public void paint() {
 		int px = 0, py = 0;
@@ -26,7 +46,7 @@ public class GumpWidget extends ShapeID {
 			px = parent.getX();
 			py = parent.getY();
 		}
-		paintShape(x+px, y+py);
+		shape.paint(gwin.getWin(), x+px, y+py);
 	}
 	public Button onButton(int mx, int my) {
 		return null;
@@ -36,12 +56,19 @@ public class GumpWidget extends ShapeID {
 	}
 	public static abstract class Button extends GumpWidget {
 		private boolean pushed;		// In pushed state.
-
+		protected ShapeFrame onShape;	// Show this when pushed (or mouse over in some cases).
+		
 		public Button(Gump par, int shnum, int px, int py) {
 			super(par, shnum, px, py);
+			onShape = shapeFile.getShape(shapeNum, frameNum + 1);
 		}
 		public Button(Gump par, int shnum, int px, int py, ShapeFiles file) {
-			super(par, shnum, px, py, file);
+			super(par, shnum, px, py, file);			
+			onShape = shapeFile.getShape(shapeNum, frameNum + 1);
+		}
+		public Button(Gump par, ShapeFrame onShape, ShapeFrame offShape, int px, int py) {
+			super(par, offShape, px, py);
+			this.onShape = onShape;
 		}
 		public Button onButton(int mx, int my) {
 			if (onWidget(mx, my))
@@ -75,10 +102,10 @@ public class GumpWidget extends ShapeID {
 				px = parent.getX();
 				py = parent.getY();
 			}
-			int prev_frame = getFrameNum();
-			setFrame(prev_frame + (isPushed()?1:0));
-			paintShape(x+px, y+py);
-			setFrame(prev_frame);
+			if (pushed)
+				onShape.paint(gwin.getWin(), x+px, y+py);
+			else
+				shape.paint(gwin.getWin(), x+px, y+py);
 		}
 		public final boolean isPushed() { 
 			return pushed; 
@@ -103,9 +130,8 @@ public class GumpWidget extends ShapeID {
 		public boolean onWidget(int mx, int my) {
 			mx -= parent.getX() + x;	// Get point rel. to gump.
 			my -= parent.getY() + y;
-			ShapeFrame cshape = getShape();
 			// Check for box, as we're on a touch-screen
-			return cshape != null && cshape.boxHasPoint(mx, my);
+			return shape != null && shape.boxHasPoint(mx, my);
 		}
 	}
 	/*
@@ -212,9 +238,10 @@ public class GumpWidget extends ShapeID {
 				return false;
 			// Only Avatar gets last frame (manual)
 			int nframes = actor == gwin.getMainActor() ? 10 : 9;
-			setFrame((getFrameNum() + 1)%nframes);
+			frameNum = (frameNum + 1)%nframes;
+			shape = shapeFile.getShape(shapeNum, frameNum);
 			// Flag that player set the mode.
-			actor.setAttackMode(getFrameNum(), true);
+			actor.setAttackMode(frameNum, true);
 			paint();
 			gwin.setPainted();
 			return true;

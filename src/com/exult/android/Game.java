@@ -54,6 +54,9 @@ public abstract class Game extends GameSingletons {
 	public int getGameType() {
 		return gameType;
 	}
+	public final VgaFile getMenuShapes() {
+		return menuShapes;
+	}
 	public final boolean isSI() {
 		return gameType == EConst.SERPENT_ISLE;
 	}
