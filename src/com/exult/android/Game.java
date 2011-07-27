@@ -79,6 +79,7 @@ public abstract class Game extends GameSingletons {
 		return null;
 	}
 	public abstract Gump.Modal topMenu();
+	public abstract void playIntro(Thread t);
 	public static class BGGame extends Game {
 		public BGGame() {
 			gameType = EConst.BLACK_GATE;
@@ -219,6 +220,10 @@ public abstract class Game extends GameSingletons {
 		}	
 		public ShapeFrame getMenuShape() {
 			return menuShapes.getShape(0x2,0);
+		}
+		@Override
+		public void playIntro(Thread t) {
+			new VideoPlayer("u7bgintro.mp4", t);
 		}
 		@Override
 		public Gump.Modal topMenu() {

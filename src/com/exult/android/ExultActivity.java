@@ -91,8 +91,7 @@ public class ExultActivity extends Activity {
 			}
 		};
 		if (!skipIntro) {
-			String nm = GameSingletons.game.isBG() ? "u7bgintro.mp4" : "u7siintro.mp4";
-			new VideoPlayer(nm, t);
+			GameSingletons.game.playIntro(t);
 		} else
 			t.start();
 	}
@@ -326,7 +325,7 @@ public class ExultActivity extends Activity {
         	item.setChecked(cheat.inPickpocket());
         	return true;
         case R.id.intro_video_button:
-        	new VideoPlayer("u7bgintro.mp4", null);	// TESTING++
+        	GameSingletons.game.playIntro(null);
         	return true;
         default:
             return super.onOptionsItemSelected(item);

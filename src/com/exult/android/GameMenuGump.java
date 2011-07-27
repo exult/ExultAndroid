@@ -63,6 +63,7 @@ public class GameMenuGump extends Modal {
 	public void handleChoice(int id) {
 		switch (id) {
 		case 0:	// Intro
+			game.playIntro(null);
 			break;
 		case 1: // New Game
 			break;
