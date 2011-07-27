@@ -35,7 +35,9 @@ public class GameMenuGump extends Modal {
 	@Override
 	public void onMotion(int mx, int my) {
 		GumpWidget.Button item = onButton(mx, my);
+		
 		if (item != selected) {
+			mouse.hide();
 			if (selected != null) {
 				selected.setPushed(false);
 				selected.paint();

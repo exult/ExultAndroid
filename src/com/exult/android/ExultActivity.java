@@ -68,7 +68,7 @@ public class ExultActivity extends Activity {
     }
     //	Show main menu and wait until done.
     private void showMainMenu() {
-    	Gump.Modal menu = GameSingletons.game.topMenu();//++++++TESTING
+    	Gump.Modal menu = GameSingletons.game.topMenu();
 		while (!menu.isDone())
 			try {
 				Thread.sleep(100);
