@@ -50,6 +50,7 @@ public class EUtil {
 			--cnt;
 		}
 	}
+	//++++Hoping these randomaccessfile methods can go away.
 	public static final int Read4(RandomAccessFile in) {
 		try {
 			in.read(buf4);
@@ -60,6 +61,23 @@ public class EUtil {
 		}
 	}
 	public static final int Read2(RandomAccessFile in) {
+		try {
+			in.read(buf2);
+			return (((int)buf2[0]&0xff) | (((int)buf2[1]&0xff)<<8));
+		} catch (IOException e) {
+			return -1;
+		}
+	}
+	public static final int Read4(DataSource in) {
+		try {
+			in.read(buf4);
+			return (((int)buf4[0]&0xff) | (((int)buf4[1]&0xff)<<8) | 
+					(((int)buf4[2]&0xff)<<16) | (((int)buf4[3]&0xff)<<24));
+		} catch (IOException e) {
+			return -1;
+		}
+	}
+	public static final int Read2(DataSource in) {
 		try {
 			in.read(buf2);
 			return (((int)buf2[0]&0xff) | (((int)buf2[1]&0xff)<<8));
@@ -178,7 +196,21 @@ public class EUtil {
 		} while ((name = baseToUppercase(name, ++uppercasecount)) != null);
 		return null;
 	}
+	//+++++Hoping this one can go away.
 	public static final boolean isFlex(RandomAccessFile in) {
+		int magic = 0;
+		try {
+			long pos = in.getFilePointer();
+			long len = in.length();	// Check length.
+			if (len >= 0x80L) {		// Has to be at least this long.
+				in.seek(0x50);
+				magic = EUtil.Read4(in);
+			}
+			in.seek(pos);
+		} catch (IOException e) {}
+		return (magic==0xffff1a00); 
+	}
+	public static final boolean isFlex(DataSource in) {
 		int magic = 0;
 		try {
 			long pos = in.getFilePointer();
