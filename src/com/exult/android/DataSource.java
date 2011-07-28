@@ -12,6 +12,7 @@ public abstract class DataSource {
 	public abstract void seek(long pos) throws IOException ;
 	public abstract long length() throws IOException;
 	public abstract long getFilePointer() throws IOException;
+	public void close() throws IOException { }
 	
 	public static class File extends DataSource {
 		private RandomAccessFile file;
@@ -33,6 +34,9 @@ public abstract class DataSource {
 		}
 		public long getFilePointer() throws IOException {
 			return file.getFilePointer();
+		}
+		public void close() throws IOException {
+			file.close();
 		}
 	}
 	public static class ByteArray extends DataSource {
