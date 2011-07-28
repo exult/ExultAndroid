@@ -68,11 +68,7 @@ public class ExultActivity extends Activity {
     }
     //	Show main menu and wait until done.
     private void showMainMenu() {
-    	Gump.Modal menu = GameSingletons.game.topMenu();
-		while (!menu.isDone())
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) { break; }
+    	GameSingletons.game.topMenu();
     }
     private void startupGame() {
     	
@@ -193,6 +189,7 @@ public class ExultActivity extends Activity {
     	ClickTracker trackSave = clickTrack;
     	clickPoint = p;
     	clickTrack = track;
+    	System.out.println("clickTrack before: " + clickTrack);
     	// Wait for the click.
     	try { clickWait.acquire(); } catch (InterruptedException e) {
     		p.x = -1;
@@ -200,6 +197,7 @@ public class ExultActivity extends Activity {
     	clickPoint = save;
     	clickTrack = trackSave;
     	clickWait.release();
+    	System.out.println("clickTrack after: " + clickTrack);
     	GameObject ret = GameWindow.targetObj;
     	if (ret != null)
     		gwin.addDirty(ret);

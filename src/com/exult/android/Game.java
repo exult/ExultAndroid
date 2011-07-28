@@ -226,13 +226,17 @@ public abstract class Game extends GameSingletons {
 			new VideoPlayer("u7bgintro.mp4", t);
 		}
 		@Override
+		// Show it and wait until done.
 		public Gump.Modal topMenu() {
 			audio.startMusic(menu_midi, true, EFile.INTROMUS);
 			GameMenuGump menu = new GameMenuGump(getMenuShape());
 			Palette pal = gwin.getPal();
 			pal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 6);
 			pal.fadeIn(EConst.c_fade_in_time);
-			menu.track(Mouse.hand);	//+++++Use proper mouse.
+			Thread t = menu.track(Mouse.hand);	//+++++Use proper mouse.
+			try {
+				t.join();
+			} catch (InterruptedException e) { }
 			return menu;
 		}
 	}

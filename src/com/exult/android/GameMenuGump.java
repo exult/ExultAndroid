@@ -3,19 +3,18 @@ package com.exult.android;
 import com.exult.android.Gump.Modal;
 
 /*
- * This is the top-level menu for Black Gate or Serpent Isle.
+ * This is the top-level menu for Black Gate or Serpent Isle. It is also the new-game menu.
  */
 public class GameMenuGump extends Modal {
 	private static final int menuChoices[] = { 0x04, 0x05, 0x08, 0x06, 0x11, 0x12, 0x07 };
 	private GumpWidget.Button selected;
+	private boolean newGame;
+	private VgaFile menuShapes;
+	private int topx, topy, centerx;
 	
-	public GameMenuGump(ShapeFrame s) {
-		super(s);
+	private void initTop() {
 		int offset = 0, cnt = menuChoices.length;
-		int topy = (gwin.getHeight() - 200)/2;
-		int centerx = gwin.getWidth()/2;
 		int menuy = topy + 120;
-		VgaFile menuShapes = game.getMenuShapes();
 		for (int i = 0; i < cnt; ++i) {
 			ShapeFrame onShape = menuShapes.getShape(menuChoices[i], 1),
 					  offShape = menuShapes.getShape(menuChoices[i], 0);
@@ -24,6 +23,31 @@ public class GameMenuGump extends Modal {
 			addElem(entry);	
 			offset += offShape.getYBelow() + 3;
 		}
+	}
+	private void initNewGame() {
+		addElem(new MenuItem(this, 10, menuShapes.getShape(8, 1), menuShapes.getShape(8, 0), topx+10, topy+180));
+		addElem(new MenuItem(this, 11, menuShapes.getShape(7, 1), menuShapes.getShape(7, 0), centerx+10, topy+180));
+	}
+	private void init(boolean isNew) {
+		newGame = isNew;
+		topx = (gwin.getWidth()-320)/2;
+		topy = (gwin.getHeight() - 200)/2;
+		centerx = gwin.getWidth()/2;
+		menuShapes = game.getMenuShapes();
+		if (isNew)
+			initNewGame();
+		else
+			initTop();
+	}
+	//	Top-level
+	public GameMenuGump(ShapeFrame s) {
+		super(s);
+		init(false);
+	}
+	//	New game.
+	public GameMenuGump(ShapeFrame s, boolean isNew) {
+		super(s);
+		init(isNew);
 	}
 	@Override
 	public void close() {
@@ -37,17 +61,17 @@ public class GameMenuGump extends Modal {
 		GumpWidget.Button item = onButton(mx, my);
 		
 		if (item != selected) {
+			System.out.println("GameMenu: this = " + this);
 			mouse.hide();
 			if (selected != null) {
 				selected.setPushed(false);
-				selected.paint();
+				gwin.setAllDirty();	// ++Just add dirty rectangle?
 			}
 			if (item != null) {
 				item.setPushed(true);
-				item.paint();
+				gwin.setAllDirty();	// ++Just add dirty rectangle?
 			}
 			selected = item;
-			gwin.setPainted();
 		}
 	}
 	@Override
@@ -62,10 +86,19 @@ public class GameMenuGump extends Modal {
 		{ }
 	public void handleChoice(int id) {
 		switch (id) {
+		//	Top-level choices.
 		case 0:	// Intro
-			game.playIntro(null);
+			audio.stopMusic();
+			ExultActivity.instanceOf().runOnUiThread(new Runnable() {
+				public void run() { game.playIntro(null); } });
 			break;
 		case 1: // New Game
+			GameMenuGump newMenu = new GameMenuGump(shape, true);
+			Thread t = newMenu.track(Mouse.hand);
+			try {
+				t.join();
+			} catch (InterruptedException e) { }
+			gwin.getPal().fadeIn(EConst.c_fade_in_time);	// This should depend on results of newMenu.++++++
 			break;
 		case 2:	// Journey Onwards
 			close(); break;
@@ -77,6 +110,11 @@ public class GameMenuGump extends Modal {
 			break;
 		case 6:	// Return to Exult menu
 			break;
+		//	New-game choices.
+		case 10:
+			close(); break;//+++++++TESTING
+		case 11:
+			close(); break;//+++++++TESTING
 		}
 	}
 	

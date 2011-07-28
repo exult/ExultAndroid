@@ -437,9 +437,10 @@ public abstract class Gump extends GameSingletons {
 		/*
 		 * This allows user to push a mouse around like when targeting.
 		 */
-		public void track(int mouseShape) {
+		public Thread track(int mouseShape) {
 			GumpThread t = new GumpThread(this, mouseShape);
 			t.start();
+			return t;
 		}
 	}
 }
