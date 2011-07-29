@@ -1,8 +1,11 @@
 package com.exult.android;
 
+import java.util.HashMap;
+
 
 public class FontsVgaFile extends GameSingletons {
 	private static Font fonts[];
+	private static HashMap<String,Font> fontsByName = new HashMap<String,Font>();
 	/*
 	 *	Horizontal leads, by fontnum:
 	 *
@@ -51,7 +54,16 @@ public class FontsVgaFile extends GameSingletons {
 		{ return fonts[fontnum].getTextWidth(text, 0, textlen); }
 	public int getTextHeight(int fontnum)
 		{ return fonts[fontnum].getTextHeight(); }
-	
+	/*
+	 * Manage named fonts.
+	 */
+	public static void addFont(String name, String fname0, String fname1, int index, int hlead, int vlead) {
+		Font font = new Font(fname0, fname1, index, hlead, vlead);
+		fontsByName.put(name, font);
+	}
+	public static Font getFont(String name) {
+		return fontsByName.get(name);
+	}
 	public static class Font {
 		private int horLead;
 		private int verLead;
@@ -98,17 +110,21 @@ public class FontsVgaFile extends GameSingletons {
 				ind++;
 			return (ind);
 		}
-		/*
-		Font(const File_spec& fname0, int index, int hlead=0, int vlead=1);
-		Font(const File_spec& fname0, const File_spec& fname1, int index,
-				int hlead=0, int vlead=1);
-		int load(const File_spec& fname0, int index, int hlead=0, int vlead=1);
-*/
+		public Font() {
+		}
+		public Font(String fname0, String fname1, int index, int hlead, int vlead) {
+			EFileManager fileMan = EFileManager.instanceOf();
+			byte data[] = fileMan.retrieve(fname0, fname1, index);
+			load(data, hlead, vlead);
+		}
 		public void load(EFile file, EFile patchfile, int index,
 										int hlead, int vlead) {
 			byte data[] = patchfile != null ? patchfile.retrieve(index) : null;
 			if (data == null || data.length == 0)
 				data = file.retrieve(index);
+			load(data, hlead, vlead);
+		}
+		public void load(byte data[], int hlead, int vlead) {
 			if (data == null || data.length == 0) {
 				fontShapes = null;
 				horLead = 0;

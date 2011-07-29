@@ -31,6 +31,7 @@ public class GameMenuGump extends Modal {
 	private void initNewGame() {
 		int menuy = topy + 110;
 		Boolean si_installed = false;	// FOR NOW.
+		FontsVgaFile.Font font = FontsVgaFile.getFont("MENU_FONT");
 		// Set up palette.
 		DataSource ds = DataSource.create(EFile.PATCH_INTROPAL, 6);
 		if (ds == null) {
@@ -50,12 +51,19 @@ public class GameMenuGump extends Modal {
 		SkinData skindata =
 			ShapeInfoLookup.getSkinInfoSafe(
 					defskin.default_skin, defskin.default_female, si_installed);
+		addElem(new MenuItem(this, 10, menuShapes.getShape(0xc, 1), menuShapes.getShape(0xc, 0), topx+10, menuy+10));
+		ShapeFrame sexShape = menuShapes.getShape(0xa, 0);
+		addElem(new MenuItem(this, 11, menuShapes.getShape(0xa, 1), sexShape, topx+10, menuy+25));
+		int sexWidth = sexShape.getWidth()+10;
+		if (sexWidth > 35) sexWidth += 25; 
+		else sexWidth = 60;
+		addElem(new GumpWidget(this, menuShapes.getShape(0xB, skindata.isFemale?1:0), topx + sexWidth, menuy + 25));
+		// Set up portrait.
 		VgaFile facesVga = new VgaFile();		// Get faces.
 		final int srcCnt = 3;
 		String sources[] = new String[srcCnt];
 		int resourceIds[] = new int[srcCnt];
-		sources[0] = EFile.FACES_VGA; resourceIds[0] = -1;
-		
+		sources[0] = EFile.FACES_VGA; resourceIds[0] = -1;		
 		// Multiracial faces.
 		StringIntPair rsc = game.getResource("files/mrfacesvga");
 		sources[1] = rsc.str; resourceIds[1] = rsc.num;
@@ -66,8 +74,8 @@ public class GameMenuGump extends Modal {
 		GumpWidget faceItem = new GumpWidget(this, portrait, topx+290, menuy+61);	// FOR NOW.  Probably want a derived class.
 		addElem(faceItem);
 		// Journey onward, return to menu:
-		addElem(new MenuItem(this, 10, menuShapes.getShape(8, 1), menuShapes.getShape(8, 0), topx+10, topy+180));
-		addElem(new MenuItem(this, 11, menuShapes.getShape(7, 1), menuShapes.getShape(7, 0), centerx+10, topy+180));
+		addElem(new MenuItem(this, 12, menuShapes.getShape(8, 1), menuShapes.getShape(8, 0), topx+10, topy+180));
+		addElem(new MenuItem(this, 13, menuShapes.getShape(7, 1), menuShapes.getShape(7, 0), centerx+10, topy+180));
 	}
 	private void init(boolean isNew) {
 		newGame = isNew;

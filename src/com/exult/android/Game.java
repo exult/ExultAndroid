@@ -217,6 +217,13 @@ public abstract class Game extends GameSingletons {
 			addResource("xforms/17", EFile.XFORMTBL, 17);
 			addResource("xforms/18", EFile.XFORMTBL, 18);
 			addResource("xforms/19", EFile.XFORMTBL, 19);
+			
+			FontsVgaFile.addFont("MENU_FONT", EFile.MAINSHP_FLX, EFile.PATCH_MAINSHP, 9, 1, 1);
+			FontsVgaFile.addFont("END2_FONT", EFile.ENDGAME, EFile.PATCH_ENDGAME, 4, -1, 1);
+			FontsVgaFile.addFont("END3_FONT", EFile.ENDGAME, EFile.PATCH_ENDGAME, 5, -2, 1);
+			FontsVgaFile.addFont("NORMAL_FONT", EFile.FONTS_VGA, EFile.PATCH_FONTS, 0, -1, 1);
+			FontsVgaFile.addFont("SMALL_BLACK_FONT", EFile.FONTS_VGA, EFile.PATCH_FONTS, 2, 0, 1);
+			FontsVgaFile.addFont("TINY_BLACK_FONT", EFile.FONTS_VGA, EFile.PATCH_FONTS, 4, 0, 1);
 		}	
 		public ShapeFrame getMenuShape() {
 			return menuShapes.getShape(0x2,0);
