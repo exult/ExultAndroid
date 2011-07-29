@@ -21,9 +21,9 @@ public class Shape {
 		numFrames = nframes;
 		frames = new ShapeFrame[nframes];
 	}
-	private ShapeFrame read(RandomAccessFile files[], boolean patch_flags[], int counts[], 
+	private ShapeFrame read(DataSource files[], boolean patch_flags[], int counts[], 
 			int shnum, int frnum, int srcnum) {
-		RandomAccessFile shpfile = null;
+		DataSource shpfile = null;
 					// Figure offset in "shapes.vga".
 		int shapeoff = 0x80 + shnum*8;
 		int shapelen = 0;
@@ -33,7 +33,7 @@ public class Shape {
 		if (srcnum < 0) {
 			for ( ; i >= 0; --i) {
 				if (shnum < counts[i]) {
-					RandomAccessFile ds = files[i];
+					DataSource ds = files[i];
 					try {
 						ds.seek(shapeoff);
 					} catch (IOException e) {
@@ -51,7 +51,7 @@ public class Shape {
 				}
 			}
 		} else if (shnum < counts[srcnum]) {
-			RandomAccessFile ds = files[srcnum];
+			DataSource ds = files[srcnum];
 			try {
 				ds.seek(shapeoff);
 			} catch (IOException e) {
@@ -142,11 +142,18 @@ public class Shape {
 		shapeSource.seek(0);
 		shapeSource.read(data);
 		load(data);
+	}	
+	protected void load(DataSource shapeSource) throws IOException {
+		int shapelen = EUtil.Read4(shapeSource);
+		byte data[] = new byte[shapelen];
+		shapeSource.seek(0);
+		shapeSource.read(data);
+		load(data);
 	}
 	/*
 	 *	Create the reflection of a shape.
 	 */
-	private ShapeFrame reflect(RandomAccessFile files[], boolean patch_flags[], int counts[], 
+	private ShapeFrame reflect(DataSource files[], boolean patch_flags[], int counts[], 
 							int shnum, int frnum) {
 						// Get normal frame.
 		ShapeFrame normal = get(files, patch_flags, counts, shnum, frnum, -1);
@@ -190,7 +197,7 @@ public class Shape {
 	 	return 0 <= framenum && framenum < frames.length
 					? frames[framenum] : null; 
 	}
-	public ShapeFrame get(RandomAccessFile files[], boolean patch_flags[], int counts[], 
+	public ShapeFrame get(DataSource files[], boolean patch_flags[], int counts[], 
 			int shnum, int frnum, int srcnum) { 
 		return (frames != null && frnum < frames.length &&
 				frames[frnum] != null) ? frames[frnum] : 

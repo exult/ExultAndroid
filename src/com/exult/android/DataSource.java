@@ -39,11 +39,11 @@ public abstract class DataSource {
 			file.close();
 		}
 	}
-	public static class ByteArray extends DataSource {
+	public static class Buffer extends DataSource {
 		private byte data[];
 		private int pos;
 		
-		public ByteArray(byte b[]) {
+		public Buffer(byte b[]) {
 			data = b;
 			pos = 0;
 		}

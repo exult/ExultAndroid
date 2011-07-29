@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Vector;
 
 public class VgaFile {
-	protected RandomAccessFile shapeSources[];
+	protected DataSource shapeSources[];
 	protected boolean patchFlags[];
 	protected int shapeCnts[];
 	protected Shape shapes[];
@@ -31,30 +31,40 @@ public class VgaFile {
 	/*
 	 *	Open file.
 	 */
-	protected RandomAccessFile U7load
+	protected DataSource U7load
 		(
 		String resource,
-		Vector<RandomAccessFile> tmpSources,
+		int resourceId,
+		Vector<DataSource> tmpSources,
 		boolean tmpPatch[]
 		) {
-		RandomAccessFile source = null;
-		String fname = EUtil.U7exists(resource);
-		if (fname != null) {
-			try {
-				source = new RandomAccessFile(fname, "r");
-			} catch (IOException e) {
-				return null;
+		DataSource source = null;
+		Boolean isPatch = false;
+		if (resourceId < 0) {	// Whole file.
+			String fname = EUtil.U7exists(resource);
+			if (fname != null) {
+				try {
+					source = new DataSource.File(new RandomAccessFile(fname, "r"));
+				} catch (IOException e) {
+					return null;
+				}
+				isPatch = resource.regionMatches(0, "<PATCH>", 0, 7);
 			}
-			tmpSources.add(source);
-			tmpPatch[tmpSources.size() - 1] = resource.regionMatches(0, "<PATCH>", 0, 7);
+		} else {	// Resource
+			byte buf[] = GameSingletons.fman.retrieve(resource, resourceId);
+			if (buf == null || buf.length == 0)
+				return null;
+			source = new DataSource.Buffer(buf);
 		}
+		tmpSources.add(source);
+		tmpPatch[tmpSources.size() - 1] = isPatch;
 		return source;
 	}
-	protected boolean load(String sources[]) {
+	public boolean load(String sources[], int resourceIds[]) {
 		reset();
 		int count = sources.length;
 		int num_shapes = 0;
-		Vector<RandomAccessFile> tmpSources = new Vector<RandomAccessFile>(count);
+		Vector<DataSource> tmpSources = new Vector<DataSource>(count);
 		boolean tmpPatch[] = new boolean[count];
 		int tmpCnts[] = new int[count];
 		
@@ -62,7 +72,7 @@ public class VgaFile {
 		if (EUtil.U7exists(sources[0]) == null)
 			is_good = false;
 		for (int i = 0; i < count; ++i) {
-			RandomAccessFile source = U7load(sources[i], tmpSources, tmpPatch);
+			DataSource source = U7load(sources[i], resourceIds == null ? -1 : resourceIds[i], tmpSources, tmpPatch);
 			if (source != null) {
 				flex = EUtil.isFlex(source);
 				if (flex) {
@@ -87,7 +97,7 @@ public class VgaFile {
 			shapes[0] = new Shape();
 			is_good = true;
 			try {
-				shapes[0].load((RandomAccessFile)tmpSources.lastElement());
+				shapes[0].load(tmpSources.lastElement());
 			} catch (IOException e) {
 				is_good = false;
 			}
@@ -97,9 +107,9 @@ public class VgaFile {
 				shapes[i] = new Shape();
 		}
 		count = tmpSources.size();
-		shapeSources = new RandomAccessFile[count];
+		shapeSources = new DataSource[count];
 		for (int i = 0; i < count; ++i)
-			shapeSources[i] = (RandomAccessFile)tmpSources.elementAt(i);
+			shapeSources[i] = tmpSources.elementAt(i);
 		patchFlags = new boolean[count];
 		System.arraycopy(tmpPatch, 0, patchFlags, 0, count);
 		shapeCnts = new int[count];
@@ -111,7 +121,7 @@ public class VgaFile {
 		src[0] = nm;
 		if (nm2 != null)
 			src[1] = nm2;
-		return load(src);
+		return load(src, null);
 	}
 	public ShapeFrame getShape(int shapenum, int framenum) {
 		ShapeFrame r;
