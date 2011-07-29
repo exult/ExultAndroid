@@ -13,7 +13,27 @@ public abstract class DataSource {
 	public abstract long length() throws IOException;
 	public abstract long getFilePointer() throws IOException;
 	public void close() throws IOException { }
-	
+	// Create from file.
+	public static DataSource create(String fname) {
+		try {
+			RandomAccessFile file = EUtil.U7open(fname, true);
+			return file == null ? null : new DataSource.File(file);
+		} catch (IOException e) {
+			return null;
+		}
+	}
+	//	Create from resource within flex file, or whole file if rsc == -1.
+	public static DataSource create(String fname, int rsc) {
+		if (rsc == -1)
+			return create(fname);
+		
+		byte buf[] = GameSingletons.fman.retrieve(fname, rsc);
+		System.out.println("DataSource:create: " + fname + ", " + rsc + ", " + (buf==null?"not found":"found"));
+		if (buf != null && buf.length != 0)
+			return new DataSource.Buffer(buf);
+		else
+			return null;
+	}
 	public static class File extends DataSource {
 		private RandomAccessFile file;
 		

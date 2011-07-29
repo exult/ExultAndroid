@@ -1,5 +1,7 @@
 package com.exult.android;
+import java.io.IOException;
 import java.util.Arrays;
+
 import android.graphics.Canvas;
 
 public class Palette {
@@ -51,6 +53,10 @@ public class Palette {
 	}
 	public Palette(Palette pal) {
 		take(pal);
+	}
+	public void print() {
+		for (int i = 0; i < 64; ++i)	// Just print some.
+			System.out.println(pal1[i]);
 	}
 	public void fade(int cycles, boolean inout, int pal_num) {
 		if (pal_num == -1) pal_num = palette;
@@ -240,6 +246,16 @@ public class Palette {
 	public void load(String fname0, String fname1, int index) {
 		load(fname0, fname1, index, null, -1);
 	}
+	public void load(DataSource in) {
+		try {
+			int len = (int)in.length();
+			byte buf[] = new byte[len];
+			in.read(buf);
+			setLoaded(buf, null, -1);
+		} catch (IOException e) {
+			ExultActivity.fatal("Error reading palette");
+		}
+	}
 	/*
 	 * This does the actual load.
 	 */
@@ -292,6 +308,14 @@ public class Palette {
 	}
 	public int findColor(int r, int g, int b) {
 		return findColor(r, g, b, 0xe0);
+	}
+	/*
+	 *	Creates a translation table between two palettes.
+	 */
+	void createPaletteMap(Palette to, byte buf[]) {
+		// Assume buf has 256 elements
+		for (int i = 0; i < 256; i++)
+			buf[i] = (byte)to.findColor(pal1[3*i], pal1[3*i + 1], pal1[3*i + 2], 256);
 	}
 	/*
 	 *	Creates a palette in-between two palettes.

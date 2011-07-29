@@ -76,6 +76,56 @@ public class ShapeFrame {
 		reflected.createRle(ibuf.getPixels(), w, h);
 		return (reflected);
 		}
+	/*
+	 * Create a new frame by translating the palette.  Assumes RLE.
+	 */
+	public ShapeFrame translatePalette(byte transTo[]) {
+		if (data == null)
+			return null;
+		byte buf[] = new byte[datalen];
+		System.arraycopy(data, 0, buf, 0, datalen);
+		ShapeFrame newShape = new ShapeFrame();
+		newShape.rle = true;		// Set data.
+		newShape.xleft = yabove;
+		newShape.yabove = xleft;
+		newShape.xright = ybelow;
+		newShape.ybelow = xright;
+		newShape.datalen = datalen;
+		newShape.data = buf;
+		int in = 0; 	// Point to data, and draw.
+		int scanlen;
+		while ((scanlen = EUtil.Read2(data, in)) != 0) {
+			in += 2;
+						// Get length of scan line.
+			boolean encoded = (scanlen&1) != 0;// Is it encoded?
+			scanlen = scanlen>>1;
+			in += 4;
+			if (!encoded) {		// Raw data?
+				for (int i = 0; i < scanlen; ++i) {
+					buf[in] = transTo[(int)data[in]&0xff];
+					++in;
+				}
+				continue;
+			}
+			for (int b = 0; b < scanlen; ) {
+				byte bcnt = data[in++];
+						// Repeat next char. if odd.
+				boolean repeat = (bcnt&1) != 0;
+				bcnt = (byte)(bcnt>>1); // Get count.
+				if (repeat) {
+					buf[in] = transTo[(int)data[in]&0xff];
+					++in;
+				} else {	// Get that # of bytes.
+					for (int i = 0; i < bcnt; ++i) {
+						buf[in] = transTo[(int)data[in]&0xff];
+						++in;
+					}
+				}
+				b += bcnt;
+			}
+		}
+		return newShape;
+	}
 	public ShapeFrame() {
 		data = null;
 		datalen = 0;

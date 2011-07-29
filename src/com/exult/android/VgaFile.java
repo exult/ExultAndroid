@@ -40,24 +40,12 @@ public class VgaFile {
 		) {
 		DataSource source = null;
 		Boolean isPatch = false;
-		if (resourceId < 0) {	// Whole file.
-			String fname = EUtil.U7exists(resource);
-			if (fname != null) {
-				try {
-					source = new DataSource.File(new RandomAccessFile(fname, "r"));
-				} catch (IOException e) {
-					return null;
-				}
-				isPatch = resource.regionMatches(0, "<PATCH>", 0, 7);
-			}
-		} else {	// Resource
-			byte buf[] = GameSingletons.fman.retrieve(resource, resourceId);
-			if (buf == null || buf.length == 0)
-				return null;
-			source = new DataSource.Buffer(buf);
+		source = DataSource.create(resource, resourceId);
+		isPatch = resource.regionMatches(0, "<PATCH>", 0, 7);
+		if (source != null) {
+			tmpSources.add(source);
+			tmpPatch[tmpSources.size() - 1] = isPatch;
 		}
-		tmpSources.add(source);
-		tmpPatch[tmpSources.size() - 1] = isPatch;
 		return source;
 	}
 	public boolean load(String sources[], int resourceIds[]) {
