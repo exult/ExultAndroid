@@ -149,7 +149,7 @@ public abstract class Game extends GameSingletons {
 			addResource("files/gameflx", gameflx, 0);
 
 			addResource("files/paperdolvga", gameflx, EFile.EXULT_BG_FLX_BG_PAPERDOL_VGA);
-			//++??addResource("files/mrfacesvga", gameflx, EFile.EXULT_BG_FLX_BG_MR_FACES_VGA);
+			addResource("files/mrfacesvga", gameflx, EFile.EXULT_BG_FLX_BG_MR_FACES_VGA);
 			addResource("config/defaultkeys", gameflx, EFile.EXULT_BG_FLX_DEFAULTKEYS_TXT);
 			addResource("config/bodies", gameflx, EFile.EXULT_BG_FLX_BODIES_TXT);
 			addResource("config/paperdol_info", gameflx, EFile.EXULT_BG_FLX_PAPERDOL_INFO_TXT);

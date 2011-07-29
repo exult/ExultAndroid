@@ -212,7 +212,7 @@ public class EFile {
 	public final static int	EXULT_BG_FLX_MR_FACES_SHP = 2;
 	public final static int	EXULT_BG_FLX_U7MENUPAL_PAL = 3;
 	public final static int	EXULT_BG_FLX_BG_PAPERDOL_VGA = 4;
-	public final static int	EXULT_BG_FLX_BG_MR_FACES_VGAj = 5;
+	public final static int	EXULT_BG_FLX_BG_MR_FACES_VGA = 5;
 	public final static int	EXULT_BG_FLX_BODIES_TXT = 6;
 	public final static int	EXULT_BG_FLX_PAPERDOL_INFO_TXT = 7;
 	public final static int	EXULT_BG_FLX_SHAPE_INFO_TXT = 8;
