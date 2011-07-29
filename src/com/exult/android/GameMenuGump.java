@@ -32,20 +32,19 @@ public class GameMenuGump extends Modal {
 		int menuy = topy + 110;
 		Boolean si_installed = false;	// FOR NOW.
 		// Set up palette.
-		DataSource ds = DataSource.create(EFile.PATCH_INTROPAL); //+++SB pal #6 in this.
+		DataSource ds = DataSource.create(EFile.PATCH_INTROPAL, 6);
 		if (ds == null) {
 			ds = DataSource.create(game.getResource("files/gameflx").str, EFile.EXULT_BG_FLX_U7MENUPAL_PAL); // Just the one palette.
 			if (ds == null) {
-				ds = DataSource.create(EFile.INTROPAL_DAT); //+++SB pal #6 in this.
+				ds = DataSource.create(EFile.INTROPAL_DAT, 6);
 			}
 		}
-		Palette pal = gwin.getPal();
-		pal.load(ds);
-		Palette oldpal = new Palette(gwin.getWin());
-		oldpal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 6);
+		Palette tmppal = new Palette(gwin.getWin());
+		tmppal.load(ds);
+		Palette oldpal = gwin.getPal();
+		//oldpal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 6);
 		byte transTo[] = new byte[256];
-		//oldpal.createPaletteMap(pal, transTo);
-		pal.createPaletteMap(oldpal, transTo);
+		tmppal.createPaletteMap(oldpal, transTo);
 		// Skin info
 		AvatarDefaultSkin defskin = ShapeInfoLookup.getDefaultAvSkin();
 		SkinData skindata =

@@ -28,7 +28,6 @@ public abstract class DataSource {
 			return create(fname);
 		
 		byte buf[] = GameSingletons.fman.retrieve(fname, rsc);
-		System.out.println("DataSource:create: " + fname + ", " + rsc + ", " + (buf==null?"not found":"found"));
 		if (buf != null && buf.length != 0)
 			return new DataSource.Buffer(buf);
 		else
