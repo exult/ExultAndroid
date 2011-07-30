@@ -719,8 +719,7 @@ public class ExultActivity extends Activity {
     	private OnKeyListener keyListener = new OnKeyListener() {
     		public boolean onKey(View v, int keyCode, KeyEvent event) {
     			System.out.println("onKey: " + keyCode);
-    			if (UsecodeMachine.running > 0 || clickPoint != null || 
-    										gwin.busyMessage != null)
+    			if (UsecodeMachine.running > 0 || gwin.busyMessage != null)
     				return false;
     			Gump.Modal modal = GameSingletons.gumpman.getModal();
 		        if (event.getAction() == KeyEvent.ACTION_DOWN) {

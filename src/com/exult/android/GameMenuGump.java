@@ -1,5 +1,7 @@
 package com.exult.android;
 
+import android.view.KeyEvent;
+
 import com.exult.android.Gump.Modal;
 import com.exult.android.shapeinf.ShapeInfoLookup;
 import com.exult.android.shapeinf.ShapeInfoLookup.AvatarDefaultSkin;
@@ -53,7 +55,8 @@ public class GameMenuGump extends Modal {
 					defskin.default_skin, defskin.default_female, si_installed);
 		// Name.
 		addElem(new MenuItem(this, 10, menuShapes.getShape(0xc, 1), menuShapes.getShape(0xc, 0), topx+10, menuy+10));
-		addElem(new TextItem(this, "Jeff", font, topx + 60, menuy+10));
+		String user = "Droid";
+		addElem(new TextItem(this, user, font, topx + 60, menuy+10));
 		// Sex.
 		ShapeFrame sexShape = menuShapes.getShape(0xa, 0);
 		addElem(new GumpWidget(this, sexShape, topx+10, menuy+25));
@@ -133,8 +136,16 @@ public class GameMenuGump extends Modal {
 		if (item != null)
 			item.activate(true);
 	}
-	public void keyDown(int chr) // Key pressed
-		{  }
+	public void keyDown(int chr) { // Key pressed
+		System.out.println("GameMenuGump: keyDown: " + chr);
+		switch (chr) {
+    	case KeyEvent.KEYCODE_BACK:
+    		/* Doesn't work: if (newGame)
+    			close();
+    		else */
+    			ExultActivity.askToQuit();
+		}
+    }
 	public void textInput(int chr, int unicode) // Character typed (unicode)
 		{ }
 	public void handleChoice(int id) {
