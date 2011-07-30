@@ -14,6 +14,8 @@ import com.exult.android.shapeinf.ShapeInfoLookup.StringIntPair;
 public class GameMenuGump extends Modal {
 	private static final int menuChoices[] = { 0x04, 0x05, 0x08, 0x06, 0x11, 0x12, 0x07 };
 	private GumpWidget.Button selected;
+	private PortraitItem faceItem;
+	private GumpWidget sexItem;
 	private boolean newGame;
 	private VgaFile menuShapes;
 	private int topx, topy, centerx;
@@ -49,37 +51,21 @@ public class GameMenuGump extends Modal {
 		//oldpal.load(EFile.INTROPAL_DAT, EFile.PATCH_INTROPAL, 6);
 		byte transTo[] = new byte[256];
 		tmppal.createPaletteMap(oldpal, transTo);
-		// Skin info
-		AvatarDefaultSkin defskin = ShapeInfoLookup.getDefaultAvSkin();
-		SkinData skindata =
-			ShapeInfoLookup.getSkinInfoSafe(
-					defskin.default_skin, defskin.default_female, si_installed);
 		// Name.
 		addElem(new MenuItem(this, 10, menuShapes.getShape(0xc, 1), menuShapes.getShape(0xc, 0), topx+10, menuy+10));
 		String user = "Droid";
 		addElem(new TextItem(this, user, font, topx + 60, menuy+10));
+		// Set up portrait.
+		faceItem = new PortraitItem(this, 11, topx+290, menuy+61, si_installed, transTo);
+		addElem(faceItem);
 		// Sex.
 		ShapeFrame sexShape = menuShapes.getShape(0xa, 0);
 		addElem(new GumpWidget(this, sexShape, topx+10, menuy+25));
 		int sexWidth = sexShape.getWidth()+10;
 		if (sexWidth > 35) sexWidth += 25; 
 		else sexWidth = 60;
-		addElem(new GumpWidget(this, menuShapes.getShape(0xB, skindata.isFemale?1:0), topx + sexWidth, menuy + 25));
-		// Set up portrait.
-		VgaFile facesVga = new VgaFile();		// Get faces.
-		final int srcCnt = 3;
-		String sources[] = new String[srcCnt];
-		int resourceIds[] = new int[srcCnt];
-		sources[0] = EFile.FACES_VGA; resourceIds[0] = -1;		
-		// Multiracial faces.
-		StringIntPair rsc = game.getResource("files/mrfacesvga");
-		sources[1] = rsc.str; resourceIds[1] = rsc.num;
-		sources[2] = EFile.PATCH_FACES; resourceIds[2] = -1;
-		facesVga.load(sources, resourceIds);
-		ShapeFrame portrait = facesVga.getShape(skindata.faceShape, skindata.faceFrame);
-		portrait = portrait.translatePalette(transTo);//+++++TESTING
-		GumpWidget faceItem = new GumpWidget(this, portrait, topx+290, menuy+61);	// FOR NOW.  Probably want a derived class.
-		addElem(faceItem);
+		sexItem = new GumpWidget(this, menuShapes.getShape(0xB, faceItem.skinData.isFemale?1:0), topx + sexWidth, menuy + 25);
+		addElem(sexItem);
 		// Journey onward, return to menu:
 		addElem(new MenuItem(this, 12, menuShapes.getShape(8, 1), menuShapes.getShape(8, 0), topx+10, topy+180));
 		addElem(new MenuItem(this, 13, menuShapes.getShape(7, 1), menuShapes.getShape(7, 0), centerx+10, topy+180));
@@ -177,13 +163,60 @@ public class GameMenuGump extends Modal {
 		case 6:	// Return to Exult menu
 			break;
 		//	New-game choices.
-		case 10:
+		case 10:	// Name
 			break;//+++++++TESTING
+		case 11:	// Portrait changed.
+			gwin.addDirty(faceItem.getDirty(dirty));
+			sexItem.setShape(menuShapes.getShape(0xB, faceItem.skinData.isFemale?1:0));
+			gwin.addDirty(sexItem.getDirty(dirty));
+			break;
+		case 12:	// Journey onward with new game.
+			break;//+++++++++++++
 		case 13: // Return to menu.
 			close(); break;
 		}
 	}
-	
+	public static class PortraitItem extends GumpWidget.Button {
+		byte transTo[];	// Palette translation.
+		SkinData skinData;
+		VgaFile facesVga;
+		boolean si_installed;
+		int id;
+		private void setPortrait() {
+			ShapeFrame portrait = facesVga.getShape(skinData.faceShape, skinData.faceFrame);
+			shape = onShape = portrait.translatePalette(transTo);
+		}
+		public PortraitItem(Gump par, int i, int px, int py, boolean si, byte trans[]) {
+			super(par, null, null, px, py);
+			id = i;
+			si_installed = si;
+			transTo = trans;
+			// Skin info
+			AvatarDefaultSkin defskin = ShapeInfoLookup.getDefaultAvSkin();
+			skinData = ShapeInfoLookup.getSkinInfoSafe(
+						defskin.default_skin, defskin.default_female, si_installed);
+			facesVga = new VgaFile();		// Get faces.
+			final int srcCnt = 3;
+			String sources[] = new String[srcCnt];
+			int resourceIds[] = new int[srcCnt];
+			sources[0] = EFile.FACES_VGA; resourceIds[0] = -1;		
+			// Multiracial faces.
+			StringIntPair rsc = game.getResource("files/mrfacesvga");
+			sources[1] = rsc.str; resourceIds[1] = rsc.num;
+			sources[2] = EFile.PATCH_FACES; resourceIds[2] = -1;
+			facesVga.load(sources, resourceIds);
+			setPortrait();
+		}
+		@Override
+		public boolean activate(boolean button) {
+			if (!button) 
+				return false;
+			skinData = ShapeInfoLookup.getNextSelSkin(skinData, si_installed, true);
+			setPortrait();
+			((GameMenuGump)parent).handleChoice(id);
+			return true;
+		}
+	}
 	public static class MenuItem extends GumpWidget.Button {
 		int id;
 		public MenuItem(Gump par, int i, ShapeFrame onShape, ShapeFrame offShape, int px, int py) {

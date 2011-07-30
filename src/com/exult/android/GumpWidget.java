@@ -35,6 +35,9 @@ public class GumpWidget extends GameSingletons {
 		frameNum = f;
 		shape = shapeFile.getShape(shapeNum, frameNum);
 	}
+	public void setShape(ShapeFrame s) {
+		shape = s;
+	}
 	public boolean onWidget(int mx, int my) {
 		mx -= parent.getX() + x;	// Get point rel. to gump.
 		my -= parent.getY() + y;

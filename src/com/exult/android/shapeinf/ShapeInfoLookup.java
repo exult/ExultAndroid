@@ -106,6 +106,12 @@ public class ShapeInfoLookup extends GameSingletons {
 			setupAvatarData();
 		return def_av_info.get(true).shapeNum;
 	}
+	public static SkinData getNextSelSkin(SkinData sdata, boolean sishapes, boolean ignoresex) {
+		return (scrollSkins(sdata.skinId, sdata.isFemale, sishapes, ignoresex, false, false));
+	}
+	public static SkinData getPrevSelSkin(SkinData sdata, boolean sishapes, boolean ignoresex) {
+		return (scrollSkins(sdata.skinId, sdata.isFemale, sishapes, ignoresex, true, false));
+	}
 	public static AvatarDefaultSkin getDefaultAvSkin() {
 		if (base_av_info == null)
 			setupAvatarData();
@@ -143,6 +149,36 @@ public class ShapeInfoLookup extends GameSingletons {
 		int skin = npc.getSkinColor();
 		boolean sex = npc.getTypeFlag(Actor.tf_sex);
 		return getSkinInfoSafe(skin, sex, ShapeID.haveSiShapes());
+	}
+	private static SkinData scrollSkins(int skin, boolean sex, boolean sishapes, boolean ignoresex, boolean prev, boolean sel) {
+		if (base_av_info == null)
+			setupAvatarData();
+		boolean nsex = sex;
+		int nskin = skin;
+		boolean chskin = true;
+		while (true) {
+			if (ignoresex) {
+				nsex = !nsex;
+				chskin = (nsex == base_av_info.default_female);
+			}
+			nskin = (nskin + (prev ? last_skin : 0) + (chskin?1:0)) % (last_skin+1);
+			if (sel && !isSkinSelectable(nskin))
+				continue;
+			SkinData newskin = getSkinInfo(nskin, nsex);
+			if (newskin != null && (sishapes ||
+					(!isSkinImported(newskin.shapeNum) &&
+						!isSkinImported(newskin.nakedShape))))
+				return newskin;
+		}
+	}
+	public static boolean isSkinSelectable(int skin) {
+		if (unselectable_skins == null)
+			setupAvatarData();
+		Boolean found = unselectable_skins.get(skin);
+		if (found != null && found == true)
+			return false;
+		else
+			return true;
 	}
 	public static UsecodeFunctionData getAvUsecode(int type) {
 		if (usecode_funs == null)
