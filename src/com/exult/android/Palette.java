@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import android.graphics.Canvas;
 
-public class Palette {
+public class Palette extends GameSingletons {
 	/*
 	 *	Palette #'s in 'palettes.flx':
 	 */
@@ -119,7 +119,7 @@ public class Palette {
 			pal1[255*3+0] = r;
 			pal1[255*3+1] = g;
 			pal1[255*3+2] = b;
-			//NEEDED? win->show();
+			gwin.setPainted();
 		}
 	}
 	public void fadeOut(int cycles) {
@@ -158,7 +158,7 @@ public class Palette {
 			}
 		} else {
 			win.setPalette(pal2, max_val, brightness);
-			//++NEEDED? win.show();
+			gwin.setPainted();
 		}
 	}
 	public boolean isFadedOut() {

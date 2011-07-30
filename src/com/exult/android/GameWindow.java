@@ -1323,7 +1323,7 @@ public class GameWindow extends GameSingletons {
 			if (mainActor != null)
 				render.paintMap(gx, gy, gw, gh);
 			else
-				win.fill8((byte)0);
+				win.fill8((byte)0, gw, gh, gx, gy);
 			effects.paint();		// Draw sprites.
 			if (wizardEye)
 				GameRender.paintWizardEye();

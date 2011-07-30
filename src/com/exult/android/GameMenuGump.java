@@ -17,6 +17,7 @@ public class GameMenuGump extends Modal {
 	private boolean newGame;
 	private VgaFile menuShapes;
 	private int topx, topy, centerx;
+	private Rectangle dirty = new Rectangle();
 	
 	private void initTop() {
 		int menuy = topy + 120;
@@ -107,7 +108,8 @@ public class GameMenuGump extends Modal {
 	}
 	@Override
 	public void close() {
-		audio.stopMusic();
+		if (!newGame)
+			audio.stopMusic();
 		gwin.getPal().fadeOut(EConst.c_fade_out_time);
 		super.close();
 	}
@@ -121,11 +123,11 @@ public class GameMenuGump extends Modal {
 			mouse.hide();
 			if (selected != null) {
 				selected.setPushed(false);
-				gwin.setAllDirty();	// ++Just add dirty rectangle?
+				gwin.addDirty(selected.getDirty(dirty));
 			}
 			if (item != null) {
 				item.setPushed(true);
-				gwin.setAllDirty();	// ++Just add dirty rectangle?
+				gwin.addDirty(item.getDirty(dirty));
 			}
 			selected = item;
 		}
@@ -187,6 +189,13 @@ public class GameMenuGump extends Modal {
 		public MenuItem(Gump par, int i, ShapeFrame onShape, ShapeFrame offShape, int px, int py) {
 			super(par, onShape, offShape, px, py);
 			id = i;
+		}
+		@Override
+		public boolean onWidget(int mx, int my) {
+			mx -= parent.getX() + x;	// Get point rel. to gump.
+			my -= parent.getY() + y;
+			// Check for box.
+			return shape != null && shape.boxHasPoint(mx, my);
 		}
 		// What to do when 'clicked':
 		@Override

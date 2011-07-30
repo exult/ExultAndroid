@@ -40,6 +40,21 @@ public class GumpWidget extends GameSingletons {
 		my -= parent.getY() + y;
 		return shape != null && shape.hasPoint(mx, my);
 	}
+	//	Get area covered by gump and its contents.
+	public Rectangle getDirty(Rectangle rect) {
+		if (shape == null) 
+			rect.set(0,0,0,0);
+		else {
+			int px = 0, py = 0;
+			if (parent != null) {
+				px = parent.getX();
+				py = parent.getY();
+			}
+			rect.set(x+px - shape.getXLeft(), y+py - shape.getYAbove(),
+				shape.getWidth(), shape.getHeight());
+		}
+		return rect;
+	}
 	public void paint() {
 		int px = 0, py = 0;
 		if (parent != null) {
