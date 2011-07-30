@@ -51,9 +51,12 @@ public class GameMenuGump extends Modal {
 		SkinData skindata =
 			ShapeInfoLookup.getSkinInfoSafe(
 					defskin.default_skin, defskin.default_female, si_installed);
+		// Name.
 		addElem(new MenuItem(this, 10, menuShapes.getShape(0xc, 1), menuShapes.getShape(0xc, 0), topx+10, menuy+10));
+		addElem(new TextItem(this, "Jeff", font, topx + 60, menuy+10));
+		// Sex.
 		ShapeFrame sexShape = menuShapes.getShape(0xa, 0);
-		addElem(new MenuItem(this, 11, menuShapes.getShape(0xa, 1), sexShape, topx+10, menuy+25));
+		addElem(new GumpWidget(this, sexShape, topx+10, menuy+25));
 		int sexWidth = sexShape.getWidth()+10;
 		if (sexWidth > 35) sexWidth += 25; 
 		else sexWidth = 60;
@@ -162,9 +165,9 @@ public class GameMenuGump extends Modal {
 			break;
 		//	New-game choices.
 		case 10:
-			close(); break;//+++++++TESTING
-		case 11:
-			close(); break;//+++++++TESTING
+			break;//+++++++TESTING
+		case 13: // Return to menu.
+			close(); break;
 		}
 	}
 	
@@ -181,6 +184,24 @@ public class GameMenuGump extends Modal {
 				return false;
 			((GameMenuGump)parent).handleChoice(id);
 			return true;
+		}
+	}
+	public static class TextItem extends GumpWidget {
+		String text;
+		FontsVgaFile.Font font;
+		public TextItem(Gump par, String txt, FontsVgaFile.Font f, int px, int py) {
+			super(par, null, px, py);
+			text = txt;
+			font = f;
+		}
+		@Override
+		public void paint() {
+			int px = 0, py = 0;
+			if (parent != null) {
+				px = parent.getX();
+				py = parent.getY();
+			}
+			font.drawText(gwin.getWin(), x+px, y+py, text);
 		}
 	}
 }
