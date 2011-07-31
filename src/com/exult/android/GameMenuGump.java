@@ -1,6 +1,10 @@
 package com.exult.android;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.view.KeyEvent;
+import android.widget.EditText;
 
 import com.exult.android.Gump.Modal;
 import com.exult.android.shapeinf.ShapeInfoLookup;
@@ -139,6 +143,28 @@ public class GameMenuGump extends Modal {
     }
 	public void textInput(int chr, int unicode) // Character typed (unicode)
 		{ }
+	private void promptName() {
+		Activity ctx = ExultActivity.instanceOf();
+		final EditText input = new EditText(ctx);
+		input.setText(nameItem.text);
+		final AlertDialog.Builder dlg = new AlertDialog.Builder(ctx)
+	    .setTitle("Exult")
+	    .setMessage("Avatar name:")
+	    .setView(input)
+	    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int whichButton) {
+	            nameItem.text = input.getText().toString(); 
+	            gwin.setAllDirty();//++++FOR NOW.  nameItem needs to get correct dirty rect.
+	            //gwin.addDirty(nameItem.getDirty(dirty));
+	        }
+	    }).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+	        public void onClick(DialogInterface dialog, int whichButton) {
+	            // Do nothing.
+	        }
+	    });
+		ctx.runOnUiThread(new Runnable() {
+			public void run() { dlg.show(); } });
+	}
 	public void handleChoice(int id) {
 		switch (id) {
 		//	Top-level choices.
@@ -170,7 +196,8 @@ public class GameMenuGump extends Modal {
 			break;
 		//	New-game choices.
 		case 10:	// Name
-			break;//++FINISH
+			promptName();
+			break;
 		case 11:	// Portrait changed.
 			gwin.addDirty(faceItem.getDirty(dirty));
 			sexItem.setShape(menuShapes.getShape(0xB, faceItem.skinData.isFemale?1:0));
