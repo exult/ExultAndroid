@@ -16,7 +16,8 @@ public class GameMenuGump extends Modal {
 	private GumpWidget.Button selected;
 	private PortraitItem faceItem;
 	private GumpWidget sexItem;
-	private boolean newGame;
+	private TextItem nameItem;
+	private boolean newGame, startedNewGame;
 	private VgaFile menuShapes;
 	private int topx, topy, centerx;
 	private Rectangle dirty = new Rectangle();
@@ -54,7 +55,8 @@ public class GameMenuGump extends Modal {
 		// Name.
 		addElem(new MenuItem(this, 10, menuShapes.getShape(0xc, 1), menuShapes.getShape(0xc, 0), topx+10, menuy+10));
 		String user = "Droid";
-		addElem(new TextItem(this, user, font, topx + 60, menuy+10));
+		nameItem = new TextItem(this, user, font, topx + 60, menuy+10);
+		addElem(nameItem);
 		// Set up portrait.
 		faceItem = new PortraitItem(this, 11, topx+290, menuy+61, si_installed, transTo);
 		addElem(faceItem);
@@ -97,6 +99,7 @@ public class GameMenuGump extends Modal {
 		if (!newGame)
 			audio.stopMusic();
 		gwin.getPal().fadeOut(EConst.c_fade_out_time);
+		gwin.setAllDirty();
 		super.close();
 	}
 	// Handle events:
@@ -150,7 +153,10 @@ public class GameMenuGump extends Modal {
 			try {
 				t.join();
 			} catch (InterruptedException e) { }
-			gwin.getPal().fadeIn(EConst.c_fade_in_time);	// This should depend on results of newMenu.++++++
+			if (newMenu.startedNewGame) {
+				close();
+			} else 
+				gwin.getPal().fadeIn(EConst.c_fade_in_time);
 			break;
 		case 2:	// Journey Onwards
 			close(); break;
@@ -164,14 +170,19 @@ public class GameMenuGump extends Modal {
 			break;
 		//	New-game choices.
 		case 10:	// Name
-			break;//+++++++TESTING
+			break;//++FINISH
 		case 11:	// Portrait changed.
 			gwin.addDirty(faceItem.getDirty(dirty));
 			sexItem.setShape(menuShapes.getShape(0xB, faceItem.skinData.isFemale?1:0));
 			gwin.addDirty(sexItem.getDirty(dirty));
 			break;
 		case 12:	// Journey onward with new game.
-			break;//+++++++++++++
+			game.setAvSkin(faceItem.skinData.skinId);
+			game.setAvName(nameItem.text);
+			game.setAvSex(faceItem.skinData.isFemale);
+			startedNewGame = gwin.initGamedat(true);
+			close();
+			break;
 		case 13: // Return to menu.
 			close(); break;
 		}

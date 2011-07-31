@@ -113,6 +113,10 @@ public class VgaFile {
 	}
 	public ShapeFrame getShape(int shapenum, int framenum) {
 		ShapeFrame r;
+		if (shapenum < 0 || shapenum >= shapes.length) {
+			System.out.println("getShape outofbounds: " + shapenum + ", size = " + shapes.length);
+			return null;
+		}
 		r = (shapes[shapenum].get(shapeSources, patchFlags, shapeCnts, shapenum, framenum, -1));
 		return r;
 	}

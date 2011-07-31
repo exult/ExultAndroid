@@ -39,8 +39,14 @@ public abstract class Game extends GameSingletons {
 	public void clearAvSex() {
 		avSex = -1;
 	}
+	public void setAvSex(boolean s) {
+		avSex = s ? 1 : 0;
+	}
 	public void clearAvSkin() {
 		avSkin = -1;
+	}
+	public void setAvSkin(int s) {
+		avSkin = s;
 	}
 	public int getAvSex() {
 		return avSex;

@@ -1496,9 +1496,6 @@ public class GameWindow extends GameSingletons {
 		for (int i = 0; i < cnt; i++) {	// Init. rings.
 			getNpc(partyman.getMember(i)).initReadied();
 		}
-		timeStopped = 0;
-	//+++++The below wasn't prev. done by .read(), so maybe it should be
-	//+++++controlled by a 'first-time' flag.
 		System.out.println("setupGame: about to activate eggs");
 						// Want to activate first egg.
 		MapChunk olist = mainActor.getChunk();
