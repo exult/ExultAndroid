@@ -184,7 +184,7 @@ public final class Audio extends GameSingletons {
 		return bg2siSfxs != null ? bg2siSfxs[sfx] : sfx;
 	}
 	// Stop all tracks.
-	public void stop() {
+	public synchronized void stop() {
 		int cnt = players.length;
 		for (int i = 0; i < cnt; ++i) {
 			if (players[i] != null) {
@@ -200,7 +200,7 @@ public final class Audio extends GameSingletons {
 	public int getCurrentTrack() {
 		return currentTrack;
 	}
-	public void stopMusic() {
+	public synchronized void stopMusic() {
 		if (currentTrackInd >= 0) {
 			MediaPlayer p = getPlayer(currentTrackInd);
 			if (p != null) {
