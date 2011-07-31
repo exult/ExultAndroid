@@ -177,9 +177,9 @@ public class ExultActivity extends Activity {
     	}
     	p.x = -1;
     	GameWindow.targetObj = null;
-    	try {clickWait.acquire();} catch (InterruptedException e) {
-    		return null;	// Failed.
-    	}
+    	System.out.println("clickWait: wait for first acquire");
+    	clickWait.drainPermits();
+    	System.out.println("clickWait: got first acquire");
     	GameSingletons.tqueue.pause();
     	tracking = (p != null);
     	trackingMouse = tracking && mouseShape >= 0;

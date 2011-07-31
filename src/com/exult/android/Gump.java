@@ -427,7 +427,8 @@ public abstract class Gump extends GameSingletons {
 			}
 			@Override
 			public void run() {
-		    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
+				System.out.println("GumpThread: run");
+		    	mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
 				while (!gump.isDone()) {
 					ExultActivity.getClick(p, gump, mouseShape);
 					gump.onUp(p.x, p.y);
