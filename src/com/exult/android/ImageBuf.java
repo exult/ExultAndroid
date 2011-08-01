@@ -14,6 +14,8 @@ public final class ImageBuf {
 	private int rgba[];			// Buffer for transfering to canvas.
 	private int pal[];			// Palette.
 	private int clipbuf[] = new int[3];		// srcx, srcw, destx
+	private int mouse[];		// Pre-rendered mouse in rgba format.
+	private Rectangle mouseRect;;
 	private Rectangle tempClipSrc = new Rectangle();
 	private Point tempClipDest = new Point();
 	//private Rectangle tempShowRect = new Rectangle();
@@ -252,10 +254,41 @@ public final class ImageBuf {
 			int ind = (int)pixels[i]&0xff;
 			rgba[i] = pal[ind];
 		}
+		if (mouse != null)
+			showMouse();
 		if (toScale == null)
 			c.drawBitmap(rgba, 0, width, 0, 0, width, height, false, null);
 		else 
 			blit(c);
+	}
+	private void showMouse() {
+		int mx = mouseRect.x, my = mouseRect.y, mw = mouseRect.w, mh = mouseRect.h;
+		if (mx >= width || my >= height)
+			return;
+		int from = 0;
+		if (my < 0) {
+			from -= my*mw;
+			mh += my; my = 0;
+			if (mh <= 0)
+				return;
+		}
+		if (mx < 0) {
+			from -= mx;
+			mw += mx; mx = 0;
+			if (mw <= 0)
+				return;
+		}
+		int to = my*width + mx;
+		int fromIncr = mouseRect.w - mw, toIncr = width - mw;
+		for (int y = 0; y < mh; y++) {
+			for (int x = 0; x < mw; x++) {
+				if ((mouse[from]&0xff000000) == 0xff000000)
+					rgba[to] = mouse[from];
+				++to; ++ from;
+			}
+			from += fromIncr;
+			to += toIncr;
+		}
 	}
 	/*
 	 *	Copy an area of the image within itself.
