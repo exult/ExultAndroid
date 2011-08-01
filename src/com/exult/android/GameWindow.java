@@ -1543,9 +1543,10 @@ public class GameWindow extends GameSingletons {
 		}
 		nfile.close();
 		mainActor.setActorShape();
-		nfile = EUtil.U7openStream(EFile.MONSNPCS);	// Monsters.
-		if (nfile != null) try {
-			PushbackInputStream nfile2 = new PushbackInputStream(nfile);
+		String fname = EUtil.U7exists(EFile.MONSNPCS);
+		// Monsters.  May not exist first time.
+		if (fname != null) try {
+			PushbackInputStream nfile2 = new PushbackInputStream(EUtil.U7openStream(fname));
 			
 			// (Won't exist the first time; in this case U7open throws
 			int cnt = EUtil.Read2(nfile2);
