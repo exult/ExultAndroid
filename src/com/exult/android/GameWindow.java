@@ -1458,7 +1458,7 @@ public class GameWindow extends GameSingletons {
 								// This also sets up initial 
 								// schedules and positions.
 		} catch (IOException e) {
-			System.out.println("FAILED to read NPCs!");
+			System.out.println("FAILED to read NPCs: " + e.getMessage());
 		}
 		System.out.println("setupGame: finished initActors");
 		/* ++++++++++FINISH 

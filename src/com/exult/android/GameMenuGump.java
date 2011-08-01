@@ -26,6 +26,10 @@ public class GameMenuGump extends Modal {
 	private int topx, topy, centerx;
 	private Rectangle dirty = new Rectangle();
 	
+	public void paint() { //+++++TESTING
+		super.paint();
+		//System.out.println("GameMenuGump painting: " + newGame);
+	}
 	private void initTop() {
 		int menuy = topy + 120;
 		int offset = 0, cnt = menuChoices.length;
@@ -100,11 +104,11 @@ public class GameMenuGump extends Modal {
 	}
 	@Override
 	public void close() {
+		super.close();
 		if (!newGame)
 			audio.stopMusic();
 		gwin.getPal().fadeOut(EConst.c_fade_out_time);
 		gwin.setAllDirty();
-		super.close();
 	}
 	// Handle events:
 	@Override
@@ -112,7 +116,6 @@ public class GameMenuGump extends Modal {
 		GumpWidget.Button item = onButton(mx, my);
 		
 		if (item != selected) {
-			System.out.println("GameMenu: this = " + this);
 			mouse.hide();
 			if (selected != null) {
 				selected.setPushed(false);
@@ -180,7 +183,12 @@ public class GameMenuGump extends Modal {
 				t.join();
 			} catch (InterruptedException e) { }
 			if (newMenu.startedNewGame) {
+				System.out.println("GameMenuGump: startedNewGame");
 				close();
+				game.setAvSkin(newMenu.faceItem.skinData.skinId);
+				game.setAvName(newMenu.nameItem.text);
+				game.setAvSex(newMenu.faceItem.skinData.isFemale);
+				gwin.initGamedat(true);
 			} else 
 				gwin.getPal().fadeIn(EConst.c_fade_in_time);
 			break;
@@ -204,11 +212,8 @@ public class GameMenuGump extends Modal {
 			gwin.addDirty(sexItem.getDirty(dirty));
 			break;
 		case 12:	// Journey onward with new game.
-			game.setAvSkin(faceItem.skinData.skinId);
-			game.setAvName(nameItem.text);
-			game.setAvSex(faceItem.skinData.isFemale);
-			startedNewGame = gwin.initGamedat(true);
 			close();
+			startedNewGame = true;
 			break;
 		case 13: // Return to menu.
 			close(); break;

@@ -199,21 +199,24 @@ public final class GumpManager extends GameSingletons {
 		if (g == kbdFocus)
 			kbdFocus = null;
 		synchronized(openGumps) {
-			openGumps.remove(g);	
-		}
-		if (!g.isPersistent()) {	// Count 'gump mode' gumps.
+			boolean removed = openGumps.remove(g);	
+			System.out.println("GameMenu: removeGump: " + openGumps.size());
+			if (!removed) //++++++++++
+				new Exception().printStackTrace();
+			if (removed && !g.isPersistent()) {	// Count 'gump mode' gumps.
 				// And resume queue if last.
 				// Gets messed up upon 'load'.
-			if (nonPersistentCount > 0)
-				nonPersistentCount--;
-			if (!dontPauseGame || g.isModal()) 
-				tqueue.resume();
-			if (g == modal) {
-				gwin.setAllDirty();
-				if (!openGumps.isEmpty() && openGumps.getLast().isModal())
-					modal = (Gump.Modal) openGumps.getLast();
-				else
-					modal = null;
+				if (nonPersistentCount > 0)
+					nonPersistentCount--;
+				if (!dontPauseGame || g.isModal()) 
+					tqueue.resume();
+				if (g == modal) {
+					gwin.setAllDirty();
+					if (!openGumps.isEmpty() && openGumps.getLast().isModal())
+						modal = (Gump.Modal) openGumps.getLast();
+					else
+						modal = null;
+				}
 			}
 		}
 	}
