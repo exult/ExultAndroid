@@ -1762,7 +1762,7 @@ public class GameWindow extends GameSingletons {
 	//	Start displaying the 'plasma' during load.  May be called more than once.
 	public void startPlasma() {
 		if (plasmaThread == null) {
-			System.out.println("startPlasma");
+			System.out.println("startPlasma: " + TimeQueue.ticks);
 			plasmaThread = new PlasmaThread(pal);
 			plasmaThread.start();
 		}

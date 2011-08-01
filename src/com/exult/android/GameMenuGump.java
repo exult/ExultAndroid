@@ -26,10 +26,6 @@ public class GameMenuGump extends Modal {
 	private int topx, topy, centerx;
 	private Rectangle dirty = new Rectangle();
 	
-	public void paint() { //+++++TESTING
-		super.paint();
-		//System.out.println("GameMenuGump painting: " + newGame);
-	}
 	private void initTop() {
 		int menuy = topy + 120;
 		int offset = 0, cnt = menuChoices.length;

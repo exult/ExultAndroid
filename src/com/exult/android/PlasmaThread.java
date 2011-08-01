@@ -12,7 +12,7 @@ public class PlasmaThread extends Thread {
 	private void plasma(int w, int h, int x, int y, int startc, int endc) {
 		ImageBuf win = GameSingletons.win;
 		win.fill8((byte)startc, w, h, x, y);
-		for (int i=0; i < w*h; i++) {
+		for (int i=0; i < w*h; i += 16) {	// Too many loops makes this too slow.
 			int pc = startc + EUtil.rand()%(endc-startc+1);
 			int px = x + EUtil.rand()%w;
 			int py = y + EUtil.rand()%h;
