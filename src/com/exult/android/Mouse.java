@@ -234,4 +234,26 @@ public final class Mouse extends GameSingletons {
 		if (cursor != dontchange)
 			setShape(cursor);
 	}
+	/*
+	 * ++++++EXPERIMENTAL:  New method of showing mouse using ImageBuf
+	 */
+	private ImageBuf mouseRender;
+	/*
+	 * Set up mouse when 'cur' shape changes.
+	 */
+	private void setup() {
+		int w = cur.getWidth(), h = cur.getHeight(), xleft = cur.getXLeft(), yabove = cur.getYAbove();
+		if (mouseRender == null) {
+			mouseRender = new ImageBuf(w, h);
+			Palette pal = new Palette(mouseRender);
+			pal.set(Palette.PALETTE_DAY);
+			pal.apply();
+			mouseRender.setPaletteVal(0xff, 0xff000000);	// Set 0xff to be transparent.
+		} else if (mouseRender.getWidth() != w || mouseRender.getHeight() != h)
+			mouseRender.setSize(w, h);
+		mouseRender.fill8((byte)0xff);
+		cur.paintRle(mouseRender, xleft, yabove);
+		mouseRender.blit();
+		gwin.getWin().setMouse(mouseRender);
+	}
 }

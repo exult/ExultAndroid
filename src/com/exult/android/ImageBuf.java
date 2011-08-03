@@ -130,6 +130,10 @@ public final class ImageBuf {
 	public void clearClip() {
 		clipx = clipy = 0; clipw = width; cliph = height;
 	}
+	public void setMouse(ImageBuf mbuf) {
+		mouse = mbuf.rgba;
+		mouseRect.set(0, 0, mbuf.width, mbuf.height);
+	}
 	/*
 	 * Utility to create each palette color.
 	 */
@@ -154,6 +158,9 @@ public final class ImageBuf {
 			int b  = getColor8(rgbs[3*i + 2], maxval, brightness);
 			pal[i] = (0xff<<24)|(r<<16) | (g<<8) | b;	// Include alpha = 0xff.
 		}
+	}
+	public void setPaletteVal(int ind, int argb) {
+		pal[ind] = argb;
 	}
 	//	Set paletter from another window.
 	public void setPalette(ImageBuf w2) {
@@ -233,12 +240,16 @@ public final class ImageBuf {
 			x + w <= clipx || y + h <= clipy)); }
 	//	Just update the bitmap.
 	public void blit(Bitmap b) {
+		blit();
+		b.setPixels(rgba, 0, width, 0, 0, width, height);
+	}
+	//	Just update rgba[].
+	public void blit() {
 		int cnt = width*height;
 		for (int i = 0; i < cnt; ++i) {
 			int ind = (int)pixels[i]&0xff;
 			rgba[i] = pal[ind];
 		}
-		b.setPixels(rgba, 0, width, 0, 0, width, height);
 	}
 	public void blit(Canvas c) {
 		if (toScale != null) {
