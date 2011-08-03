@@ -111,25 +111,25 @@ public final class Mouse extends GameSingletons {
 		return mousey;
 	}
 	boolean show() { // Paint it.
-		if (!onscreen){
-			onscreen = true;
-			synchronized(gwin.getWin()) {
+		synchronized(gwin.getWin()) {
+			if (!onscreen){
+				onscreen = true;
 						// Save background.
 				gwin.getWin().get(backup, maxw, maxh, box.x, box.y);
 						// Paint new location.
 				cur.paintRle(gwin.getWin(), mousex, mousey);
-			}
-			return true;
-		} else
-			return false;
+				return true;
+			} else
+				return false;
+		}
 	}
 	void hide() {			// Restore area under mouse.
-		if (onscreen) {
-			onscreen = false;
-			synchronized(gwin.getWin()) {
+		synchronized(gwin.getWin()) {
+			if (onscreen) {
+				onscreen = false;
 				gwin.getWin().put(backup, maxw, maxh, box.x, box.y);
 			}
-			}
+		}
 	}
 	public void setShape(int framenum) {	// Set to desired shape.
 		if (framenum != cur_framenum)
