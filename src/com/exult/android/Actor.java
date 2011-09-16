@@ -840,7 +840,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			return;
 		}
 						// Going to walk there.
-		if (scheduleLoc != null)
+		if (scheduleLoc == null)
 			scheduleLoc = new Tile();
 		scheduleLoc.set(dest);
 		nextSchedule = (byte)newScheduleType;
@@ -3907,8 +3907,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 
 		EUtil.Write4(out, 0);	// Skip 2*2
 		
-		EUtil.Write2(out, scheduleLoc.tx);	//S-Vr Where npc is supposed to 
-		EUtil.Write2(out, scheduleLoc.ty);	//be for schedule)
+		EUtil.Write2(out, scheduleLoc == null ? 0 : scheduleLoc.tx);	//S-Vr Where npc is supposed to 
+		EUtil.Write2(out, scheduleLoc == null ? 0 : scheduleLoc.ty);	//be for schedule)
 		//EUtil.Write4(out, 0);
 
 		EUtil.Write2(out, getTypeFlags());	// Typeflags

@@ -151,10 +151,10 @@ public class ExultActivity extends Activity {
     		DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
     			@Override
     			public void onClick(DialogInterface dialog, int which) {		
-    				dialog.dismiss();
     				Boolean answer = (which == DialogInterface.BUTTON_POSITIVE);
     				reporter.setChanged();
     				reporter.notifyObservers(answer);
+    				dialog.dismiss();
     			}
     		};
     		AlertDialog.Builder builder = new AlertDialog.Builder(instance);
