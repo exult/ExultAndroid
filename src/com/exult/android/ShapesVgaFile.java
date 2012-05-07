@@ -19,7 +19,7 @@ public class ShapesVgaFile extends VgaFile {
 								? Ready.backpack : Ready.rhand));
 	}
 	public static ShapeInfo getInfo(int shapenum) {
-		ShapeInfo s = shapenum >= 0 ? info[shapenum] : zinfo;
+		ShapeInfo s = shapenum >= 0 && shapenum < info.length ? info[shapenum] : zinfo;
 		return s;
 	}
 }
