@@ -3449,9 +3449,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 		int schunk = out.read();	// Superchunk #.
 							// For multi-map:1
 		int map_num = out.read();
-		//System.out.println("Npc #" + num + ", shape = " + getShapeNum() + ", map = " + map_num);
 		if (fix_first)
 			map_num = 0;
+		if (map_num > 1)
+		System.out.println("Npc #" + num + ", shape = " + getShapeNum() + ", map = " + map_num);
 		GameMap npcmap = gwin.getMap(map_num);
 		int usefun = EUtil.Read2(out);	// Get usecode function #.
 		setLift(usefun >> 12);		// Lift is high 4 bits.
@@ -3822,6 +3823,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			// we store all off-map actors in map 0
 			map_num = 0;
 		assert(map_num >= 0 && map_num < 256);
+		if (map_num > 1)
+			System.out.println("Writing actor " + name + ", map_num = " + map_num);
 		out.write(map_num);		// Borrowing for map #.
 						// Usecode.
 		int usefun = getUsecode() & 0xfff;

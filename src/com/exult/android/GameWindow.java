@@ -113,8 +113,10 @@ public class GameWindow extends GameSingletons {
 	 */
 	public GameMap getMap(int num) {
 		GameMap newMap;
-		if (num >= maps.size())
+		if (num >= maps.size()) {
+			System.out.println("getMap new map: " + num);
 			maps.setSize(num + 1);
+		}
 		newMap = maps.elementAt(num);
 		if (newMap == null) {
 			newMap = new GameMap(num);
@@ -1550,14 +1552,16 @@ public class GameWindow extends GameSingletons {
 			
 			// (Won't exist the first time; in this case U7open throws
 			int cnt = EUtil.Read2(nfile2);
+			byte[] tmpbuf = new byte[4];
 			while (cnt-- > 0) {
 						// Read ahead to get shape.
-				nfile2.skip(2);
-				int shnum = (int)EUtil.Read2(nfile2)&0x3ff;
-				nfile2.unread(4);
+				nfile2.read(tmpbuf);
+				int shnum = (int)EUtil.Read2(tmpbuf, 2)&0x3ff;
+				nfile2.unread(tmpbuf);
 				if (ShapeFiles.SHAPES_VGA.getFile().getNumFrames(shnum) < 16)
 					break;	// Watch for corrupted file.
 				MonsterActor act = MonsterActor.create(shnum);
+				System.out.println("Reading monster of shape " + act.getShapeNum() + ", cnt = " + cnt);
 				act.read(nfile2, -1, false);
 				act.restoreSchedule();
 			}
@@ -1852,8 +1856,10 @@ public class GameWindow extends GameSingletons {
 	public void write() throws IOException {
 		int mapcnt = maps.size();
 		try {
-			for (int i = 0; i < mapcnt; ++i)
+			for (int i = 0; i < mapcnt; ++i) {
+				System.out.println("Saving map " + i);
 				maps.elementAt(i).writeIreg();	// Write ireg files.
+			}
 			writeNpcs();			// Write out npc.dat.
 			usecode.write();		// Usecode.dat (party, global flags).
 			//+++++ Notebook_gump.write();		// Write out journal.
@@ -1942,10 +1948,13 @@ public class GameWindow extends GameSingletons {
 			if (!mact.isDead())		// Alive?
 				cnt++;
 		}
+		System.out.println("Writing " + cnt + " monsters");
 		EUtil.Write2(out, cnt);
 		for (MonsterActor mact : monsters) {
-			if (!mact.isDead())		// Alive?
+			if (!mact.isDead()) {		// Alive?
+				System.out.println("Writing monster of shape " + mact.getShapeNum() + ", map = " + mact.getMap().getNum() + ", cnt = " + cnt);
 				mact.write(out);
+			}
 		}
 		out.close();
 	}
