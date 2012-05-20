@@ -74,7 +74,7 @@ public final class DataUtils {
 			in.close();
 		}
 		for (int i = 0; i < numsections; i++) {
-			System.out.println("readTextDataFile: parsing " + sections[i]);
+			//System.out.println("readTextDataFile: parsing " + sections[i]);
 			Vector<byte[]> data = static_strings.elementAt(i);
 			parsers[i].parse(data, static_version, false, game);
 			data = patch_strings.elementAt(i);
@@ -113,7 +113,7 @@ public final class DataUtils {
 			in.reset();
 			if (!searchTextMsgSection(in, sections[i]))
 				continue;
-			System.out.println("Calling readTextMsgFile for " + sections[i]);
+			//System.out.println("Calling readTextMsgFile for " + sections[i]);
 			strings.setElementAt(readTextMsgFile(in, null), i);
 		}
 	return version;
@@ -135,7 +135,7 @@ public final class DataUtils {
 			for (ind = 9; ind < strlen && Character.isSpace(s.charAt(ind)); ++ind)
 					;
 			if (s.startsWith(section, ind)) {	
-				System.out.println("searchTextMsgSection: found " + section);
+				//System.out.println("searchTextMsgSection: found " + section);
 				return true;
 			}
 		}
@@ -232,7 +232,7 @@ public final class DataUtils {
 			if (haveversion)
 				vers = EUtil.Read1(in);
 			int cnt = ReadCount(in);
-			System.out.println("**** cnt = " + cnt);
+			//System.out.println("**** cnt = " + cnt);
 			for (int j = 0; j < cnt; j++)
 				readData(in, j, vers, patch, game, true);
 			}

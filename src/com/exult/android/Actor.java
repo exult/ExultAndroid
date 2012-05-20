@@ -1247,10 +1247,10 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 	 */
 	boolean readyAmmo() {
 		GameObject weapon = spots[Ready.lhand];
-		System.out.println("readyAmmo for npc #" + npcNum +
-				", weapon = " + weapon.getShapeNum());
 		if (weapon == null)
 			return false;
+		System.out.println("readyAmmo for npc #" + npcNum +
+				", weapon = " + weapon.getShapeNum());
 		ShapeInfo info = weapon.getInfo();
 		WeaponInfo winf = info.getWeaponInfo();
 		if (winf == null)
@@ -3107,7 +3107,8 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 			goal.tx += xoffs[partyId] + 1 - EUtil.rand()%3;
 			goal.ty += yoffs[partyId] + 1 - EUtil.rand()%3;
 			dist = 1;
-			}
+		}
+		//System.out.println("Actor.follow: leader.isMoving = " + leader.isMoving() + ", goal = " + goal + ", dist = " + dist);
 						// Already aiming along a path?
 		if (isMoving() && action != null && action.followingSmartPath()) {
 						// And leader moving, or dest ~= goal?
@@ -3133,13 +3134,13 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// Get his speed.
 		int speed = leader.getFrameTime();
 		if (speed == 0) {			// Not moving?
-			speed = 100;
+			speed = 1;
 			if (goaldist < leaderdist)	// Closer than leader?
 						// Delay a bit IF not moving.
-				delay = (1 + leaderdist - goaldist)*100;
+				delay = ((1 + leaderdist - goaldist)*100)/TimeQueue.tickMsecs;
 			}
-		if (goaldist - leaderdist >= 5)
-			speed -= 20;		// Speed up if too far.
+		//if (goaldist - leaderdist >= 5)
+		//	speed -= 20;		// Speed up if too far.
 						// Get window rect. in tiles.
 		Rectangle wrect = new Rectangle();
 		gwin.getWinTileRect(wrect);
@@ -3165,6 +3166,7 @@ public abstract class Actor extends ContainerGameObject implements TimeSensitive
 						// NOTE:  Avoid delay when moving,
 						//  as it creates jerkiness.  AND,
 						//  0 retries if blocked.
+		//System.out.println("Actor.follow: walkToTile: " + goal + ", speed = " + speed + ", delay = " + delay);
 		walkToTile(goal, speed, delay, 0);
 		}
 

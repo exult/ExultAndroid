@@ -177,9 +177,9 @@ public class ExultActivity extends Activity {
     	}
     	p.x = -1;
     	GameWindow.targetObj = null;
-    	System.out.println("clickWait: wait for first acquire");
+    	//System.out.println("clickWait: wait for first acquire");
     	clickWait.drainPermits();
-    	System.out.println("clickWait: got first acquire");
+    	//System.out.println("clickWait: got first acquire");
     	GameSingletons.tqueue.pause();
     	tracking = (p != null);
     	trackingMouse = tracking && mouseShape >= 0;
@@ -189,7 +189,7 @@ public class ExultActivity extends Activity {
     	ClickTracker trackSave = clickTrack;
     	clickPoint = p;
     	clickTrack = track;
-    	System.out.println("clickTrack before: " + clickTrack);
+    	//System.out.println("clickTrack before: " + clickTrack);
     	// Wait for the click.
     	try { clickWait.acquire(); } catch (InterruptedException e) {
     		p.x = -1;
@@ -197,7 +197,7 @@ public class ExultActivity extends Activity {
     	clickPoint = save;
     	clickTrack = trackSave;
     	clickWait.release();
-    	System.out.println("clickTrack after: " + clickTrack);
+    	//System.out.println("clickTrack after: " + clickTrack);
     	GameObject ret = GameWindow.targetObj;
     	if (ret != null)
     		gwin.addDirty(ret);
@@ -405,7 +405,7 @@ public class ExultActivity extends Activity {
                 if (movingAvatar && !gwin.isMoving() && gwin.mainActorCanAct()) {
                 	int x = (int)gwin.getWin().screenToGameX(avatarMotion.getX()), 
     					y = (int)gwin.getWin().screenToGameY(avatarMotion.getY());
-                	System.out.println("Keep moving");
+                	//System.out.println("Keep moving");
                 	gwin.startActor(avatarStartX, avatarStartY, x, y, mouse.avatarSpeed);
                 } else if (!dragging && !movingAvatar && downMouse.isLongPress(trackMouse.x, trackMouse.y)) {
                 	// Long press.
@@ -562,7 +562,7 @@ public class ExultActivity extends Activity {
     					if (obj == gwin.getMainActor() && canAct) {
     						DraggingInfo.abort();
     						dragging = false;
-    						System.out.println("Starting motion");
+    						//System.out.println("Starting motion");
         					avatarMotion = MotionEvent.obtain(event);
         					avatarStartX = x; avatarStartY = y;
     					} else if (!dragging || (obj != null && !obj.isDragable() &&
@@ -597,7 +597,7 @@ public class ExultActivity extends Activity {
     					wasZooming = false;
     					return true;
     				}
-    				System.out.println("action_up: " + x + ", " + y + ", mouse = " + mouse.getX() + ", " + mouse.getY());
+    				//System.out.println("action_up: " + x + ", " + y + ", mouse = " + mouse.getX() + ", " + mouse.getY());
     				if (dragging) {
     					clickHandled = GameSingletons.drag.drop(mouse.getX(), mouse.getY(), dragged);
     					GameWindow.targetObj = null;

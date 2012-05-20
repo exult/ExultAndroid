@@ -265,11 +265,13 @@ public abstract class Schedule extends GameSingletons {
 			av.getTile(goal);
 			npc.getTile(pos);
 			int dist2lead = av.distance(pos);
+			System.out.println("followAvatar: dist2lead = " + dist2lead);
 			if (!av.isMoving() &&		// Avatar stopped.
 			    dist2lead <= 12)		// And we're already close enough.
 				return;
 			int curtime = TimeQueue.ticks;// Want the REAL time here.
 			if (!is_blocked) {		// Not blocked?
+				System.out.println("followAvatar: not blocked, about to follow");
 				npc.follow(av);		// Then continue following.
 				return;
 			}
@@ -295,6 +297,7 @@ public abstract class Schedule extends GameSingletons {
 				speed = 1;
 			if (pos.distance(goal) <= 3)
 				return;			// Already close enough!
+			System.out.println("followAvatar: walk path to " + goal);
 							// Succeed if within 3 tiles of goal.
 			if (npc.walkPathToTile(pos, goal, speed - speed/4, 0, 3, 1))
 				return;			// Success.
