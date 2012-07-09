@@ -925,6 +925,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			String str = lval.getStringValue();
 			sign.addText(i, str);
 		}
+		sign.track(Mouse.hand);
 	}
 	public final UsecodeValue clickOnItem(int event) {
 		// Doesn't ret. until user single-
