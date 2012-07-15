@@ -232,9 +232,10 @@ public class ExultActivity extends Activity {
 		// Keeps program from exiting.
     	if (AndroidSave.instance != null)
     		AndroidSave.instance.close();
-    	else if (GameSingletons.gumpman.gumpMode())
+    	else if (GameSingletons.gumpman.gumpMode()) {
 			GameSingletons.gumpman.closeAllGumps(false);
-    	else if (!VideoPlayer.closeIfPlaying())
+			clickWait.release();
+    	} else if (!VideoPlayer.closeIfPlaying())
     		askToQuit();
 	}
     /*

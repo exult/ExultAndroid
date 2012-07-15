@@ -1,9 +1,11 @@
 package com.exult.android;
 import java.util.LinkedList;
 import java.util.ListIterator;
-import java.util.Observer;
 import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.Semaphore;
+
+import android.graphics.Point;
 
 public final class GumpManager extends GameSingletons {	
 	private static int gumpCount = 0;			// For staggering them.
@@ -14,6 +16,7 @@ public final class GumpManager extends GameSingletons {
 	private int nonPersistentCount;
 	private boolean dontPauseGame;	// NEVER SET THIS MANUALLY! YOU MUST 
 										// CALL set_gumps_dontPauseGame.
+	private Thread gumpThread;			// Targetting thread when gumps are open.
 	public GumpManager() {
 		openGumps = new LinkedList<Gump>();
 	}
@@ -124,6 +127,20 @@ public final class GumpManager extends GameSingletons {
 				modal = (Gump.Modal)g;
 			if (!dontPauseGame || g.isModal()) 
 				tqueue.pause();
+			if (gumpThread == null && modal == null) {
+				gumpThread = new Thread() {		// Track for 'normal' gumps.
+		    		public void run() {
+		    			while (nonPersistentCount > 0) {
+		    				GameObject t = ExultActivity.getTarget(new Point(), Mouse.hand);
+		    				System.out.println("gumpThread returned, count = " + nonPersistentCount);
+		    				if (t != null)
+		    					t.activate();
+		    			}
+		    			gumpThread = null;
+		    		}
+		    	};
+		    	gumpThread.start();
+		    }
 		}
 		gwin.setAllDirty();
 	}
@@ -146,10 +163,12 @@ public final class GumpManager extends GameSingletons {
 				    gump.getShapeNum() == shapenum) {
 				// If found, move to end.
 				if (iter.hasNext()) {
-					removeGump(gump);
-					addGump(gump);
-				} else
-					setKbdFocus(gump);
+					synchronized(openGumps) {
+						openGumps.remove(gump);
+						openGumps.addLast(gump);	
+					}
+				}
+				setKbdFocus(gump);
 				gwin.setAllDirty();
 				return;
 			}
@@ -225,6 +244,7 @@ public final class GumpManager extends GameSingletons {
 	 */
 	public void closeAllGumps(boolean pers) {
 		boolean removed = false;
+		System.out.println("gumpManager: closeAllGumps");
 		ListIterator<Gump> iter = openGumps.listIterator();
 		while (iter.hasNext()) {		// Remove all gumps.
 			Gump gump = iter.next();
@@ -237,6 +257,7 @@ public final class GumpManager extends GameSingletons {
 			}
 		}
 		nonPersistentCount = 0;
+		gumpThread = null;
 		setKbdFocus(null);
 		/* ++FINISH NEEDED?
 		gwin.get_npc_prox().wait(4);		// Delay "barking" for 4 secs.
