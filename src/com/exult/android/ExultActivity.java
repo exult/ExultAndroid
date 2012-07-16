@@ -214,9 +214,11 @@ public class ExultActivity extends Activity {
     	waitForClick(p, t, mouseShape);
     }
     public static GameObject getTarget(Point p, int mouseShape) {
-    	GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
+    	if (p.x < 0 || p.y < 0) {
+    		GameSingletons.mouse.setLocation(gwin.getWidth()/2, gwin.getHeight()/2);
+    		instance.vibrate();
+    	}
     	targeting = true;
-    	instance.vibrate();
     	return waitForClick(p, null, mouseShape);
     }
     public static void setInCombat() {
@@ -556,8 +558,14 @@ public class ExultActivity extends Activity {
     					gwin.shiftWizardEye(x, y);
     					return true;
     				}
-    				if (clickPoint == null && UsecodeMachine.running <= 0) {
-    					dragging = DraggingInfo.startDragging(x, y);
+    				if (clickTrack == null && UsecodeMachine.running <= 0) {
+    					/* ++++++++++++FINISH THIS isn't right. 
+    					if (tracking) {			
+    						dragging = DraggingInfo.startDragging(mouse.getX(), mouse.getY());
+    						if (DraggingInfo.onGump())	// Don't drag the gump we're on.
+    							DraggingInfo.abort();
+    					}
+    					*/
     					dragged = false;
     					GameObject obj = dragging?DraggingInfo.getObject():null;
     					if (obj == gwin.getMainActor() && canAct) {

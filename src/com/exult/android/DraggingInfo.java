@@ -24,6 +24,9 @@ public final class DraggingInfo extends GameSingletons {
 	public Gump getGump() {
 		return gump;
 	}
+	public static boolean onGump() {
+		return drag != null && drag.gump != null;
+	}
 	private boolean start(int x, int y) { // First motion.
 		int deltax = Math.abs(x - mousex),
 		deltay = Math.abs(y - mousey);
@@ -261,7 +264,8 @@ public final class DraggingInfo extends GameSingletons {
 		return drag.obj;
 	}
 	public static void abort() {
-		drag.clear();
+		if (drag != null)
+			drag.clear();
 	}
 	public void clear() {
 		obj = null;
@@ -277,6 +281,7 @@ public final class DraggingInfo extends GameSingletons {
 		//UNUSED mouseShape = mouse.getShape();
 		mouse.setShape(Mouse.hand);
 		rect.w = -1;
+		System.out.println("gump: DraggingInfo.Init");
 		// First see if it's a gump.
 		gump = gumpman.findGump(x, y);
 		if (gump != null) {

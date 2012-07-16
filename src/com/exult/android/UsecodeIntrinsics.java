@@ -962,7 +962,7 @@ public class UsecodeIntrinsics extends GameSingletons {
 			// +++++++++++Allow dragging while here:
 			//if (!Get_click(x, y, Mouse.greenselect, 0, true))
 				//return Usecode_value(0);
-			Point p = new Point();
+			Point p = new Point(-1, -1);
 			obj = ExultActivity.getTarget(p, Mouse.greenselect);
 						// Get abs. tile coords. clicked on.
 			t = new Tile(gwin.getScrolltx() + p.x/EConst.c_tilesize,

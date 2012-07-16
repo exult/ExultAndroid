@@ -130,8 +130,9 @@ public final class GumpManager extends GameSingletons {
 			if (gumpThread == null && modal == null) {
 				gumpThread = new Thread() {		// Track for 'normal' gumps.
 		    		public void run() {
+		    			Point p = new Point(-1, -1);
 		    			while (nonPersistentCount > 0) {
-		    				GameObject t = ExultActivity.getTarget(new Point(), Mouse.hand);
+		    				GameObject t = ExultActivity.getTarget(p, Mouse.hand);
 		    				System.out.println("gumpThread returned, count = " + nonPersistentCount);
 		    				if (t != null)
 		    					t.activate();

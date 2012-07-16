@@ -13,7 +13,7 @@ public final class Shortcuts extends GameSingletons {
 	public static void target() {
     	Thread t = new Thread() {
     		public void run() {
-    			GameObject t = ExultActivity.getTarget(new Point(), mouse.getShortArrow(EConst.northeast));
+    			GameObject t = ExultActivity.getTarget(new Point(-1, -1), mouse.getShortArrow(EConst.northeast));
     			if (t != null)
     				t.activate();
     		}
