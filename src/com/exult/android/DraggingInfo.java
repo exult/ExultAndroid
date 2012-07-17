@@ -24,8 +24,8 @@ public final class DraggingInfo extends GameSingletons {
 	public Gump getGump() {
 		return gump;
 	}
-	public static boolean onGump() {
-		return drag != null && drag.gump != null;
+	public static boolean onButton() {
+		return drag != null && drag.button != null;
 	}
 	private boolean start(int x, int y) { // First motion.
 		int deltax = Math.abs(x - mousex),

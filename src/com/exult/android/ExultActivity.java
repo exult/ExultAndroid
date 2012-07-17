@@ -559,13 +559,13 @@ public class ExultActivity extends Activity {
     					return true;
     				}
     				if (clickTrack == null && UsecodeMachine.running <= 0) {
-    					/* ++++++++++++FINISH THIS isn't right. 
-    					if (tracking) {			
+    					if (tracking) {	
     						dragging = DraggingInfo.startDragging(mouse.getX(), mouse.getY());
-    						if (DraggingInfo.onGump())	// Don't drag the gump we're on.
+    						if (!DraggingInfo.onButton()) {	// Only looking for button clicks here.
     							DraggingInfo.abort();
+    							dragging = false;
+    						}
     					}
-    					*/
     					dragged = false;
     					GameObject obj = dragging?DraggingInfo.getObject():null;
     					if (obj == gwin.getMainActor() && canAct) {
