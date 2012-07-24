@@ -187,8 +187,8 @@ public class GameRender {
 				obj.paint_outline(HIT_PIXEL);
 			}
 		*/
-		if (GameWindow.targetObj != null)
-			GameWindow.targetObj.paintOutline(ShapeID.HIT_PIXEL);
+		if (GameWindow.targetElem != null)
+			GameWindow.targetElem.paintOutline(ShapeID.HIT_PIXEL);
 		if (GameWindow.onObj != null)
 			GameWindow.onObj.paintOutline(ShapeID.POISON_PIXEL);
 		return light_sources;
@@ -288,4 +288,9 @@ public class GameRender {
 			win.fill8((byte)0, sizex, 200, w - sizex, sizey);
 		}
 	}
+	//	Things that can be painted:
+	public static interface Paintable {
+		public void paint();
+		public void paintOutline(int pix);
+	};
 }

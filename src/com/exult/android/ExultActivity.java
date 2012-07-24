@@ -177,6 +177,7 @@ public class ExultActivity extends Activity {
     	}
     	p.x = -1;
     	GameWindow.targetObj = null;
+    	GameWindow.targetElem = null;
     	//System.out.println("clickWait: wait for first acquire");
     	clickWait.drainPermits();
     	//System.out.println("clickWait: got first acquire");
@@ -202,6 +203,7 @@ public class ExultActivity extends Activity {
     	if (ret != null)
     		gwin.addDirty(ret);
     	GameWindow.targetObj = null;
+    	GameWindow.targetElem = null;
     	tracking = targeting = trackingMouse = false;
     	GameSingletons.mouse.hide();
     	GameSingletons.tqueue.resume();
@@ -610,6 +612,7 @@ public class ExultActivity extends Activity {
     				if (dragging) {
     					clickHandled = GameSingletons.drag.drop(mouse.getX(), mouse.getY(), dragged);
     					GameWindow.targetObj = null;
+    					GameWindow.targetElem = null;
     				}
     				if (clickPoint != null) {
     					if (dragging || (!wasLongPress && downMouse.pointNear(x, y))) {	// Dropped, or clicked.
@@ -687,6 +690,7 @@ public class ExultActivity extends Activity {
     							if (obj != null)
     								gwin.addDirty(obj);
     							GameWindow.targetObj = obj;
+    							GameWindow.targetElem = obj;
     						}
     					}
     				} else if (dragging) {

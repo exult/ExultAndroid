@@ -3,7 +3,7 @@ import java.util.Vector;
 
 import android.graphics.Point;
 
-public abstract class Gump extends GameSingletons {
+public abstract class Gump extends GameSingletons implements GameRender.Paintable {
 	protected int shapeNum;
 	protected ShapeFrame shape;	// Gump's shape.
 	protected int x, y;			// Location on screen.
@@ -75,11 +75,18 @@ public abstract class Gump extends GameSingletons {
 			rect.set(x - shape.getXLeft(), 	y - shape.getYAbove(),
 				shape.getWidth(), shape.getHeight());
 	}
+	//	GameRender.Paintable
+	@Override
 	public void paint() {
 		shape.paint(gwin.getWin(), x, y);
 		gwin.setPainted();
 		paintElems();		// Checkmark, buttons.
 	}
+	@Override
+	public void paintOutline(int pix) {
+		shape.paintRleOutline(gwin.getWin(), x, y, ShapeID.getSpecialPixel(pix));
+	}
+	
 	public final void paintElems() {
 		if (elems != null) {
 			int cnt = elems.size();
@@ -369,7 +376,7 @@ public abstract class Gump extends GameSingletons {
 				}
 				obj.paintShape(paintBox.x + obj.getTx(),
 								paintBox.y + obj.getTy());
-				if (obj == GameWindow.targetObj)
+				if (obj == GameWindow.targetElem)
 					obj.paintOutline(paintBox.x + obj.getTx(),
 							paintBox.y + obj.getTy(), ShapeID.HIT_PIXEL);
 				else if (obj == GameWindow.onObj)

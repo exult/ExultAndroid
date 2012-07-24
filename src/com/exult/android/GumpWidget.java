@@ -1,6 +1,6 @@
 package com.exult.android;
 
-public class GumpWidget extends GameSingletons {
+public class GumpWidget extends GameSingletons implements GameRender.Paintable {
 	protected Gump parent;
 	protected ShapeFrame shape;
 	protected int shapeNum, frameNum;
@@ -58,6 +58,8 @@ public class GumpWidget extends GameSingletons {
 		}
 		return rect;
 	}
+	//	GameRender.Paintable
+	@Override
 	public void paint() {
 		int px = 0, py = 0;
 		if (parent != null) {
@@ -66,6 +68,11 @@ public class GumpWidget extends GameSingletons {
 		}
 		shape.paint(gwin.getWin(), x+px, y+py);
 	}
+	@Override
+	public void paintOutline(int pix) {
+		shape.paintRleOutline(gwin.getWin(), x, y, ShapeID.getSpecialPixel(pix));
+	}
+	
 	public Button onButton(int mx, int my) {
 		return null;
 	}

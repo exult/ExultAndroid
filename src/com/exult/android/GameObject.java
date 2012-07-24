@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 import com.exult.android.shapeinf.*;
 
-public abstract class GameObject extends ShapeID {
+public abstract class GameObject extends ShapeID implements GameRender.Paintable {
 	//	Flags
 	public static final int
 	invisible = 0,
@@ -1190,18 +1190,23 @@ public abstract class GameObject extends ShapeID {
 			dependors.clear();
 		}
 	}
-	public void paint() {
-		gwin.getShapeLocation(paintLoc, this);
-		paintShape(paintLoc.x, paintLoc.y);
-	}
+	
 	protected final void paintObj() {	// Same as above
 		gwin.getShapeLocation(paintLoc, this);
 		paintShape(paintLoc.x, paintLoc.y);
 	}
+	// GameRender.paintable
+	@Override
+	public void paint() {
+		gwin.getShapeLocation(paintLoc, this);
+		paintShape(paintLoc.x, paintLoc.y);
+	}
+	@Override
 	public void paintOutline(int pix) {
 		gwin.getShapeLocation(paintLoc, this);
 		paintOutline(paintLoc.x, paintLoc.y, pix);
 	}
+	
 	public boolean isFindable() { 
 		return true; 
 	}
