@@ -43,21 +43,6 @@ public class GumpWidget extends GameSingletons implements GameRender.Paintable {
 		my -= parent.getY() + y;
 		return shape != null && shape.hasPoint(mx, my);
 	}
-	//	Get area covered by gump and its contents.
-	public Rectangle getDirty(Rectangle rect) {
-		if (shape == null) 
-			rect.set(0,0,0,0);
-		else {
-			int px = 0, py = 0;
-			if (parent != null) {
-				px = parent.getX();
-				py = parent.getY();
-			}
-			rect.set(x+px - shape.getXLeft(), y+py - shape.getYAbove(),
-				shape.getWidth(), shape.getHeight());
-		}
-		return rect;
-	}
 	//	GameRender.Paintable
 	@Override
 	public void paint() {
@@ -70,7 +55,28 @@ public class GumpWidget extends GameSingletons implements GameRender.Paintable {
 	}
 	@Override
 	public void paintOutline(int pix) {
-		shape.paintRleOutline(gwin.getWin(), x, y, ShapeID.getSpecialPixel(pix));
+		int px = 0, py = 0;
+		if (parent != null) {
+			px = parent.getX();
+			py = parent.getY();
+		}
+		shape.paintRleOutline(gwin.getWin(), x + px, y + py, ShapeID.getSpecialPixel(pix));
+	}
+	@Override
+	public Rectangle getDirty(Rectangle rect) {
+		if (shape == null) 
+			rect.set(0,0,0,0);
+		else {
+			int px = 0, py = 0;
+			if (parent != null) {
+				px = parent.getX();
+				py = parent.getY();
+			}
+			rect.set(x+px - shape.getXLeft(), y+py - shape.getYAbove(),
+				shape.getWidth(), shape.getHeight());
+			rect.enlarge(1+EConst.c_tilesize/2);
+		}
+		return rect;
 	}
 	
 	public Button onButton(int mx, int my) {
@@ -240,8 +246,9 @@ public class GumpWidget extends GameSingletons implements GameRender.Paintable {
 			// On?  Got to turn off others.
 			Actor party[] = new Actor[9];
 					// Get entire party, including Avatar.
+			gwin.getParty(party, true);
 			for (Actor a : party) {
-				if (a != actor && a.isCombatProtected())
+				if (a != null && a != actor && a.isCombatProtected())
 					a.setCombatProtected(false);
 			// +++++Should also update gumps.
 			}

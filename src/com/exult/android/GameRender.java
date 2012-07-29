@@ -187,10 +187,6 @@ public class GameRender {
 				obj.paint_outline(HIT_PIXEL);
 			}
 		*/
-		if (GameWindow.targetElem != null)
-			GameWindow.targetElem.paintOutline(ShapeID.HIT_PIXEL);
-		if (GameWindow.onObj != null)
-			GameWindow.onObj.paintOutline(ShapeID.POISON_PIXEL);
 		return light_sources;
 	}
 	/*
@@ -292,5 +288,6 @@ public class GameRender {
 	public static interface Paintable {
 		public void paint();
 		public void paintOutline(int pix);
+		public Rectangle getDirty(Rectangle rect);
 	};
 }

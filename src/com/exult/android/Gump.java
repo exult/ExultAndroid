@@ -67,14 +67,6 @@ public abstract class Gump extends GameSingletons implements GameRender.Paintabl
 		x = (gwin.getWidth() - shape.getWidth())/2 + shape.getXLeft();
 		y = (gwin.getHeight() - shape.getHeight())/2 + shape.getYAbove();
 	}
-	//	Get area covered by gump and its contents.
-	public void getDirty(Rectangle rect) {
-		if (shape == null) 
-			rect.set(0,0,0,0);
-		else
-			rect.set(x - shape.getXLeft(), 	y - shape.getYAbove(),
-				shape.getWidth(), shape.getHeight());
-	}
 	//	GameRender.Paintable
 	@Override
 	public void paint() {
@@ -86,7 +78,20 @@ public abstract class Gump extends GameSingletons implements GameRender.Paintabl
 	public void paintOutline(int pix) {
 		shape.paintRleOutline(gwin.getWin(), x, y, ShapeID.getSpecialPixel(pix));
 	}
-	
+	//	Get area covered by gump and its contents.
+	@Override
+	public Rectangle getDirty(Rectangle rect) {
+		if (shape == null) 
+			rect.set(0,0,0,0);
+		else {
+			rect.set(x - shape.getXLeft(), 	y - shape.getYAbove(),
+				shape.getWidth(), shape.getHeight());
+			rect.enlarge(1+EConst.c_tilesize/2);
+			// NEEDED? gwin.clipToWin(rect);
+		}
+		return rect;
+	}
+
 	public final void paintElems() {
 		if (elems != null) {
 			int cnt = elems.size();

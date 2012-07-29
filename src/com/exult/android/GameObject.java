@@ -1206,7 +1206,13 @@ public abstract class GameObject extends ShapeID implements GameRender.Paintable
 		gwin.getShapeLocation(paintLoc, this);
 		paintOutline(paintLoc.x, paintLoc.y, pix);
 	}
-	
+	@Override
+	public Rectangle getDirty(Rectangle rect) {
+		gwin.getShapeRect(rect, this);
+		rect.enlarge(1+EConst.c_tilesize/2);
+		gwin.clipToWin(rect);
+		return rect;
+	}
 	public boolean isFindable() { 
 		return true; 
 	}

@@ -31,6 +31,7 @@ public class ExultActivity extends Activity {
 	private static Point clickPoint;	// Non-null if getClick() is active.
 	private static Point clickIgnore;	// For waiting for a click, but don't care where.
 	private static ClickTracker clickTrack;
+	private static final Rectangle tempRect = new Rectangle();
 	private static final Semaphore clickWait = new Semaphore(1, true);
 	private static boolean targeting, tracking, trackingMouse;
 	private static ExultActivity instance;
@@ -679,18 +680,23 @@ public class ExultActivity extends Activity {
     						dragged = GameSingletons.drag.moved(mx, my);
     					} else if (targeting) {
     						GameObject obj;
+    						GameRender.Paintable elem = null;
     						Gump gump = GameSingletons.gumpman.findGump(mx, my);
-    						if (gump != null)
-    							obj = gump.findObject(mx, my);
-    						else
-    							obj = gwin.findObject(mx, my);
-    						if (obj != GameWindow.targetObj) {
-    							if (GameWindow.targetObj != null)
-    								gwin.addDirty(GameWindow.targetObj);
-    							if (obj != null)
-    								gwin.addDirty(obj);
+    						if (gump != null) {
+    							elem = obj = gump.findObject(mx, my);
+    							if (obj == null) {
+    								// ++++Maybe later:  if ((elem = gump.onButton(mx, my)) == null)
+    									elem = gump;
+    							}
+    						} else
+    							elem = obj = gwin.findObject(mx, my);
+    						if (elem != GameWindow.targetElem) {
+    							if (GameWindow.targetElem != null)
+    								gwin.addDirty(GameWindow.targetElem.getDirty(tempRect));
+    							if (elem != null)
+    								gwin.addDirty(elem.getDirty(tempRect));
     							GameWindow.targetObj = obj;
-    							GameWindow.targetElem = obj;
+    							GameWindow.targetElem = elem;
     						}
     					}
     				} else if (dragging) {

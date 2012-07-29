@@ -295,8 +295,6 @@ public final class DraggingInfo extends GameSingletons {
 				if (!button.isDraggable())
 					return false;
 				button.push(true);
-						// Pushed button, so make noise.
-				audio.playSfx(Audio.gameSfx(73));
 				gwin.setPainted();
 			} else if (gump.isDraggable()) {	// Dragging whole gump.
 				paint = new Point(gump.getX(), gump.getY());
@@ -484,9 +482,11 @@ public final class DraggingInfo extends GameSingletons {
 		boolean handled = moved;
 		if (button != null) {
 			button.unpush(true);
-			if (button.onWidget(x, y))
-						// Clicked on button.
+			if (button.onWidget(x, y)) {
+				// Clicked button, so make noise.
+				audio.playSfx(Audio.gameSfx(73));
 				button.activate(true);
+			}
 			handled = true;
 		} else if (obj == null) {		// Only dragging a gump?
 			if (gump == null)

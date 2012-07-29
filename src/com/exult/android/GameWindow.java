@@ -1335,6 +1335,10 @@ public class GameWindow extends GameSingletons {
 				drag.paint();	// Paint what user is dragging.
 			effects.paintText();
 			gumpman.paint(true);
+			if (targetElem != null)
+				targetElem.paintOutline(ShapeID.HIT_PIXEL);
+			if (onObj != null)
+				onObj.paintOutline(ShapeID.POISON_PIXEL);
 			Conversation conv = GameSingletons.conv;
 			if (conv != null)
 				conv.paint();		// Conversation.
