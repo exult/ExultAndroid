@@ -419,7 +419,7 @@ public class ExultActivity extends Activity {
                 		trackMouse.set(downMouse.x, downMouse.y);
                 		downMouse.longPress = true;
                 		Shortcuts.target();
-                	} else if (targeting && !downMouse.longPress && GameWindow.targetObj != null) {
+                	} else if (targeting && !downMouse.longPress && GameWindow.targetElem != null) {
                 		instance.vibrate();
                 		downMouse.longPress = true;
                 		dragging = DraggingInfo.startDragging(mouse.getX(), mouse.getY());
