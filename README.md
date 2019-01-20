@@ -1,5 +1,5 @@
 # ExultAndroid
-Ancient, ort of Exult to Java for Android.
+Ancient, unmaintained port of Exult to Java for Android.
 
 Quoting Dominus on issue #1:
 
